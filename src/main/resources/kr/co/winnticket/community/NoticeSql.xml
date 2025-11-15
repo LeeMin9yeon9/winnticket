@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.community.notice.mapper.NoticeMapper">
+
+    <!--
+    - 공지사항 목록 Select
+    -->
+    <select id="selectNoticeList" resultType="kr.co.winnticket.community.notice.dto.NoticeListGetResDto">
+        <![CDATA[
+        Select
+            a.ID,  -- 아이디
+            a.TYPE,  -- 타입
+            a.TITLE,  -- 제목
+            a.AUTHOR_NAME,  -- 작성자
+            To_Char(a.CREATED_AT, 'YYYY"."FM9"."FM9"."') CREATED_AT,  -- 작성일자
+            a.VIEWS::text VIEWS,  -- 조회수
+            a.IS_ACTIVE  -- 활성화여부
+        FROM
+            POSTS a
+        Where 1 = 1
+        And a.TYPE = 'NOTICE'
+        And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
+        And To_Char(a.CREATED_AT, 'YYYYMMDD') Between #{begDate} And #{endDate}
+        Order By
+            a.CREATED_AT Desc
+        ]]>
+    </select>
+
+    <!--
+    - 공지사항 상세 Select
+    -->
+    <select id="selectNoticeDetail" resultType="kr.co.winnticket.community.notice.dto.NoticeDetailGetResDto">
+        <![CDATA[
+        Select
+            a.ID,  -- 아이디
+            a.TYPE,  -- 타입
+            a.TITLE,  -- 제목
+            a.AUTHOR_NAME,  -- 작성자
+            REPLACE(REPLACE(To_Char(a.CREATED_AT, 'YYYY"년" FMMM"월" FMDD"일" AM HH12:MI'), 'AM', '오전'), 'PM', '오후') CREATED_AT,  -- 작성일시
+            a.VIEWS::text VIEWS,  -- 조회수
+            a.CONTENT  -- 내용
+        FROM
+            POSTS a
+        Where 1 = 1
+        And a.ID = #{id}
+        ]]>
+    </select>
+
+    <!--
+    - 공지사항 insert
+    -->
+    <insert id="insertNotice" parameterType="kr.co.winnticket.community.notice.dto.NoticePostReqDto">
+        <![CDATA[
+        Insert Into POSTS
+        (
+         TYPE,
+         TITLE,
+         CONTENT,
+         AUTHOR_NAME
+        )
+        Values
+        (
+         'NOTICE',
+         #{title},
+         #{content},
+         '관리자'
+        )
+        ]]>
+    </insert>
+
+    <!--
+    - 공지사항 update
+    -->
+    <update id="updateNotice" parameterType="kr.co.winnticket.community.notice.dto.NoticePatchReqDto">
+        <![CDATA[
+        Update POSTS
+        Set
+            TITLE = COALESCE(#{title}, TITLE),
+            CONTENT = COALESCE(#{content}, CONTENT),
+            UPDATED_AT = CURRENT_TIMESTAMP
+        Where 1 = 1
+        And ID = #{id}
+        ]]>
+    </update>
+</mapper>

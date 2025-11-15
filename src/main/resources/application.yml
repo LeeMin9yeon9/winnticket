@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://100.127.191.39:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: postgres
+    password: 1234
+
+
+mybatis:
+  mapper-locations: classpath*:/kr/co/winnticket/**/*.xml
+  type-aliases-package: kr.co.winnticket
+  configuration:
+    map-underscore-to-camel-case: true
+    type-handlers-package: kr.co.winnticket.common.typehandler
+
+
+logging:
+  level:
+    kr.co.winnticket: DEBUG
