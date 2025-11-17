@@ -1,4 +1,4 @@
-package kr.co.winnticket.community.notice.enums;
+package kr.co.winnticket.common.enums;
 
 public enum QnaStatus {
     PENDING("대기중"),

@@ -2,8 +2,8 @@ package kr.co.winnticket.common.config;
 
 import kr.co.winnticket.common.typehandler.EnumTypeHandler;
 import kr.co.winnticket.common.typehandler.UUIDTypeHandler;
-import kr.co.winnticket.community.notice.enums.PostType;
-import kr.co.winnticket.community.notice.enums.QnaStatus;
+import kr.co.winnticket.common.enums.PostType;
+import kr.co.winnticket.common.enums.QnaStatus;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
