@@ -8,6 +8,7 @@ import kr.co.winnticket.community.notice.mapper.NoticeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,17 +18,17 @@ public class NoticeService {
     private final NoticeMapper mapper;
 
     // 공지사항 목록조회
-    public List<NoticeListGetResDto> selectNoticeList(String asTitle, String asBegDate, String asEndDate) {
+    public List<NoticeListGetResDto> selectNoticeList(String asTitle, LocalDate asBegDate, LocalDate asEndDate) {
         List<NoticeListGetResDto> lModel = mapper.selectNoticeList(asTitle, asBegDate, asEndDate);
 
         return lModel;
     }
 
     // 공지사항 상세조회
-    public List<NoticeDetailGetResDto> selectNoticeDetail(UUID auId) {
-        List<NoticeDetailGetResDto> lModel = mapper.selectNoticeDetail(auId);
+    public NoticeDetailGetResDto selectNoticeDetail(UUID auId) {
+        NoticeDetailGetResDto model = mapper.selectNoticeDetail(auId);
 
-        return lModel;
+        return model;
     }
 
     // 공지사항 등록
@@ -36,7 +37,12 @@ public class NoticeService {
     }
 
     // 공지사항 수정
-    public void updateNotice(NoticePatchReqDto model) {
-        mapper.updateNotice(model);
+    public void updateNotice(UUID auId, NoticePatchReqDto model) {
+        mapper.updateNotice(auId, model.getTitle(), model.getContent());
+    }
+
+    // 공지사항 삭제
+    public void deleteNotice(UUID auId) {
+        mapper.deleteNotice(auId);
     }
 }

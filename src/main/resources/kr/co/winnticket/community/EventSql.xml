@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.community.event.mapper.EventMapper">
+
+    <!--
+    - 이벤트 목록 Select
+    -->
+    <select id="selectEventList" resultType="kr.co.winnticket.community.event.dto.EventListGetResDto">
+        <![CDATA[
+            Select
+                a.ID,  -- 아이디
+                a.TYPE,  -- 타입
+                a.TITLE,  -- 제목
+                a.AUTHOR_NAME,  -- 작성자
+                a.CREATED_AT,  -- 작성일자
+                a.VIEWS,  -- 조회수
+                a.IS_ACTIVE  -- 활성화여부
+            FROM
+                POSTS a
+            Where 1 = 1
+            And a.TYPE = 'EVENT'
+            And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
+            And Date(a.CREATED_AT) Between #{begDate} And #{endDate}
+            Order By
+                Date(a.CREATED_AT) Desc
+            ]]>
+    </select>
+
+    <!--
+     - 이벤트 상세 Select
+     -->
+    <select id="selectEventDetail" resultType="kr.co.winnticket.community.event.dto.EventDetailGetResDto">
+        <![CDATA[
+        Select
+            a.ID,  -- 아이디
+            a.TYPE,  -- 타입
+            a.TITLE,  -- 제목
+            a.AUTHOR_NAME,  -- 작성자
+            a.CREATED_AT,  -- 작성일시
+            a.VIEWS,  -- 조회수
+            a.CONTENT  -- 내용
+        FROM
+            POSTS a
+        Where 1 = 1
+        And a.TYPE = 'EVENT'
+        And a.ID = #{id}
+        ]]>
+    </select>
+
+    <!--
+    - 이벤트 insert
+    -->
+    <insert id="insertEvent" parameterType="kr.co.winnticket.community.event.dto.EventPostReqDto">
+        <![CDATA[
+        Insert Into POSTS
+        (
+            TYPE,
+            TITLE,
+            CONTENT,
+            AUTHOR_NAME,
+            VIEWS,
+            IS_ACTIVE,
+            EVENT_END_DATE
+        )
+        Values
+        (
+            'EVENT',
+            #{title},
+            #{content},
+            #{authorName},
+            0,
+            #{isActive},
+            #{eventEndDate}
+        )
+        ]]>
+    </insert>
+
+    <!--
+    - 이벤트 update
+    -->
+    <update id="updateEvent">
+        <![CDATA[
+        Update POSTS
+        Set
+            TITLE = COALESCE(#{title}, TITLE),
+            CONTENT = COALESCE(#{content}, CONTENT),
+            EVENT_END_DATE = COALESCE(#{eventEndDate}, EVENT_END_DATE),
+            UPDATED_AT = CURRENT_TIMESTAMP
+        Where 1 = 1
+        And TYPE = 'EVENT'
+        And ID = #{id}
+        ]]>
+    </update>
+
+    <!--
+    - 이벤트 delete
+    -->
+    <delete id="deleteEvent">
+        <![CDATA[
+        Delete
+        From
+            POSTS
+        Where 1 = 1
+        And TYPE = 'EVENT'
+        And ID = #{id}
+        ]]>
+    </delete>
+</mapper>

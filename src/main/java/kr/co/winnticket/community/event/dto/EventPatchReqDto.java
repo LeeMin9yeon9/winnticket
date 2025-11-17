@@ -1,16 +1,16 @@
-package kr.co.winnticket.community.notice.dto;
+package kr.co.winnticket.community.event.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.ToString;
 
-import java.util.UUID;
+import java.time.LocalDate;
 
 @Data
 @ToString(callSuper = true)
-@Schema(title = "[공지사항 > 공지사항 수정] NoticePatchReqDto")
-public class NoticePatchReqDto {
+@Schema(title = "[이벤트 > 이벤트 수정] EventPatchReqDto")
+public class EventPatchReqDto {
     @NotEmpty
     @Schema(description = "제목")
     private String title;
@@ -18,4 +18,8 @@ public class NoticePatchReqDto {
     @NotEmpty
     @Schema(description = "내용")
     private String content;
+
+    @NotEmpty
+    @Schema(description = "이벤트종료일")
+    private LocalDate eventEndDate;
 }

@@ -16,63 +16,60 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "공지사항", description = "공지사항 관리")
 @RestController
 @RequiredArgsConstructor
 public class NoticeController {
     private final NoticeService service;
 
     // 공지사항 목록조회
-    @GetMapping("GET/api/community/noticeList")
-    @Tag(name = "0010.공지사항", description = "공지사항 관리")
-    @Operation(summary = "010.공지사항 목록 조회", description = "공지사항 목록을 조회합니다.")
+    @GetMapping("api/community/notice")
+    @Operation(summary = "공지사항 목록 조회", description = "공지사항 목록을 조회합니다.")
     public List<NoticeListGetResDto> getNoticeList (
-            @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
-            @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) String asBegDate,
-            @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) String asEndDate
-        ) throws Exception {
-
-        if (asBegDate == null || asBegDate.isBlank()) {
-            asBegDate = LocalDate.now().withDayOfMonth(1).toString();
-        }
-
-        if (asEndDate == null || asEndDate.isBlank()) {
-            asEndDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).toString();
-        }
-
+        @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
+        @Parameter(description = "시작일자", example = "2025-11-01") @RequestParam(value = "begDate") LocalDate asBegDate,
+        @Parameter(description = "종료일자", example = "2025-11-30") @RequestParam(value = "endDate") LocalDate asEndDate
+    ) throws Exception {
         return service.selectNoticeList(asTitle, asBegDate, asEndDate);
     }
 
     // 공지사항 상세조회
-    @GetMapping("GET/api/community/noticeDetail")
-    @Tag(name = "0010.공지사항", description = "공지사항 관리")
-    @Operation(summary = "020.공지사항 상세 조회", description = "전달받은 id의 공지사항을 조회합니다.")
-    public List<NoticeDetailGetResDto> getNoticeDetail (
-            @Parameter(description = "게시글_ID") @RequestParam(value = "id", required = false) UUID auId
+    @GetMapping("api/community/notice/{id}")
+    @Operation(summary = "공지사항 상세 조회", description = "전달받은 id의 공지사항을 조회합니다.")
+    public NoticeDetailGetResDto getNoticeDetail (
+        @Parameter(description = "게시글 ID") @PathVariable("id") UUID auId
     ) throws Exception {
-
         return service.selectNoticeDetail(auId);
     }
 
     // 공지사항 등록
-    @PostMapping("POST/api/community/notice")
+    @PostMapping("api/community/notice")
     @ResponseBody
-    @Tag(name = "0010.공지사항", description = "공지사항 관리")
-    @Operation(summary = "030.공지사항 등록", description = "전달받은 공지사항의 정보를 등록합니다.")
+    @Operation(summary = "공지사항 등록", description = "전달받은 공지사항의 정보를 등록합니다.")
     public void postNotice (
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "공지사항 정보") @RequestBody @Valid NoticePostReqDto model
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "공지사항 정보") @RequestBody @Valid NoticePostReqDto model
     ) throws Exception {
         service.insertNotice(model);
     }
 
     // 공지사항 수정
-    @PatchMapping("PATCH/api/community/notice")
+    @PatchMapping("api/community/notice/{id}")
     @ResponseBody
-    @Tag(name = "0010.공지사항", description = "공지사항 관리")
-    @Operation(summary = "040.공지사항 수정", description = "전달받은 공지사항의 정보를 수정합니다.")
+    @Operation(summary = "공지사항 수정", description = "전달받은 공지사항의 정보를 수정합니다.")
     public void patchNotice (
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "공지사항 정보") @RequestBody @Valid NoticePatchReqDto model
+        @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId,  
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "공지사항 정보") @RequestBody @Valid NoticePatchReqDto model
     ) throws Exception {
-        service.updateNotice(model);
+        service.updateNotice(auId, model);
     }
+    
+    // 공지사항 삭제
+    @DeleteMapping("api/community/notice/{id}")
+	@ResponseBody
+	@Operation(summary = "공지사항 삭제", description = "전달받은 공지사항의 정보를 삭제합니다.")
+	public void deleteNotice(
+        @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId
+    ) throws Exception {
+        service.deleteNotice(auId);
+	}
 }
-//ㅇ

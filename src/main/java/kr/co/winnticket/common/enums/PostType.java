@@ -1,4 +1,4 @@
-package kr.co.winnticket.community.notice.enums;
+package kr.co.winnticket.common.enums;
 
 public enum PostType {
     NOTICE("공지사항"),
