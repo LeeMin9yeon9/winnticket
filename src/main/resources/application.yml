@@ -12,6 +12,20 @@ mybatis:
     map-underscore-to-camel-case: true
     type-handlers-package: kr.co.winnticket.common.typehandler
 
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    path: /api-docs
+  group-configs:
+  - group: 0000. 공통
+    paths-to-match: /api/common/**
+  - group: 0100. 커뮤니티
+    paths-to-match: /api/community/**
+  - group: 0200. 메뉴
+    paths-to-match: /api/menu/**
+
 logging:
   level:
     kr.co.winnticket: DEBUG
+

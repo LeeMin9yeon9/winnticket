@@ -1,4 +1,4 @@
-package kr.co.winnticket.community.notice.dto;
+package kr.co.winnticket.community.event.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -11,8 +11,8 @@ import java.util.UUID;
 
 @Data
 @ToString(callSuper = true)
-@Schema(title = "[공지사항 > 공지사항 목록 조회] NoticeListGetResDto")
-public class NoticeListGetResDto {
+@Schema(title = "[이벤트 > 이벤트 상세 조회] EventDetailGetResDto")
+public class EventDetailGetResDto {
     @NotEmpty
     @Schema(description = "게시글_ID")
     private UUID id;
@@ -32,6 +32,6 @@ public class NoticeListGetResDto {
     @Schema(description = "조회수")
     private int views;
 
-    @Schema(description = "활성화여부")
-    private boolean isActive;
+    @Schema(description = "내용")
+    private String content;
 }

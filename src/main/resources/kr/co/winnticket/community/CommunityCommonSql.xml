@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.community.common.mapper.CommunityCommonMapper">
+    <!--
+   -  조회수 update
+   -->
+    <update id="increaseViewCount">
+        <![CDATA[
+        Update POSTS
+        Set
+            VIEWS = VIEWS + 1
+        Where 1 = 1
+          And ID = #{id}
+        ]]>
+    </update>
+
+    <!--
+   -  활성화여부 update
+   -->
+    <update id="updateIsActive">
+        <![CDATA[
+        Update POSTS
+        Set
+            IS_ACTIVE = #{isActive}
+        Where 1 = 1
+          And ID = #{id}
+        ]]>
+    </update>
+</mapper>
