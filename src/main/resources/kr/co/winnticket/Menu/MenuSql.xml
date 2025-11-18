@@ -48,17 +48,19 @@
     </select>
 
     <!-- 메뉴 수정 -->
-    <update id="menuUpdate">
-        UPDATE menu_categories
-        SET name = #{name},
-            code = #{code},
-            level = #{level},
-            parent_id = #{parentId, jdbcType=OTHER},
-            display_order = #{displayOrder},
-            visible = #{visible},
-            route_path = #{routePath}
+    <update id="admMenuUpdate">
+        UPDATE admin_menus
+        <set>
+            <if test="title != null"> title = #{title}, </if>
+            <if test="titleEn != null"> title_en = #{titleEn}, </if>
+            <if test="icon != null"> icon = #{icon}, </if>
+            <if test="page != null"> page = #{page}, </if>
+            <if test="displayOrder != null"> display_order = #{displayOrder}, </if>
+            <if test="visible != null"> visible = #{visible}, </if>
+        </set>
         WHERE id = #{id, jdbcType=OTHER}
     </update>
+
 
     <!-- 삭제 -->
     <delete id="menuDelete">
