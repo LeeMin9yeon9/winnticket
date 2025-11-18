@@ -39,10 +39,8 @@ public class MenuCategoryController {
 
     // 메뉴 삭제
     @DeleteMapping("/api/menu/menuDelete")
-    public String menuDelete(@PathVariable UUID id) throws NotFoundException {
+    public String menuDelete(@RequestParam UUID id) throws NotFoundException {
         menuService.deleteMenu(id);
         return "OK";
     }
-
-
 }
