@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        /*
         registry.addMapping("/**")
                 .allowedOrigins(
                         // 로컬 개발 환경
@@ -33,5 +34,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600); // 1시간 동안 preflight 요청 캐시
+        */
     }
 }
