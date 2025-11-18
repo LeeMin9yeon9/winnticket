@@ -108,6 +108,14 @@
         WHERE page = #{page}
     </select>
 
+    <!-- 메뉴명 중복 여부-->
+    <select id="admMenuCountByTitle" resultType="int">
+        SELECT COUNT(*)
+        FROM admin_menus
+        WHERE title = #{title}
+    </select>
+
+    <!--메뉴 검색-->
     <select id="admMenuSearch"
              parameterType="kr.co.winnticket.menu.admmenu.dto.AdminMenuSearchDto"
              resultType="kr.co.winnticket.menu.admmenu.entity.AdminMenus">

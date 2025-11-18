@@ -141,7 +141,10 @@ public class MenuCategoryService {
         if(menuCategory == null){
             throw new NotFoundException("삭제할 메뉴가 존재하지 않습니다.");
         }
-        menuMapper.menuDelete(id);
+        int result = menuMapper.menuDelete(id);
+        if(result == 0){
+            throw new IllegalStateException("삭제에 실패했습니다.");
+        }
     }
 
     // 메뉴조회

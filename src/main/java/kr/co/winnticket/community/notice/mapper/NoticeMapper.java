@@ -29,4 +29,5 @@ public interface NoticeMapper {
 
     // 공지사항 수정
     void updateNotice(NoticePatchReqDto model);
+
 }
