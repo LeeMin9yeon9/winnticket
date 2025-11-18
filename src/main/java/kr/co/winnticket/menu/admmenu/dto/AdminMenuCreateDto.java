@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(title =  " [쇼핑몰메뉴관리 > 메뉴등록] AdminMenuCreateDto")
 public class AdminMenuCreateDto {
 
     @Schema(description = "관리자메뉴_ID")

@@ -29,7 +29,7 @@ public interface MenuCategoryMapper {
     int menuUpdate(MenuCategory menuCategory);
 
     // 메뉴 삭제
-    MenuCategory menuDelete(
+    int menuDelete(
             @Param("id") UUID id);
 
     // 메뉴 활성/비활성화

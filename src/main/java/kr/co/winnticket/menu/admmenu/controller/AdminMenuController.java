@@ -7,14 +7,14 @@ import kr.co.winnticket.menu.admmenu.dto.AdminMenuUpdateDto;
 import kr.co.winnticket.menu.admmenu.service.AdminMenuService;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-//@RequestMapping("/api/admin/menus")
-//@RequestMapping("/api/v1/adminmenulist")
+
 @RequiredArgsConstructor
 public class AdminMenuController {
 
@@ -22,7 +22,6 @@ public class AdminMenuController {
 
 
      // 관리자 메뉴 전체 리스트 조회
-
     @GetMapping("/api/menu/adminMenuList")
     public List<AdminMenuListDto> getAllAdmMenus() {
         return adminMenuService.getAllList();
@@ -37,15 +36,18 @@ public class AdminMenuController {
     }
 
     // 관리자 메뉴 수정
-    @PostMapping("/api/menu/adminMenuUpdate")
-    public String updateAdmMenu(@RequestBody AdminMenuUpdateDto updateDto) throws NotFoundException {
-        adminMenuService.updateAdmMenu(updateDto);
-        return "OK";
+    @PatchMapping ("/api/menu/adminMenuUpdate")
+    public ResponseEntity<Object> updateAdmMenu(@RequestBody AdminMenuUpdateDto updateDto) throws NotFoundException {
+
+            boolean updateStatus = adminMenuService.updateAdmMenu(updateDto);
+            if(!updateStatus) {
+                return ResponseEntity.noContent().build();
+            }
+        return ResponseEntity.ok("수정완료");
     }
 
     //관리자 메뉴 삭제
-
-    @PostMapping("/api/menu/adminMenuDelete")
+    @DeleteMapping ("/api/menu/adminMenuDelete")
     public String deleteAdmMenu(@RequestParam UUID id) throws NotFoundException {
         adminMenuService.deleteAdmMenu(id);
         return "OK";

@@ -83,7 +83,7 @@ public class AdminMenuService {
     }
 
     // 관리자 메뉴 수정
-    public void updateAdmMenu(AdminMenuUpdateDto updateDto) throws NotFoundException {
+    public boolean updateAdmMenu(AdminMenuUpdateDto updateDto) throws NotFoundException {
 
         // 기존 메뉴 조회
         AdminMenus adminMenus = adminMapper.admMenuFindById(UUID.fromString(updateDto.getId()));
@@ -106,26 +106,25 @@ public class AdminMenuService {
             adminMenus.setIcon(updateDto.getIcon());
             changed = true;
         }
-
         if (updateDto.getPage() != null && !updateDto.getPage().equals(adminMenus.getPage())) {
             adminMenus.setPage(updateDto.getPage());
             changed = true;
         }
-
         if (updateDto.getDisplayOrder() != null && !updateDto.getDisplayOrder().equals(adminMenus.getDisplayOrder())) {
             adminMenus.setDisplayOrder(updateDto.getDisplayOrder());
             changed = true;
         }
-
         if (updateDto.getVisible() != null && !updateDto.getVisible().equals(adminMenus.getVisible())) {
             adminMenus.setVisible(updateDto.getVisible());
             changed = true;
         }
 
         if (!changed) {
-            throw new RuntimeException("변경된 항목이 없습니다.");
+            return false; // 변경 없음
         }
+
         adminMapper.admMenuUpdate(adminMenus);
+        return true; // 정상 업데이트 완료
     }
 
     // 관리자 메뉴 삭제
@@ -137,7 +136,7 @@ public class AdminMenuService {
         adminMapper.admMenuDelete(id);
     }
 
-    // 관리자 메뉴 조회
+    // 관리자 메뉴 검색
 
     public List<AdminMenuListDto> searchAdmMenu(AdminMenuSearchDto searchDto) {
 
