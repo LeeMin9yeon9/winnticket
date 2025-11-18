@@ -2,24 +2,6 @@ server:
   port: 8080
 
 spring:
-  web:
-    cors:
-      allowed-origins:
-        http://localhost:5173
-        http://localhost:3000
-        https://winnticket.store
-        https://www.winnticket.store
-        https://api.winnticket.store
-      allowed-methods:
-        GET
-        POST
-        PUT
-        PATCH
-        DELETE
-        OPTIONS
-      allowed-headers: "*"
-      allow-credentials: true
-      max-age: 3600
   profiles:
     active: local
 
