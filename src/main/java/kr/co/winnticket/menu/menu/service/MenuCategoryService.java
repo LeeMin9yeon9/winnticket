@@ -1,15 +1,11 @@
 package kr.co.winnticket.menu.menu.service;
 
-import kr.co.winnticket.menu.menu.dto.CreateMenuDto;
-import kr.co.winnticket.menu.menu.dto.MenuListDto;
-import kr.co.winnticket.menu.menu.dto.MenuSearchDto;
-import kr.co.winnticket.menu.menu.dto.UpdateMenuDto;
-import kr.co.winnticket.menu.menu.entity.MenuCategory;
+import kr.co.winnticket.menu.common.MenuValidator;
+import kr.co.winnticket.menu.menu.dto.*;
 import kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,235 +15,153 @@ import java.util.UUID;
 public class MenuCategoryService {
 
     private final MenuCategoryMapper menuMapper;
+    private final MenuValidator validator;
 
-    // 메뉴 전체 리스트 조회
-    public List<MenuListDto> MenuGetAllList() {
-        List<MenuCategory> list = menuMapper.menuAllList();
-        return list.stream()
-                .map(m -> MenuListDto.builder()
-                        .id(m.getId())
-                        .name(m.getName())
-                        .code(m.getCode())
-                        .level(m.getLevel())
-                        .parentId(m.getParentId())
-                        .displayOrder(m.getDisplayOrder())
-                        .visible(m.getVisible())
-                        .build())
-                .toList();
+    // 메뉴 전체 + 검색 조회
+    public List<MenuListDto> searchMenus(String name, String code) {
+        return menuMapper.findMenus(name, code);
     }
+
 
     // 메뉴 생성
-    public MenuCategory MenuCreate(CreateMenuDto createMenuDto) {
+    public void createMenu(CreateMenuDto createMenuDto) {
+        // 공통 검증
+        validator.validateCode(createMenuDto.getCode());
+        validator.validateCodeDup(createMenuDto.getCode());
+        validator.validateLevel(createMenuDto.getLevel());
+        validator.validateParent(createMenuDto.getLevel(),createMenuDto.getParentId());
 
-        //메뉴명 필수 값 체크
-        if (createMenuDto.getName() == null || createMenuDto.getName().isEmpty()) {
-            throw new IllegalArgumentException("메뉴 이름은 필수 값 입니다.");
-        }
-
-        // 메뉴명 중복 체크
-        if (menuMapper.countByMenuName(createMenuDto.getName()) > 0) {
-            throw new IllegalArgumentException("이미 존재하는 메뉴명입니다." + createMenuDto.getName());
-        }
-
-        // 빈 문자열이면 null 처리
-        if (createMenuDto.getLevel() == 2 && createMenuDto.getParentId() == null) {
-            throw new IllegalArgumentException("2레벨 parentId가 필요합니다.");
-        }
-
-
-        // 최상위 메뉴는 parentId = null 고정
-        if (createMenuDto.getLevel() == 1) {
-            createMenuDto.setParentId(null);
-        }
-        // 하위 메뉴인데 parentId 없음 → 에러
-        if (createMenuDto.getLevel() == 2 && createMenuDto.getParentId() == null) {
-            throw new IllegalArgumentException("2레벨 parentId가 필요합니다.");
-        }
-
-        // 순서 자동 설정
-        Integer displayOrder = createMenuDto.getDisplayOrder();
-        int nextOrder = 0;
-        if(displayOrder == null){
-            int maxOrder = menuMapper.menuGetMaxOrder();
-            nextOrder = maxOrder + 1;
-        }else{
-            if(displayOrder < 1){
-                throw new IllegalArgumentException("표시 순서는 항상 1 이상이여야 합니다.");
-            }
-        }
-
-        UUID menuId = UUID.randomUUID();
-
-        UUID parentUuind = createMenuDto.getParentId() == null
-                ? null
-                : UUID.fromString(String.valueOf(createMenuDto.getParentId()));
-
-        MenuCategory  Menu = MenuCategory.builder()
-                .id(menuId)
-                .name(createMenuDto.getName())
-                .code(createMenuDto.getCode())
-                .level(createMenuDto.getLevel())
-                .parentId(parentUuind)
-                .displayOrder(displayOrder == null ? nextOrder : displayOrder)
-                .visible(createMenuDto.getVisible())
-                .routePath(createMenuDto.getRoutePath())
-                .build();
-
-        menuMapper.menuInsert(Menu);
-        return Menu;
+        processOrder(createMenuDto.getParentId(), createMenuDto);
+        menuMapper.menuInsert(createMenuDto);
     }
+
+    // 하위 메뉴 생성
+    public void createSubMenu(UUID parentId,CreateSubMenuDto createSubMenuDto){
+        // 상위메뉴 여부 확인
+        MenuListDto menuListDto = menuMapper.menuFindById(parentId);
+        if(menuListDto == null){
+            throw new IllegalArgumentException("상위 메뉴가 존재하지 않습니다.");
+        }
+
+        createSubMenuDto.setParentId(parentId);
+        createSubMenuDto.setLevel(2);
+
+        // 하위 메뉴 코드 검증
+        validator.validateSubMenuCode(menuListDto.getCode(), createSubMenuDto.getCode());
+        createSubMenuDto.setCode(menuListDto.getCode()+"_"+createSubMenuDto.getCode());
+        processOrder(parentId,createSubMenuDto);
+
+        menuMapper.menuSubInsert(createSubMenuDto);
+    }
+
     // 메뉴 수정
-    public void updateMenu(UpdateMenuDto updateMenuDto) throws NotFoundException{
-        MenuCategory menuCategory = menuMapper.menuFindById(UUID.fromString(updateMenuDto.getId().toString()));
-        if(menuCategory == null){
+    public void updateMenu(UUID id, UpdateMenuDto updateMenuDto) throws NotFoundException {
+
+        MenuListDto menuListDto = menuMapper.menuFindById(id);
+        if (menuListDto == null) {
             throw new NotFoundException("메뉴를 찾을 수 없습니다.");
         }
 
-        // 변경된 항목만 저장 
-        boolean changed = false;
-
-        if (updateMenuDto.getName() != null && !updateMenuDto.getName().equals(menuCategory.getName())) {
-            menuCategory.setName(updateMenuDto.getName());
-            changed = true;
-        }
-        if (updateMenuDto.getCode() != null && !updateMenuDto.getCode().equals(menuCategory.getCode())) {
-            menuCategory.setCode(updateMenuDto.getCode());
-            changed = true;
-        }
-        if (updateMenuDto.getRoutePath() != null && !updateMenuDto.getRoutePath().equals(menuCategory.getRoutePath())) {
-            menuCategory.setRoutePath(updateMenuDto.getRoutePath());
-            changed = true;
+        // 코드 중복 체크 (code 필드를 수정할 때만)
+        if (updateMenuDto.getCode() != null) {
+            // code 유무 + 소문자
+            validator.validateCode(updateMenuDto.getCode());
+            // code 중복체크
+            validator.validateCodeDup(updateMenuDto.getCode());
         }
 
-        if (updateMenuDto.getDisplayOrder() != null && !updateMenuDto.getDisplayOrder().equals(menuCategory.getDisplayOrder())) {
-            menuCategory.setDisplayOrder(updateMenuDto.getDisplayOrder());
-            changed = true;
-        }
-
-        if (updateMenuDto.getVisible() != null && !updateMenuDto.getVisible().equals(menuCategory.getVisible())) {
-            menuCategory.setVisible(updateMenuDto.getVisible());
-            changed = true;
-        }
-
-        if (!changed) {
-            throw new RuntimeException("변경된 항목이 없습니다.");
-        }
-        menuMapper.menuUpdate(menuCategory);
+        menuMapper.menuUpdate(id, updateMenuDto);
     }
 
     // 메뉴삭제
     public void deleteMenu(UUID id) throws NotFoundException {
-        MenuCategory menuCategory = menuMapper.menuFindById(id);
-        if(menuCategory == null){
+
+        if(menuMapper.countChildMenus(id) > 0)
+            throw  new IllegalStateException("하위메뉴가 있어 삭제 불가합니다.");
+
+        if(menuMapper.menuDelete(id) == 0){
             throw new NotFoundException("삭제할 메뉴가 존재하지 않습니다.");
         }
-        int result = menuMapper.menuDelete(id);
-        if(result == 0){
-            throw new IllegalStateException("삭제에 실패했습니다.");
-        }
     }
 
-    // 메뉴조회
-    public List<MenuListDto> searchMenu(MenuSearchDto searchDto){
-        List<MenuCategory> menus = menuMapper.menuSearch(searchDto);
-        return menus.stream()
-                .map(m -> MenuListDto.builder()
-                        .id(m.getId())
-                        .name(m.getName())
-                        .code(m.getCode())
-                        .level(m.getLevel())
-                        .parentId(m.getParentId() == null ? null : m.getParentId())
-                        .visible(m.getVisible())
-                        .build()
-                ).toList();
-    }
 
-    //노출 순서 변경
-    public void changeMenu(UUID id , Integer order) throws NotFoundException{
-        MenuCategory menuCategory = menuMapper.menuFindById(id);
-        if(menuCategory == null){
-            throw new NotFoundException("변경할 메뉴가 존재하지 않습니다.");
+    //메뉴 순서 변경
+    public void changeMenu(UUID id , Integer displayOrder) {
+        MenuListDto menuList = menuMapper.menuFindById(id);
+
+        if(menuList == null ) {
+            throw new IllegalArgumentException("메뉴를 찾을 수 없습니다.");
         }
-        if(order == null || order < 1){
-            throw new IllegalArgumentException("노출 순서는 1 이상의 값이어야 합니다.");
+        if(displayOrder == null || displayOrder < 1) {
+            throw new IllegalArgumentException("순서는 1 이상이어야 합니다.");
         }
-        menuMapper.menuUpdateOrder(id,order);
+
+        menuMapper.shiftDisplayOrder(menuList.getParentId(), displayOrder);
+        menuMapper.menuUpdateOrder(id,displayOrder);
     }
 
     // 메뉴 활성화 비활성화
-    public void changeVisible(UUID id , Boolean visible) throws NotFoundException{
-        MenuCategory menuCategory = menuMapper.menuFindById(id);
-        if(menuCategory == null){
-            throw new NotFoundException("변경할 메뉴가 존재하지 않습니다.");
-        }
+    public void changeVisible(UUID id , Boolean visible) {
         if (visible == null){
             throw new IllegalStateException("true 또는 false 여야 합니다.");
         }
         menuMapper.menuUpdateVisible(id, visible);
     }
 
-    //상위 메뉴로 이동
-    @Transactional
-    public void moveUp(UUID id) throws NotFoundException {
-
-        MenuCategory menuCategory = menuMapper.menuFindById(id);
-        if (menuCategory == null) {
+    // 메뉴 up
+    public void moveUp(UUID id) throws NotFoundException{
+        MenuListDto findId = menuMapper.menuFindById(id);
+        if(findId == null)
             throw new NotFoundException("메뉴를 찾을 수 없습니다.");
-        }
 
-        // 위 메뉴 찾기
-        MenuCategory upper = menuMapper.findByTreeMenu(
-                menuCategory.getParentId(),
-                menuCategory.getLevel(),
-                menuCategory.getDisplayOrder() - 1
-        );
+        if(findId.getDisplayOrder() == 1) // 1번이면 이동 불가
+            return;
 
-        if (upper == null) return; // 맨 위라면 종료
+        // 현재 위에 있는 메뉴찾기
+        MenuListDto upId = menuMapper.findByOrder(findId.getParentId(), findId.getDisplayOrder()-1);
+        if(upId == null) return;
 
-        int currentOrder = menuCategory.getDisplayOrder();
-        int upperOrder = upper.getDisplayOrder();
+        int findIdOrder = findId.getDisplayOrder();
+        int upIdOrder = upId.getDisplayOrder();
 
-        // swap
-        menuMapper.updateDisplayOrder(
-                menuCategory.getId(),
-                upperOrder
-        );
-
-        menuMapper.updateDisplayOrder(
-                upper.getId(),
-                currentOrder
-        );
+        // 메뉴 위로 올리고
+        menuMapper.menuUpdateOrder(findId.getId(), upIdOrder);
+        // 기존 메뉴
+        menuMapper.menuUpdateOrder(upId.getId(),findIdOrder);
     }
 
-    @Transactional
-    public void moveDown(UUID id) throws NotFoundException {
+    // 메뉴 down
+    public void moveDown(UUID id) throws NotFoundException{
+        MenuListDto findId = menuMapper.menuFindById(id);
 
-        MenuCategory menuCategory = menuMapper.menuFindById(id);
-        if (menuCategory == null) {
+        if(findId.getDisplayOrder() == null)
             throw new NotFoundException("메뉴를 찾을 수 없습니다.");
+
+        Integer maxOrder = menuMapper.findMaxOrder(findId.getParentId());
+        if(findId.getDisplayOrder().equals(maxOrder))
+            return;
+
+        //현재 아래에 있는 메뉴 찾기
+        MenuListDto lowId = menuMapper.findByOrder(findId.getParentId(),findId.getDisplayOrder()+1);
+        if(lowId == null) return;
+
+        int findIdOrder = findId.getDisplayOrder();
+        int lowIdOrder = lowId.getDisplayOrder();
+
+        menuMapper.menuUpdateOrder(findId.getId(), lowIdOrder);
+        menuMapper.menuUpdateOrder(lowId.getId(),findIdOrder);
+    }
+
+    // 공통 순서 처리
+    private void processOrder(UUID parentId, OrderUpdateble orderUpdateble) {
+        Integer order = orderUpdateble.getDisplayOrder();
+
+        if (order == null || order < 1) {
+            Integer max = menuMapper.findMaxOrder(parentId);
+            orderUpdateble.setDisplayOrder(max == null ? 1 : max + 1);
+            return;
         }
 
-        // 아래 메뉴 찾기
-        MenuCategory lower = menuMapper.findByTreeMenu(
-                menuCategory.getParentId(),
-                menuCategory.getLevel(),
-                menuCategory.getDisplayOrder() + 1
-        );
-
-        if (lower == null) return; // 맨 아래
-
-        int currentOrder = menuCategory.getDisplayOrder();
-        int lowerOrder = lower.getDisplayOrder();
-
-        // swap
-        menuMapper.updateDisplayOrder(
-                menuCategory.getId(),
-                lowerOrder
-        );
-
-        menuMapper.updateDisplayOrder(
-                lower.getId(),
-                currentOrder
-        );
+        menuMapper.shiftDisplayOrder(parentId, order);
     }
 }
