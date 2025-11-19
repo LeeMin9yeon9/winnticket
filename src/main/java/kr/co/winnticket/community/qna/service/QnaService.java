@@ -1,5 +1,7 @@
 package kr.co.winnticket.community.qna.service;
 
+import kr.co.winnticket.common.enums.QnaStatus;
+import kr.co.winnticket.community.qna.dto.QnaCntGetResDto;
 import kr.co.winnticket.community.qna.dto.QnaDetailGetResDto;
 import kr.co.winnticket.community.qna.dto.QnaListGetResDto;
 import kr.co.winnticket.community.qna.dto.QnaPatchReqDto;
@@ -8,6 +10,7 @@ import kr.co.winnticket.community.qna.mapper.QnaMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,9 +19,16 @@ import java.util.UUID;
 public class QnaService {
     private final QnaMapper mapper;
 
+    // QNA 상태별 카운트 조회
+    public QnaCntGetResDto selectQnaCnt() {
+        QnaCntGetResDto model = mapper.selectQnaCnt();
+
+        return model;
+    }
+
     // QNA 목록조회
-    public List<QnaListGetResDto> selectQnaList(String asTitle, String asBegDate, String asEndDate) {
-        List<QnaListGetResDto> lModel = mapper.selectQnaList(asTitle, asBegDate, asEndDate);
+    public List<QnaListGetResDto> selectQnaList(String asTitle, LocalDate asBegDate, LocalDate asEndDate, String aqStatus) {
+        List<QnaListGetResDto> lModel = mapper.selectQnaList(asTitle, asBegDate, asEndDate, aqStatus);
 
         return lModel;
     }
