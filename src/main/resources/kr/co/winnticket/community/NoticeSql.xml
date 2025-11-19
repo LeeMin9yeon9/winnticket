@@ -7,7 +7,6 @@
     - 공지사항 목록 Select
     -->
     <select id="selectNoticeList" resultType="kr.co.winnticket.community.notice.dto.NoticeListGetResDto">
-        <![CDATA[
         Select
             a.ID,  -- 아이디
             a.TYPE,  -- 타입
@@ -20,11 +19,26 @@
             POSTS a
         Where 1 = 1
         And a.TYPE = 'NOTICE'
-        And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
-        And Date(a.CREATED_AT) Between #{begDate} And #{endDate}
+        <if test="title != null and title != ''">
+        <![CDATA[
+            And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
+        ]]>
+        </if>
+
+        <if test="begDate != null">
+        <![CDATA[
+            AND Date(a.created_at) >= #{begDate}
+        ]]>
+        </if>
+
+        <if test="endDate != null">
+        <![CDATA[
+            AND Date(a.created_at) <= #{endDate}
+        ]]>
+        </if>
+
         Order By
             Date(a.CREATED_AT) Desc
-        ]]>
     </select>
 
     <!--
@@ -78,16 +92,19 @@
     - 공지사항 update
     -->
     <update id="updateNotice">
-        <![CDATA[
         Update POSTS
-        Set
-            TITLE = COALESCE(#{title}, TITLE),
-            CONTENT = COALESCE(#{content}, CONTENT),
+        <set>
+        <if test="title != null and title != ''">
+            TITLE = #{title},
+        </if>
+        <if test="content != null and content != ''">
+            CONTENT = #{content},
+        </if>
             UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
         Where 1 = 1
         And TYPE = 'NOTICE'
         And ID = #{id}
-        ]]>
     </update>
 
     <!--
