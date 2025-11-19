@@ -26,9 +26,9 @@ public class EventController {
     @GetMapping("api/community/event")
     @Operation(summary = "이벤트 목록 조회", description = "이벤트 목록을 조회합니다.")
     public List<EventListGetResDto> getEventList (
-        @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
-        @Parameter(description = "시작일자", example = "2025-11-01") @RequestParam(value = "begDate") LocalDate asBegDate,
-        @Parameter(description = "종료일자", example = "2025-11-30") @RequestParam(value = "endDate") LocalDate asEndDate
+        @Parameter(description = "제목") @RequestParam(value = "title", required = false) String asTitle,
+        @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) LocalDate asBegDate,
+        @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate
     ) throws Exception {
         return service.selectEventList(asTitle, asBegDate, asEndDate);
     }

@@ -7,7 +7,6 @@
     - FAQ 목록 Select
     -->
     <select id="selectFaqList" resultType="kr.co.winnticket.community.faq.dto.FaqListGetResDto">
-        <![CDATA[
         Select
             a.ID,  -- 아이디
             a.TYPE,  -- 타입
@@ -20,11 +19,25 @@
             POSTS a
         Where 1 = 1
         And a.TYPE = 'FAQ'
-        And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
-        And Date(a.CREATED_AT) Between #{begDate} And #{endDate}
+        <if test="title != null and title != ''">
+        <![CDATA[
+            And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
+        ]]>
+        </if>
+
+        <if test="begDate != null">
+        <![CDATA[
+            AND Date(a.created_at) >= #{begDate}
+        ]]>
+        </if>
+
+        <if test="endDate != null">
+        <![CDATA[
+            AND Date(a.created_at) <= #{endDate}
+        ]]>
+        </if>
         Order By
             Date(a.CREATED_AT) Desc
-        ]]>
     </select>
 
     <!--
@@ -80,17 +93,22 @@
     - FAQ update
     -->
     <update id="updateFaq">
-        <![CDATA[
         Update POSTS
-        Set
-            TITLE = COALESCE(#{title}, TITLE),
-            CONTENT = COALESCE(#{content}, CONTENT),
-            CATEGORY = COALESCE(#{category}, CATEGORY),
-            UPDATED_AT = CURRENT_TIMESTAMP
+        <set>
+            <if test="title != null and title != ''">
+                TITLE = #{title},
+            </if>
+            <if test="content != null and content != ''">
+                CONTENT = #{content},
+            </if>
+            <if test="category != null">
+                CATEGORY = #{category},
+            </if>
+                UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
         Where 1 = 1
-          And TYPE = 'FAQ'
-          And ID = #{id}
-        ]]>
+        And TYPE = 'FAQ'
+        And ID = #{id}
     </update>
 
     <!--
