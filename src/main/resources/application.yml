@@ -6,11 +6,8 @@ spring:
     active: local   # 기본은 local
 
 mybatis:
-  mapper-locations:
-    - classpath:/kr/co/winnticket/community/*.xml
-    - classpath:/kr/co/winnticket/Menu/*.xml
+  mapper-locations: classpath:kr/co/winnticket/**/*Sql.xml
   type-aliases-package: kr.co.winnticket
-  config-location: classpath:mybatis-config.xml
   configuration:
     map-underscore-to-camel-case: true
     type-handlers-package: kr.co.winnticket.common.typehandler
@@ -30,4 +27,3 @@ springdoc:
 logging:
   level:
     kr.co.winnticket: DEBUG
-# 테
