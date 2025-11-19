@@ -3,6 +3,7 @@ package kr.co.winnticket.community.faq.mapper;
 import kr.co.winnticket.community.faq.dto.FaqDetailGetResDto;
 import kr.co.winnticket.community.faq.dto.FaqListGetResDto;
 import kr.co.winnticket.community.faq.dto.FaqPostReqDto;
+import kr.co.winnticket.common.enums.FaqCategory;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
