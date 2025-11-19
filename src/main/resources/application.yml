@@ -17,8 +17,7 @@ springdoc:
   default-produces-media-type: application/json
   swagger-ui:
     path: /api-docs
-  servers:
-    - url: https://api.winnticket.store
+  server-url: https://api.winnticket.store
   group-configs:
   - group: 0000. 공통
     paths-to-match: /api/common/**
