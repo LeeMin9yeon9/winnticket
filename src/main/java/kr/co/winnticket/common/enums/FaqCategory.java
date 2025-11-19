@@ -4,8 +4,8 @@ public enum FaqCategory {
     ORDER("주문/배송관리"),
     DELIVERY("배송"),
     CANCEL("취소/환불"),
-    TICKET("티켓")
-    MEMBERSHIP("회원")
+    TICKET("티켓"),
+    MEMBERSHIP("회원"),
     ETC("기타");
 
     private final String displayName;
