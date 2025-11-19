@@ -8,6 +8,7 @@ spring:
 mybatis:
   mapper-locations: classpath*:/kr/co/winnticket/**/*.xml
   type-aliases-package: kr.co.winnticket
+  config-location: classpath:mybatis-config.xml
   configuration:
     map-underscore-to-camel-case: true
     type-handlers-package: kr.co.winnticket.common.typehandler
