@@ -3,6 +3,7 @@ package kr.co.winnticket.community.faq.dto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import kr.co.winnticket.common.enums.FaqCategory;
 import lombok.Data;
 import lombok.ToString;
 
@@ -27,6 +28,10 @@ public class FaqPostReqDto {
     @NotEmpty
     @Schema(description = "활성화여부")
     private boolean isActive;
+
+    @NotEmpty
+    @Schema(description = "카테고리 [ORDER:주문/배송관리, DELIVERY:배송, CANCEL:취소/환불, TICKET:티켓, MEMBERSHOP:회원, ETC:기타]")
+    private FaqCategory caregory;
 
     @Hidden
     @Schema(description = "아이디")
