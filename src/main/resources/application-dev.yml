@@ -9,11 +9,15 @@ spring:
     username: admin
     password: winnticket!@#$
 
+server:
+  forward-headers-strategy: framework
+
 springdoc:
+  swagger-ui:
+    path: /api-docs
   servers:
     - url: https://api.winnticket.store
       description: 개발 서버
-
   group-configs:
     - group: 0000. 공통
       paths-to-match: /api/common/**
