@@ -38,7 +38,7 @@ public class FaqService {
 
     // FAQ 수정
     public void updateFaq(UUID auId, FaqPatchReqDto model) {
-        mapper.updateFaq(auId, model.getTitle(), model.getContent());
+        mapper.updateFaq(auId, model.getTitle(), model.getContent(), model.getCategory());
     }
 
     // FAQ 삭제
