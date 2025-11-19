@@ -3,6 +3,8 @@ package kr.co.winnticket.menu.admmenu.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -11,8 +13,7 @@ import lombok.*;
 @Schema(title =  " [쇼핑몰메뉴관리 > 메뉴등록] AdminMenuCreateDto")
 public class AdminMenuCreateDto {
 
-    @Schema(description = "관리자메뉴_ID")
-    private String id;
+    private UUID id;
 
     @Schema(description = "관리자메뉴명_한글")
     private String title;

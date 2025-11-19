@@ -10,9 +10,6 @@ import lombok.*;
 @Builder
 public class AdminMenuUpdateDto {
 
-    @Schema(description = "관리자메뉴_ID")
-    private String id;
-
     @Schema(description = "관리자메뉴명_한글")
     private String title;
 

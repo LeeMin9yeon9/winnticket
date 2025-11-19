@@ -10,6 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(title =  " [쇼핑몰 메뉴 관리 > 관리자 메뉴 리스트] AdminMenuListDto")
 public class AdminMenuListDto {
     private UUID id;
 

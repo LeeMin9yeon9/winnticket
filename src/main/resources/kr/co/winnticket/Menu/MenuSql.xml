@@ -5,117 +5,218 @@
 
 <mapper namespace="kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper">
 
-    <!-- 전체 메뉴 조회 -->
-    <select id="menuAllList" resultType="kr.co.winnticket.menu.menu.entity.MenuCategory">
+    <!-- =============================
+         메뉴 검색
+    ============================== -->
+    <select id="findMenus" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
         SELECT *
         FROM menu_categories
-        ORDER BY level, display_order
+        WHERE 1=1
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="code != null and code != ''">
+            AND code LIKE CONCAT('%', #{code}, '%')
+        </if>
+        ORDER BY parent_id NULLS FIRST, display_order ASC
     </select>
 
-    <!-- 메뉴명 중복 체크 -->
-    <select id="countByMenuName" resultType="int">
-        SELECT COUNT(*) FROM menu_categories WHERE name = #{name}
+
+    <!-- =============================
+         단건 조회
+    ============================== -->
+    <select id="menuFindById" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT * FROM menu_categories WHERE id = #{id}
     </select>
 
-    <!-- max display_order -->
-    <select id="menuGetMaxOrder" resultType="int">
-        SELECT COALESCE(MAX(display_order), 0)
+
+    <!-- =============================
+         Up/Down 조회
+    ============================== -->
+    <select id="findByOrder" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT *
         FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order = #{displayOrder}
     </select>
 
-    <!-- 메뉴 생성 -->
+
+    <!-- =============================
+         상위 메뉴 생성
+    ============================== -->
     <insert id="menuInsert">
-        INSERT INTO menu_categories(
-            id, name, code, level, parent_id,
-            display_order, visible, route_path
+        INSERT INTO menu_categories (
+            id,
+            name,
+            code,
+            level,
+            parent_id,
+            display_order,
+            visible,
+            icon_url,
+            route_path,
+            created_at,
+            updated_at
         ) VALUES (
-                     #{id, jdbcType=OTHER},
+                     uuid_generate_v4(),
                      #{name},
                      #{code},
                      #{level},
-                     #{parentId, jdbcType=OTHER},
+                     #{parentId},
                      #{displayOrder},
                      #{visible},
-                     #{routePath}
+                     #{iconUrl},
+                     #{routePath},
+                     CURRENT_TIMESTAMP,
+                     CURRENT_TIMESTAMP
                  )
     </insert>
 
-    <!-- 메뉴 조회 by ID -->
-    <select id="menuFindById" resultType="kr.co.winnticket.menu.menu.entity.MenuCategory">
-        SELECT *
-        FROM menu_categories
-        WHERE id = #{id, jdbcType=OTHER}
-    </select>
 
-    <!-- 메뉴 수정 -->
-    <update id="admMenuUpdate">
-        UPDATE admin_menus
+    <!-- =============================
+         하위 메뉴 생성
+    ============================== -->
+    <insert id="menuSubInsert">
+        INSERT INTO menu_categories (
+            id,
+            name,
+            code,
+            level,
+            parent_id,
+            display_order,
+            visible,
+            icon_url,
+            route_path,
+            created_at,
+            updated_at
+        ) VALUES (
+                     uuid_generate_v4(),
+                     #{name},
+                     #{code},
+                     #{level},
+                     #{parentId},
+                     #{displayOrder},
+                     #{visible},
+                     #{iconUrl},
+                     #{routePath},
+                     CURRENT_TIMESTAMP,
+                     CURRENT_TIMESTAMP
+                 )
+    </insert>
+
+
+    <!-- =============================
+         메뉴 수정 (Null 이면 기존 유지)
+    ============================== -->
+    <update id="menuUpdate">
+        UPDATE menu_categories
         <set>
-            <if test="title != null"> title = #{title}, </if>
-            <if test="titleEn != null"> title_en = #{titleEn}, </if>
-            <if test="icon != null"> icon = #{icon}, </if>
-            <if test="page != null"> page = #{page}, </if>
-            <if test="displayOrder != null"> display_order = #{displayOrder}, </if>
-            <if test="visible != null"> visible = #{visible}, </if>
+            <if test="updateMenuDto.name != null">
+                name = #{updateMenuDto.name},
+            </if>
+
+            <if test="updateMenuDto.code != null">
+                code = #{updateMenuDto.code},
+            </if>
+
+            <if test="updateMenuDto.routePath != null">
+                route_path = #{updateMenuDto.routePath},
+            </if>
+
+            <if test="updateMenuDto.iconUrl != null">
+                icon_url = #{updateMenuDto.iconUrl},
+            </if>
+
+            <if test="updateMenuDto.visible != null">
+                visible = #{updateMenuDto.visible},
+            </if>
+
+            updated_at = CURRENT_TIMESTAMP
         </set>
-        WHERE id = #{id, jdbcType=OTHER}
+        WHERE id = #{id}
     </update>
 
 
-    <!-- 삭제 -->
+    <!-- =============================
+         메뉴 삭제
+    ============================== -->
     <delete id="menuDelete">
-        DELETE FROM menu_categories
-        WHERE id = #{id, jdbcType=OTHER}
+        DELETE FROM menu_categories WHERE id = #{id}
     </delete>
 
-    <!-- 검색 -->
-    <select id="menuSearch"
-            parameterType="kr.co.winnticket.menu.menu.dto.MenuSearchDto"
-            resultType="kr.co.winnticket.menu.menu.entity.MenuCategory">
 
-        SELECT *
-        FROM menu_categories
-        <where>
-            <if test="name != null and name != ''">
-                AND name ILIKE CONCAT('%', #{name}, '%')
-            </if>
-            <if test="code != null and code != ''">
-                AND code ILIKE CONCAT('%', #{code}, '%')
-            </if>
-        </where>
-
-        ORDER BY level, display_order
-    </select>
-
-    <!-- 순서 변경 -->
-    <update id="menuUpdateOrder">
-        UPDATE menu_categories
-        SET display_order = #{order}
-        WHERE id = #{id, jdbcType=OTHER}
-    </update>
-
-    <!-- 활성/비활성 -->
+    <!-- =============================
+         visible 변경
+    ============================== -->
     <update id="menuUpdateVisible">
         UPDATE menu_categories
-        SET visible = #{visible}
-        WHERE id = #{id, jdbcType=OTHER}
+        SET visible = #{visible}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
     </update>
 
-    <!-- 형제 메뉴 중 특정 순서 메뉴 찾기 -->
-    <select id="findByTreeMenu" resultType="kr.co.winnticket.menu.menu.entity.MenuCategory">
-        SELECT *
-        FROM menu_categories
-        WHERE parent_id = #{parentId, jdbcType=OTHER}
-          AND level = #{level}
-          AND display_order = #{displayOrder}
-            LIMIT 1
+
+    <!-- =============================
+         순서 변경
+    ============================== -->
+    <update id="menuUpdateOrder">
+        UPDATE menu_categories
+        SET display_order = #{displayOrder}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- =============================
+         순서 밀기 (끼워넣기)
+    ============================== -->
+    <update id="shiftDisplayOrder">
+        UPDATE menu_categories
+        SET display_order = display_order + 1
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order >= #{displayOrder}
+    </update>
+
+
+    <!-- =============================
+         하위 메뉴 개수
+    ============================== -->
+    <select id="countChildMenus" resultType="int">
+        SELECT COUNT(*) FROM menu_categories WHERE parent_id = #{id}
     </select>
 
-    <!-- Swap 위한 업데이트 -->
-    <update id="updateDisplayOrder">
-        UPDATE menu_categories
-        SET display_order = #{displayOrder}
-        WHERE id = #{id, jdbcType=OTHER}
-    </update>
+
+    <!-- =============================
+         parent 그룹의 최대 displayOrder
+    ============================== -->
+    <select id="findMaxOrder" resultType="int">
+        SELECT MAX(display_order)
+        FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+    </select>
+
+
+    <!-- =============================
+         코드 중복 체크
+    ============================== -->
+    <select id="existsByCode" resultType="int">
+        SELECT COUNT(*) FROM menu_categories WHERE code = #{code}
+    </select>
 
 </mapper>
