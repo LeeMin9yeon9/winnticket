@@ -60,6 +60,7 @@
             CONTENT,
             AUTHOR_NAME,
             VIEWS,
+            CATEGORY,
             IS_ACTIVE
         )
         Values
@@ -69,6 +70,7 @@
             #{content},
             #{authorName},
             0,
+            #{category},
             #{isActive}
         )
         ]]>
@@ -83,6 +85,7 @@
         Set
             TITLE = COALESCE(#{title}, TITLE),
             CONTENT = COALESCE(#{content}, CONTENT),
+            CATEGORY = COALESCE(#{category}, CATEGORY),
             UPDATED_AT = CURRENT_TIMESTAMP
         Where 1 = 1
           And TYPE = 'FAQ'
