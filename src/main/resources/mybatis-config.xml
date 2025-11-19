@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <mappers>
+        <mapper resource="kr/co/winnticket/Menu/MenuSql.xml"/>
+        <mapper resource="kr/co/winnticket/Menu/AdminMenuSql.xml"/>
+
+        <mapper resource="kr/co/winnticket/community/NoticeSql.xml"/>
+        <mapper resource="kr/co/winnticket/community/EventSql.xml"/>
+        <mapper resource="kr/co/winnticket/community/QnaSql.xml"/>
+        <mapper resource="kr/co/winnticket/community/CommunityCommonSql.xml"/>
+        <mapper resource="kr/co/winnticket/community/FaqSql.xml"/>
+    </mappers>
+</configuration>
