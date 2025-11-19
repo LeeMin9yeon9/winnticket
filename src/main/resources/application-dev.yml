@@ -15,13 +15,19 @@ server:
 springdoc:
   swagger-ui:
     path: /api-docs
-  servers:
-    - url: https://api.winnticket.store
-      description: 개발 서버
-  group-configs:
+
+    group-configs:
     - group: 0000. 공통
       paths-to-match: /api/common/**
+      servers:
+        - url: https://api.winnticket.store
+
     - group: 0100. 커뮤니티
       paths-to-match: /api/community/**
+      servers:
+        - url: https://api.winnticket.store
+
     - group: 0200. 메뉴
       paths-to-match: /api/menu/**
+      servers:
+        - url: https://api.winnticket.store
