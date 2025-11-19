@@ -10,7 +10,7 @@ public enum FaqCategory {
 
     private final String displayName;
 
-    PostType(String displayName) {
+    FaqCategory(String displayName) {
         this.displayName = displayName;
     }
 
