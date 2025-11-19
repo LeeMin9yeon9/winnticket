@@ -5,40 +5,52 @@
 
 <mapper namespace="kr.co.winnticket.menu.admmenu.mapper.AdminMenuMapper">
 
-    <!-- 관리자 메뉴 전체 조회 -->
-    <select id="admMenuAllList" resultType="kr.co.winnticket.menu.admmenu.entity.AdminMenus">
-        SELECT id,
-               title,
-               title_en AS titleEn,
-               icon,
-               page,
-               display_order AS displayOrder,
-               visible,
-               created_at AS createdAt,
-               updated_at AS updatedAt
+    <!-- 관리자 메뉴 검색 + 전체 조회 -->
+    <select id="findAdminMenus" resultType="kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto">
+        SELECT
+        id,
+        title,
+        title_en      AS titleEn,
+        icon,
+        page,
+        display_order AS displayOrder,
+        visible,
+        created_at    AS createdAt,
+        updated_at    AS updatedAt
         FROM admin_menus
+        <where>
+            <if test="title != null and title != ''">
+                AND title ILIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="titleEn != null and titleEn != ''">
+                AND title_en ILIKE CONCAT('%', #{titleEn}, '%')
+            </if>
+            <if test="page != null and page != ''">
+                AND page ILIKE CONCAT('%', #{page}, '%')
+            </if>
+        </where>
         ORDER BY display_order ASC;
     </select>
 
     <!-- ID로 단건 조회 -->
-    <select id="admMenuFindById" resultType="kr.co.winnticket.menu.admmenu.entity.AdminMenus">
-        SELECT id,
-               title,
-               title_en AS titleEn,
-               icon,
-               page,
-               display_order AS displayOrder,
-               visible,
-               created_at AS createdAt,
-               updated_at AS updatedAt
+    <select id="admMenuFindById" resultType="kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto">
+        SELECT
+            id,
+            title,
+            title_en      AS titleEn,
+            icon,
+            page,
+            display_order AS displayOrder,
+            visible,
+            created_at    AS createdAt,
+            updated_at    AS updatedAt
         FROM admin_menus
-        WHERE id = #{id, jdbcType=OTHER};
+        WHERE id = #{id}::uuid;
     </select>
 
-    <!-- 관리자 메뉴 추가 -->
-    <insert id="admMenuInsert">
+    <!-- 관리자 메뉴 생성 -->
+    <insert id="admMenuInsert" parameterType="kr.co.winnticket.menu.admmenu.dto.AdminMenuCreateDto">
         INSERT INTO admin_menus (
-            id,
             title,
             title_en,
             icon,
@@ -48,7 +60,6 @@
             created_at,
             updated_at
         ) VALUES (
-                     #{id, jdbcType=OTHER},
                      #{title},
                      #{titleEn},
                      #{icon},
@@ -60,67 +71,71 @@
                  );
     </insert>
 
-    <!-- 관리자 메뉴 업데이트 -->
+    <!-- 관리자 메뉴 수정 -->
     <update id="admMenuUpdate">
         UPDATE admin_menus
-        SET title        = #{title},
-            title_en     = #{titleEn},
-            icon         = #{icon},
-            page         = #{page},
-            display_order = #{displayOrder},
-            visible      = #{visible},
-            updated_at   = CURRENT_TIMESTAMP
-        WHERE id = #{id ,jdbcType=OTHER};
+        <set>
+            <if test="adminMenuUpdateDto.title != null">
+                title = #{adminMenuUpdateDto.title},
+            </if>
+            <if test="adminMenuUpdateDto.icon != null">
+                icon = #{adminMenuUpdateDto.icon},
+            </if>
+            <if test="adminMenuUpdateDto.page != null">
+                page = #{adminMenuUpdateDto.page},
+            </if>
+            <if test="adminMenuUpdateDto.displayOrder != null">
+                display_order = #{adminMenuUpdateDto.displayOrder},
+            </if>
+            <if test="adminMenuUpdateDto.visible != null">
+                visible = #{adminMenuUpdateDto.visible},
+            </if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}::uuid;
     </update>
+
 
     <!-- 관리자 메뉴 삭제 -->
     <delete id="admMenuDelete">
         DELETE FROM admin_menus
-        WHERE id = #{id, jdbcType=OTHER};
+        WHERE id = #{id}::uuid;
     </delete>
 
-    <!-- 관리자 메뉴 노출 순서 변경 -->
+    <!-- 노출 순서 변경 -->
     <update id="admMenuUpdateOrder">
         UPDATE admin_menus
         SET display_order = #{order},
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{id, jdbcType=OTHER};
+        WHERE id = #{id}::uuid;
     </update>
 
-    <!-- 관리자 메뉴 활성/비활성 변경 -->
+    <!-- 활성/비활성 변경 -->
     <update id="admMenuUpdateVisible">
         UPDATE admin_menus
         SET visible = #{visible},
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{id,jdbcType=OTHER};
+        WHERE id = #{id}::uuid;
     </update>
 
-    <!-- 신규 메뉴 생성 시 자동 순서 부여 -->
-    <select id="admMenuGetMaxOrder" resultType="java.lang.Integer">
+    <!-- 신규 메뉴 생성 시 순서 번호 조회 -->
+    <select id="admMenuGetMaxOrder" resultType="int">
         SELECT COALESCE(MAX(display_order), 0)
         FROM admin_menus;
     </select>
 
-    <!--존재페이지 여부-->
+    <!-- 페이지 중복 여부 -->
     <select id="admMenuCountByPage" resultType="int">
         SELECT COUNT(*)
         FROM admin_menus
-        WHERE page = #{page}
+        WHERE page = #{page};
     </select>
 
-    <select id="admMenuSearch"
-             parameterType="kr.co.winnticket.menu.admmenu.dto.AdminMenuSearchDto"
-             resultType="kr.co.winnticket.menu.admmenu.entity.AdminMenus">
-    SELECT *
-    FROM admin_menus
-    <where>
-        <if test="title != null and title != ''">
-            AND title ILIKE CONCAT('%', #{title}, '%')
-        </if>
-        <if test="page != null and page != ''">
-            AND page ILIKE CONCAT('%', #{page}, '%')
-        </if>
-    </where>
-</select>
+    <!-- 메뉴명 중복 여부 -->
+    <select id="admMenuCountByTitle" resultType="int">
+        SELECT COUNT(*)
+        FROM admin_menus
+        WHERE title = #{title};
+    </select>
 
 </mapper>

@@ -10,17 +10,22 @@ import java.util.UUID;
 @Setter
 @Getter
 @AllArgsConstructor
-public class MenuSearchDto{
+public class MenuSearchDto implements OrderUpdateble {
     @Schema(description = "메뉴_ID")
     private UUID id;
+
     @Schema(description = "메뉴_이름")
     private String name;
+
     @Schema(description = "메뉴_코드")
     private String code;
+
     @Schema(description = "메뉴_래벨")
     private Integer level;
+
     @Schema(description = "메뉴_표시순서")
     private Integer displayOrder;
+
     @Schema(description = "메뉴_활성화_여부")
     private Boolean visible;
 
