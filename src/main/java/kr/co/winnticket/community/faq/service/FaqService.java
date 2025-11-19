@@ -8,6 +8,7 @@ import kr.co.winnticket.community.faq.mapper.FaqMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ public class FaqService {
     private final FaqMapper mapper;
 
     // FAQ 목록조회
-    public List<FaqListGetResDto> selectFaqList(String asTitle, String asBegDate, String asEndDate) {
+    public List<FaqListGetResDto> selectFaqList(String asTitle, LocalDate asBegDate, LocalDate asEndDate) {
         List<FaqListGetResDto> lModel = mapper.selectFaqList(asTitle, asBegDate, asEndDate);
 
         return lModel;

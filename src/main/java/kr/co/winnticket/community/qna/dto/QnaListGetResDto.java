@@ -3,6 +3,7 @@ package kr.co.winnticket.community.qna.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import kr.co.winnticket.common.enums.PostType;
+import kr.co.winnticket.common.enums.QnaStatus;
 import lombok.Data;
 import lombok.ToString;
 
@@ -19,6 +20,9 @@ public class QnaListGetResDto {
     @Schema(description = "타입")
     private PostType type;
 
+    @Schema(description = "QNA상태")
+    private QnaStatus status;
+
     @Schema(description = "제목")
     private String title;
 
@@ -31,6 +35,6 @@ public class QnaListGetResDto {
     @Schema(description = "조회수")
     private String views;
 
-    @Schema(description = "활성화여부")
-    private Boolean isActive;
+    @Schema(description = "차단여부")
+    private boolean isBlocked;
 }
