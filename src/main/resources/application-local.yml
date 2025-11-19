@@ -1,6 +1,23 @@
 spring:
+  config:
+    activate:
+      on-profile: local
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://3.36.128.67:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: admin
     password: winnticket!@#$
+
+springdoc:
+  servers:
+    - url: http://localhost:8080
+      description: 로컬 서버
+
+  group-configs:
+    - group: 0000. 공통
+      paths-to-match: /api/common/**
+    - group: 0100. 커뮤니티
+      paths-to-match: /api/community/**
+    - group: 0200. 메뉴
+      paths-to-match: /api/menu/**
