@@ -13,20 +13,31 @@ mybatis:
     type-handlers-package: kr.co.winnticket.common.typehandler
 
 springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /api-docs
+
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-  swagger-ui:
-    path: /api-docs
-  server-url: https://api.winnticket.store
+
+  servers:
+    - url: https://api.winnticket.store
+      description: 개발 서버
+    - url: http://localhost:8080
+      description: 로컬 서버
+
   group-configs:
-  - group: 0000. 공통
-    paths-to-match: /api/common/**
-  - group: 0100. 커뮤니티
-    paths-to-match: /api/community/**
-  - group: 0200. 메뉴
-    paths-to-match: /api/menu/**
+    - group: 0000. 공통
+      paths-to-match: /api/common/**
+    - group: 0100. 커뮤니티
+      paths-to-match: /api/community/**
+    - group: 0200. 메뉴
+      paths-to-match: /api/menu/**
+
+  override-with-generic-response: false
 
 logging:
   level:
     kr.co.winnticket: DEBUG
-
