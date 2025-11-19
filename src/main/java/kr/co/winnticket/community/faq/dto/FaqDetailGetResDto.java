@@ -6,6 +6,7 @@ import kr.co.winnticket.common.enums.PostType;
 import lombok.Data;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -26,10 +27,10 @@ public class FaqDetailGetResDto {
     private String authorName;
 
     @Schema(description = "작성일")
-    private String createdAt;
+    private LocalDate createdAt;
 
     @Schema(description = "조회수")
-    private String views;
+    private int views;
 
     @Schema(description = "내용")
     private String content;

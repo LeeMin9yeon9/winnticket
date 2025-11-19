@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.community.faq.mapper.FaqMapper">
+
+    <!--
+    - FAQ 목록 Select
+    -->
+    <select id="selectFaqList" resultType="kr.co.winnticket.community.faq.dto.FaqListGetResDto">
+        <![CDATA[
+        Select
+            a.ID,  -- 아이디
+            a.TYPE,  -- 타입
+            a.TITLE,  -- 제목
+            a.AUTHOR_NAME,  -- 작성자
+            a.CREATED_AT,  -- 작성일자
+            a.VIEWS,  -- 조회수
+            a.IS_ACTIVE  -- 활성화여부
+        FROM
+            POSTS a
+        Where 1 = 1
+        And a.TYPE = 'FAQ'
+        And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
+        And Date(a.CREATED_AT) Between #{begDate} And #{endDate}
+        Order By
+            Date(a.CREATED_AT) Desc
+        ]]>
+    </select>
+
+    <!--
+    - FAQ 상세 Select
+    -->
+    <select id="selectFaqDetail" resultType="kr.co.winnticket.community.faq.dto.FaqDetailGetResDto">
+        <![CDATA[
+        Select
+            a.ID,  -- 아이디
+            a.TYPE,  -- 타입
+            a.TITLE,  -- 제목
+            a.AUTHOR_NAME,  -- 작성자
+            a.CREATED_AT,  -- 작성일시
+            a.VIEWS,  -- 조회수
+            a.CONTENT  -- 내용
+        FROM
+            POSTS a
+        Where 1 = 1
+        And TYPE = 'FAQ'
+        And a.ID = #{id}
+        ]]>
+    </select>
+
+    <!--
+    - FAQ insert
+    -->
+    <insert id="insertFaq" parameterType="kr.co.winnticket.community.faq.dto.FaqPostReqDto">
+        <![CDATA[
+        Insert Into POSTS
+        (
+            TYPE,
+            TITLE,
+            CONTENT,
+            AUTHOR_NAME,
+            VIEWS,
+            IS_ACTIVE
+        )
+        Values
+        (
+            'FAQ',
+            #{title},
+            #{content},
+            #{authorName},
+            0,
+            #{isActive}
+        )
+        ]]>
+    </insert>
+
+    <!--
+    - FAQ update
+    -->
+    <update id="updateFaq">
+        <![CDATA[
+        Update POSTS
+        Set
+            TITLE = COALESCE(#{title}, TITLE),
+            CONTENT = COALESCE(#{content}, CONTENT),
+            UPDATED_AT = CURRENT_TIMESTAMP
+        Where 1 = 1
+          And TYPE = 'FAQ'
+          And ID = #{id}
+        ]]>
+    </update>
+
+    <!--
+   - FAQ delete
+   -->
+    <delete id="deleteFaq">
+        <![CDATA[
+        Delete
+        From
+            POSTS
+        Where 1 = 1
+          And TYPE = 'FAQ'
+          And ID = #{id}
+        ]]>
+    </delete>
+</mapper>

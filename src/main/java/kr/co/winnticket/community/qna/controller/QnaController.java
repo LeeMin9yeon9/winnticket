@@ -4,10 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kr.co.winnticket.community.qna.dto.QnaDetailGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaListGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaPatchReqDto;
-import kr.co.winnticket.community.qna.dto.QnaPostReqDto;
+import kr.co.winnticket.common.enums.QnaStatus;
+import kr.co.winnticket.community.qna.dto.*;
 import kr.co.winnticket.community.qna.service.QnaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -23,22 +21,23 @@ public class QnaController {
     private final QnaService service;
 
     // QNA 목록조회
+    @GetMapping("api/community/qna/count")
+    @Operation(summary = "QNA 상태별 카운트 조회", description = "QNA 상태별 카운트를 조회합니다.")
+    public QnaCntGetResDto getQnaList (
+    ) throws Exception {
+        return service.selectQnaCnt();
+    }
+
+    // QNA 목록조회
     @GetMapping("api/community/qna")
     @Operation(summary = "QNA 목록 조회", description = "QNA 목록을 조회합니다.")
     public List<QnaListGetResDto> getQnaList (
         @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
-        @Parameter(description = "시작일자") @RequestParam(value = "begDate") String asBegDate,
-        @Parameter(description = "종료일자") @RequestParam(value = "endDate") String asEndDate
+        @Parameter(description = "시작일자", example = "2025-11-01") @RequestParam(value = "begDate") LocalDate asBegDate,
+        @Parameter(description = "종료일자", example = "2025-11-30") @RequestParam(value = "endDate") LocalDate asEndDate,
+        @Parameter(description = "QNA상태 [ALL:전체, PENDING:답변대기, ANSWERED:답변완료, BLOCKED:차단]") @RequestParam(value = "status") String aqStatus
     ) throws Exception {
-        if (asBegDate == null || asBegDate.isBlank()) {
-            asBegDate = LocalDate.now().withDayOfMonth(1).toString();
-        }
-
-        if (asEndDate == null || asEndDate.isBlank()) {
-            asEndDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).toString();
-        }
-
-        return service.selectQnaList(asTitle, asBegDate, asEndDate);
+        return service.selectQnaList(asTitle, asBegDate, asEndDate, aqStatus);
     }
 
     // QNA 상세조회

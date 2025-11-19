@@ -6,6 +6,7 @@ import kr.co.winnticket.community.faq.dto.FaqPostReqDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,8 +15,8 @@ public interface FaqMapper {
     // FAQ 목록 조회
     List<FaqListGetResDto> selectFaqList(
             @Param("title") String asTitle,
-            @Param("begDate") String asBegDate,
-            @Param("endDate") String asEndDate
+            @Param("begDate") LocalDate asBegDate,
+            @Param("endDate") LocalDate asEndDate
     );
 
     // FAQ 상세 조회

@@ -20,6 +20,14 @@ public class FaqPostReqDto {
     @Schema(description = "내용")
     private String content;
 
+    @NotEmpty
+    @Schema(description = "작성자")
+    private String authorName;
+
+    @NotEmpty
+    @Schema(description = "활성화여부")
+    private boolean isActive;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
