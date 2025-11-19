@@ -6,7 +6,7 @@ spring:
     active: local   # 기본은 local
 
 mybatis:
-  mapper-locations: classpath:kr/co/winnticket/**/*Sql.xml
+  mapper-locations: classpath*:/**/*Sql.xml
   type-aliases-package: kr.co.winnticket
   configuration:
     map-underscore-to-camel-case: true
