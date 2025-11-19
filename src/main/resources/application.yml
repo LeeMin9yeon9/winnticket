@@ -6,7 +6,9 @@ spring:
     active: local   # 기본은 local
 
 mybatis:
-  mapper-locations: classpath*:/kr/co/winnticket/**/*.xml
+  mapper-locations:
+    - classpath:/kr/co/winnticket/community/*.xml
+    - classpath:/kr/co/winnticket/Menu/*.xml
   type-aliases-package: kr.co.winnticket
   config-location: classpath:mybatis-config.xml
   configuration:
