@@ -9,10 +9,10 @@ import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @Tag(name = "공통", description = "공통 관리")
-@RequestMapping("/api/status")
+@RequestMapping("/api/common")
 public class StatusController {
 
-    @GetMapping("/check")
+    @GetMapping("/status")
     @Operation(summary = "상태 조회", description = "api호출 상태를 조회합니다.")
     public ResponseEntity<Void> statusCheck() {
         return ResponseEntity.ok().build(); // 200 OK
