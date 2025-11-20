@@ -4,10 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kr.co.winnticket.community.faq.dto.FaqDetailGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqListGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqPatchReqDto;
-import kr.co.winnticket.community.faq.dto.FaqPostReqDto;
+import kr.co.winnticket.community.faq.dto.*;
 import kr.co.winnticket.community.faq.service.FaqService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -72,4 +69,43 @@ public class FaqController {
     ) throws Exception {
         service.deleteFaq(auId);
 	}
+
+    // FAQ 카테고리 목록조회
+    @GetMapping("api/community/faq/categories")
+    @Operation(summary = "FAQ 카테고리 목록 조회", description = "FAQ 카테고리목록을 조회합니다.")
+    public List<FaqCategoryListGetResDto> getFaqList (
+    ) throws Exception {
+        return service.selectFaqCategoryList();
+    }
+
+    // FAQ 카테고리 등록
+    @PostMapping("api/community/faq/categories")
+    @ResponseBody
+    @Operation(summary = "FAQ 카테고리 등록", description = "전달받은 FAQ 카테고리 정보를 등록합니다.")
+    public void postFaqCategory (
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "카테고리 정보") @RequestBody @Valid FaqCategoryPostReqDto model
+    ) throws Exception {
+        service.insertFaqCategory(model);
+    }
+
+    // FAQ 카테고리 수정
+    @PatchMapping("api/community/faq/categories/{id}")
+    @ResponseBody
+    @Operation(summary = "FAQ 카테고리 수정", description = "전달받은 FAQ 카테고리 정보를 수정합니다.")
+    public void patchFaqCategory (
+            @Parameter(description = "카테고리_ID") @PathVariable("id") String asId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "카테고리 정보") @RequestBody @Valid FaqCategoryPatchReqDto model
+    ) throws Exception {
+        service.updateFaqCategory(asId, model);
+    }
+
+    // FAQ 카테고리 삭제
+    @DeleteMapping("api/community/faq/categories/{id}")
+    @ResponseBody
+    @Operation(summary = "FAQ 카테고리 삭제", description = "전달받은 FAQ 카테고리 정보를 삭제합니다.")
+    public void deleteFaqCategory(
+            @Parameter(description = "카테고리_ID") @PathVariable("id") String asId
+    ) throws Exception {
+        service.deleteFaqCategory(asId);
+    }
 }

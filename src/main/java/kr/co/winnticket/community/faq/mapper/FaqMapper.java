@@ -1,12 +1,9 @@
 package kr.co.winnticket.community.faq.mapper;
 
-import kr.co.winnticket.community.faq.dto.FaqDetailGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqListGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqPostReqDto;
-import kr.co.winnticket.common.enums.FaqCategory;
+import kr.co.winnticket.community.faq.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Mapper;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -33,11 +30,28 @@ public interface FaqMapper {
         @Param("id") UUID auId, 
         @Param("title") String title,
         @Param("content") String content,
-        @Param("category") FaqCategory category
+        @Param("category") String category
     );
 
     // FAQ 삭제
     void deleteFaq(
         @Param("id") UUID auId
+    );
+
+    // 카테고리 목록조회
+    List<FaqCategoryListGetResDto> selectFaqCategoryList();
+
+    // 카테고리 등록
+    void insertFaqCategory(FaqCategoryPostReqDto model);
+
+    // 카테고리 수정
+    void updateFaqCategory(
+            @Param("id") String asId,
+            @Param("name") String name
+    );
+
+    // 카테고리 삭제
+    void deleteFaqCategory(
+            @Param("id") String asId
     );
 }
