@@ -32,7 +32,7 @@ public class FaqPostReqDto {
 
     @NotNull
     @Schema(description = "카테고리 [ORDER:주문/배송관리, DELIVERY:배송, CANCEL:취소/환불, TICKET:티켓, MEMBERSHOP:회원, ETC:기타]")
-    private FaqCategory caregory;
+    private FaqCategory category;
 
     @Hidden
     @Schema(description = "아이디")
