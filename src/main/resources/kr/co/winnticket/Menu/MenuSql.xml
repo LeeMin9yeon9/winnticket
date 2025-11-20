@@ -117,24 +117,24 @@
     <update id="menuUpdate">
         UPDATE menu_categories
         <set>
-            <if test="updateMenuDto.name != null">
-                name = #{updateMenuDto.name},
+            <if test="param2.name != null">
+                name = #{param2.name},
             </if>
 
-            <if test="updateMenuDto.code != null">
-                code = #{updateMenuDto.code},
+            <if test="param2.code != null">
+                code = #{param2.code},
             </if>
 
-            <if test="updateMenuDto.routePath != null">
-                route_path = #{updateMenuDto.routePath},
+            <if test="param2.routePath != null">
+                route_path = #{param2.routePath},
             </if>
 
-            <if test="updateMenuDto.iconUrl != null">
-                icon_url = #{updateMenuDto.iconUrl},
+            <if test="param2.iconUrl != null">
+                icon_url = #{param2.iconUrl},
             </if>
 
-            <if test="updateMenuDto.visible != null">
-                visible = #{updateMenuDto.visible},
+            <if test="param2.visible != null">
+                visible = #{param2.visible},
             </if>
 
             updated_at = CURRENT_TIMESTAMP

@@ -75,20 +75,20 @@
     <update id="admMenuUpdate">
         UPDATE admin_menus
         <set>
-            <if test="adminMenuUpdateDto.title != null">
-                title = #{adminMenuUpdateDto.title},
+            <if test="param2.title != null">
+                title = #{param2.title},
             </if>
-            <if test="adminMenuUpdateDto.icon != null">
-                icon = #{adminMenuUpdateDto.icon},
+            <if test="param2.icon != null">
+                icon = #{param2.icon},
             </if>
-            <if test="adminMenuUpdateDto.page != null">
-                page = #{adminMenuUpdateDto.page},
+            <if test="param2.page != null">
+                page = #{param2.page},
             </if>
-            <if test="adminMenuUpdateDto.displayOrder != null">
-                display_order = #{adminMenuUpdateDto.displayOrder},
+            <if test="param2.displayOrder != null">
+                display_order = #{param2.displayOrder},
             </if>
-            <if test="adminMenuUpdateDto.visible != null">
-                visible = #{adminMenuUpdateDto.visible},
+            <if test="param2.visible != null">
+                visible = #{param2.visible},
             </if>
             updated_at = CURRENT_TIMESTAMP
         </set>
