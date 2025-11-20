@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @Schema(title = "[이벤트 > 이벤트 상세 조회] EventDetailGetResDto")
 public class EventDetailGetResDto {
-    @NotEmpty
+    @NotNull
     @Schema(description = "게시글_ID")
     private UUID id;
 
