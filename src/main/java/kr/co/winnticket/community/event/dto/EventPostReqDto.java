@@ -25,11 +25,11 @@ public class EventPostReqDto {
     @Schema(description = "작성자")
     private String authorName;
 
-    @NotEmpty
+    @NotNull
     @Schema(description = "활성화여부")
     private boolean isActive;
 
-    @NotEmpty
+    @NotNull
     @Schema(description = "이벤트종료일")
     private LocalDate eventEndDate;
 

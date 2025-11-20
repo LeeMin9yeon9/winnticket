@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @Schema(title = "[FAQ > FAQ 목록 조회] FaqListGetResDto")
 public class FaqListGetResDto {
-    @NotEmpty
+    @NotNull
     @Schema(description = "게시글_ID")
     private UUID id;
 
