@@ -52,7 +52,8 @@
             a.AUTHOR_NAME,  -- 작성자
             a.CREATED_AT,  -- 작성일시
             a.VIEWS,  -- 조회수
-            a.CONTENT  -- 내용
+            a.CONTENT,  -- 내용
+            a.CATEGORY  -- 카테고리
         FROM
             POSTS a
         Where 1 = 1
@@ -101,7 +102,7 @@
             <if test="content != null and content != ''">
                 CONTENT = #{content},
             </if>
-            <if test="category != null">
+            <if test="category != null and category != ''">
                 CATEGORY = #{category},
             </if>
                 UPDATED_AT = CURRENT_TIMESTAMP
@@ -115,13 +116,75 @@
    - FAQ delete
    -->
     <delete id="deleteFaq">
-        <![CDATA[
         Delete
         From
             POSTS
         Where 1 = 1
-          And TYPE = 'FAQ'
-          And ID = #{id}
+        And TYPE = 'FAQ'
+        And ID = #{id}
+    </delete>
+
+    <!--
+     - FAQ 카테고리 목록 Select
+     -->
+    <select id="selectFaqCategoryList" resultType="kr.co.winnticket.community.faq.dto.FaqCategoryListGetResDto">
+        Select
+            a.ID,  -- 아이디
+            a.NAME,  -- 이름
+            a.DISPLAY_ORDER,  -- 정렬순서
+            a.IS_SYSTEM  -- 시스템등록여부
+        FROM
+             FAQ_CATEGORY_ITEM a
+        Where 1 = 1
+    </select>
+
+    <!--
+    - FAQ 카테고리 등록
+    -->
+    <insert id="insertFaqCategory" parameterType="kr.co.winnticket.community.faq.dto.FaqCategoryPostReqDto">
+        <![CDATA[
+        Insert Into FAQ_CATEGORY_ITEM
+        (
+            ID,
+            NAME,
+            DISPLAY_ORDER,
+            IS_SYSTEM
+        )
+        Values
+        (
+            'cat-' || extract(epoch from now())::bigint,
+            #{name},
+            (SELECT MAX(display_order) + 1 FROM FAQ_CATEGORY_ITEM),
+            false
+        )
         ]]>
+    </insert>
+
+    <!--
+    - FAQ 카테고리 수정
+    -->
+    <update id="updateFaqCategory">
+        Update FAQ_CATEGORY_ITEM
+        <set>
+            <if test="name != null and name != ''">
+                NAME = #{name},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+        And IS_SYSTEM = false
+    </update>
+
+    <!--
+    - FAQ 카테고리 삭제
+    -->
+    <delete id="deleteFaqCategory">
+        Delete
+        From
+            FAQ_CATEGORY_ITEM
+        Where 1 = 1
+        And ID = #{id}
+        And IS_SYSTEM = false
     </delete>
 </mapper>
