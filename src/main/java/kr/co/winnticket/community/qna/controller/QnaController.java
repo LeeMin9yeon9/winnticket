@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kr.co.winnticket.common.enums.QnaStatus;
 import kr.co.winnticket.community.qna.dto.*;
 import kr.co.winnticket.community.qna.service.QnaService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ import java.util.UUID;
 public class QnaController {
     private final QnaService service;
 
-    // QNA 목록조회
+    // QNA 상태별 카운트 조회
     @GetMapping("api/community/qna/count")
     @Operation(summary = "QNA 상태별 카운트 조회", description = "QNA 상태별 카운트를 조회합니다.")
     public QnaCntGetResDto getQnaList (
@@ -33,8 +32,8 @@ public class QnaController {
     @Operation(summary = "QNA 목록 조회", description = "QNA 목록을 조회합니다.")
     public List<QnaListGetResDto> getQnaList (
         @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
-        @Parameter(description = "시작일자", example = "2025-11-01") @RequestParam(value = "begDate") LocalDate asBegDate,
-        @Parameter(description = "종료일자", example = "2025-11-30") @RequestParam(value = "endDate") LocalDate asEndDate,
+        @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) LocalDate asBegDate,
+        @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate,
         @Parameter(description = "QNA상태 [ALL:전체, PENDING:답변대기, ANSWERED:답변완료, BLOCKED:차단]") @RequestParam(value = "status") String aqStatus
     ) throws Exception {
         return service.selectQnaList(asTitle, asBegDate, asEndDate, aqStatus);
@@ -49,31 +48,42 @@ public class QnaController {
         return service.selectQnaDetail(auId);
     }
 
-    // QNA 등록
-    @PostMapping("api/community/qna")
+    // QNA 답변 등록
+    @PatchMapping("api/community/qna/{id}/answer")
     @ResponseBody
-    @Operation(summary = "QNA 등록", description = "전달받은 QNA의 정보를 등록합니다.")
-    public void postQna (
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "QNA 정보") @RequestBody @Valid QnaPostReqDto model
+    @Operation(summary = "QNA 답변등록/수정", description = "전달받은 id의 답변을 등록/수정합니다.")
+    public void patchQnaAnswer (
+        @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId,  
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "답변 정보") @RequestBody @Valid QnaAnswerPatchReqDto model
     ) throws Exception {
-        service.insertQna(model);
+        service.updateQnaAnswer(auId, model);
     }
 
-    // QNA 수정
-    @PatchMapping("api/community/qna/{id}")
+    // QNA 차단
+    @PatchMapping("api/community/qna/{id}/block")
     @ResponseBody
-    @Operation(summary = "QNA 수정", description = "전달받은 QNA의 정보를 수정합니다.")
-    public void patchQna (
-        @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId,  
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "QNA 정보") @RequestBody @Valid QnaPatchReqDto model
+    @Operation(summary = "QNA 차단", description = "전달받은 id의 QNA를 차단합니다.")
+    public void patchQnaBlock (
+            @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "차단 정보") @RequestBody @Valid QnaBlockPatchReqDto model
     ) throws Exception {
-        service.updateQna(auId, model);
+        service.updateQnaBlock(auId, model);
     }
-    
+
+    // QNA 차단 해제
+    @PatchMapping("api/community/qna/{id}/unblock")
+    @ResponseBody
+    @Operation(summary = "QNA 차단해제", description = "전달받은 id의 QNA를 차단해제합니다.")
+    public void patchQnaUnblock (
+            @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId
+    ) throws Exception {
+        service.updateQnaUnblock(auId);
+    }
+
     // QNA 삭제
     @DeleteMapping("api/community/qna/{id}")
 	@ResponseBody
-	@Operation(summary = "QNA 삭제", description = "전달받은 QNA의 정보를 삭제합니다.")
+	@Operation(summary = "QNA 삭제", description = "전달받은 id의 정보를 삭제합니다.")
 	public void deleteQna(
         @Parameter(description = "게시글_ID") @PathVariable("id") UUID auId
     ) throws Exception {

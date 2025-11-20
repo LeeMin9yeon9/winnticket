@@ -29,7 +29,6 @@
     - QNA 목록 Select
     -->
     <select id="selectQnaList" resultType="kr.co.winnticket.community.qna.dto.QnaListGetResDto">
-        <![CDATA[
         Select
             a.ID,  -- 아이디
             a.TYPE,  -- 타입
@@ -38,25 +37,139 @@
             a.AUTHOR_NAME,  -- 작성자
             a.CREATED_AT,  -- 작성일자
             a.VIEWS,  -- 조회수
-            a.IS_ACTIVE  -- 활성화여부
+            a.IS_BLOCKED  -- 차단여부
         FROM
             POSTS a
         Where 1 = 1
         And a.TYPE = 'QNA'
-        And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
-        And Date(a.CREATED_AT) Between #{begDate} And #{endDate}
-        And (#{staus} = 'ALL'
-        Or (#{status} = 'BLOCKED'
-        And Exists(
-            Select 1
-            From
-                POSTS
-            Where 1 = 1
-            And IS_BLOCKED = 'true'
-        ))
-        Or a.STATUS = #{status})
-        Order By
-            Date(a.CREATED_AT) Desc
+        <if test="title != null and title != ''">
+            <![CDATA[
+            And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
         ]]>
+        </if>
+
+        <if test="begDate != null">
+            <![CDATA[
+            AND Date(a.created_at) >= #{begDate}
+        ]]>
+        </if>
+
+        <if test="endDate != null">
+        <![CDATA[
+            AND Date(a.created_at) <= #{endDate}
+        ]]>
+        </if>
+        <choose>
+            <when test="status == 'BLOCKED'">
+                And a.IS_BLOCKED = true
+            </when>
+            <when test="status == 'PENDING'">
+                And a.STATUS = 'PENDING'
+                And a.IS_BLOCKED = false
+            </when>
+            <when test="status == 'ANSWERED'">
+                And a.STATUS = 'ANSWERED'
+                And a.IS_BLOCKED = false
+            </when>
+            <otherwise>
+                <!-- 전체조회 -->
+            </otherwise>
+        </choose>
+        Order By
+            a.CREATED_AT Desc
     </select>
+
+    <!--
+    - QNA 상세 Select
+    -->
+    <select id="selectQnaDetail" resultType="kr.co.winnticket.community.qna.dto.QnaDetailGetResDto">
+        Select
+            a.ID,  -- 아이디
+            a.STATUS,  -- 상태
+            a.TITLE,  -- 제목
+            a.CONTENT,  -- 내용
+            a.AUTHOR_NAME,  -- 작성자
+            a.CREATED_AT,  -- 작성일자
+            a.ANSWER,  -- 답변
+            a.ANSWERED_AT,  -- 답변일시
+            a.IS_BLOCKED,  -- 차단여부
+            a.BLOCKED_REASON,  --차단사유
+            a.BLOCKED_AT  -- 차단일시
+        FROM
+        POSTS a
+        Where 1 = 1
+        And a.TYPE = 'QNA'
+        And a.ID = #{id}
+    </select>
+
+    <!--
+    - Qna 답변 등록
+    -->
+    <update id="updateQnaAnswer">
+        Update POSTS
+        <set>
+            <if test="answer != null and answer != ''">
+                ANSWER = #{answer},
+            </if>
+            <if test="answeredBy != null and answeredBy != ''">
+                ANSWERED_BY = #{answeredBy},
+            </if>
+            ANSWERED_AT = CURRENT_TIMESTAMP,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            STATUS = 'ANSWERED'
+        </set>
+        Where 1 = 1
+        And TYPE = 'QNA'
+        And ID = #{id}
+    </update>
+
+    <!--
+    - Qna 차단
+    -->
+    <update id="updateQnaBlock">
+        Update POSTS
+        <set>
+            <if test="blockedReason != null and blockedReason != ''">
+                BLOCKED_REASON = #{blockedReason},
+            </if>
+            <if test="blockedBy != null and blockedBy != ''">
+                BLOCKED_BY = #{blockedBy},
+            </if>
+            BLOCKED_AT = CURRENT_TIMESTAMP,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            IS_BLOCKED = true
+        </set>
+        Where 1 = 1
+        And TYPE = 'QNA'
+        And ID = #{id}
+    </update>
+
+    <!--
+    - Qna 차단 해제
+    -->
+    <update id="updateQnaUnblock">
+        Update POSTS
+        <set>
+            BLOCKED_REASON = Null,
+            BLOCKED_BY = Null,
+            BLOCKED_AT = Null,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            IS_BLOCKED = false
+        </set>
+        Where 1 = 1
+        And TYPE = 'QNA'
+        And ID = #{id}
+    </update>
+
+    <!--
+    - Qna 삭제
+    -->
+    <delete id="deleteQna">
+        Delete
+        From
+            POSTS
+        Where 1 = 1
+        And TYPE = 'QNA'
+        And ID = #{id}
+    </delete>
 </mapper>

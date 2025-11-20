@@ -1,11 +1,6 @@
 package kr.co.winnticket.community.qna.service;
 
-import kr.co.winnticket.common.enums.QnaStatus;
-import kr.co.winnticket.community.qna.dto.QnaCntGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaDetailGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaListGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaPatchReqDto;
-import kr.co.winnticket.community.qna.dto.QnaPostReqDto;
+import kr.co.winnticket.community.qna.dto.*;
 import kr.co.winnticket.community.qna.mapper.QnaMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,18 +35,24 @@ public class QnaService {
         return model;
     }
 
-    // QNA 등록
-    public void insertQna(QnaPostReqDto model) {
-        mapper.insertQna(model);
+    // QNA 답변 등록
+    public void updateQnaAnswer(UUID auId, QnaAnswerPatchReqDto model) {
+        mapper.updateQnaAnswer(auId, model.getAnswer(), model.getAnsweredBy());
     }
 
-    // QNA 수정
-    public void updateQna(UUID auId, QnaPatchReqDto model) {
-        mapper.updateQna(auId, model.getTitle(), model.getContent());
+    // QNA 차단
+    public void updateQnaBlock(UUID auId, QnaBlockPatchReqDto model) {
+        mapper.updateQnaBlock(auId, model.getBlockedReason(), model.getBlockedBy());
+    }
+
+    // QNA 차단 해제
+    public void updateQnaUnblock(UUID auId) {
+        mapper.updateQnaUnblock(auId);
     }
 
     // QNA 삭제
     public void deleteQna(UUID auId) {
         mapper.deleteQna(auId);
     }
+
 }
