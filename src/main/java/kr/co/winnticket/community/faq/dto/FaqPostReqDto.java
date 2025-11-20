@@ -3,6 +3,7 @@ package kr.co.winnticket.community.faq.dto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.FaqCategory;
 import lombok.Data;
 import lombok.ToString;
