@@ -38,7 +38,7 @@
         </if>
 
         Order By
-            Date(a.CREATED_AT) Desc
+            a.CREATED_AT Desc
     </select>
 
     <!--
