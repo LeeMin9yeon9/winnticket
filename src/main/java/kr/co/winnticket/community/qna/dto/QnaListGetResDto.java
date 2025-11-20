@@ -1,7 +1,7 @@
 package kr.co.winnticket.community.qna.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.PostType;
 import kr.co.winnticket.common.enums.QnaStatus;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @Schema(title = "[QNA > QNA 목록 조회] QnaListGetResDto")
 public class QnaListGetResDto {
-    @NotEmpty
+    @NotNull
     @Schema(description = "게시글_ID")
     private UUID id;
 
@@ -33,7 +33,7 @@ public class QnaListGetResDto {
     private String createdAt;
 
     @Schema(description = "조회수")
-    private String views;
+    private int views;
 
     @Schema(description = "차단여부")
     private boolean isBlocked;

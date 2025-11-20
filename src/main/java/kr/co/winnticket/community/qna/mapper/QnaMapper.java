@@ -3,7 +3,6 @@ package kr.co.winnticket.community.qna.mapper;
 import kr.co.winnticket.community.qna.dto.QnaCntGetResDto;
 import kr.co.winnticket.community.qna.dto.QnaDetailGetResDto;
 import kr.co.winnticket.community.qna.dto.QnaListGetResDto;
-import kr.co.winnticket.community.qna.dto.QnaPostReqDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -29,8 +28,24 @@ public interface QnaMapper {
             @Param("id") UUID auId
     );
 
-    // QNA 등록
-    void insertQna(QnaPostReqDto model);
+    // QNA 답변 등록
+    void updateQnaAnswer(
+            @Param("id") UUID auId,
+            @Param("answer") String answer,
+            @Param("answeredBy") String answeredBy
+    );
+
+    // QNA 차단
+    void updateQnaBlock(
+            @Param("id") UUID auId,
+            @Param("blockedReason") String blockedReason,
+            @Param("blockedBy") String blockedBy
+    );
+
+    // QNA 차단 해제
+    void updateQnaUnblock(
+            @Param("id") UUID auId
+    );
 
     // QNA 수정
     void updateQna(
@@ -43,4 +58,6 @@ public interface QnaMapper {
     void deleteQna(
         @Param("id") UUID auId
     );
+
+
 }

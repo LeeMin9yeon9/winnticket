@@ -1,9 +1,6 @@
 package kr.co.winnticket.community.faq.service;
 
-import kr.co.winnticket.community.faq.dto.FaqDetailGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqListGetResDto;
-import kr.co.winnticket.community.faq.dto.FaqPatchReqDto;
-import kr.co.winnticket.community.faq.dto.FaqPostReqDto;
+import kr.co.winnticket.community.faq.dto.*;
 import kr.co.winnticket.community.faq.mapper.FaqMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,5 +41,25 @@ public class FaqService {
     // FAQ 삭제
     public void deleteFaq(UUID auId) {
         mapper.deleteFaq(auId);
+    }
+
+    // 카테고리 목록조회
+    public List<FaqCategoryListGetResDto> selectFaqCategoryList() {
+        return mapper.selectFaqCategoryList();
+    }
+
+    // 카테고리 등록
+    public void insertFaqCategory(FaqCategoryPostReqDto model) {
+        mapper.insertFaqCategory(model);
+    }
+
+    // 카테고리 수정
+    public void updateFaqCategory(String asId, FaqCategoryPatchReqDto model) {
+        mapper.updateFaqCategory(asId, model.getName());
+    }
+
+    // 카테고리 삭제
+    public void deleteFaqCategory(String asId) {
+        mapper.deleteFaqCategory(asId);
     }
 }

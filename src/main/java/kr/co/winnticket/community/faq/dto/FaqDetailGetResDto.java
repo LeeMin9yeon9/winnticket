@@ -34,4 +34,7 @@ public class FaqDetailGetResDto {
 
     @Schema(description = "내용")
     private String content;
+
+    @Schema(description = "카테고리")
+    private String category;
 }
