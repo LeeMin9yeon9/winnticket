@@ -7,13 +7,13 @@ import lombok.ToString;
 
 @Data
 @ToString(callSuper = true)
-@Schema(title = "[QNA > QNA 수정] QnaPatchReqDto")
-public class QnaPatchReqDto {
+@Schema(title = "[QNA > QNA 차단] QnaBlockPatchReqDto")
+public class QnaBlockPatchReqDto {
     @NotEmpty
-    @Schema(description = "제목")
-    private String title;
+    @Schema(description = "차단사유")
+    private String blockedReason;
 
     @NotEmpty
-    @Schema(description = "내용")
-    private String content;
+    @Schema(description = "차단자")
+    private String blockedBy;
 }
