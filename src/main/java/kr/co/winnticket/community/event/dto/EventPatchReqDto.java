@@ -19,7 +19,7 @@ public class EventPatchReqDto {
     @Schema(description = "내용")
     private String content;
 
-    @NotEmpty
+    @NotNull
     @Schema(description = "이벤트종료일")
     private LocalDate eventEndDate;
 }

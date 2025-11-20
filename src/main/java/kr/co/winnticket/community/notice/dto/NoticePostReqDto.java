@@ -24,7 +24,7 @@ public class NoticePostReqDto {
     @Schema(description = "작성자")
     private String authorName;
 
-    @NotEmpty
+    @NotNull
     @Schema(description = "활성화여부")
     private boolean isActive;
 
