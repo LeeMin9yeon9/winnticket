@@ -34,4 +34,7 @@ public class FaqListGetResDto {
 
     @Schema(description = "활성화여부")
     private boolean isActive;
+    
+    @Schema(description = "카테고리")
+    private String category;
 }

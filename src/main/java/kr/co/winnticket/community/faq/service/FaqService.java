@@ -54,12 +54,16 @@ public class FaqService {
     }
 
     // 카테고리 수정
-    public void updateFaqCategory(String asId, FaqCategoryPatchReqDto model) {
-        mapper.updateFaqCategory(asId, model.getName());
+    public void updateFaqCategory(UUID auId, FaqCategoryPatchReqDto model) {
+        mapper.updateFaqCategory(auId, model.getName());
     }
 
     // 카테고리 삭제
-    public void deleteFaqCategory(String asId) {
-        mapper.deleteFaqCategory(asId);
+    public void deleteFaqCategory(UUID auId) {
+        int deleted = mapper.deleteFaqCategory(auId);
+
+        if(int deleted > 0) {
+            mapper.reorderDisplayOrder();
+        }
     }
 }
