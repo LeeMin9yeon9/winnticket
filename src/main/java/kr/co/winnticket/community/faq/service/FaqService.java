@@ -62,7 +62,7 @@ public class FaqService {
     public void deleteFaqCategory(UUID auId) {
         int deleted = mapper.deleteFaqCategory(auId);
 
-        if(int deleted > 0) {
+        if(deleted > 0) {
             mapper.reorderDisplayOrder();
         }
     }
