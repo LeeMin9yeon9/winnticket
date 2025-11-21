@@ -60,6 +60,10 @@ public class FaqService {
 
     // 카테고리 삭제
     public void deleteFaqCategory(UUID auId) {
-        mapper.deleteFaqCategory(auId);
+        int deleted = mapper.deleteFaqCategory(auId);
+
+        if(int deleted > 0) {
+            mapper.reorderDisplayOrder();
+        }
     }
 }
