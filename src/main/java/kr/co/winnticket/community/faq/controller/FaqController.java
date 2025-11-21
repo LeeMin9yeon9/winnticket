@@ -104,7 +104,7 @@ public class FaqController {
     @ResponseBody
     @Operation(summary = "FAQ 카테고리 삭제", description = "전달받은 FAQ 카테고리 정보를 삭제합니다.")
     public void deleteFaqCategory(
-            @Parameter(description = "카테고리_ID") @PathVariable("id") UUID asId
+            @Parameter(description = "카테고리_ID") @PathVariable("id") UUID auId
     ) throws Exception {
         service.deleteFaqCategory(auId);
     }
