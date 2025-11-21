@@ -14,7 +14,8 @@
             a.AUTHOR_NAME,  -- 작성자
             a.CREATED_AT,  -- 작성일자
             a.VIEWS,  -- 조회수
-            a.IS_ACTIVE  -- 활성화여부
+            a.IS_ACTIVE,  -- 활성화여부
+            a.CATEGORY  -- 카테고리
         FROM
             POSTS a
         Where 1 = 1
