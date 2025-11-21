@@ -93,10 +93,10 @@ public class FaqController {
     @ResponseBody
     @Operation(summary = "FAQ 카테고리 수정", description = "전달받은 FAQ 카테고리 정보를 수정합니다.")
     public void patchFaqCategory (
-            @Parameter(description = "카테고리_ID") @PathVariable("id") String asId,
+            @Parameter(description = "카테고리_ID") @PathVariable("id") UUID auId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "카테고리 정보") @RequestBody @Valid FaqCategoryPatchReqDto model
     ) throws Exception {
-        service.updateFaqCategory(asId, model);
+        service.updateFaqCategory(auId, model);
     }
 
     // FAQ 카테고리 삭제
@@ -104,8 +104,8 @@ public class FaqController {
     @ResponseBody
     @Operation(summary = "FAQ 카테고리 삭제", description = "전달받은 FAQ 카테고리 정보를 삭제합니다.")
     public void deleteFaqCategory(
-            @Parameter(description = "카테고리_ID") @PathVariable("id") String asId
+            @Parameter(description = "카테고리_ID") @PathVariable("id") UUID asId
     ) throws Exception {
-        service.deleteFaqCategory(asId);
+        service.deleteFaqCategory(auId);
     }
 }

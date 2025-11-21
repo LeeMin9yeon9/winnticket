@@ -14,7 +14,8 @@
             a.AUTHOR_NAME,  -- 작성자
             a.CREATED_AT,  -- 작성일자
             a.VIEWS,  -- 조회수
-            a.IS_ACTIVE  -- 활성화여부
+            a.IS_ACTIVE,  -- 활성화여부
+            a.CATEGORY  -- 카테고리
         FROM
             POSTS a
         Where 1 = 1
@@ -131,8 +132,7 @@
         Select
             a.ID,  -- 아이디
             a.NAME,  -- 이름
-            a.DISPLAY_ORDER,  -- 정렬순서
-            a.IS_SYSTEM  -- 시스템등록여부
+            a.DISPLAY_ORDER  -- 정렬순서
         FROM
              FAQ_CATEGORY_ITEM a
         Where 1 = 1
@@ -145,17 +145,13 @@
         <![CDATA[
         Insert Into FAQ_CATEGORY_ITEM
         (
-            ID,
             NAME,
-            DISPLAY_ORDER,
-            IS_SYSTEM
+            DISPLAY_ORDER
         )
         Values
         (
-            'cat-' || extract(epoch from now())::bigint,
             #{name},
-            (SELECT MAX(display_order) + 1 FROM FAQ_CATEGORY_ITEM),
-            false
+            (SELECT MAX(display_order) + 1 FROM FAQ_CATEGORY_ITEM)
         )
         ]]>
     </insert>
@@ -173,7 +169,6 @@
         </set>
         Where 1 = 1
         And ID = #{id}
-        And IS_SYSTEM = false
     </update>
 
     <!--
@@ -185,6 +180,25 @@
             FAQ_CATEGORY_ITEM
         Where 1 = 1
         And ID = #{id}
-        And IS_SYSTEM = false
     </delete>
+
+    <!--
+    - FAQ 카테고리 재정렬
+    -->
+    <update id="reorderDisplayOrder">
+        With reordered As (
+            Select 
+                id,
+                Row_Number() Over (Order By DISPLAY_ORDER) NEW_ORDER
+            From
+                FAQ_CATEGORY_ITEM
+        )
+        Update FAQ_CATEGORY_ITEM a
+        Set 
+            a.DISPLAY_ORDER = x.NEW_ORDER
+        From
+            reordered x
+        Where 1 = 1
+        And a.id = x.id
+    </update>
 </mapper>
