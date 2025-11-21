@@ -132,8 +132,7 @@
         Select
             a.ID,  -- 아이디
             a.NAME,  -- 이름
-            a.DISPLAY_ORDER,  -- 정렬순서
-            a.IS_SYSTEM  -- 시스템등록여부
+            a.DISPLAY_ORDER  -- 정렬순서
         FROM
              FAQ_CATEGORY_ITEM a
         Where 1 = 1
@@ -146,17 +145,13 @@
         <![CDATA[
         Insert Into FAQ_CATEGORY_ITEM
         (
-            ID,
             NAME,
-            DISPLAY_ORDER,
-            IS_SYSTEM
+            DISPLAY_ORDER
         )
         Values
         (
-            'cat-' || extract(epoch from now())::bigint,
             #{name},
-            (SELECT MAX(display_order) + 1 FROM FAQ_CATEGORY_ITEM),
-            false
+            (SELECT MAX(display_order) + 1 FROM FAQ_CATEGORY_ITEM)
         )
         ]]>
     </insert>
@@ -174,7 +169,6 @@
         </set>
         Where 1 = 1
         And ID = #{id}
-        And IS_SYSTEM = false
     </update>
 
     <!--
@@ -186,6 +180,5 @@
             FAQ_CATEGORY_ITEM
         Where 1 = 1
         And ID = #{id}
-        And IS_SYSTEM = false
     </delete>
 </mapper>
