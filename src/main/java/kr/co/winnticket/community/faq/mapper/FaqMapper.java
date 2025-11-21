@@ -46,12 +46,12 @@ public interface FaqMapper {
 
     // 카테고리 수정
     void updateFaqCategory(
-            @Param("id") String asId,
+            @Param("id") UUID auId,
             @Param("name") String name
     );
 
     // 카테고리 삭제
     void deleteFaqCategory(
-            @Param("id") String asId
+            @Param("id") UUID auId
     );
 }
