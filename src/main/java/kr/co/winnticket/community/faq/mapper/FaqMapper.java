@@ -51,7 +51,10 @@ public interface FaqMapper {
     );
 
     // 카테고리 삭제
-    void deleteFaqCategory(
+    int deleteFaqCategory(
             @Param("id") UUID auId
     );
+
+    // 카테고리 정렬순서 재정렬
+    void reorderDisplayOrder();
 }
