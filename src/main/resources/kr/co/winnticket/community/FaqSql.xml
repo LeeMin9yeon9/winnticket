@@ -195,7 +195,7 @@
         )
         Update FAQ_CATEGORY_ITEM a
         Set 
-            a.DISPLAY_ORDER = x.NEW_ORDER
+            DISPLAY_ORDER = x.NEW_ORDER
         From
             reordered x
         Where 1 = 1
