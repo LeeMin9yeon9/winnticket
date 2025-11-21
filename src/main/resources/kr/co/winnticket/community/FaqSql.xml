@@ -181,4 +181,24 @@
         Where 1 = 1
         And ID = #{id}
     </delete>
+
+    <!--
+    - FAQ 카테고리 재정렬
+    -->
+    <update id="reorderDisplayOrder">
+        With reordered As (
+            Select 
+                id,
+                Row_Number() Over (Order By DISPLAY_ORDER) NEW_ORDER
+            From
+                FAQ_CATEGORY_ITEM
+        )
+        Update FAQ_CATEGORY_ITEM a
+        Set 
+            a.DISPLAY_ORDER = x.NEW_ORDER
+        From
+            reordered x
+        Where 1 = 1
+        And a.id = x.id
+    </update>
 </mapper>
