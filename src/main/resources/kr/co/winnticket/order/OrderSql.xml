@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.order.mapper.OrderMapper">
+    <!--
+    - 주문 상태별 카운트 Select
+    -->
+    <select id="selectOrderStatusCount" resultType="kr.co.winnticket.order.dto.OrderStatusCountGetResDto">
+        select
+            Sum(Case
+                When a.STATUS = '입금전' Then 1 Else 0
+            End) UNPAID_CNT,  -- 입금전 수
+            Sum(Case
+                When a.STATUS = '입금전' Then a.TOTAL_PRICE Else 0
+            End) UNPAID_TOTAL_PRICE,  -- 입금전 총액
+            Sum(Case
+                When a.STATUS = '주문처리완료' Then 1 Else 0
+            End) COMPLETED_CNT,  -- 주문처리완료 수
+            Sum(Case
+                   When a.STATUS = '주문처리완료' Then a.TOTAL_PRICE Else 0
+                End) COMPLETED_TOTAL_PRICE,  -- 주문처리완료 총액
+            Sum(Case
+                When a.STATUS In ('취소신청', '취소완료', '환불완료') Then 1 Else 0
+            End) CANCELED_CNT,  -- 취소/환불 수
+            Sum(Case
+               When a.STATUS In ('취소신청', '취소완료', '환불완료') Then a.TOTAL_PRICE Else 0
+            End) CANCELED_TOTAL_PRICE  -- 취소/환불 총액
+        from
+            TICKET_ORDERS a
+    </select>
+</mapper>

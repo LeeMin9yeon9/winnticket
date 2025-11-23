@@ -31,3 +31,9 @@ springdoc:
       paths-to-match: /api/menu/**
       servers:
         - url: https://api.winnticket.store
+
+    - group: 0300. 주문
+      paths-to-match: /api/order/**
+      servers:
+        - url: https://api.winnticket.store
+
