@@ -31,7 +31,7 @@ public class FaqPostReqDto {
 
     @NotEmpty
     @Schema(description = "카테고리")
-    private String category;
+    private UUID category;
 
     @Hidden
     @Schema(description = "아이디")

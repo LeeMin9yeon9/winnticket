@@ -1,0 +1,111 @@
+package kr.co.winnticket.community.menu.menu.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.winnticket.community.menu.menu.dto.UpdateMenuDto;
+import kr.co.winnticket.community.menu.menu.service.MenuCategoryService;
+import kr.co.winnticket.community.menu.menu.dto.CreateMenuDto;
+import kr.co.winnticket.community.menu.menu.dto.CreateSubMenuDto;
+import kr.co.winnticket.community.menu.menu.dto.MenuListDto;
+import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.javassist.NotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@Tag(name = "쇼핑몰 메뉴 관리", description = "쇼핑몰 메뉴 관리 API")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/menu/menuCategory")
+public class MenuCategoryController {
+
+    private final MenuCategoryService menuService;
+
+    @GetMapping
+    @Operation(summary = "쇼핑몰 메뉴 전체 조회")
+    public ResponseEntity<List<MenuListDto>> getAllMenus(
+        @Parameter(description = "메뉴이름") @RequestParam(value = "name" , required = false) String name,
+        @Parameter(description = "메뉴코드") @RequestParam(value = "code" , required = false) String code
+    )throws Exception{
+        return ResponseEntity.ok(menuService.menuList(name,code));
+    }
+
+    @PostMapping
+    @Operation(summary = "쇼핑몰 메뉴 생성" , description = "새로운 메뉴를 생성합니다.")
+    public ResponseEntity<String> createMenu(@RequestBody CreateMenuDto createMenuDto) {
+        menuService.createMenu(createMenuDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("created");
+    }
+
+    @PostMapping("/sub/{parentId}")
+    @Operation(summary = "쇼핑몰 하위 메뉴 생성", description = "새로운 하위 메뉴를 생성합니다.")
+    private ResponseEntity<?> createSubMenu(
+            @PathVariable UUID parentId,
+            @RequestBody CreateSubMenuDto createSubMenuDto
+    ){
+        menuService.createSubMenu(parentId,createSubMenuDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("created");
+    }
+
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "쇼핑몰 메뉴 수정" , description = "쇼핑몰 메뉴 정보를 수정합니다.")
+    public ResponseEntity<String> updateMenu(
+            @PathVariable UUID id,
+            @RequestBody UpdateMenuDto updateMenuDto
+    ) throws NotFoundException{
+         menuService.updateMenu(id,updateMenuDto);
+        return ResponseEntity.ok("Updated");
+    }
+
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "쇼핑몰 메뉴 삭제" , description = "쇼핑몰 메뉴를 삭제합니다.")
+    public ResponseEntity<Void> deleteMenu(@PathVariable UUID id) throws NotFoundException {
+        menuService.deleteMenu(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/displayOrder/{id}/{displayOrder}")
+    @Operation(summary = "쇼핑몰 메뉴 순서 변경" , description = "쇼핑몰 메뉴의 노출 순서를 변경합니다.")
+    public ResponseEntity<String> changeMenuOrder(
+            @PathVariable UUID id,
+            @PathVariable Integer displayOrder
+    ) throws NotFoundException{
+        menuService.changeMenu(id,displayOrder);
+        return ResponseEntity.ok("order Updated");
+    }
+
+    @PatchMapping("/displayOrder/up/{id}")
+    @Operation(summary = "쇼핑몰 메뉴 순서를 위로 이동" , description = "쇼핑몰 메뉴 순서를 위로 이동합니다.")
+    public ResponseEntity<String> moveUp(
+            @PathVariable UUID id
+    ) throws NotFoundException{
+        menuService.moveUp(id);
+        return ResponseEntity.ok("moved up");
+    }
+
+    @PatchMapping("/displayOrder/down/{id}")
+    @Operation(summary = "쇼핑몰 메뉴 순서를 아래로 이동" ,description = "쇼핑몰 메뉴 순서를 아래로 이동합니다.")
+    public ResponseEntity<String> moveDown(
+            @PathVariable UUID id
+    )throws NotFoundException{
+        menuService.moveDown(id);
+        return ResponseEntity.ok("moved down");
+    }
+
+    @PatchMapping("/visible/{id}/{visible}")
+    @Operation(summary = "쇼핑몰 메뉴 활성화/비활성화" , description = "쇼핑몰 메뉴를 활성/비활성화 합니다.")
+    public ResponseEntity<String> visibleMenu(
+            @PathVariable UUID id,
+            @PathVariable Boolean visible
+    ) throws NotFoundException{
+        menuService.changeVisible(id , visible);
+        return ResponseEntity.ok("visible updated");
+    }
+
+}

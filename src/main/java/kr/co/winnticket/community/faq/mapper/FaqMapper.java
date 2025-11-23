@@ -30,7 +30,7 @@ public interface FaqMapper {
         @Param("id") UUID auId, 
         @Param("title") String title,
         @Param("content") String content,
-        @Param("category") String category
+        @Param("category") UUID category
     );
 
     // FAQ 삭제

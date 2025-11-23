@@ -36,5 +36,5 @@ public class FaqListGetResDto {
     private boolean isActive;
     
     @Schema(description = "카테고리")
-    private String category;
+    private UUID category;
 }

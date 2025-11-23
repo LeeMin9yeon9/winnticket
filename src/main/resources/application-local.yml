@@ -21,3 +21,5 @@ springdoc:
       paths-to-match: /api/community/**
     - group: 0200. 메뉴
       paths-to-match: /api/menu/**
+    - group: 0300. 주문
+      paths-to-match: /api/order/**
