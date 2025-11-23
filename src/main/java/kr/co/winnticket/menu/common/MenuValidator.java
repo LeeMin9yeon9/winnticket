@@ -1,7 +1,7 @@
-package kr.co.winnticket.community.menu.common;
+package kr.co.winnticket.menu.common;
 
-import kr.co.winnticket.community.menu.menu.dto.MenuListDto;
-import kr.co.winnticket.community.menu.menu.mapper.MenuCategoryMapper;
+import kr.co.winnticket.menu.menu.dto.MenuListDto;
+import kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package kr.co.winnticket.community.menu.menu.dto;
+package kr.co.winnticket.menu.menu.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +11,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CreateSubMenuDto implements OrderUpdateble {
+public class CreateMenuDto implements OrderUpdateble {
+
     @Hidden
     @Schema(description = "메뉴_ID")
     private UUID id;
@@ -35,7 +36,7 @@ public class CreateSubMenuDto implements OrderUpdateble {
     @Schema(description = "메뉴_활성화여부")
     private Boolean visible;
 
+    @Hidden
     @Schema(description = "메뉴_라우팅")
     private String routePath;
-
 }

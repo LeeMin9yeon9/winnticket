@@ -1,8 +1,8 @@
-package kr.co.winnticket.community.menu.admmenu.mapper;
+package kr.co.winnticket.menu.admmenu.mapper;
 
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuListDto;
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuCreateDto;
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuUpdateDto;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuCreateDto;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuUpdateDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

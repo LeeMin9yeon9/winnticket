@@ -1,4 +1,4 @@
-package kr.co.winnticket.community.menu.admmenu.dto;
+package kr.co.winnticket.menu.admmenu.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;

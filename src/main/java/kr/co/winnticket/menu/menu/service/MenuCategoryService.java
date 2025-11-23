@@ -1,9 +1,8 @@
-package kr.co.winnticket.community.menu.menu.service;
+package kr.co.winnticket.menu.menu.service;
 
-import kr.co.winnticket.community.menu.menu.dto.*;
-import kr.co.winnticket.community.menu.common.MenuValidator;
+import kr.co.winnticket.menu.common.MenuValidator;
 import kr.co.winnticket.menu.menu.dto.*;
-import kr.co.winnticket.community.menu.menu.mapper.MenuCategoryMapper;
+import kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;

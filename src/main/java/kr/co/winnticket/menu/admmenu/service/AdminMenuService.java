@@ -1,9 +1,9 @@
-package kr.co.winnticket.community.menu.admmenu.service;
+package kr.co.winnticket.menu.admmenu.service;
 
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuListDto;
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuCreateDto;
-import kr.co.winnticket.community.menu.admmenu.dto.AdminMenuUpdateDto;
-import kr.co.winnticket.community.menu.admmenu.mapper.AdminMenuMapper;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuCreateDto;
+import kr.co.winnticket.menu.admmenu.dto.AdminMenuUpdateDto;
+import kr.co.winnticket.menu.admmenu.mapper.AdminMenuMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;

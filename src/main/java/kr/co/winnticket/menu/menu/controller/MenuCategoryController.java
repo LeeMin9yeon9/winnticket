@@ -1,13 +1,13 @@
-package kr.co.winnticket.community.menu.menu.controller;
+package kr.co.winnticket.menu.menu.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.winnticket.community.menu.menu.dto.UpdateMenuDto;
-import kr.co.winnticket.community.menu.menu.service.MenuCategoryService;
-import kr.co.winnticket.community.menu.menu.dto.CreateMenuDto;
-import kr.co.winnticket.community.menu.menu.dto.CreateSubMenuDto;
-import kr.co.winnticket.community.menu.menu.dto.MenuListDto;
+import kr.co.winnticket.menu.menu.dto.UpdateMenuDto;
+import kr.co.winnticket.menu.menu.service.MenuCategoryService;
+import kr.co.winnticket.menu.menu.dto.CreateMenuDto;
+import kr.co.winnticket.menu.menu.dto.CreateSubMenuDto;
+import kr.co.winnticket.menu.menu.dto.MenuListDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.http.HttpStatus;
