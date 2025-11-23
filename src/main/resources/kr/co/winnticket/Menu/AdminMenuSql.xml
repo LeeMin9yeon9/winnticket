@@ -3,10 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.co.winnticket.menu.admmenu.mapper.AdminMenuMapper">
+<mapper namespace="kr.co.winnticket.community.menu.admmenu.mapper.AdminMenuMapper">
 
     <!-- 관리자 메뉴 검색 + 전체 조회 -->
-    <select id="findAdminMenus" resultType="kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto">
+    <select id="findAdminMenus" resultType="kr.co.winnticket.community.menu.admmenu.dto.AdminMenuListDto">
         SELECT
         id,
         title,
@@ -33,7 +33,7 @@
     </select>
 
     <!-- ID로 단건 조회 -->
-    <select id="admMenuFindById" resultType="kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto">
+    <select id="admMenuFindById" resultType="kr.co.winnticket.community.menu.admmenu.dto.AdminMenuListDto">
         SELECT
             id,
             title,
@@ -49,7 +49,7 @@
     </select>
 
     <!-- 관리자 메뉴 생성 -->
-    <insert id="admMenuInsert" parameterType="kr.co.winnticket.menu.admmenu.dto.AdminMenuCreateDto">
+    <insert id="admMenuInsert" parameterType="kr.co.winnticket.community.menu.admmenu.dto.AdminMenuCreateDto">
         INSERT INTO admin_menus (
             title,
             title_en,
@@ -75,20 +75,12 @@
     <update id="admMenuUpdate">
         UPDATE admin_menus
         <set>
-            <if test="param2.title != null">
-                title = #{param2.title},
+            <if test="adminMenuUpdate.title != null">
+                title = #{adminMenuUpdate.title},
             </if>
-            <if test="param2.icon != null">
-                icon = #{param2.icon},
-            </if>
-            <if test="param2.page != null">
-                page = #{param2.page},
-            </if>
-            <if test="param2.displayOrder != null">
-                display_order = #{param2.displayOrder},
-            </if>
-            <if test="param2.visible != null">
-                visible = #{param2.visible},
+
+            <if test="adminMenuUpdate.visible != null">
+                visible = #{adminMenuUpdate.visible},
             </if>
             updated_at = CURRENT_TIMESTAMP
         </set>
@@ -137,5 +129,20 @@
         FROM admin_menus
         WHERE title = #{title};
     </select>
+
+    <update id="shiftUp">
+        UPDATE admin_menus
+        SET display_order = display_order + 1
+        WHERE display_order &gt;= #{newOrder}
+          AND display_order &lt; #{oldOrder};
+    </update>
+
+    <update id="shiftDown">
+        UPDATE admin_menus
+        SET display_order = display_order - 1
+        WHERE display_order &gt; #{oldOrder}
+          AND display_order &lt;= #{newOrder};
+    </update>
+
 
 </mapper>
