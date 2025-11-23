@@ -1,4 +1,4 @@
-package kr.co.winnticket.order.dto;
+package kr.co.winnticket.order.admin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 @Schema(title = "[주문 > 주문상태별 카운트 조회] OrderStatusCountGetResDto")
-public class OrderStatusCountGetResDto {
+public class OrderAdminStatusGetResDto {
     @Schema(description = "입금전")
     private int unpaidCnt;
 
