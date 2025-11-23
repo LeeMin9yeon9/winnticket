@@ -3,12 +3,12 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper">
+<mapper namespace="kr.co.winnticket.community.menu.menu.mapper.MenuCategoryMapper">
 
     <!-- =============================
          메뉴 검색
     ============================== -->
-    <select id="findMenus" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+    <select id="findMenus" resultType="kr.co.winnticket.community.menu.menu.dto.MenuListDto">
         SELECT *
         FROM menu_categories
         WHERE 1=1
@@ -25,7 +25,7 @@
     <!-- =============================
          단건 조회
     ============================== -->
-    <select id="menuFindById" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+    <select id="menuFindById" resultType="kr.co.winnticket.community.menu.menu.dto.MenuListDto">
         SELECT * FROM menu_categories WHERE id = #{id}
     </select>
 
@@ -33,7 +33,7 @@
     <!-- =============================
          Up/Down 조회
     ============================== -->
-    <select id="findByOrder" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+    <select id="findByOrder" resultType="kr.co.winnticket.community.menu.menu.dto.MenuListDto">
         SELECT *
         FROM menu_categories
         WHERE
@@ -59,7 +59,6 @@
             parent_id,
             display_order,
             visible,
-            icon_url,
             route_path,
             created_at,
             updated_at
@@ -71,7 +70,6 @@
                      #{parentId},
                      #{displayOrder},
                      #{visible},
-                     #{iconUrl},
                      #{routePath},
                      CURRENT_TIMESTAMP,
                      CURRENT_TIMESTAMP
@@ -91,7 +89,6 @@
             parent_id,
             display_order,
             visible,
-            icon_url,
             route_path,
             created_at,
             updated_at
@@ -103,7 +100,6 @@
                      #{parentId},
                      #{displayOrder},
                      #{visible},
-                     #{iconUrl},
                      #{routePath},
                      CURRENT_TIMESTAMP,
                      CURRENT_TIMESTAMP
@@ -117,24 +113,24 @@
     <update id="menuUpdate">
         UPDATE menu_categories
         <set>
-            <if test="param2.name != null">
-                name = #{param2.name},
+            <if test="updateMenuDto.name != null">
+                name = #{updateMenuDto.name},
             </if>
 
-            <if test="param2.code != null">
-                code = #{param2.code},
+            <if test="updateMenuDto.code != null">
+                code = #{updateMenuDto.code},
             </if>
 
-            <if test="param2.routePath != null">
-                route_path = #{param2.routePath},
+            <if test="updateMenuDto.displayOrder != null">
+                display_order = #{updateMenuDto.displayOrder},
             </if>
 
-            <if test="param2.iconUrl != null">
-                icon_url = #{param2.iconUrl},
+            <if test="updateMenuDto.routePath != null">
+                route_path = #{updateMenuDto.routePath},
             </if>
 
-            <if test="param2.visible != null">
-                visible = #{param2.visible},
+            <if test="updateMenuDto.visible != null">
+                visible = #{updateMenuDto.visible},
             </if>
 
             updated_at = CURRENT_TIMESTAMP
@@ -186,6 +182,28 @@
         </if>
         AND display_order >= #{displayOrder}
     </update>
+
+
+    <!-- 위로 이동: newOrder ~ oldOrder-1 +1 -->
+    <update id="upMenu">
+        UPDATE menu_categories
+        SET display_order = display_order + 1
+        WHERE parent_id = #{parentId}
+          AND display_order BETWEEN #{newOrder} AND #{oldOrder}
+    </update>
+
+    <!-- 아래로 이동: oldOrder+1 ~ newOrder -1 -->
+    <update id="downMenu">
+        UPDATE menu_categories
+        SET display_order = display_order - 1
+        WHERE parent_id = #{parentId}
+          AND display_order BETWEEN #{oldOrder} AND #{newOrder}
+    </update>
+
+
+
+
+
 
 
     <!-- =============================

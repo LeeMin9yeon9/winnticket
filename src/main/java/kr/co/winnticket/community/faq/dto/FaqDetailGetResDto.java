@@ -36,5 +36,5 @@ public class FaqDetailGetResDto {
     private String content;
 
     @Schema(description = "카테고리")
-    private String category;
+    private UUID category;
 }
