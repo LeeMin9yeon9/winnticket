@@ -1,31 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="kr.co.winnticket.order.mapper.OrderMapper">
+<mapper namespace="kr.co.winnticket.order.admin.mapper.OrderMapper">
     <!--
-    - 주문 상태별 카운트 Select
+    - 주문 상태 Select
     -->
-    <select id="selectOrderStatusCount" resultType="kr.co.winnticket.order.dto.OrderStatusCountGetResDto">
+    <select id="selectOrderAdminStatus" resultType="kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto">
         select
             Sum(Case
-                When a.STATUS = '입금전' Then 1 Else 0
+                When a.STATUS = 'PENDING_PAYMENT' Then 1 Else 0
             End) UNPAID_CNT,  -- 입금전 수
             Sum(Case
-                When a.STATUS = '입금전' Then a.TOTAL_PRICE Else 0
+                When a.STATUS = 'PENDING_PAYMENT' Then a.TOTAL_PRICE Else 0
             End) UNPAID_TOTAL_PRICE,  -- 입금전 총액
             Sum(Case
-                When a.STATUS = '주문처리완료' Then 1 Else 0
+                When a.STATUS = 'COMPLETED' Then 1 Else 0
             End) COMPLETED_CNT,  -- 주문처리완료 수
             Sum(Case
-                   When a.STATUS = '주문처리완료' Then a.TOTAL_PRICE Else 0
+                   When a.STATUS = 'COMPLETED' Then a.TOTAL_PRICE Else 0
                 End) COMPLETED_TOTAL_PRICE,  -- 주문처리완료 총액
             Sum(Case
-                When a.STATUS In ('취소신청', '취소완료', '환불완료') Then 1 Else 0
+                When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then 1 Else 0
             End) CANCELED_CNT,  -- 취소/환불 수
             Sum(Case
-               When a.STATUS In ('취소신청', '취소완료', '환불완료') Then a.TOTAL_PRICE Else 0
+               When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then a.TOTAL_PRICE Else 0
             End) CANCELED_TOTAL_PRICE  -- 취소/환불 총액
         from
             TICKET_ORDERS a
+        Where 1 = 1
+    </select>
+
+    <!--
+    - 주문 목록 Select
+    -->
+    <select id="selectOrderAdminList" resultType="kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto">
+        Select
+            a.ID,  -- 주문_ID
+            a.PAYMENT_DATE,  -- 주문일
+            a.ORDER_NUMBER,  -- 주문번호
+            -- 파트너사 ??
+            a.CUSTOMER_NAME,  -- 주문자
+            a.PRODUCT_NAME,  -- 상품명
+            a.QUANTITY,  -- 수량
+            a.UNIT_PRICE,  -- 상품가격
+            a.STATUS,  -- 주문상태
+            a.TOTAL_PRICE,  -- 총 주문금액
+            -- 결제상태??
+            -- 결제금액??
+            a.PAYMENT_METHOD,  -- 결제수단
+            a.CUSTOMER_PHONE  -- 연락처
+        From
+            TICKET_ORDERS a
+        Where 1 = 1
+        <if test="srchWord != null and srchWord != ''">
+            <![CDATA[
+            AND (
+                Upper(a.ORDER_NUMBER) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.CUSTOMER_NAME) ILIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.PRODUCT_NAME) ILIKE '%' || Upper(#{srchWord}) || '%'
+             )
+            ]]>
+        </if>
+
+        <if test="begDate != null">
+            <![CDATA[
+            AND Date(a.PAYMENT_DATE) >= #{begDate}
+            ]]>
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[
+            AND Date(a.PAYMENT_DATE) <= #{endDate}
+            ]]>
+        </if>
+
+
+        <if test="status != null and status != '' and status != 'ALL'">
+            <![CDATA[
+            AND a.STATUS = #{status}::order_status
+            ]]>
+        </if>
+        Order By
+        a.PAYMENT_DATE Desc
     </select>
 </mapper>

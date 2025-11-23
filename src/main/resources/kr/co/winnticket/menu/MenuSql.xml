@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper">
+
+    <!-- =============================
+         메뉴 검색
+    ============================== -->
+    <select id="findMenus" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT *
+        FROM menu_categories
+        WHERE 1=1
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="code != null and code != ''">
+            AND code LIKE CONCAT('%', #{code}, '%')
+        </if>
+        ORDER BY parent_id NULLS FIRST, display_order ASC
+    </select>
+
+
+    <!-- =============================
+         단건 조회
+    ============================== -->
+    <select id="menuFindById" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT * FROM menu_categories WHERE id = #{id}
+    </select>
+
+
+    <!-- =============================
+         Up/Down 조회
+    ============================== -->
+    <select id="findByOrder" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT *
+        FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order = #{displayOrder}
+    </select>
+
+
+    <!-- =============================
+         상위 메뉴 생성
+    ============================== -->
+    <insert id="menuInsert">
+        INSERT INTO menu_categories (
+            id,
+            name,
+            code,
+            level,
+            parent_id,
+            display_order,
+            visible,
+            route_path,
+            created_at,
+            updated_at
+        ) VALUES (
+                     uuid_generate_v4(),
+                     #{name},
+                     #{code},
+                     #{level},
+                     #{parentId},
+                     #{displayOrder},
+                     #{visible},
+                     #{routePath},
+                     CURRENT_TIMESTAMP,
+                     CURRENT_TIMESTAMP
+                 )
+    </insert>
+
+
+    <!-- =============================
+         하위 메뉴 생성
+    ============================== -->
+    <insert id="menuSubInsert">
+        INSERT INTO menu_categories (
+            id,
+            name,
+            code,
+            level,
+            parent_id,
+            display_order,
+            visible,
+            route_path,
+            created_at,
+            updated_at
+        ) VALUES (
+                     uuid_generate_v4(),
+                     #{name},
+                     #{code},
+                     #{level},
+                     #{parentId},
+                     #{displayOrder},
+                     #{visible},
+                     #{routePath},
+                     CURRENT_TIMESTAMP,
+                     CURRENT_TIMESTAMP
+                 )
+    </insert>
+
+
+    <!-- =============================
+         메뉴 수정 (Null 이면 기존 유지)
+    ============================== -->
+    <update id="menuUpdate">
+        UPDATE menu_categories
+        <set>
+            <if test="updateMenuDto.name != null">
+                name = #{updateMenuDto.name},
+            </if>
+
+            <if test="updateMenuDto.code != null">
+                code = #{updateMenuDto.code},
+            </if>
+
+            <if test="updateMenuDto.displayOrder != null">
+                display_order = #{updateMenuDto.displayOrder},
+            </if>
+
+            <if test="updateMenuDto.routePath != null">
+                route_path = #{updateMenuDto.routePath},
+            </if>
+
+            <if test="updateMenuDto.visible != null">
+                visible = #{updateMenuDto.visible},
+            </if>
+
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- =============================
+         메뉴 삭제
+    ============================== -->
+    <delete id="menuDelete">
+        DELETE FROM menu_categories WHERE id = #{id}
+    </delete>
+
+
+    <!-- =============================
+         visible 변경
+    ============================== -->
+    <update id="menuUpdateVisible">
+        UPDATE menu_categories
+        SET visible = #{visible}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- =============================
+         순서 변경
+    ============================== -->
+    <update id="menuUpdateOrder">
+        UPDATE menu_categories
+        SET display_order = #{displayOrder}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- =============================
+         순서 밀기 (끼워넣기)
+    ============================== -->
+    <update id="shiftDisplayOrder">
+        UPDATE menu_categories
+        SET display_order = display_order + 1
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order >= #{displayOrder}
+    </update>
+
+
+    <!-- 위로 이동: newOrder ~ oldOrder-1 +1 -->
+    <update id="upMenu">
+        UPDATE menu_categories
+        SET display_order = display_order + 1
+        WHERE parent_id = #{parentId}
+          AND display_order BETWEEN #{newOrder} AND #{oldOrder}
+    </update>
+
+    <!-- 아래로 이동: oldOrder+1 ~ newOrder -1 -->
+    <update id="downMenu">
+        UPDATE menu_categories
+        SET display_order = display_order - 1
+        WHERE parent_id = #{parentId}
+          AND display_order BETWEEN #{oldOrder} AND #{newOrder}
+    </update>
+
+
+
+
+
+
+
+    <!-- =============================
+         하위 메뉴 개수
+    ============================== -->
+    <select id="countChildMenus" resultType="int">
+        SELECT COUNT(*) FROM menu_categories WHERE parent_id = #{id}
+    </select>
+
+
+    <!-- =============================
+         parent 그룹의 최대 displayOrder
+    ============================== -->
+    <select id="findMaxOrder" resultType="int">
+        SELECT MAX(display_order)
+        FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+    </select>
+
+
+    <!-- =============================
+         코드 중복 체크
+    ============================== -->
+    <select id="existsByCode" resultType="int">
+        SELECT COUNT(*) FROM menu_categories WHERE code = #{code}
+    </select>
+
+</mapper>
