@@ -2,6 +2,7 @@ package kr.co.winnticket.community.faq.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.ToString;
 
@@ -19,7 +20,7 @@ public class FaqPatchReqDto {
     @Schema(description = "내용")
     private String content;
     
-    @NotEmpty
+    @NotNull
     @Schema(description = "카테고리")
     private UUID category;
 }
