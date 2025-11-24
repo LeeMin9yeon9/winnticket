@@ -37,4 +37,7 @@ public class FaqListGetResDto {
     
     @Schema(description = "카테고리")
     private UUID category;
+
+    @Schema(description = "카테고리명")
+    private String categoryName;
 }
