@@ -15,9 +15,11 @@
             a.CREATED_AT,  -- 작성일자
             a.VIEWS,  -- 조회수
             a.IS_ACTIVE,  -- 활성화여부
-            a.CATEGORY  -- 카테고리
+            a.CATEGORY,  -- 카테고리
+            b.NAME CATEGORY_NAME -- 카테고리명
         FROM
             POSTS a
+            LEFT JOIN FAQ_CATEGORY_ITEM b ON a.CATEGORY = b.ID
         Where 1 = 1
         And a.TYPE = 'FAQ'
         <if test="title != null and title != ''">
