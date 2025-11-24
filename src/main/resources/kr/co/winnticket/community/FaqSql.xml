@@ -105,7 +105,7 @@
             <if test="content != null and content != ''">
                 CONTENT = #{content},
             </if>
-            <if test="category != null and category != ''">
+            <if test="category != null">
                 CATEGORY = #{category},
             </if>
                 UPDATED_AT = CURRENT_TIMESTAMP
