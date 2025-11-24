@@ -29,7 +29,7 @@ public class FaqPostReqDto {
     @Schema(description = "활성화여부")
     private boolean isActive;
 
-    @NotEmpty
+    @NotNull
     @Schema(description = "카테고리")
     private UUID category;
 
