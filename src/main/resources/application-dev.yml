@@ -16,7 +16,7 @@ springdoc:
   swagger-ui:
     path: /api-docs
 
-    group-configs:
+  group-configs:
     - group: 0000. 공통
       paths-to-match: /api/common/**
       servers:
