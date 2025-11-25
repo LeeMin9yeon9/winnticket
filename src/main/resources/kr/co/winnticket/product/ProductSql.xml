@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.product.mapper.ProductMapper">
+
+    <!--
+    - 상품 목록 Select
+    -->
+    <select id="selectProductList" resultType="kr.co.winnticket.product.dto.ProductListGetResDto">
+        Select
+            a.ID,  -- 상품_ID
+            a.CODE,  -- 상품코드
+            a.NAME,  -- 상품명
+            a.CATEGORY_ID,  -- 카테고리_ID
+            a.PARTNER_ID,  -- 파트너_ID
+            a.PRICE,  -- 정가
+            a.DISCOUNT_PRICE,  -- 판매가
+            a.SALES_STATUS,  -- 판매상태
+            a.STOCK,  -- 재고
+            a.VISIBLE  -- 활성화여부
+        FROM
+            PRODUCTS a
+        Where 1 = 1
+        <if test="srchWord != null and srchWord != ''">
+            <![CDATA[
+            And (
+                Upper(a.CODE) Like '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.NAME) LiKE '%' || Upper(#{srchWord}) || '%'
+            )
+            ]]>
+        </if>
+
+        <if test="categoryId != null">
+            <![CDATA[
+            AND a.CATEGORY_ID = #{categoryId}
+            ]]>
+        </if>
+
+        <if test="salesStatus != null and salesStatus != '' and salesStatus != 'ALL'">
+            <![CDATA[
+            AND a.SALES_STATUS = #{salesStatus}::sales_status
+        ]]>
+        </if>
+        Order By
+            a.DISPLAY_ORDER
+    </select>
+
+    <!--
+    - 상품 insert
+    -->
+    <insert id="insertProduct" parameterType="kr.co.winnticket.product.dto.ProductPostReqDto">
+        <![CDATA[
+        Insert Into PRODUCTS
+        (
+            NAME,
+            CODE,
+            CATEGORY_ID,
+            PARTNER_ID,
+            DESCRIPTION,
+            IMAGE_URL,
+            PRICE,
+            DISCOUNT_PRICE,
+            SALES_STATUS,
+            STOCK,
+            SALES_START_DATE,
+            SALES_END_DATE,
+            DISPLAY_ORDER,
+            VISIBLE
+        )
+        Values
+        (
+            #{name},
+            #{code},
+            #{categoryId},
+            #{parterId},
+            #{description},
+            #{imageUrl},
+            #{price},
+            #{discountPrice},
+            #{salesStatus}::sales_status,
+            #{stock},
+            #{salesStartDate},
+            #{salesEndDate},
+            COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
+            #{visible}
+        )
+        ]]>
+    </insert>
+</mapper>
