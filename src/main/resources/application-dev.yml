@@ -37,3 +37,9 @@ springdoc:
       servers:
         - url: https://api.winnticket.store
 
+    - group: 0400. 상품
+      paths-to-match: /api/product/**
+      servers:
+        - url: https://api.winnticket.store
+
+

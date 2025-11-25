@@ -56,8 +56,8 @@
             <![CDATA[
             AND (
                 Upper(a.ORDER_NUMBER) LIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(a.CUSTOMER_NAME) ILIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(a.PRODUCT_NAME) ILIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.CUSTOMER_NAME) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.PRODUCT_NAME) LIKE '%' || Upper(#{srchWord}) || '%'
              )
             ]]>
         </if>
