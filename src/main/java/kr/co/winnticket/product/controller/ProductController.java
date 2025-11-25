@@ -16,11 +16,12 @@ import java.util.UUID;
 @Tag(name = "상품", description = "상품 관리")
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/product")
 public class ProductController {
     private final ProductService service;
 
     // 상품 목록조회
-    @GetMapping("/api/product")
+    @GetMapping("")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
     public List<ProductListGetResDto> getProductList (
             @Parameter(description = "검색어") @RequestParam(value = "srchWord", required = false) String srchWord,
@@ -31,7 +32,7 @@ public class ProductController {
     }
 
     // 상품 등록
-    @PostMapping("/api/product")
+    @PostMapping("")
     @ResponseBody
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
     public void postProduct (
