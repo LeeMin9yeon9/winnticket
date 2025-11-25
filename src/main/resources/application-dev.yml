@@ -36,10 +36,8 @@ springdoc:
       paths-to-match: /api/menu/**
     - group: 0300. 주문
       paths-to-match:
-        - /api/order/**
-        - /api/order
+        - /api/order*
     - group: 0400. 상품
       paths-to-match:
-        - /api/product/**
-        - /api/product
+        - /api/product*
 
