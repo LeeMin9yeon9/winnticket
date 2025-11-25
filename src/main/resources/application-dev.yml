@@ -33,12 +33,16 @@ springdoc:
         - url: https://api.winnticket.store
 
     - group: 0300. 주문
-      paths-to-match: /api/order/**
+      paths-to-match:
+        - /api/order/**
+        - /api/order
       servers:
         - url: https://api.winnticket.store
 
     - group: 0400. 상품
-      paths-to-match: /api/product/**
+      paths-to-match:
+        - /api/product/**
+        - /api/product
       servers:
         - url: https://api.winnticket.store
 

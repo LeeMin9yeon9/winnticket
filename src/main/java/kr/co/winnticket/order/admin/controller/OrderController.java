@@ -3,6 +3,7 @@ package kr.co.winnticket.order.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
 import kr.co.winnticket.order.admin.service.OrderService;
@@ -21,7 +22,7 @@ public class OrderController {
     private final OrderService service;
 
     // 주문 상태별 카운트 조회
-    @GetMapping("/api/order/admin/status")
+    @GetMapping("api/order/admin/status")
     @Operation(summary = "주문 상태별 카운트/총액 조회", description = "QNA 상태별 카운트및 총액을 조회합니다.")
     public OrderAdminStatusGetResDto getOrderStatusCount(
     ) throws Exception {
@@ -29,7 +30,7 @@ public class OrderController {
     }
 
     // 주문 목록조회 (관리자)
-    @GetMapping("/api/order/admin")
+    @GetMapping("api/order/admin")
     @Operation(summary = "주문 목록 조회(관리자)", description = "주문 목록을 조회합니다.")
     public List<OrderAdminListGetResDto> getOrderAdminList (
             @Parameter(description = "검색어") @RequestParam(value = "srchWord", required = false) String asSrchWord,
