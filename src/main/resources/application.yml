@@ -12,7 +12,6 @@ mybatis:
     map-underscore-to-camel-case: true
     type-handlers-package: kr.co.winnticket.common.typehandler
 
-
 springdoc:
   api-docs:
     enabled: true
@@ -20,18 +19,31 @@ springdoc:
     enabled: true
     path: /api-docs
 
+  group-configs:
+    - group: 0000.공통
+      paths-to-match: /api/common/**
+    - group: 0100.커뮤니티
+      paths-to-match: /api/community/**
+    - group: 0200.메뉴
+      paths-to-match: /api/menu/**
+    - group: 0300.주문
+      paths-to-match: /api/order/**
+    - group: 0400.상품
+      paths-to-match: /api/product/**
+    - group: 0500.로그인 및 토큰
+      paths-to-match: /api/auth/**
+    - group: 0600.사이트관리
+      paths-to-match: /api/admin/**
 
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-
   override-with-generic-response: false
 
 jwt:
-   #secret: ${JWT_SECRET:local-secret}
+  #secret: ${JWT_SECRET:local-secret}
   secret: fW8Lr3RkZJq92xu3x6Qm2TZZV9DPuG3EJm1Q8zv9pO4Z6rjVJt5vZkBj0U9y3BTsPR3A1GjWJq8N0Kj7WTfF1Q
   access-token-validity: 3600000 #1시간
   refresh-token-validity: 2592000000 #30일
-
 
 logging:
   level:

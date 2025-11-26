@@ -1,3 +1,7 @@
+server:
+  forward-headers-strategy: framework
+  port: 8080
+
 spring:
   config:
     activate:
@@ -8,50 +12,3 @@ spring:
     url: jdbc:postgresql://172.31.35.207:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: admin
     password: winnticket!@#$
-
-server:
-  forward-headers-strategy: framework
-
-springdoc:
-  swagger-ui:
-    path: /api-docs
-
-  group-configs:
-  - group: 0000. 공통
-    paths-to-match: /api/common/**
-    servers:
-      - url: https://api.winnticket.store
-
-  - group: 0100. 커뮤니티
-    paths-to-match: /api/community/**
-    servers:
-      - url: https://api.winnticket.store
-
-  - group: 0200. 메뉴
-    paths-to-match: /api/menu/**
-    servers:
-      - url: https://api.winnticket.store
-
-  - group: 0300. 주문
-    paths-to-match: /api/order/**
-    servers:
-      - url: https://api.winnticket.store
-
-  - group: 0400. 상품
-    paths-to-match: /api/product/**
-    servers:
-      - url: https://api.winnticket.store
-
-  - group: 0500. 로그인 및 토큰
-    paths-to-match: /api/auth/**
-    servers:
-      - url: https://api.winnticket.store
-
-jwt:
-  #secret: ${JWT_SECRET:local-secret}
-  secret: fW8Lr3RkZJq92xu3x6Qm2TZZV9DPuG3EJm1Q8zv9pO4Z6rjVJt5vZkBj0U9y3BTsPR3A1GjWJq8N0Kj7WTfF1Q
-  access-token-validity: 3600000 #1시간
-  refresh-token-validity: 2592000000 #30일
-
-  # 운영에선 환경변수로 빼야함
-
