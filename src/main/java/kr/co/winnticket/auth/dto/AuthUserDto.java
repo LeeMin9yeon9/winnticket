@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema (description = "로그인 사용자 정보 DTO")
 public class AuthUserDto {
     @Schema(description = "PK ID")
     private String id;
@@ -15,7 +16,7 @@ public class AuthUserDto {
     @Schema(description = "이름")
     private String name;
 
-    @Schema(description = "직원: accountId / 현장관리자: username")
+    @Schema(description = "로그인 ID")
     private String accountId;
 
     @Schema(description = "역할")
