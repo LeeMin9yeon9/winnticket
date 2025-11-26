@@ -1,14 +1,17 @@
 package kr.co.winnticket.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 // service 내부 및 db 매핑용
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Schema(description = "로그인 조회 내부 DTO")
 public class LoginUserDbDto {
-    @Schema(description = "PK ID")
+    @Schema(description = "사용자 PK ID")
     private String id;
 
     @Schema(description = "이름")
@@ -20,7 +23,7 @@ public class LoginUserDbDto {
     @Schema(description = "password")
     private String password;
 
-    @Schema(description = "역할")
+    @Schema(description = "역할 ROLE001, ROLE002 ")
     private String roleId;
 
     @Schema(description = "이미지")

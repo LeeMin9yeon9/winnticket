@@ -1,7 +1,7 @@
-package kr.co.winnticket.product.mapper;
+package kr.co.winnticket.product.admin.mapper;
 
-import kr.co.winnticket.product.dto.ProductListGetResDto;
-import kr.co.winnticket.product.dto.ProductPostReqDto;
+import kr.co.winnticket.product.admin.dto.ProductPostReqDto;
+import kr.co.winnticket.product.admin.dto.ProductListGetResDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
