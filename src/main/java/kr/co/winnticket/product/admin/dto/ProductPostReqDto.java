@@ -1,4 +1,4 @@
-package kr.co.winnticket.product.dto;
+package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;

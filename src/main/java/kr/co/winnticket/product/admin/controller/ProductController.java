@@ -1,27 +1,26 @@
-package kr.co.winnticket.product.controller;
+package kr.co.winnticket.product.admin.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kr.co.winnticket.product.dto.ProductListGetResDto;
-import kr.co.winnticket.product.dto.ProductPostReqDto;
-import kr.co.winnticket.product.service.ProductService;
+import kr.co.winnticket.product.admin.dto.ProductListGetResDto;
+import kr.co.winnticket.product.admin.dto.ProductPostReqDto;
+import kr.co.winnticket.product.admin.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "상품", description = "상품 관리")
+@Tag(name = "상품_관리자", description = "상품 관리")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/product")
 public class ProductController {
     private final ProductService service;
 
     // 상품 목록조회
-    @GetMapping("")
+    @GetMapping("api/product/admin")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
     public List<ProductListGetResDto> getProductList (
             @Parameter(description = "검색어") @RequestParam(value = "srchWord", required = false) String srchWord,
@@ -32,7 +31,7 @@ public class ProductController {
     }
 
     // 상품 등록
-    @PostMapping("")
+    @PostMapping("api/product/admin")
     @ResponseBody
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
     public void postProduct (
