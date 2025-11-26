@@ -1,8 +1,8 @@
-package kr.co.winnticket.product.service;
+package kr.co.winnticket.product.admin.service;
 
-import kr.co.winnticket.product.dto.ProductListGetResDto;
-import kr.co.winnticket.product.dto.ProductPostReqDto;
-import kr.co.winnticket.product.mapper.ProductMapper;
+import kr.co.winnticket.product.admin.dto.ProductPostReqDto;
+import kr.co.winnticket.product.admin.dto.ProductListGetResDto;
+import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -15,29 +15,36 @@ server:
 springdoc:
   swagger-ui:
     path: /api-docs
-    urls:
-      - url: /v3/api-docs/0000. 공통
-        name: 0000. 공통
-      - url: /v3/api-docs/0100. 커뮤니티
-        name: 0100. 커뮤니티
-      - url: /v3/api-docs/0200. 메뉴
-        name: 0200. 메뉴
-      - url: /v3/api-docs/0300. 주문
-        name: 0300. 주문
-      - url: /v3/api-docs/0400. 상품
-        name: 0400. 상품
 
   group-configs:
-    - group: 0000. 공통
-      paths-to-match: /api/common/**
-    - group: 0100. 커뮤니티
-      paths-to-match: /api/community/**
-    - group: 0200. 메뉴
-      paths-to-match: /api/menu/**
-    - group: 0300. 주문
-      paths-to-match:
-        - /api/order*
-    - group: 0400. 상품
-      paths-to-match:
-        - /api/product*
+  - group: 0000. 공통
+    paths-to-match: /api/common/**
+    servers:
+      - url: https://api.winnticket.store
+
+  - group: 0100. 커뮤니티
+    paths-to-match: /api/community/**
+    servers:
+      - url: https://api.winnticket.store
+
+  - group: 0200. 메뉴
+    paths-to-match: /api/menu/**
+    servers:
+      - url: https://api.winnticket.store
+
+  - group: 0300. 주문
+    paths-to-match: /api/order/**
+    servers:
+      - url: https://api.winnticket.store
+
+  - group: 0400. 상품
+    paths-to-match: /api/product/**
+    servers:
+      - url: https://api.winnticket.store
+
+  - group: 0500. 로그인 및 토큰
+    paths-to-match: /api/auth/**
+    servers:
+      - url: https://api.winnticket.store
+
 

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="kr.co.winnticket.product.mapper.ProductMapper">
+<mapper namespace="kr.co.winnticket.product.admin.mapper.ProductMapper">
 
     <!--
     - 상품 목록 Select
     -->
-    <select id="selectProductList" resultType="kr.co.winnticket.product.dto.ProductListGetResDto">
+    <select id="selectProductList" resultType="kr.co.winnticket.product.admin.dto.ProductListGetResDto">
         Select
             a.ID,  -- 상품_ID
             a.CODE,  -- 상품코드
@@ -48,7 +48,7 @@
     <!--
     - 상품 insert
     -->
-    <insert id="insertProduct" parameterType="kr.co.winnticket.product.dto.ProductPostReqDto">
+    <insert id="insertProduct" parameterType="kr.co.winnticket.product.admin.dto.ProductPostReqDto">
         <![CDATA[
         Insert Into PRODUCTS
         (
