@@ -104,4 +104,13 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi siteinfoApi() {
+        return GroupedOpenApi.builder()
+                .group("0600. 사이트관리")
+                .packagesToScan("kr.co.winnticket.siteinfo")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
 }
