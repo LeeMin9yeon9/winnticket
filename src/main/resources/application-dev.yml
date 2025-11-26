@@ -47,4 +47,11 @@ springdoc:
     servers:
       - url: https://api.winnticket.store
 
+jwt:
+  #secret: ${JWT_SECRET:local-secret}
+  secret: fW8Lr3RkZJq92xu3x6Qm2TZZV9DPuG3EJm1Q8zv9pO4Z6rjVJt5vZkBj0U9y3BTsPR3A1GjWJq8N0Kj7WTfF1Q
+  access-token-validity: 3600000 #1시간
+  refresh-token-validity: 2592000000 #30일
+
+  # 운영에선 환경변수로 빼야함
 
