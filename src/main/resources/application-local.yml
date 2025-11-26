@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   config:
     activate:
@@ -8,30 +11,3 @@ spring:
     url: jdbc:postgresql://3.36.128.67:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: admin
     password: winnticket!@#$
-
-springdoc:
-  servers:
-    - url: http://localhost:8080
-      description: 로컬 서버
-
-  group-configs:
-    - group: 0000. 공통
-      paths-to-match: /api/common/**
-    - group: 0100. 커뮤니티
-      paths-to-match: /api/community/**
-    - group: 0200. 메뉴
-      paths-to-match: /api/menu/**
-    - group: 0300. 주문
-      paths-to-match: /api/order/**
-    - group: 0400. 상품
-      paths-to-match: /api/product/**
-    - group: 0500. 로그인 및 토큰
-      paths-to-match: /api/auth/**
-
-jwt:
-  #secret: ${JWT_SECRET:local-secret}
-  secret: fW8Lr3RkZJq92xu3x6Qm2TZZV9DPuG3EJm1Q8zv9pO4Z6rjVJt5vZkBj0U9y3BTsPR3A1GjWJq8N0Kj7WTfF1Q
-  access-token-validity: 3600000 #1시간
-  refresh-token-validity: 2592000000 #30일
-
-  # 운영에선 환경변수로 빼야함
