@@ -2,6 +2,61 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="kr.co.winnticket.auth.mapper.AuthMapper">
+
+    <resultMap id="LoginUserDbDto" type="kr.co.winnticket.auth.dto.LoginUserDbDto">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="accountId" column="account_Id"/>
+        <result property="password" column="password"/>
+        <result property="roleId" column="role_Id"/>
+        <result property="avatarUrl" column="avatar_Url"/>
+        <result property="userType" column="user_Type"/>
+        <result property="partnerId" column="partner_Id"/>
+    </resultMap>
+
+    <!-- 관리자 로그인 -->
+    <select id="selectEmpAccountId" resultMap="LoginUserDbDto">
+        SELECT
+            e.id,
+            e.name,
+            e.account_id AS account_id,
+            e.password,
+            e.role_id AS role_id,
+            e.avatar_url AS avatar_url,
+            'employee' AS user_type,
+            NULL AS partner_id
+        FROM employees e
+        WHERE e.account_id = #{accountId}
+          AND e.account_status = '활성화'
+            LIMIT 1
+    </select>
+
+    <!-- 현장 관리자 로그인 -->
+    <select id="selectFieldAccountId" resultMap="LoginUserDbDto">
+        SELECT
+            fm.id AS id,
+            fm.name AS name,
+            fm.account_id AS account_id,
+            fm.password AS password,
+            fm.role_id AS role_id,
+            fm.logo_url AS avatar_url,
+            'field-manager' AS user_type,
+            fm.partner_id AS partner_id
+        FROM field_managers fm
+        WHERE fm.account_id = #{accountId}
+          AND fm.active = TRUE
+            LIMIT 1
+    </select>
+
+    <!-- 현장관리자 로그인 성공 시 마지막 로그인 시간 업데이트 -->
+    <update id="updateLastLoginAt">
+        UPDATE field_managers
+        SET last_login_at = NOW(),
+            updated_at = NOW()
+        WHERE id = CAST(#{id} AS UUID)
+    </update>
+
 
 </mapper>
