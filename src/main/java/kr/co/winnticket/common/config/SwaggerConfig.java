@@ -53,7 +53,7 @@ public class SwaggerConfig {
         }
 
         return new OpenAPI()
-                .info(new io.swagger.v3.oas.models.info.Info()
+                .info(new Info()
                         .title("WinnTicket API Docs")
                         .description("윈앤티켓 백엔드 API 명세서")
                         .version("v1.0"))
