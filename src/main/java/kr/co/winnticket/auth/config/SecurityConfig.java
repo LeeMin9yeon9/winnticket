@@ -25,7 +25,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/refresh",
-                                "/api/auth/logout"
+                                "/api/auth/logout",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
                         ).permitAll() // 인증없이 허용
                         .anyRequest().authenticated() // 나머지는 API 인증 필요
                 )
