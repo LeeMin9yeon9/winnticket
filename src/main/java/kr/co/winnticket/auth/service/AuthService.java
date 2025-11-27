@@ -13,6 +13,9 @@ public class AuthService {
     private final AuthMapper authmapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final LoginAttemptService loginAttemptService;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final RefreshTokenService refreshTokenService;
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto){
         String accountId = loginRequestDto.getAccountId();
@@ -31,21 +34,35 @@ public class AuthService {
 
         String roleId = loginUser.getRoleId();
 
+        // ROLE002 계정 잠금 여부 확인
+        if("ROLE002".equals(roleId)){
+            if(loginAttemptService.isLocked(accountId,roleId)){
+                throw new RuntimeException("계정이 잠겼습니다. 15분 후 다시 시도하세요.");
+            }
+        }
+
+        // 비밀번호 검증
+        boolean passwordMatches;
         if ("ROLE001".equals(roleId)) {
             // 직원(ROLE001) → bcrypt
-            if (!passwordEncoder.matches(password, loginUser.getPassword())) {
-                throw new RuntimeException("Incorrect password");
-            }
-
+            passwordMatches = passwordEncoder.matches(password,loginUser.getPassword());
         } else if ("ROLE002".equals(roleId)) {
             // 현장 관리자(ROLE002) → 평문
-            if (!password.equals(loginUser.getPassword())) {
-                throw new RuntimeException("Incorrect password");
-            }
-
+            passwordMatches = password.equals(loginUser.getPassword());
         } else {
             throw new RuntimeException("Unknown role: " + roleId);
         }
+
+        // 비밀번호 틀렸을 때
+        if(!passwordMatches){
+            loginAttemptService.recordFailedAttempt(accountId,roleId);
+            throw new RuntimeException("패스워드가 틀렸습니다.");
+        }
+
+        // 비밀번호가 맞으면 실패 카운트 초기화
+        loginAttemptService.resetFailCount(accountId,roleId);
+
+        // 로그인 마지막 시간 업데이트
         authmapper.updateLastLoginAt(loginUser.getId());
 
 
@@ -58,9 +75,17 @@ public class AuthService {
                 loginUser.getUserType(),
                 loginUser.getPartnerId()
         );
+        String refreshToken = null;
+        if("ROLE002".equals(loginUser.getRoleId())) {
 
-        String refreshToken = jwtTokenProvider.createRefreshToken(loginUser.getId());
-
+            refreshToken = jwtTokenProvider.createRefreshToken(
+                    loginUser.getId(),
+                    loginUser.getAccountId(),
+                    loginUser.getRoleId()
+            );
+            long refreshTtl = jwtTokenProvider.getExpiration(refreshToken) - System.currentTimeMillis();
+            refreshTokenService.refreshStore(loginUser.getAccountId(),refreshToken,refreshTtl);
+        }
         // JWT 응답
         AuthUserDto authUser = AuthUserDto.builder()
                 .id(loginUser.getId())
@@ -80,8 +105,98 @@ public class AuthService {
 
     }
     public void logout(String accessToken, LogoutRequestDto logoutRequestDto){
+        String refreshToken = logoutRequestDto.getRefreshToken();
+
+        // Access 블랙리스트
+        if(accessToken != null){
+            tokenBlacklistService.blacklistAccessToken(accessToken);
+        }
+
+        // Refresh 블랙리스트 + Redis에서 제거
+        if(refreshToken != null){
+            tokenBlacklistService.blacklistAccessToken(accessToken);
+            try{
+                var claims = jwtTokenProvider.getClaims(refreshToken);
+                String accountId = claims.get("accountId", String.class);
+                refreshTokenService.refreshDelete(accountId);
+            }catch (Exception e){
+
+            }
+        }
 
     }
+
+
+    public TokenResponseDto refresh(RefreshTokenRequestDto requestDto) {
+        String refreshToken = requestDto.getRefreshToken();
+
+        // 토큰 유효성 검증
+        if (!jwtTokenProvider.validate(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        // 블랙리스트 여부
+        if (tokenBlacklistService.isBlacklisted(refreshToken)) {
+            throw new RuntimeException("Token blacklisted");
+        }
+
+        // Claims 추출
+        var claims = jwtTokenProvider.getClaims(refreshToken);
+
+        String userId   = claims.getSubject();
+        String accountId = claims.get("accountId", String.class);
+        String roleId    = claims.get("roleId", String.class);
+        String type      = claims.get("type", String.class);
+
+        // Refresh 타입, ROLE002(현장관리자)만 허용
+        if (!"refresh".equals(type)) {
+            throw new RuntimeException("Invalid token type");
+        }
+        if (!"ROLE002".equals(roleId)) {
+            throw new RuntimeException("현장관리자만 Refresh Token을 사용할 수 있습니다.");
+        }
+
+        // Redis에 저장된 Refresh Token과 비교
+        String savedRefresh = refreshTokenService.refreshGet(accountId);
+        if (savedRefresh == null || !savedRefresh.equals(refreshToken)) {
+            throw new RuntimeException("Refresh token mismatch");
+        }
+
+        // 기존 Refresh Token 블랙리스트 + 삭제 (rotate)
+        tokenBlacklistService.blacklistRefreshToken(refreshToken);
+        refreshTokenService.refreshDelete(accountId);
+
+        // 유저 정보 다시 조회 (현장관리자 테이블에서)
+        LoginUserDbDto user = authmapper.selectFieldAccountId(accountId);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        //  새 Access / Refresh 발급
+        String newAccessToken = jwtTokenProvider.createAccessToken(
+                user.getId(),
+                user.getName(),
+                user.getAccountId(),
+                user.getRoleId(),
+                user.getUserType(),
+                user.getPartnerId()
+        );
+
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(
+                user.getId(),
+                user.getAccountId(),
+                user.getRoleId()
+        );
+
+        long refreshTtl = jwtTokenProvider.getExpiration(newRefreshToken) - System.currentTimeMillis();
+        refreshTokenService.refreshStore(user.getAccountId(), newRefreshToken, refreshTtl);
+
+        return TokenResponseDto.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
+
 
 
 }

@@ -5,9 +5,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Schema(description = "로그아웃 요청 DTO")
 public class LogoutRequestDto {
 

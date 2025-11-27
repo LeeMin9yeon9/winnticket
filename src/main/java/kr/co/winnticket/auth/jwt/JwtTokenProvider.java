@@ -26,10 +26,11 @@ public class JwtTokenProvider {
         this.refreshTokenValidMs = refreshTokenValidMs;
     }
 
-    public String createAccessToken(String userId, String name, String accountId, String roleId, String userType, String partnerId){
+    // Access Token 생성
+    public String createAccessToken(String id, String name, String accountId, String roleId, String userType, String partnerId){
         long now = System.currentTimeMillis();
 
-        Claims claims = Jwts.claims().setSubject(userId);
+        Claims claims = Jwts.claims().setSubject(id);
         claims.put("name", name);
         claims.put("accountId", accountId);
         claims.put("roleId", roleId);
@@ -44,11 +45,14 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(String userId){
+    // Refresh Token 생성
+    public String createRefreshToken(String id, String accountId, String roleId){
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(id)
+                .claim("accountId",accountId)
+                .claim("roleId",roleId)
                 .claim("type", "refresh")
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + refreshTokenValidMs))
@@ -76,6 +80,12 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // 토큰 만료시간 timestamp(ms)로 반환
+    public long getExpiration(String token){
+        Claims claims = getClaims(token);
+        return claims.getExpiration().getTime();
     }
 }
 
