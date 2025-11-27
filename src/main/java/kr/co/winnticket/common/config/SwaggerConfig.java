@@ -98,7 +98,9 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
-                .group("0500. 인증/로그인")
+                //.group("0500. 인증-로그인")
+                .group("auth-login-0500")
+                .displayName("0500. 인증 / 로그인")
                 .packagesToScan("kr.co.winnticket.auth")
                 .pathsToMatch("/api/**")
                 .build();
