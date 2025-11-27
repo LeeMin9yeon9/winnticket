@@ -62,8 +62,12 @@ public class AuthService {
         // 비밀번호가 맞으면 실패 카운트 초기화
         loginAttemptService.resetFailCount(accountId,roleId);
 
+
         // 로그인 마지막 시간 업데이트
-        authmapper.updateLastLoginAt(loginUser.getId());
+        if("ROLE002".equals(loginUser.getRoleId())){
+            authmapper.updateLastLoginAt(loginUser.getId());
+        }
+
 
 
         // JWT 생성
