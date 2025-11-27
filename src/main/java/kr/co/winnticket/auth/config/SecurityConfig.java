@@ -26,11 +26,16 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
+
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/swagger-ui/index.html",
+                                "/v3/api-docs",
+                                "/v3/api-docs/*",
                                 "/v3/api-docs/**",
+                                "/v3/api-docs/**/**",
+
                                 "/webjars/**"
                         ).permitAll() // 인증없이 허용
                         .anyRequest().authenticated() // 나머지는 API 인증 필요
