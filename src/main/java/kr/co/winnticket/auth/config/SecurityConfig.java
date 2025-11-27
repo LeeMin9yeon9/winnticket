@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -26,24 +25,27 @@ public class SecurityConfig {
                 //.authorizeHttpRequests(auth -> auth.anyRequest().permitAll()) // 모든요청 허용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/api/auth/logout",
-
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/swagger-ui/index.html",
-                                "/v3/api-docs/**",
-
-
-                                "/webjars/**"
-                        ).permitAll() // 인증없이 허용
-                        .anyRequest().authenticated() // 나머지는 API 인증 필요
-                )
-                .httpBasic(httpBasic -> httpBasic.disable()); // HTTP Basic 끔
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                .anyRequest().permitAll())
+//                        .requestMatchers(
+//                                "/api/auth/login",
+//                                "/api/auth/refresh",
+//                                "/api/auth/logout",
+//
+//                                "/swagger-ui/**",
+//                                "/swagger-ui.html",
+//                                "/swagger-resources/**",
+//                                "/swagger-ui/index.html",
+//                                "/v3/api-docs/**",
+//
+//
+//                                "/webjars/**"
+//                        ).permitAll() // 인증없이 허용
+//                        .anyRequest().authenticated() // 나머지는 API 인증 필요
+//                )
+                .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 끔
+                .formLogin(form -> form.disable())
+                .sessionManagement(session ->session.disable());
+       // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();                            // 현재 모든 인증 끔
     }
 
