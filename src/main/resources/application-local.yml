@@ -11,3 +11,9 @@ spring:
     url: jdbc:postgresql://3.36.128.67:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: admin
     password: winnticket!@#$
+
+  redis:
+    data:
+     host: localhost
+     port: 6379
+     password: null
