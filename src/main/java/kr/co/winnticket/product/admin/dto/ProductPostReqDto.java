@@ -28,7 +28,7 @@ public class ProductPostReqDto {
     private UUID categoryId;
 
     @Schema(description = "파트너_ID")
-    private UUID parterId;
+    private UUID partnerId;
 
     @Schema(description = "상품설명")
     private String description;
