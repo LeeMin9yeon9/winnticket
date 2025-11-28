@@ -42,7 +42,7 @@
         ]]>
         </if>
         Order By
-            a.DISPLAY_ORDER
+            a.CREATED_AT Desc
     </select>
 
     <!--
@@ -72,7 +72,7 @@
             #{name},
             #{code},
             #{categoryId},
-            #{parterId},
+            #{partnerId},
             #{description},
             #{imageUrl},
             #{price},
