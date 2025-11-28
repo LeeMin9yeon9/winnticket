@@ -23,7 +23,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 끔
                 //.authorizeHttpRequests(auth -> auth.anyRequest().permitAll()) // 모든요청 허용
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                //.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                                 .anyRequest().permitAll())
 //                        .requestMatchers(
