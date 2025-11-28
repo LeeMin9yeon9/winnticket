@@ -42,7 +42,7 @@
         ]]>
         </if>
         Order By
-            a.DISPLAY_ORDER
+            a.CREATED_AT
     </select>
 
     <!--
