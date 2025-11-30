@@ -46,6 +46,94 @@
     </select>
 
     <!--
+     - 상품 상세 Select
+     -->
+    <select id="selectProductDetail" resultType="kr.co.winnticket.product.admin.dto.ProductDetailGetResDto">
+        Select
+            a.ID,  -- 상품_ID
+            a.NAME,  -- 상품명
+            a.CODE,  -- 상품코드
+            a.CATEGORY_ID,  -- 카테고리_ID
+            a.PARTNER_ID,  -- 파트너_ID
+            a.PRICE,  -- 정가
+            a.DISCOUNT_PRICE,  -- 판매가
+            a.STOCK,  -- 재고
+            a.SALES_STATUS,  -- 판매상태
+            a.DESCRIPTION,  -- 설명
+            a.SHIPPING_INFO,  -- 배송정보
+            a.WARRANTY_INFO,  -- 보증정보
+            a.RETURN_INFO,  -- 반품/교환정보
+            a.DETAIL_CONTENT,  -- 상세설명
+            a.DETAIL_IMAGES  -- 상세이미지
+        FROM
+            PRODUCTS a
+        Where 1 = 1
+        And id = #{id}
+    </select>
+
+    <!--
+     - 상품 섹션 Select
+     -->
+    <select id="selectSections" resultType="kr.co.winnticket.product.admin.dto.ProductSectionGetResDto">
+        Select
+            a.ID,  -- 섹션_ID
+            a.NAME,  -- 섹션명
+            a.DESCRIPTION,  -- 설명
+            COALESCE(b.VISIBLE, false) VISIBLE  -- 노출여부
+        From
+            SECTION a
+        Left Join
+            PRODUCT_SECTION b
+        On a.ID = b.SECTION_ID
+        And b.PRODUCT_ID = #{id}
+    </select>
+
+    <!--
+     - 상품 옵션 목록 Select
+     -->
+    <select id="selectOptions" resultType="kr.co.winnticket.product.admin.dto.ProductOptionGetResDto">
+        Select
+            a.ID,  -- 옵션_ID
+            a.NAME,  -- 옵션명
+            a.CODE,  -- 옵션코드
+            a.REQUIRED  -- 필수여부
+        FROM
+            PRODUCT_OPTIONS a
+        Where 1 = 1
+        And a.PRODUCT_ID = #{id}
+    </select>
+
+    <!--
+     - 상품 옵션 상세 Select
+     -->
+    <select id="selectProductOptionDetail" resultType="kr.co.winnticket.product.admin.dto.ProductOptionGetResDto">
+        Select
+            a.ID,  -- 옵션_ID
+            a.NAME,  -- 옵션명
+            a.CODE,  -- 옵션코드
+            a.REQUIRED  -- 필수여부
+        FROM
+            PRODUCT_OPTIONS a
+        Where 1 = 1
+          And a.ID = #{id}
+    </select>
+
+    <!--
+     - 상품 옵션별 가격 Select
+     -->
+    <select id="selectOptionValues" resultType="kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto">
+        Select
+            a.ID,  -- 옵션별가격_ID
+            a.CODE,  -- 코드
+            a.VALUE,  -- 옵션별가격명
+            a.ADDITIONAL_PRICE  -- 추가가격
+        FROM
+            PRODUCT_OPTION_VALUES a
+        Where 1 = 1
+        And a.OPTION_ID = #{id}
+    </select>
+
+    <!--
     - 상품 insert
     -->
     <insert id="insertProduct" parameterType="kr.co.winnticket.product.admin.dto.ProductPostReqDto">
@@ -86,4 +174,163 @@
         )
         ]]>
     </insert>
+
+    <!--
+    - 상품 기본정보 수정
+    -->
+    <update id="updateProductBasic">
+        Update PRODUCTS
+        <set>
+            <if test="model.name != null and model.name != ''">
+                NAME = #{model.name},
+            </if>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
+            <if test="model.categoryId != null">
+                CATEGORY_ID = #{model.categoryId},
+            </if>
+            <if test="model.partnerId != null">
+                PARTNER_ID = #{model.partnerId},
+            </if>
+            <if test="model.price != null">
+                PRICE = #{model.price},
+            </if>
+            <if test="model.discountPrice != null">
+                DISCOUNT_PRICE = #{model.discountPrice},
+            </if>
+            <if test="model.stock != null">
+                STOCK = #{model.stock},
+            </if>
+            <if test="model.salesStatus != null">
+                SALES_STATUS = #{model.salesStatus}::sales_status,
+            </if>
+            <if test="model.description != null">
+                DESCRIPTION = #{model.description},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
+
+    <!--
+    - 상품 배송정보 수정
+    -->
+    <update id="updateProductShipping">
+        Update PRODUCTS
+        <set>
+            <if test="model.shippingInfo != null and model.shippingInfo != ''">
+                SHIPPING_INFO = #{model.shippingInfo},
+            </if>
+            <if test="model.warrantyInfo != null and model.warrantyInfo != ''">
+                WARRANTY_INFO = #{model.warrantyInfo},
+            </if>
+            <if test="model.returnInfo != null and model.returnInfo != ''">
+                RETURN_INFO = #{model.returnInfo},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
+
+    <!--
+    - 상품 섹션정보 수정
+    -->
+    <update id="updateProductSection">
+        <choose>
+            <when test="visible == true">
+                INSERT INTO PRODUCT_SECTION
+                (
+                    PRODUCT_ID,
+                    SECTION_ID,
+                    VISIBLE
+                )
+                VALUES
+                (
+                    #{id},
+                    #{sectionId},
+                    TRUE
+                )
+                ON CONFLICT (PRODUCT_ID, SECTION_ID)
+                DO UPDATE SET visible = TRUE,
+                updated_at = NOW();
+            </when>
+            <otherwise>
+                DELETE FROM PRODUCT_SECTION
+                WHERE PRODUCT_ID = #{id}
+                AND SECTION_ID = #{sectionId};
+            </otherwise>
+        </choose>
+    </update>
+
+    <!--
+    - 상품 상세내용 수정
+    -->
+    <update id="updateProductDetailContent">
+        Update PRODUCTS
+        <set>
+            <if test="detailContent != null and detailContent != ''">
+                DETAIL_CONTENT = #{detailContent},
+            </if>
+            <if test="detailImages != null and detailImages != ''">
+                DETAIL_IMAGES = #{detailImages},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
+
+
+    <!--
+    - 상품 옵션 등록
+    -->
+    <insert id="insertProductOption" parameterType="map" useGeneratedKeys="true" keyProperty="model.optionId">
+        Insert Into PRODUCT_OPTIONS
+        (
+            PRODUCT_ID,
+            NAME,
+            CODE,
+            REQUIRED
+        )
+        Values
+        (
+            #{id},
+            #{model.name},
+            #{model.code},
+            #{model.required}
+        )
+    </insert>
+
+    <!--
+    - 상품 옵션별 가격 등록
+    -->
+    <insert id="insertOptionValue">
+        Insert Into PRODUCT_OPTION_VALUES
+        (
+            OPTION_ID,
+            VALUE,
+            CODE,
+            ADDITIONAL_PRICE
+        )
+        Values
+        (
+            #{optionId},
+            #{model.value},
+            #{model.code},
+            #{model.additionalPrice}
+        )
+    </insert>
+
+    <!--
+    - 상품 옵션별 가격 삭제
+    -->
+    <delete id="deleteOptionValues">
+        DELETE FROM PRODUCT_OPTION_VALUES
+        WHERE 1 = 1
+        AND ID = #{optionValueId};
+    </delete>
+
 </mapper>
