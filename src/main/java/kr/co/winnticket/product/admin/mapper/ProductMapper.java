@@ -60,7 +60,18 @@ public interface ProductMapper {
     void updateProductDetailContent(
             @Param("id") UUID id,
             @Param("detailContent") String detailContent,
-            @Param("detailImages") String detailImages
+            @Param("imagesJson") String imagesJson
+    );
+
+    // 상품 상세내용 이미지삭제
+    void deleteProductDetailImages(
+            @Param("id") UUID auId
+    );
+
+    // 상품 상세내용 이미지등록
+    void insertProductDetailImages(
+            @Param("id") UUID auId,
+            @Param("fileNames") List<String> files
     );
 
     // 상품 옵션상세 조회
@@ -82,6 +93,46 @@ public interface ProductMapper {
 
     // 상품별 옵션별 옵션값 삭제
     void deleteOptionValues(
-            @Param("optionValueId") List<UUID> deleteValueIds
+            @Param("list") List<UUID> ids
     );
+
+    // 상품별 옵션 수정
+    void updateProductOption(
+            @Param("optionId") UUID auId,
+            @Param("model") ProductOptionPatchReqDto model
+    );
+
+    // 상품별 옵션별 옵션값 전체삭제
+    void deleteOptionValuesByOptionId(UUID auId);
+
+    // 상품별 옵션 삭제
+    void deleteProductOption(UUID auId);
+
+    // 섹션 목록 조회
+    List<SectionListGetResDto> selectSectionList();
+
+    // 활성화 섹션 목록 조회
+    List<SectionListActiveGetResDto> selectSectionListActive();
+
+    // 섹션 상세 조회
+    SectionDetailGetResDto selectSectionDetail(
+            @Param("id") UUID auId
+    );
+
+    // 섹션 등록
+    void insertSection(SectionPostReqDto model);
+
+    // 섹션 수정
+    void updateSection(
+            @Param("id") UUID auId,
+            @Param("model") SectionPatchReqDto model
+    );
+
+    // 섹션 삭제
+    void deleteSection(
+            @Param("id") UUID auId
+    );
+
+    // 섹션 정렬순서 재정렬
+    void reorderDisplayOrder();
 }

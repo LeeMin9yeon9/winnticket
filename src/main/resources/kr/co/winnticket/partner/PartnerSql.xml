@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.partner.mapper.PartnerMapper">
+
+    <!-- 파트너 목록 / 검색 -->
+    <select id="selectPartnerList" resultType="kr.co.winnticket.partner.dto.PartnerListGetResDto">
+        SELECT
+        p.ID,
+        p.CODE,
+        p.NAME,
+        p.TYPE,
+        p.STATUS,
+        p.MANAGER_NAME AS managerName,
+        p.CONTRACT_START_DATE AS contractStartDate,
+        p.CONTRACT_END_DATE AS contractEndDate,
+        p.COMMISSION_RATE AS commissionRate,
+        p.VISIBLE
+        FROM PARTNERS p
+        WHERE 1 = 1
+
+        <if test="keyword != null and keyword != ''">
+            AND (
+            UPPER(p.NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(p.CODE) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(p.MANAGER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+
+        <if test="AllType != null">
+            AND p.TYPE = #{AllType}
+        </if>
+
+        <if test="AllStatus != null">
+            AND p.STATUS = #{AllStatus}
+        </if>
+
+        ORDER BY p.CREATED_AT DESC
+    </select>
+
+
+    <!-- 파트너 기본 정보 -->
+    <select id="selectPartnerInfo"
+            parameterType="java.util.UUID"
+            resultType="kr.co.winnticket.partner.dto.PartnerInfoGetResDto">
+
+        SELECT
+            p.ID,
+            p.CODE,
+            p.NAME,
+            p.TYPE,
+            p.COMMISSION_RATE AS commissionRate,
+            p.BUSINESS_NUMBER AS businessNumber,
+            p.ADDRESS,
+            p.MANAGER_NAME AS managerName,
+            p.MANAGER_EMAIL AS managerEmail,
+            p.MANAGER_PHONE AS managerPhone,
+            p.CONTRACT_START_DATE AS contractStartDate,
+            p.CONTRACT_END_DATE AS contractEndDate,
+
+            (SELECT COUNT(*) FROM PRODUCTS pr WHERE pr.PARTNER_ID = p.ID) AS productCount,
+
+            (SELECT COALESCE(SUM(o.TOTAL_PRICE),0)
+             FROM TICKET_ORDERS o
+             WHERE o.PRODUCT_ID IN (
+                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
+             )) AS totalSales,
+
+            (SELECT COUNT(*)
+             FROM TICKET_ORDERS o
+             WHERE o.PRODUCT_ID IN (
+                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
+             )) AS totalOrders,
+
+            (SELECT MAX(o.PAYMENT_DATE)
+             FROM TICKET_ORDERS o
+             WHERE o.PRODUCT_ID IN (
+                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
+             )) AS lastOrderDate
+
+        FROM PARTNERS p
+        WHERE p.ID = #{id}
+    </select>
+
+
+    <!-- 파트너 등록 -->
+    <insert id="insertPartner" parameterType="kr.co.winnticket.partner.dto.PartnerPostReqDto">
+        INSERT INTO PARTNERS (
+            ID,
+            CODE,
+            NAME,
+            TYPE,
+            STATUS,
+            BUSINESS_NUMBER,
+            ADDRESS,
+            MANAGER_NAME,
+            MANAGER_EMAIL,
+            MANAGER_PHONE,
+            CONTRACT_START_DATE,
+            CONTRACT_END_DATE,
+            COMMISSION_RATE,
+            LOGO_URL,
+            DESCRIPTION,
+            CREATED_AT,
+            UPDATED_AT
+        )
+        VALUES(
+                  #{id},
+                  #{code},
+                  #{name},
+                  #{type},
+                  #{status},
+                  #{businessNumber},
+                  #{address},
+                  #{managerName},
+                  #{managerEmail},
+                  #{managerPhone},
+                  #{contractStartDate},
+                  #{contractEndDate},
+                  #{commissionRate},
+                  #{logoUrl},
+                  #{description},
+                  NOW(),
+                  NOW()
+              )
+    </insert>
+
+
+    <!-- 파트너 수정 (model 사용하도록 수정됨!) -->
+    <update id="updatePartner">
+        UPDATE PARTNERS
+        <set>
+            <if test="model.code != null">CODE = #{model.code},</if>
+            <if test="model.name != null">NAME = #{model.name},</if>
+            <if test="model.type != null">TYPE = #{model.type},</if>
+            <if test="model.status != null">STATUS = #{model.status},</if>
+            <if test="model.businessNumber != null">BUSINESS_NUMBER = #{model.businessNumber},</if>
+            <if test="model.address != null">ADDRESS = #{model.address},</if>
+            <if test="model.managerName != null">MANAGER_NAME = #{model.managerName},</if>
+            <if test="model.managerEmail != null">MANAGER_EMAIL = #{model.managerEmail},</if>
+            <if test="model.managerPhone != null">MANAGER_PHONE = #{model.managerPhone},</if>
+            <if test="model.contractStartDate != null">CONTRACT_START_DATE = #{model.contractStartDate},</if>
+            <if test="model.contractEndDate != null">CONTRACT_END_DATE = #{model.contractEndDate},</if>
+            <if test="model.commissionRate != null">COMMISSION_RATE = #{model.commissionRate},</if>
+            <if test="model.logoUrl != null">LOGO_URL = #{model.logoUrl},</if>
+            <if test="model.description != null">DESCRIPTION = #{model.description},</if>
+            UPDATED_AT = NOW()
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+
+    <!-- 파트너 삭제 -->
+    <update id="deletePartner" parameterType="java.util.UUID">
+        UPDATE PARTNERS
+        SET STATUS = 'DELETED',
+            UPDATED_AT = NOW()
+        WHERE ID = #{id}
+    </update>
+
+
+    <!-- 연관 상품 비활성화 -->
+    <update id="disableProductsByPartnerId" parameterType="java.util.UUID">
+        UPDATE PRODUCTS
+        SET
+            VISIBLE = FALSE,
+            SALES_STATUS = 'STOPPED',
+            UPDATED_AT = NOW()
+        WHERE PARTNER_ID = #{partnerId}
+    </update>
+
+    <!-- 파트너 복구 -->
+    <update id="restorePartner" parameterType="java.util.UUID">
+        UPDATE PARTNERS
+        SET STATUS = 'ACTIVE',
+            UPDATED_AT = NOW()
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 연관 상품 복구 -->
+    <update id="restoreProductsByPartnerId" parameterType="java.util.UUID">
+        UPDATE PRODUCTS
+        SET
+            VISIBLE = TRUE,
+            SALES_STATUS = 'READY',
+            UPDATED_AT = NOW()
+        WHERE PARTNER_ID = #{partnerId}
+    </update>
+
+
+    <update id="updatePartnerStatus">
+        UPDATE partners
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
