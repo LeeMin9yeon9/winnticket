@@ -274,15 +274,14 @@
             <if test="detailContent != null and detailContent != ''">
                 DETAIL_CONTENT = #{detailContent},
             </if>
-            <if test="detailImages != null and detailImages != ''">
-                DETAIL_IMAGES = #{detailImages},
+            <if test="imagesJson != null">
+                DETAIL_IMAGES = CAST(#{imagesJson} AS jsonb),
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
         And ID = #{id}
     </update>
-
 
     <!--
     - 상품 옵션 등록
@@ -303,6 +302,27 @@
             #{model.required}
         )
     </insert>
+
+    <!--
+    - 상품별 옵션 수정
+    -->
+    <update id="updateProductOption">
+        Update PRODUCT_OPTIONS
+        <set>
+            <if test="model.name != null and model.name != ''">
+                NAME = #{model.name},
+            </if>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
+            <if test="model.required != null">
+                REQUIRED = #{model.required},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{optionId}
+    </update>
 
     <!--
     - 상품 옵션별 가격 등록
@@ -329,8 +349,164 @@
     -->
     <delete id="deleteOptionValues">
         DELETE FROM PRODUCT_OPTION_VALUES
-        WHERE 1 = 1
-        AND ID = #{optionValueId};
+        WHERE ID IN
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </delete>
 
+    <!--
+    - 상품별 옵션별 옵션값 전체삭제
+    -->
+    <delete id="deleteOptionValuesByOptionId">
+        DELETE FROM PRODUCT_OPTION_VALUES
+        WHERE 1 = 1
+        And OPTION_ID = #{id}
+    </delete>
+
+    <!--
+    - 상품별 옵션 삭제
+    -->
+    <delete id="deleteProductOption">
+        DELETE FROM PRODUCT_OPTIONS
+        WHERE 1 = 1
+        And ID = #{id}
+    </delete>
+
+    <!--
+     - 섹션 목록 Select
+     -->
+    <select id="selectSectionList" resultType="kr.co.winnticket.product.admin.dto.SectionListGetResDto">
+        Select
+            a.ID,  -- 섹션_ID
+            a.CODE,  -- 코드
+            a.NAME,  -- 이름
+            a.DISPLAY_ORDER,  -- 표시순서
+            a.IS_ACTIVE,  -- 활성화여부
+            a.IS_SYSTEM,  -- 시스템등록여부
+            a.DESCRIPTION  -- 설명
+        FROM
+            SECTION a
+        Where 1 = 1
+        Order By
+            a.DISPLAY_ORDER ASC
+    </select>
+
+    <!--
+     - 활성화 섹션 목록 Select
+     -->
+    <select id="selectSectionListActive" resultType="kr.co.winnticket.product.admin.dto.SectionListActiveGetResDto">
+        Select
+            a.ID,  -- 섹션_ID
+            a.CODE,  -- 코드
+            a.NAME,  -- 이름
+            a.DISPLAY_ORDER,  -- 표시순서
+            a.IS_ACTIVE,  -- 활성화여부
+            a.IS_SYSTEM,  -- 시스템등록여부
+            a.DESCRIPTION  -- 설명
+        FROM
+            SECTION a
+        Where 1 = 1
+        And IS_ACTIVE = true
+        Order By
+            a.DISPLAY_ORDER ASC
+    </select>
+
+    <!--
+     - 섹션 상세 Select
+     -->
+    <select id="selectSectionDetail" resultType="kr.co.winnticket.product.admin.dto.SectionDetailGetResDto">
+        Select
+            a.ID,  -- 섹션_ID
+            a.CODE,  -- 코드
+            a.NAME,  -- 이름
+            a.DISPLAY_ORDER,  -- 표시순서
+            a.IS_ACTIVE,  -- 활성화여부
+            a.IS_SYSTEM,  -- 시스템등록여부
+            a.DESCRIPTION  -- 설명
+        FROM
+            SECTION a
+        Where 1 = 1
+        And a.ID = #{id}
+    </select>
+
+    <!--
+     - 섹션 등록
+     -->
+    <insert id="insertSection">
+        Insert Into SECTION
+        (
+            CODE,
+            NAME,
+            DISPLAY_ORDER,
+            DESCRIPTION,
+            IS_ACTIVE,
+            IS_SYSTEM
+        )
+        Values
+        (
+            #{code},
+            #{name},
+            #{displayOrder},
+            #{description},
+            #{isActive},
+            false
+        )
+    </insert>
+
+    <!--
+    - 섹션 수정
+    -->
+    <update id="updateSection">
+        Update SECTION
+        <set>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
+            <if test="model.name != null and model.name != ''">
+                NAME = #{model.name},
+            </if>
+            <if test="model.displayOrder != null">
+                DISPLAY_ORDER = #{model.displayOrder},
+            </if>
+            <if test="model.description != null and model.description != ''">
+                DESCRIPTION = #{model.description},
+            </if>
+            <if test="model.isActive != null">
+                IS_ACTIVE = #{model.isActive},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
+
+    <!--
+    - 섹션 삭제
+    -->
+    <delete id="deleteSection">
+        DELETE FROM SECTION
+        WHERE 1 = 1
+          And ID = #{id}
+    </delete>
+
+    <!--
+    - 섹션 정렬순서 재정렬
+    -->
+    <update id="reorderDisplayOrder">
+        With reordered As (
+            Select
+                id,
+                Row_Number() Over (Order By DISPLAY_ORDER, CREATED_AT) NEW_ORDER
+            From
+                SECTION
+        )
+        Update SECTION a
+        Set
+            DISPLAY_ORDER = x.NEW_ORDER
+            From
+            reordered x
+        Where 1 = 1
+          And a.id = x.id
+    </update>
 </mapper>
