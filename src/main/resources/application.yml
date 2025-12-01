@@ -34,6 +34,8 @@ springdoc:
       paths-to-match: /api/auth/**
     - group: 0600.사이트관리
       paths-to-match: /api/admin/**
+    - group: 0700.파트너관리
+      paths-to-match: /api/partners/**
 
   default-consumes-media-type: application/json
   default-produces-media-type: application/json

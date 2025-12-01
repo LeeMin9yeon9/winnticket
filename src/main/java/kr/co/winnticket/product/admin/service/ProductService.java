@@ -2,10 +2,13 @@ package kr.co.winnticket.product.admin.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.common.service.FileService;
 import kr.co.winnticket.product.admin.dto.*;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.UUID;
 public class ProductService {
     private final ProductMapper mapper;
     private final ObjectMapper objectMapper;
+    private final FileService fileService;
 
     // 상품 목록 조회
     public List<ProductListGetResDto> selectProductList(String srchWord, UUID categoryId, String salesStatus) {
@@ -73,13 +77,26 @@ public class ProductService {
     }
 
     // 상품 상세내용 수정
-    public void updateProductDetailContent(UUID auId, ProductDetailContentPatchReqDto model) throws Exception{
-        String imagesJson = null;
-        if (model.getDetailImagesList() != null) {
-            imagesJson = objectMapper.writeValueAsString(model.getDetailImagesList());
+    @Transactional
+    public void updateProductDetailContent(UUID id, String detailContent, List<String> existFileNames, List<MultipartFile> files) throws Exception{
+        // 새 파일 업로드
+        List<String> uploadedFiles = new ArrayList<>();
+        if (files != null && !files.isEmpty()) {
+            uploadedFiles = fileService.uploadFiles(files);  // 공통 파일업로드
         }
 
-        mapper.updateProductDetailContent(auId, model.getDetailContent(), imagesJson);
+        // 최종 이미지 목록: 남겨둔 기존 이미지 + 새 이미지
+        List<String> finalImages = existFileNames != null
+                ? new ArrayList<>(existFileNames)
+                : new ArrayList<>();
+
+        finalImages.addAll(uploadedFiles);
+
+        // JSON 형태로 변환
+        String imagesJson = new ObjectMapper().writeValueAsString(finalImages);
+
+        // DB 업데이트
+        mapper.updateProductDetailContent(id, detailContent, imagesJson);
     }
 
     // 상품 옵션 상세 조회
@@ -103,5 +120,65 @@ public class ProductService {
         if (model.getDeleteValueIds() != null && !model.getDeleteValueIds().isEmpty()) {
             mapper.deleteOptionValues(model.getDeleteValueIds());
         }
+    }
+
+    // 상품 옵션 수정
+    public void updateProductOption(UUID auId, ProductOptionPatchReqDto model) {
+        mapper.updateProductOption(auId, model);
+
+        if (model.getValuesInsert() != null && !model.getValuesInsert().isEmpty()) {
+            for (ProductOptionValuePostReqDto valueDto : model.getValuesInsert()) {
+                mapper.insertOptionValue(auId, valueDto);
+            }
+        };
+
+        if (model.getDeleteValueIds() != null && !model.getDeleteValueIds().isEmpty()) {
+            mapper.deleteOptionValues(model.getDeleteValueIds());
+        }
+    }
+
+    // 상품 옵션 삭제
+    public void deleteProductOption(UUID auId) {
+        mapper.deleteOptionValuesByOptionId(auId);
+        mapper.deleteProductOption(auId);
+    }
+
+    // 섹션 목록 조회
+    public List<SectionListGetResDto> selectSectionList() {
+        List<SectionListGetResDto> lModel = mapper.selectSectionList();
+
+        return lModel;
+    }
+
+    // 활성화 섹션 목록 조회
+    public List<SectionListActiveGetResDto> selectSectionListActive() {
+        List<SectionListActiveGetResDto> lModel = mapper.selectSectionListActive();
+
+        return lModel;
+    }
+
+    // 섹션 상세조회
+    public SectionDetailGetResDto selectSectionDetail(UUID auId) {
+        SectionDetailGetResDto model = mapper.selectSectionDetail(auId);
+
+        return model;
+    }
+
+    // 섹션등록
+    public void insertSection(SectionPostReqDto model) {
+        mapper.insertSection(model);
+        mapper.reorderDisplayOrder();
+    }
+
+    // 섹션 수정
+    public void updateSection(UUID auId, SectionPatchReqDto model) {
+        mapper.updateSection(auId, model);
+        mapper.reorderDisplayOrder();
+    }
+
+    // 섹션 삭제
+    public void deleteSection(UUID auId) {
+        mapper.deleteSection(auId);
+        mapper.reorderDisplayOrder();
     }
 }

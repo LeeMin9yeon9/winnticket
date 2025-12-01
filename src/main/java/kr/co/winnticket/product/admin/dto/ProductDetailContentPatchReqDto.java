@@ -15,8 +15,8 @@ public class ProductDetailContentPatchReqDto {
     @Schema(description = "상세설명 HTML")
     private String detailContent;
 
-    @Schema(description = "이미지 리스트")
-    private List<String> detailImagesList;
+    @Schema(description = "기존이미지파일")
+    private List<String> existFileNames;
 
     @Hidden
     @Schema(description = "아이디")
