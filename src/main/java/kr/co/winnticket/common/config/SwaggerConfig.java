@@ -129,4 +129,13 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi partnersApi() {
+        return GroupedOpenApi.builder()
+                .group("0700. 파트너관리")
+                .packagesToScan("kr.co.winnticket.partner")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
 }
