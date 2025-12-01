@@ -21,7 +21,6 @@ spring:
         password: null
 
 file:
-  base-url: https://cdn.winnticket.store
-  upload-path: /home/ubuntu/winnticket_upload
+  upload-dir: /home/ubuntu/winnticket_upload
 
 
