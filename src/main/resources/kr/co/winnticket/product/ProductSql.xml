@@ -490,6 +490,41 @@
           And ID = #{id}
     </delete>
 
+    <!-- Max Order Select
+    -->
+    <select id="getMaxDisplayOrder" resultType="int">
+        SELECT COALESCE(MAX(display_order), 0) FROM section
+    </select>
+
+    <!-- INSERT 시 order 밀기 -->
+    <update id="shiftDisplayOrderForInsert">
+        <![CDATA[
+        UPDATE section
+        SET display_order = display_order + 1
+        WHERE display_order >= #{newOrder}
+        ]]>
+    </update>
+
+    <!-- 수정 시: old > new (ex: 5→2 → 2~4 +1) -->
+    <update id="shiftDisplayOrderForMoveUp">
+        <![CDATA[
+        UPDATE section
+        SET display_order = display_order + 1
+        WHERE display_order >= #{newOrder}
+        AND display_order <  #{oldOrder}
+        ]]>
+    </update>
+
+    <!-- 수정 시: old < new (ex: 2→5 → 3~5 -1) -->
+    <update id="shiftDisplayOrderForMoveDown">
+        <![CDATA[
+        UPDATE section
+        SET display_order = display_order - 1
+        WHERE display_order <= #{newOrder}
+        AND display_order >  #{oldOrder}
+        ]]>
+    </update>
+
     <!--
     - 섹션 정렬순서 재정렬
     -->
@@ -497,7 +532,7 @@
         With reordered As (
             Select
                 id,
-                Row_Number() Over (Order By DISPLAY_ORDER, CREATED_AT) NEW_ORDER
+                Row_Number() Over (Order By DISPLAY_ORDER) NEW_ORDER
             From
                 SECTION
         )
@@ -507,6 +542,6 @@
             From
             reordered x
         Where 1 = 1
-          And a.id = x.id
+        And a.id = x.id
     </update>
 </mapper>

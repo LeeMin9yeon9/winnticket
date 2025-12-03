@@ -57,7 +57,15 @@ public class ProductService {
     }
 
     // 상품 등록
-    public void insertProduct(ProductPostReqDto model) {
+    @Transactional
+    public void insertProduct(ProductPostReqDto model, MultipartFile file) throws Exception {
+        // 파일 업로드 처리
+        if (file != null && !file.isEmpty()) {
+            // 새 파일 업로드
+            String uploadPath = fileService.uploadFile(file);
+            model.setImageUrl(uploadPath);    // 상품테이블 이미지 컬럼
+        }
+
         mapper.insertProduct(model);
     }
 
@@ -164,21 +172,59 @@ public class ProductService {
         return model;
     }
 
+    // Max Order Select
+    private int getMaxDisplayOrder() {
+        return mapper.getMaxDisplayOrder();
+    }
+
     // 섹션등록
+    @Transactional
     public void insertSection(SectionPostReqDto model) {
+        int maxOrder = getMaxDisplayOrder();         // ex: 현재 1,2,3 이면 maxOrder=3
+        int newOrder = model.getDisplayOrder();            // 요청 displayOrder
+
+        // displayOrder가 max+1 보다 크면 max+1로 조정
+        if (newOrder > maxOrder + 1) {
+            newOrder = maxOrder + 1;
+        }
+
+        // Insert 위치 이상은 모두 뒤로 밀기
+        mapper.shiftDisplayOrderForInsert(newOrder);
+
+        model.setDisplayOrder(newOrder);
         mapper.insertSection(model);
-        mapper.reorderDisplayOrder();
     }
 
     // 섹션 수정
+    @Transactional
     public void updateSection(UUID auId, SectionPatchReqDto model) {
+        SectionDetailGetResDto origin = mapper.selectSectionDetail(auId);
+
+        int oldOrder = origin.getDisplayOrder();
+        int newOrder = model.getDisplayOrder() != null ? model.getDisplayOrder() : oldOrder;
+        int maxOrder = getMaxDisplayOrder();
+
+        if (newOrder > maxOrder) {
+            newOrder = maxOrder;
+        }
+
+        if (newOrder != oldOrder) {
+            if (newOrder < oldOrder) {
+                mapper.shiftDisplayOrderForMoveUp(newOrder, oldOrder);
+            } else {
+                mapper.shiftDisplayOrderForMoveDown(newOrder, oldOrder);
+            }
+        }
+
+        model.setDisplayOrder(newOrder);
+
         mapper.updateSection(auId, model);
-        mapper.reorderDisplayOrder();
     }
 
     // 섹션 삭제
+    @Transactional
     public void deleteSection(UUID auId) {
         mapper.deleteSection(auId);
-        mapper.reorderDisplayOrder();
+        mapper.reorderAllDisplayOrders();
     }
 }

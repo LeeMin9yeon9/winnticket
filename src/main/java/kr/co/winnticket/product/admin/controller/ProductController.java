@@ -42,14 +42,15 @@ public class ProductController {
     }
 
     // 상품 등록
-    @PostMapping("api/product/admin")
+    @PostMapping(value="api/product/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
     public void postProduct (
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 정보") @RequestBody @Valid ProductPostReqDto model
+            @RequestPart("model") @Valid ProductPostReqDto model,
+            @RequestPart(value = "files", required = false) MultipartFile file
     ) throws Exception {
-        service.insertProduct(model);
+        service.insertProduct(model, file);
     }
 
     // 상품 기본정보 수정
@@ -208,5 +209,4 @@ public class ProductController {
     ) throws Exception {
         service.deleteSection(auId);
     }
-
 }
