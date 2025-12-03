@@ -35,7 +35,7 @@ public class ProductPostReqDto {
 
     @Hidden
     @Schema(description = "대표이미지 파일명 (서버에서 자동 설정)", example = "파일명 저장용: ex) 927fa93-test.png")
-    private String imageName;
+    private String imageUrl;
 
     @NotNull
     @Schema(description = "정가", example = "20000")

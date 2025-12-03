@@ -487,7 +487,7 @@
     <delete id="deleteSection">
         DELETE FROM SECTION
         WHERE 1 = 1
-          And ID = #{id}
+        And ID = #{id}
     </delete>
 
     <!-- Max Order Select
@@ -528,7 +528,7 @@
     <!--
     - 섹션 정렬순서 재정렬
     -->
-    <update id="reorderDisplayOrder">
+    <update id="reorderAllDisplayOrders">
         With reordered As (
             Select
                 id,
