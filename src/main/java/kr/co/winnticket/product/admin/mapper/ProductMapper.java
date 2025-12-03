@@ -35,7 +35,9 @@ public interface ProductMapper {
     List<ProductOptionValueGetResDto> selectOptionValues(UUID id);
 
     // 상품 등록
-    void insertProduct(ProductPostReqDto model);
+    void insertProduct(
+            @Param("model") ProductPostReqDto model
+    );
 
     // 상품 기본정보 수정
     void updateProductBasic(
@@ -61,17 +63,6 @@ public interface ProductMapper {
             @Param("id") UUID id,
             @Param("detailContent") String detailContent,
             @Param("imagesJson") String imagesJson
-    );
-
-    // 상품 상세내용 이미지삭제
-    void deleteProductDetailImages(
-            @Param("id") UUID auId
-    );
-
-    // 상품 상세내용 이미지등록
-    void insertProductDetailImages(
-            @Param("id") UUID auId,
-            @Param("fileNames") List<String> files
     );
 
     // 상품 옵션상세 조회
@@ -133,6 +124,24 @@ public interface ProductMapper {
             @Param("id") UUID auId
     );
 
-    // 섹션 정렬순서 재정렬
-    void reorderDisplayOrder();
+    // Max Order Select
+    int getMaxDisplayOrder();
+
+    // --- display_order 관련 쿼리 ---
+    void shiftDisplayOrderForInsert(
+            @Param("newOrder") int newOrder
+    );
+
+    void shiftDisplayOrderForMoveUp(
+            @Param("newOrder") int newOrder,
+            @Param("oldOrder") int oldOrder
+    );
+
+    void shiftDisplayOrderForMoveDown(
+            @Param("newOrder") int newOrder,
+            @Param("oldOrder") int oldOrder
+    );
+
+    // 전체 재정렬(삭제 시 사용)
+    void reorderAllDisplayOrders();
 }
