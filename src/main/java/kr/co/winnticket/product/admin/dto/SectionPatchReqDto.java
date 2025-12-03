@@ -15,7 +15,7 @@ public class SectionPatchReqDto {
     private String name;
 
     @Schema(description = "표시순서")
-    private int displayOrder;
+    private Integer displayOrder;
 
     @Schema(description = "설명")
     private String description;
