@@ -1,11 +1,11 @@
-package kr.co.winnticket.partner.service;
+package kr.co.winnticket.partners.partnerinfo.service;
 
 import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
-import kr.co.winnticket.partner.dto.PartnerInfoGetResDto;
-import kr.co.winnticket.partner.dto.PartnerListGetResDto;
-import kr.co.winnticket.partner.dto.PartnerPostReqDto;
-import kr.co.winnticket.partner.mapper.PartnerMapper;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
+import kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

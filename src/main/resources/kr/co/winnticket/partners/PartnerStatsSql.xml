@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.partners.partnerstats.mapper.PartnerStatsMapper">
+    <!-- 총 매출 -->
+    <select id="getTotalRevenue" resultType="long">
+        SELECT COALESCE(SUM(o.total_price), 0)
+        FROM ticket_orders o
+                 JOIN product_option_values pov ON o.option_value_id = pov.id
+                 JOIN product_options po ON pov.option_id = po.id
+                 JOIN products p ON po.product_id = p.id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+    </select>
+
+    <!-- 총 주문 수 -->
+    <select id="getTotalOrders" resultType="int">
+        SELECT COUNT(*)
+        FROM ticket_orders o
+                 JOIN product_option_values pov ON o.option_value_id = pov.id
+                 JOIN product_options po ON pov.option_id = po.id
+                 JOIN products p ON po.product_id = p.id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+    </select>
+
+    <!-- 총 판매 티켓 수 -->
+    <select id="getTotalTickets" resultType="int">
+        SELECT COALESCE(SUM(o.quantity), 0)
+        FROM ticket_orders o
+                 JOIN product_option_values pov ON o.option_value_id = pov.id
+                 JOIN product_options po ON pov.option_id = po.id
+                 JOIN products p ON po.product_id = p.id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+    </select>
+
+
+
+
+
+    <!--파트너 일별 매출-->
+    <select id="getDailySales" resultType="kr.co.winnticket.partners.partnerstats.dto.PartnerDailySalesDto">
+        SELECT
+            TO_CHAR(o.payment_date, 'YYYY-MM-DD') AS date,
+        COALESCE(SUM(o.total_price), 0) AS revenue
+        FROM ticket_orders o
+            JOIN product_option_values pov ON o.option_value_id = pov.id
+            JOIN product_options po ON pov.option_id = po.id
+            JOIN products p ON po.product_id = p.id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+        GROUP BY date
+        ORDER BY date ASC
+    </select>
+
+
+    <!--카테고리 별 매출-->
+    <select id="getCategorySales" resultType="kr.co.winnticket.partners.partnerstats.dto.PartnerCategorySalesDto">
+        SELECT
+            c.name AS category,
+            COALESCE(SUM(o.total_price), 0) AS revenue
+        FROM ticket_orders o
+                 JOIN product_option_values pov ON o.option_value_id = pov.id
+                 JOIN product_options po ON pov.option_id = po.id
+                 JOIN products p ON po.product_id = p.id
+                 JOIN menu_categories c ON c.id = p.category_id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+        GROUP BY c.name
+        ORDER BY revenue DESC
+    </select>
+
+
+    <!-- 상위 판매 상품 // 판매수량 기준-->
+    <select id="getTopProducts"
+            resultType="kr.co.winnticket.partners.partnerstats.dto.PartnerTopProductsDto">
+        SELECT
+            p.id AS productId,
+            p.code AS productCode,
+            p.name AS productName,
+            COALESCE(SUM(o.total_price), 0) AS revenue,
+            COALESCE(SUM(o.quantity), 0) AS tickets
+        FROM ticket_orders o
+                 JOIN product_option_values pov ON o.option_value_id = pov.id
+                 JOIN product_options po ON pov.option_id = po.id
+                 JOIN products p ON po.product_id = p.id
+        WHERE p.partner_id = #{partnerId}
+          AND o.status IN ('결제완료','티켓발송','사용완료')
+          AND o.payment_date >= #{startDate}
+          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+        GROUP BY p.id, p.code, p.name
+        ORDER BY tickets DESC
+            LIMIT 3
+    </select>
+
+</mapper>
