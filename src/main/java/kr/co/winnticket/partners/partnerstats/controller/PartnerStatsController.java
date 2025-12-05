@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "파트너 판매현황", description = "파트너 상세 > 파트너 판매현")
+@Tag(name = "파트너 판매현황", description = "파트너 상세 > 파트너 판매현황")
 @RequestMapping("/api/partnerStats")
 public class PartnerStatsController {
 
