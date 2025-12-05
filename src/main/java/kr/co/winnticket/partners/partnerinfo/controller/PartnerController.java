@@ -1,4 +1,4 @@
-package kr.co.winnticket.partner.controller;
+package kr.co.winnticket.partners.partnerinfo.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -6,10 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
-import kr.co.winnticket.partner.dto.PartnerInfoGetResDto;
-import kr.co.winnticket.partner.dto.PartnerListGetResDto;
-import kr.co.winnticket.partner.dto.PartnerPostReqDto;
-import kr.co.winnticket.partner.service.PartnerService;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
+import kr.co.winnticket.partners.partnerinfo.service.PartnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "파트너", description = "파트너 관리")
+@Tag(name = "파트너", description = "파트너 관리 > 파트너 목록 / 기본정보")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/partners")

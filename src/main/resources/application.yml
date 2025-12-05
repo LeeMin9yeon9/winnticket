@@ -50,3 +50,6 @@ jwt:
 logging:
   level:
     kr.co.winnticket: DEBUG
+
+file:
+  upload-dir: /Users/kimhb/uploads

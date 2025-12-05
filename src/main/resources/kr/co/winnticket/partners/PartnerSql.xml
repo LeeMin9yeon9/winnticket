@@ -2,10 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.co.winnticket.partner.mapper.PartnerMapper">
+<mapper namespace="kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper">
 
     <!-- 파트너 목록 / 검색 -->
-    <select id="selectPartnerList" resultType="kr.co.winnticket.partner.dto.PartnerListGetResDto">
+    <select id="selectPartnerList" resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
         SELECT
         p.ID,
         p.CODE,
@@ -43,7 +43,7 @@
     <!-- 파트너 기본 정보 -->
     <select id="selectPartnerInfo"
             parameterType="java.util.UUID"
-            resultType="kr.co.winnticket.partner.dto.PartnerInfoGetResDto">
+            resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto">
 
         SELECT
             p.ID,
@@ -85,7 +85,7 @@
 
 
     <!-- 파트너 등록 -->
-    <insert id="insertPartner" parameterType="kr.co.winnticket.partner.dto.PartnerPostReqDto">
+    <insert id="insertPartner" parameterType="kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto">
         INSERT INTO PARTNERS (
             ID,
             CODE,
