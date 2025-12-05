@@ -133,7 +133,7 @@ public class SwaggerConfig {
     public GroupedOpenApi partnersApi() {
         return GroupedOpenApi.builder()
                 .group("0700. 파트너관리")
-                .packagesToScan("kr.co.winnticket.partner")
+                .packagesToScan("kr.co.winnticket.partners")
                 .pathsToMatch("/api/**")
                 .build();
     }
