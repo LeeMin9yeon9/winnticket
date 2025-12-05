@@ -1,10 +1,10 @@
-package kr.co.winnticket.partner.mapper;
+package kr.co.winnticket.partners.partnerinfo.mapper;
 
 import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
-import kr.co.winnticket.partner.dto.PartnerInfoGetResDto;
-import kr.co.winnticket.partner.dto.PartnerListGetResDto;
-import kr.co.winnticket.partner.dto.PartnerPostReqDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
