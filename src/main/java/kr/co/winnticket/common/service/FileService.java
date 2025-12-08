@@ -1,86 +1,80 @@
 package kr.co.winnticket.common.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class FileService {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    /**
-     * 단건 파일 업로드
-     */
-    public String uploadFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return null;
+    @Value("${server.url}")
+    private String serverUrl;
+
+    // 업로드 처리
+    public List<String> uploadFiles(MultipartFile[] files) {
+
+        // 폴더 없으면 생성
+        File dir = new File(uploadDir);
+
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
 
-        // 저장 폴더 생성
-        Files.createDirectories(Paths.get(uploadDir));
-
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, fileName);
-        file.transferTo(filePath.toFile());
-
-        return fileName; // 파일명만 반환
-    }
-
-    /**
-     * 다건 파일 업로드
-     */
-    public List<String> uploadFiles(List<MultipartFile> files) throws IOException {
-        List<String> savedFiles = new ArrayList<>();
-
-        if (files == null || files.isEmpty()) {
-            return savedFiles;
-        }
+        List<String> urls = new ArrayList<>();
 
         for (MultipartFile file : files) {
-            String fileName = uploadFile(file); // 단건 메서드 재사용
-            if (fileName != null) {
-                savedFiles.add(fileName);
+            String savedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path savePath = Paths.get(uploadDir, savedName);  // 안전한 경로 결합
+
+            try {
+                Files.copy(file.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException("파일 저장에 실패했습니다.");
+            }
+
+            urls.add(serverUrl + "/uploads/" + savedName);
+        }
+
+        return urls;
+    }
+
+    public List<String> deleteFiles(List<String> imageUrls) {
+        List<String> deletedFiles = new ArrayList<>();
+
+        for (String url : imageUrls) {
+            // URL → 파일명 추출
+            String fileName = url.substring(url.lastIndexOf("/") + 1);
+            Path filePath = Paths.get(uploadDir, fileName);
+
+            try {
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    deletedFiles.add(fileName);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("파일 삭제에 실패했습니다: " + fileName);
             }
         }
 
-        return savedFiles;
-    }
-
-    /**
-     * 단건 파일 삭제
-     */
-    public void deleteFile(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
-            return;
+        if (deletedFiles.isEmpty()) {
+            throw new RuntimeException("삭제 가능한 파일이 없습니다.");
         }
 
-        Path filePath = Paths.get(uploadDir, fileName);
-
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("파일 삭제 실패: " + fileName, e);
-        }
-    }
-
-    /**
-     * 다건 파일 삭제
-     */
-    public void deleteFiles(List<String> fileNames) {
-        if (fileNames == null || fileNames.isEmpty()) {
-            return;
-        }
-
-        for (String fileName : fileNames) {
-            deleteFile(fileName);
-        }
+        return deletedFiles;
     }
 }

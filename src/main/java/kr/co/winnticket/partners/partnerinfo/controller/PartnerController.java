@@ -49,11 +49,11 @@ public class PartnerController {
 
     @PostMapping
     @Operation(summary = "파트너 등록", description = "파트너를 등록합니다.")
-    public ResponseEntity<ApiResponse<UUID>> postPartner(
+    public ResponseEntity<ApiResponse<Void>> postPartner(
             @RequestBody PartnerPostReqDto postReqDto
     ) {
-        UUID createdId = service.insertPartner(postReqDto);
-        return ResponseEntity.ok(ApiResponse.success("파트너가 등록되었습니다.", createdId));
+        service.insertPartner(postReqDto);
+        return ResponseEntity.ok(ApiResponse.success("파트너가 등록되었습니다.", null));
     }
 
     @PatchMapping("/{id}")

@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@Schema(title = "[파트너 >  현장관리자 수정 DTO ] UpdateFieldManagerDto")
+@Schema(title = "[파트너 관리 >  현장관리자 수정 DTO ] UpdateFieldManagerDto")
 public class UpdateFieldManagerDto {
     @NotBlank
     @Schema(description = "로그인 아이디")

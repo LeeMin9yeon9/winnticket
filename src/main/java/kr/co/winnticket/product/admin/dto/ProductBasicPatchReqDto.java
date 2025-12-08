@@ -8,6 +8,7 @@ import kr.co.winnticket.common.enums.SalesStatus;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -43,6 +44,12 @@ public class ProductBasicPatchReqDto {
 
     @Schema(description = "상품설명")
     private String description;
+
+    @Schema(description = "판매상태")
+    private boolean visible;
+
+    @Schema(description = "상품설명")
+    private List<String> imageUrl;
 
     @Hidden
     @Schema(description = "아이디")

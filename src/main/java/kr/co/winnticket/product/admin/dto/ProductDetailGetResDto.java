@@ -1,6 +1,5 @@
 package kr.co.winnticket.product.admin.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.SalesStatus;
@@ -58,12 +57,8 @@ public class ProductDetailGetResDto {
     @Schema(description = "상품상세설명")
     private String detailContent;
 
-    @JsonIgnore
-    @Schema(description = "상품상세이미지")
-    private String detailImages; // DB에서 TEXT로 받는 값 (String JSON)
-
-    @Schema(description = "상품상세이미지")
-    private List<String> detailImagesList;
+    @Schema(description = "상품이미지")
+    private List<String> imageUrl;
 
     @Schema(description = "섹션 관리")
     private List<ProductSectionGetResDto> sections = new ArrayList<>();

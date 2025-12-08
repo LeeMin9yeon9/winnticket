@@ -10,7 +10,7 @@ mybatis:
   type-aliases-package: kr.co.winnticket
   configuration:
     map-underscore-to-camel-case: true
-    type-handlers-package: kr.co.winnticket.common.typehandler
+  type-handlers-package: kr.co.winnticket.common.typehandler
 
 springdoc:
   api-docs:
@@ -36,6 +36,8 @@ springdoc:
       paths-to-match: /api/admin/**
     - group: 0700.파트너관리
       paths-to-match: /api/partners/**
+    - group: 0800.채널관리
+      paths-to-match: /api/channels/**
 
   default-consumes-media-type: application/json
   default-produces-media-type: application/json

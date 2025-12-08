@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.product.shop.mapper.ProductShopMapper">
+
+    <!--
+    - 상품 목록 Select
+    -->
+    <select id="selectProductList" resultType="kr.co.winnticket.product.shop.dto.ProductShopListGetResDto">
+        Select
+            a.CODE,  -- 상품코드
+            a.NAME,  -- 상품명
+            a.PRICE,  -- 정가
+            a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
+            a.DISCOUNT_PRICE,  -- 판매가
+            a.SALES_STATUS  -- 판매상태
+        FROM
+            PRODUCTS a
+        Where 1 = 1
+        <if test="name != null and name != ''">
+            <![CDATA[
+            And Upper(a.NAME) LiKE '%' || Upper(#{name}) || '%'
+            ]]>
+        </if>
+
+        <if test="categoryId != null">
+            <![CDATA[
+            AND a.CATEGORY_ID = #{categoryId}
+            ]]>
+        </if>
+        And a.SALES_STATUS IN ('READY', 'ON_SALE')
+        And a.VISIBLE = true
+        Order By
+        a.CREATED_AT Desc
+    </select>
+</mapper>

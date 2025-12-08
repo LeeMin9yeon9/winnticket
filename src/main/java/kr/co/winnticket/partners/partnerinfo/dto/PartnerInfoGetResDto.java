@@ -50,23 +50,5 @@ public class PartnerInfoGetResDto {
     @Schema(description = "계약 종료일")
     private LocalDateTime contractEndDate;
 
-    @Schema(description = "등록 상품 수")
-    private Integer productCount;
-
-    @Schema(description = "총 매출")
-    private Integer totalSales;
-
-    @Schema(description = "총 주문 수")
-    private Integer totalOrders;
-
-    @Schema(description = "최근 주문일")
-    private LocalDateTime lastOrderDate;
-
-
-
-
-
-
-
 
 }
