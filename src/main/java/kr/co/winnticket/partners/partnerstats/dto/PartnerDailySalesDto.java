@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "파트너 일별 매출")
+@Schema(title = "[파트너 > 판매현황 파트너 일별 매출] PartnerDailySalesDto")
 public class PartnerDailySalesDto {
     @Schema(description = "YYYY-MM-DD", example = "2025-01-01")
     private String date;

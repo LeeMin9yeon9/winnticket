@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "상위 판매 상품")
+@Schema(title = "[파트너 > 판매현황 상위 판매 상품 TOP3] PartnerTopProductsDto")
 public class PartnerTopProductsDto {
     @Hidden
     @Schema(description = "상품 ID")

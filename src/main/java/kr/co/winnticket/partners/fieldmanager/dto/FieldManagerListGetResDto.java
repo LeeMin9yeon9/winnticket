@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-@Schema(title = "[파트너 >  현장관리자 목록 ] FieldManagerListGetResDto")
+@Schema(title = "[파트너 관리 >  현장관리자 목록 ] FieldManagerListGetResDto")
 public class FieldManagerListGetResDto {
 
     @Hidden
