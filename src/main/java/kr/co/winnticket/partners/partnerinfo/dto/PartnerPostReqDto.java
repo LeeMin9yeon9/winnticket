@@ -57,6 +57,9 @@ public class PartnerPostReqDto {
     @Schema(description = "로고URL")
     private String logoUrl;
 
+    @Schema(description = "쿠폰코드 생성 여부")
+    private boolean couponCode;
+
     @Schema(description = "파트너 설명")
     private String description;
 

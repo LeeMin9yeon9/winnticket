@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+                "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.channels.mapper.ChannelMapper">
+
+    <select id="selectPartnerList" resultType="kr.co.winnticket.channels.dto.ChannelListGetResDto">
+        SELECT
+        code,
+        logo_url AS logoUrl,
+        name,
+        company_name AS companyName,
+        status,
+        domain
+        FROM channels
+        WHERE 1 = 1
+
+        <if test="code != null and code != ''">
+            AND code ILIKE CONCAT('%', #{code}, '%')
+        </if>
+
+        <if test="name != null and name != ''">
+            AND name ILIKE CONCAT('%', #{name}, '%')
+        </if>
+
+        <if test="companyName != null and companyName != ''">
+            AND company_name ILIKE CONCAT('%', #{companyName}, '%')
+        </if>
+
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="createChannel" parameterType="kr.co.winnticket.channels.dto.ChannelCreateReqDto">
+        INSERT INTO channels(
+            id,
+            code,
+            name,
+            company_name,
+            commission_rate,
+            logo_url,
+            favicon_url,
+            email,
+            phone,
+            domain,
+            description,
+            status,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            gen_random_uuid(),
+            #{code},
+            #{name},
+            #{companyName},
+            #{commissionRate},
+            #{logoUrl},
+            #{faviconUrl},
+            #{email},
+            #{phone},
+            #{domain},
+            #{description},
+            COALESCE(#{status},TRUE),
+            NOW(),
+            NOW()
+               )
+    </insert>
+
+</mapper>

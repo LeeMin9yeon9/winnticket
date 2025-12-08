@@ -57,27 +57,7 @@
             p.MANAGER_EMAIL AS managerEmail,
             p.MANAGER_PHONE AS managerPhone,
             p.CONTRACT_START_DATE AS contractStartDate,
-            p.CONTRACT_END_DATE AS contractEndDate,
-
-            (SELECT COUNT(*) FROM PRODUCTS pr WHERE pr.PARTNER_ID = p.ID) AS productCount,
-
-            (SELECT COALESCE(SUM(o.TOTAL_PRICE),0)
-             FROM TICKET_ORDERS o
-             WHERE o.PRODUCT_ID IN (
-                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
-             )) AS totalSales,
-
-            (SELECT COUNT(*)
-             FROM TICKET_ORDERS o
-             WHERE o.PRODUCT_ID IN (
-                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
-             )) AS totalOrders,
-
-            (SELECT MAX(o.PAYMENT_DATE)
-             FROM TICKET_ORDERS o
-             WHERE o.PRODUCT_ID IN (
-                 SELECT ID FROM PRODUCTS WHERE PARTNER_ID = p.ID
-             )) AS lastOrderDate
+            p.CONTRACT_END_DATE AS contractEndDate
 
         FROM PARTNERS p
         WHERE p.ID = #{id}
@@ -102,11 +82,12 @@
             COMMISSION_RATE,
             LOGO_URL,
             DESCRIPTION,
+            COUPON_CODE,
             CREATED_AT,
             UPDATED_AT
         )
         VALUES(
-                  #{id},
+                  gen_random_uuid(),
                   #{code},
                   #{name},
                   #{type},
@@ -121,6 +102,7 @@
                   #{commissionRate},
                   #{logoUrl},
                   #{description},
+                  #{couponCode},
                   NOW(),
                   NOW()
               )
@@ -145,6 +127,7 @@
             <if test="model.commissionRate != null">COMMISSION_RATE = #{model.commissionRate},</if>
             <if test="model.logoUrl != null">LOGO_URL = #{model.logoUrl},</if>
             <if test="model.description != null">DESCRIPTION = #{model.description},</if>
+            <if test="model.couponCode != null">COUPON_CODE = #{model.couponCode},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}

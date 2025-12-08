@@ -61,8 +61,7 @@ public interface ProductMapper {
     // 상품 상세내용 수정
     void updateProductDetailContent(
             @Param("id") UUID id,
-            @Param("detailContent") String detailContent,
-            @Param("imagesJson") String imagesJson
+            @Param("detailContent") String detailContent
     );
 
     // 상품 옵션상세 조회

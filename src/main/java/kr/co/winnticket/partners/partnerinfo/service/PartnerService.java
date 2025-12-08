@@ -34,11 +34,8 @@ public class PartnerService {
     }
 
     // 파트너 등록
-    public UUID insertPartner(PartnerPostReqDto model){
-        UUID id = UUID.randomUUID();
-        model.setId(id);
+    public void insertPartner(PartnerPostReqDto model){
         mapper.insertPartner(model);
-        return id;
     }
 
     // 파트너 수정

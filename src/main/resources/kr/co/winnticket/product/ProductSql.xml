@@ -64,7 +64,7 @@
             a.WARRANTY_INFO,  -- 보증정보
             a.RETURN_INFO,  -- 반품/교환정보
             a.DETAIL_CONTENT,  -- 상세설명
-            a.DETAIL_IMAGES  -- 상세이미지
+            a.IMAGE_URL -- 이미지
         FROM
             PRODUCTS a
         Where 1 = 1
@@ -162,7 +162,7 @@
             #{categoryId},
             #{partnerId},
             #{description},
-            #{imageUrl},
+            #{imageUrl,jdbcType=ARRAY, typeHandler=org.apache.ibatis.type.ArrayTypeHandler},
             #{price},
             #{discountPrice},
             #{salesStatus}::sales_status,
@@ -207,6 +207,12 @@
             </if>
             <if test="model.description != null">
                 DESCRIPTION = #{model.description},
+            </if>
+            <if test="model.visible != null">
+                VISIBLE = #{model.visible},
+            </if>
+            <if test="model.imageUrl != null">
+                IMAGE_URL = #{imageUrl,jdbcType=ARRAY, typeHandler=org.apache.ibatis.type.ArrayTypeHandler},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
@@ -273,9 +279,6 @@
         <set>
             <if test="detailContent != null and detailContent != ''">
                 DETAIL_CONTENT = #{detailContent},
-            </if>
-            <if test="imagesJson != null">
-                DETAIL_IMAGES = CAST(#{imagesJson} AS jsonb),
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>

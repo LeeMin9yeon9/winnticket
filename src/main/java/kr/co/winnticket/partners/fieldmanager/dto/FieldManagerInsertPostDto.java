@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@Schema(description = "현장관리자 생성 요청 DTO")
+@Schema(title = "[파트너 관리 > 현장관리자 생성 요청 DTO] FieldManagerInsertPostDto")
 public class FieldManagerInsertPostDto {
 
     @NotBlank

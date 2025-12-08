@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "[파트너 >  현장관리자 응답 DTO ] FieldManagerResDto")
+@Schema(description = "[파트너 관리 >  현장관리자 응답 DTO ] FieldManagerResDto")
 public class FieldManagerResDto {
 
     @Hidden

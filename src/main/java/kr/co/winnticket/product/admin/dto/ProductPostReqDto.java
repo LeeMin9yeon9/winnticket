@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -33,9 +34,8 @@ public class ProductPostReqDto {
     @Schema(description = "상품설명", example = "아이들이 참여하는 샌드아트 체험 키트")
     private String description;
 
-    @Hidden
-    @Schema(description = "대표이미지 파일명 (서버에서 자동 설정)", example = "파일명 저장용: ex) 927fa93-test.png")
-    private String imageUrl;
+    @Schema(description = "대표이미지")
+    private List<String> imageUrl;
 
     @NotNull
     @Schema(description = "정가", example = "20000")
@@ -44,7 +44,7 @@ public class ProductPostReqDto {
     @Schema(description = "할인가", example = "15000")
     private int discountPrice;
 
-    @Schema(description = "판매상태", example = "판매중")
+    @Schema(description = "판매상태", example = "READY")
     private SalesStatus salesStatus;
 
     @Schema(description = "재고수량", example = "100")

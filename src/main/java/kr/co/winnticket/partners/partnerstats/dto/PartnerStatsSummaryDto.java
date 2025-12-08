@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "파트너 판매현황 요약")
+@Schema(title = "[파트너 > 판매현황 총 매출,주문,판매,금액] PartnerStatsSummaryDto")
 public class PartnerStatsSummaryDto {
 
     @Schema(description = "총 매출")
