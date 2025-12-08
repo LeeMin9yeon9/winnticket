@@ -1,8 +1,11 @@
 package kr.co.winnticket.product.admin.dto;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.ToString;
+
+import java.util.UUID;
 
 @Data
 @ToString(callSuper = true)
@@ -22,4 +25,8 @@ public class SectionPatchReqDto {
 
     @Schema(description = "활성화여부")
     private boolean isActive;
+
+    @Hidden
+    @Schema(description = "섹션_ID")
+    private UUID id;
 }

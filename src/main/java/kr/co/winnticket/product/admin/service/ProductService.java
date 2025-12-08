@@ -1,6 +1,5 @@
 package kr.co.winnticket.product.admin.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.common.service.FileService;
 import kr.co.winnticket.product.admin.dto.*;
@@ -8,9 +7,7 @@ import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,18 +28,6 @@ public class ProductService {
     // 상품 상세조회
     public ProductDetailGetResDto selectProductDetail(UUID auId) throws Exception {
         ProductDetailGetResDto model = mapper.selectProductDetail(auId);
-
-        if (model.getDetailImages() != null && !model.getDetailImages().isEmpty()) {
-            List<String> images = objectMapper.readValue(
-                    model.getDetailImages(),
-                    new TypeReference<List<String>>() {
-                    }
-            );
-            model.setDetailImagesList(images);
-        } else {
-                model.setDetailImagesList(new ArrayList<>());
-        }
-
         List<ProductOptionGetResDto> options = mapper.selectOptions(auId);
 
         for (ProductOptionGetResDto option : options) {
@@ -58,14 +43,7 @@ public class ProductService {
 
     // 상품 등록
     @Transactional
-    public void insertProduct(ProductPostReqDto model, MultipartFile file) throws Exception {
-        // 파일 업로드 처리
-        if (file != null && !file.isEmpty()) {
-            // 새 파일 업로드
-            String uploadPath = fileService.uploadFile(file);
-            model.setImageUrl(uploadPath);    // 상품테이블 이미지 컬럼
-        }
-
+    public void insertProduct(ProductPostReqDto model) throws Exception {
         mapper.insertProduct(model);
     }
 
@@ -86,25 +64,8 @@ public class ProductService {
 
     // 상품 상세내용 수정
     @Transactional
-    public void updateProductDetailContent(UUID id, String detailContent, List<String> existFileNames, List<MultipartFile> files) throws Exception{
-        // 새 파일 업로드
-        List<String> uploadedFiles = new ArrayList<>();
-        if (files != null && !files.isEmpty()) {
-            uploadedFiles = fileService.uploadFiles(files);  // 공통 파일업로드
-        }
-
-        // 최종 이미지 목록: 남겨둔 기존 이미지 + 새 이미지
-        List<String> finalImages = existFileNames != null
-                ? new ArrayList<>(existFileNames)
-                : new ArrayList<>();
-
-        finalImages.addAll(uploadedFiles);
-
-        // JSON 형태로 변환
-        String imagesJson = new ObjectMapper().writeValueAsString(finalImages);
-
-        // DB 업데이트
-        mapper.updateProductDetailContent(id, detailContent, imagesJson);
+    public void updateProductDetailContent(UUID auId, String detailContent) throws Exception{
+        mapper.updateProductDetailContent(auId, detailContent);
     }
 
     // 상품 옵션 상세 조회

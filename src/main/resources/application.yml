@@ -10,7 +10,7 @@ mybatis:
   type-aliases-package: kr.co.winnticket
   configuration:
     map-underscore-to-camel-case: true
-    type-handlers-package: kr.co.winnticket.common.typehandler
+  type-handlers-package: kr.co.winnticket.common.typehandler
 
 springdoc:
   api-docs:

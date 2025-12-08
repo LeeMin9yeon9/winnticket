@@ -1,6 +1,7 @@
 server:
   forward-headers-strategy: framework
   port: 8080
+  url: https://api.winnticket.store
 
 spring:
   config:

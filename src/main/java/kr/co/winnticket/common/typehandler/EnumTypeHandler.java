@@ -10,7 +10,11 @@ import java.sql.SQLException;
 
 public class EnumTypeHandler <E extends Enum<E>> extends BaseTypeHandler<E> {
 
-    private final Class<E> type;
+    private Class<E> type;
+
+    public EnumTypeHandler() {
+        // 기본 생성자
+    }
 
     public EnumTypeHandler(Class<E> type) {
         if (type == null) throw new IllegalArgumentException("Type argument cannot be null");
