@@ -45,10 +45,10 @@ public class PartnerInfoGetResDto {
     private String managerPhone;
 
     @Schema(description = "계약 시작일")
-    private LocalDateTime contractStartDate;
+    private LocalDate contractStartDate;
 
     @Schema(description = "계약 종료일")
-    private LocalDateTime contractEndDate;
+    private LocalDate contractEndDate;
 
 
 }
