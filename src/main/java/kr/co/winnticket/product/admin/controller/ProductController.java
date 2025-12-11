@@ -52,7 +52,7 @@ public class ProductController {
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
     public ResponseEntity<ApiResponse<ProductPostReqDto>> postProduct (
-            @RequestPart("model") @Valid ProductPostReqDto model
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 정보") @RequestBody @Valid ProductPostReqDto model
     ) throws Exception {
         service.insertProduct(model);
 
