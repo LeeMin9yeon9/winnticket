@@ -119,9 +119,9 @@ public class ProductController {
     @Operation(summary = "상품 상세내용 수정", description = "전달받은 id의 상품 상세내용을 수정합니다.")
     public ResponseEntity<ApiResponse<String>> patchProductDetailContent (
             @Parameter(description = "상품_ID") @PathVariable("id") UUID auId,
-            @RequestPart(value = "detailContent",required = false) String detailContent
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 상세정보") @RequestBody @Valid ProductDetailContentPatchReqDto model
     ) throws Exception {
-        service.updateProductDetailContent(auId, detailContent);
+        service.updateProductDetailContent(auId, model);
         String id = auId.toString();
 
         return ResponseEntity.ok(

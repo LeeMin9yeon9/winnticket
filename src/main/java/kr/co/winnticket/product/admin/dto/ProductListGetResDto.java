@@ -16,6 +16,9 @@ public class ProductListGetResDto {
     @Schema(description = "상품_ID")
     private UUID id;
 
+    @Schema(description = "대표이미지")
+    private String image;
+    
     @Schema(description = "상품코드")
     private String code;
 
