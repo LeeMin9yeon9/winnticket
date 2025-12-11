@@ -163,7 +163,7 @@
             #{categoryId},
             #{partnerId},
             #{description},
-            #{imageUrl,jdbcType=OTHER},
+            #{imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             #{price},
             #{discountPrice},
             #{salesStatus}::sales_status,
@@ -213,7 +213,7 @@
                 VISIBLE = #{model.visible},
             </if>
             <if test="model.imageUrl != null">
-                IMAGE_URL = #{model.imageUrl,jdbcType=OTHER},
+                IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
