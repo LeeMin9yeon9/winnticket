@@ -35,9 +35,7 @@ public interface ProductMapper {
     List<ProductOptionValueGetResDto> selectOptionValues(UUID id);
 
     // 상품 등록
-    void insertProduct(
-            @Param("model") ProductPostReqDto model
-    );
+    void insertProduct(ProductPostReqDto model);
 
     // 상품 기본정보 수정
     void updateProductBasic(
