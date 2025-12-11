@@ -162,7 +162,7 @@
             #{categoryId},
             #{partnerId},
             #{description},
-            #{imageUrl,jdbcType=ARRAY, typeHandler=org.apache.ibatis.type.ArrayTypeHandler},
+            #{imageUrl,jdbcType=OTHER},
             #{price},
             #{discountPrice},
             #{salesStatus}::sales_status,
@@ -212,7 +212,7 @@
                 VISIBLE = #{model.visible},
             </if>
             <if test="model.imageUrl != null">
-                IMAGE_URL = #{imageUrl,jdbcType=ARRAY, typeHandler=org.apache.ibatis.type.ArrayTypeHandler},
+                IMAGE_URL = #{model.imageUrl,jdbcType=OTHER},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
