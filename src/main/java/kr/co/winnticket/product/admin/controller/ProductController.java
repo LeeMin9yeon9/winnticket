@@ -113,7 +113,7 @@ public class ProductController {
     }
 
     // 상품 상세내용 수정
-    @PatchMapping(value="api/product/admin/{id}/detailContent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping("api/product/admin/{id}/detailContent")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 상세내용 수정", description = "전달받은 id의 상품 상세내용을 수정합니다.")
