@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import kr.co.winnticket.common.enums.PartnerType;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
