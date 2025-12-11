@@ -14,10 +14,7 @@ import java.util.UUID;
 public class ProductDetailContentPatchReqDto {
     @Schema(description = "상세설명 HTML")
     private String detailContent;
-
-    @Schema(description = "기존이미지파일")
-    private List<String> existFileNames;
-
+    
     @Hidden
     @Schema(description = "아이디")
     private UUID id;

@@ -9,6 +9,7 @@
     <select id="selectProductList" resultType="kr.co.winnticket.product.admin.dto.ProductListGetResDto">
         Select
             a.ID,  -- 상품_ID
+            a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
             a.CODE,  -- 상품코드
             a.NAME,  -- 상품명
             a.CATEGORY_ID,  -- 카테고리_ID
