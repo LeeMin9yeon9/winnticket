@@ -6,7 +6,7 @@ import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -32,10 +32,10 @@ public class PartnerListGetResDto {
     private PartnerStatus status;
 
     @Schema(description = "계약 시작일")
-    private LocalDateTime contractStartDate;
+    private LocalDate contractStartDate;
 
     @Schema(description = "계약 종료일")
-    private LocalDateTime contractEndDate;
+    private LocalDate contractEndDate;
 
     @Schema(description = "수수표율 %")
     private Integer commissionRate;
