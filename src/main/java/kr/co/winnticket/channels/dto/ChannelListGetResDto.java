@@ -23,7 +23,7 @@ public class ChannelListGetResDto {
     @Schema(description = "채널 이름")
     private String name;
 
-    @Schema(description = "채널 로그")
+    @Schema(description = "채널 로고")
     private String logoUrl;
 
     @NotBlank
