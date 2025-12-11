@@ -1,6 +1,6 @@
 server:
   port: 8080
-
+  url: https://api.winnticket.store
 spring:
   config:
     activate:
