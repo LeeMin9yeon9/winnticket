@@ -64,8 +64,8 @@ public class ProductService {
 
     // 상품 상세내용 수정
     @Transactional
-    public void updateProductDetailContent(UUID auId, String detailContent) throws Exception{
-        mapper.updateProductDetailContent(auId, detailContent);
+    public void updateProductDetailContent(UUID auId, ProductDetailContentPatchReqDto model) throws Exception{
+        mapper.updateProductDetailContent(auId, model);
     }
 
     // 상품 옵션 상세 조회
