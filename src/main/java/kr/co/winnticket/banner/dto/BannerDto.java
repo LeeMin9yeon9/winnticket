@@ -4,6 +4,8 @@ package kr.co.winnticket.banner.dto;
 import kr.co.winnticket.banner.enums.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,7 +35,7 @@ public class BannerDto {
     private Integer height;
     private Integer mobileWidth;
     private Integer mobileHeight;
-    private List<String> channelIds;
+    private List<UUID> channelIds;
     private BannerStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

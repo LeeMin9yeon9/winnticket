@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -50,5 +52,5 @@ public class BannerCreateDto {
     private Integer mobileWidth;
     private Integer mobileHeight;
 
-    private List<String> channelIds;
+    private List<UUID> channelIds;
 }
