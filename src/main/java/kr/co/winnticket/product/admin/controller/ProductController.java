@@ -47,7 +47,7 @@ public class ProductController {
     }
 
     // 상품 등록
-    @PostMapping(value="api/product/admin")
+    @PostMapping("api/product/admin")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
