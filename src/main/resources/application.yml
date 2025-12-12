@@ -38,9 +38,9 @@ springdoc:
       paths-to-match: /api/partners/**
     - group: 채널관리
       paths-to-match: /api/channels/**
-    - group: 0900.팝업관리
+    - group: 팝업관리
       paths-to-match: /api/admin/popups/**
-    - group: 1000.배너관리
+    - group: 배너관리
       paths-to-match: /api/admin/banners/**
 
   default-consumes-media-type: application/json
