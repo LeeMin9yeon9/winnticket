@@ -18,31 +18,7 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /api-docs
-
-  group-configs:
-    - group: 공통
-      paths-to-match: /api/common/**
-    - group: 커뮤니티
-      paths-to-match: /api/community/**
-    - group: 메뉴
-      paths-to-match: /api/menu/**
-    - group: 주문
-      paths-to-match: /api/order/**
-    - group: 상품
-      paths-to-match: /api/product/**
-    - group: 로그인 및 토큰
-      paths-to-match: /api/auth/**
-    - group: 사이트관리
-      paths-to-match: /api/admin/**
-    - group: 파트너관리
-      paths-to-match: /api/partners/**
-    - group: 채널관리
-      paths-to-match: /api/channels/**
-    - group: 팝업관리
-      paths-to-match: /api/admin/popups/**
-    - group: 배너관리
-      paths-to-match: /api/admin/banners/**
-
+    
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
   override-with-generic-response: false
