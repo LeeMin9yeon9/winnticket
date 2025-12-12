@@ -7,6 +7,8 @@ import kr.co.winnticket.banner.enums.BannerPosition;
 import kr.co.winnticket.banner.service.BannerService;
 import kr.co.winnticket.common.dto.ApiResponse;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +22,7 @@ public class BannerShopController {
     @GetMapping
     public ApiResponse<List<BannerDto>> getBanners(
             @RequestParam BannerPosition position,
-            @RequestParam(required = false) String channelId
+            @RequestParam(required = false) UUID channelId
     ) {
         return bannerService.getShopBanners(position, channelId);
     }
