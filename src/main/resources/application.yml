@@ -20,27 +20,27 @@ springdoc:
     path: /api-docs
 
   group-configs:
-    - group: 0000.공통
+    - group: 공통
       paths-to-match: /api/common/**
-    - group: 0100.커뮤니티
+    - group: 커뮤니티
       paths-to-match: /api/community/**
-    - group: 0200.메뉴
+    - group: 메뉴
       paths-to-match: /api/menu/**
-    - group: 0300.주문
+    - group: 주문
       paths-to-match: /api/order/**
-    - group: 0400.상품
+    - group: 상품
       paths-to-match: /api/product/**
-    - group: 0500.로그인 및 토큰
+    - group: 로그인 및 토큰
       paths-to-match: /api/auth/**
-    - group: 0600.사이트관리
+    - group: 사이트관리
       paths-to-match: /api/admin/**
-    - group: 0700.파트너관리
+    - group: 파트너관리
       paths-to-match: /api/partners/**
-    - group: 0800.채널관리
+    - group: 채널관리
       paths-to-match: /api/channels/**
-    - group: 0900.팝업관리
+    - group: 팝업관리
       paths-to-match: /api/admin/popups/**
-    - group: 1000.배너관리
+    - group: 배너관리
       paths-to-match: /api/admin/banners/**
 
   default-consumes-media-type: application/json
