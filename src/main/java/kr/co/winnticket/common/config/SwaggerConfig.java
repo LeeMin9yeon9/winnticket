@@ -67,7 +67,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi commonApi() {
         return GroupedOpenApi.builder()
-                .group("0000. 공통")
+                .group("공통")
                 .packagesToScan("kr.co.winnticket.status", "kr.co.winnticket.common")
                 .pathsToMatch("/api/**")
                 .build();
@@ -76,7 +76,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi communityApi() {
         return GroupedOpenApi.builder()
-                .group("0100. 커뮤니티")
+                .group("커뮤니티")
                 .packagesToScan("kr.co.winnticket.community")
                 .pathsToMatch("/api/**")
                 .build();
@@ -85,7 +85,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi menuApi() {
         return GroupedOpenApi.builder()
-                .group("0200. 메뉴")
+                .group("메뉴")
                 .packagesToScan("kr.co.winnticket.menu")
                 .pathsToMatch("/api/**")
                 .build();
@@ -94,7 +94,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi productApi() {
         return GroupedOpenApi.builder()
-                .group("0300. 상품")
+                .group("상품")
                 .packagesToScan("kr.co.winnticket.product")
                 .pathsToMatch("/api/**")
                 .build();
@@ -103,7 +103,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi orderApi() {
         return GroupedOpenApi.builder()
-                .group("0400. 주문")
+                .group("주문")
                 .packagesToScan("kr.co.winnticket.order")
                 .pathsToMatch("/api/**")
                 .build();
@@ -112,9 +112,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
-                //.group("0500. 인증-로그인")
-                .group("auth-login-0500")
-                .displayName("0500. 인증 / 로그인")
+                .group("인증 및 로그인")
                 .packagesToScan("kr.co.winnticket.auth")
                 .pathsToMatch("/api/**")
                 .build();
@@ -123,7 +121,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi siteinfoApi() {
         return GroupedOpenApi.builder()
-                .group("0600. 사이트관리")
+                .group("사이트관리")
                 .packagesToScan("kr.co.winnticket.siteinfo")
                 .pathsToMatch("/api/**")
                 .build();
@@ -132,8 +130,35 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi partnersApi() {
         return GroupedOpenApi.builder()
-                .group("0700. 파트너관리")
+                .group("파트너관리")
                 .packagesToScan("kr.co.winnticket.partners")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi channelsApi() {
+        return GroupedOpenApi.builder()
+                .group("채널관리")
+                .packagesToScan("kr.co.winnticket.channels")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+        
+    @Bean
+    public GroupedOpenApi popupApi() {
+        return GroupedOpenApi.builder()
+                .group("팝업관리")
+                .packagesToScan("kr.co.winnticket.popup")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+       
+    @Bean
+    public GroupedOpenApi bannerApi() {
+        return GroupedOpenApi.builder()
+                .group("배너관리")
+                .packagesToScan("kr.co.winnticket.banner")
                 .pathsToMatch("/api/**")
                 .build();
     }
