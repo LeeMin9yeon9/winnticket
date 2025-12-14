@@ -4,6 +4,32 @@
 <mapper namespace="kr.co.winnticket.product.shop.mapper.ProductShopMapper">
 
     <!--
+    - 상품 목록 검색
+    -->
+    <select id="selectProductListSearch" resultType="kr.co.winnticket.product.shop.dto.ProductShopListGetResDto">
+        Select
+        a.CODE,  -- 상품코드
+        a.NAME,  -- 상품명
+        a.PRICE,  -- 정가
+        a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
+        a.DISCOUNT_PRICE,  -- 판매가
+        FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+        a.SALES_STATUS  -- 판매상태
+        FROM
+        PRODUCTS a
+        Where 1 = 1
+        <if test="name != null and name != ''">
+            <![CDATA[
+            AND UPPER(a.NAME) LIKE '%' || UPPER(#{name}) || '%'
+            ]]>
+        </if>
+        And a.SALES_STATUS IN ('READY', 'ON_SALE')
+        And a.VISIBLE = true
+        Order By
+        a.CREATED_AT Desc
+    </select>
+
+    <!--
     - 상품 목록 Select
     -->
     <select id="selectProductList" resultType="kr.co.winnticket.product.shop.dto.ProductShopListGetResDto">
@@ -13,24 +39,60 @@
             a.PRICE,  -- 정가
             a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
             a.DISCOUNT_PRICE,  -- 판매가
+            FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
             a.SALES_STATUS  -- 판매상태
         FROM
             PRODUCTS a
+        Join MENU_CATEGORIES b
+        On a.CATEGORY_ID = b.ID
         Where 1 = 1
-        <if test="name != null and name != ''">
+        <if test="subCategory != null and subCategory != ''">
             <![CDATA[
-            And Upper(a.NAME) LiKE '%' || Upper(#{name}) || '%'
+            AND b.CODE = #{subCategory}
             ]]>
         </if>
 
-        <if test="categoryId != null">
+        <if test="(subCategory == null or subCategory == '')
+                and (mainCategory != null and mainCategory != '')">
             <![CDATA[
-            AND a.CATEGORY_ID = #{categoryId}
+            AND (b.CODE = #{mainCategory}
+            Or b.PARENT_ID = (Select ID From MENU_CATEGORIES Where 1 = 1 And CODE = #{mainCategory}))
             ]]>
         </if>
         And a.SALES_STATUS IN ('READY', 'ON_SALE')
         And a.VISIBLE = true
         Order By
         a.CREATED_AT Desc
+    </select>
+
+    <!--
+    - 상품 상세 조회
+    -->
+    <select id="selectProductDetail" resultType="kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto">
+        Select
+            a.id,  -- 상품id
+            a.CODE,  -- 상품코드
+            a.IMAGE_URL,  -- 대표사진
+            a.NAME,  -- 상품명
+            (
+                Select
+                    x.Name
+                From
+                    MENU_CATEGORIES x
+                Where 1 = 1
+                  And x.ID = a.CATEGORY_ID
+            ) CATEGORY_NAME,  -- 카테고리명
+            a.DESCRIPTION,  -- 상품설
+            a.PRICE,  -- 정가
+            a.DISCOUNT_PRICE,  -- 판매가
+            FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+            a.SHIPPING_INFO,  -- 배송정보
+            a.WARRANTY_INFO,  -- 보증정보
+            a.RETURN_INFO,  -- 반품/교환정보
+            a.DETAIL_CONTENT  -- 상품상세설명
+        FROM
+            PRODUCTS a
+        Where 1 = 1
+        And a.CODE = #{code}
     </select>
 </mapper>

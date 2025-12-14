@@ -32,7 +32,12 @@ jwt:
 
 logging:
   level:
+    org.springframework.web: INFO
     kr.co.winnticket: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    org.springframework.jdbc: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.SQL: DEBUG
 
 file:
   upload-dir: /Users/kimhb/uploads
