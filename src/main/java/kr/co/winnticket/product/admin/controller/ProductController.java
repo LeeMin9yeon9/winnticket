@@ -129,6 +129,22 @@ public class ProductController {
         );
     }
 
+    // 상품 삭제
+    @DeleteMapping("api/product/admin/{id}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 삭제", description = "전달받은 id의 상품을 삭제합니다.")
+    public ResponseEntity<ApiResponse<String>>  deleteProduct (
+            @Parameter(description = "상품_ID") @PathVariable("id") UUID auId
+    ) throws Exception {
+        service.deleteProduct(auId);
+        String id = auId.toString();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("삭제 성공", id)
+        );
+    }
+    
     // 상품옵션 상세조회
     @GetMapping("api/product/admin/option/{id}")
     @Tag(name = "상품_관리자", description = "상품 관리")
@@ -179,7 +195,7 @@ public class ProductController {
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 옵션 삭제", description = "전달받은 id의 옵션을 삭제합니다.")
-    public ResponseEntity<ApiResponse<String>>  patchProductOption (
+    public ResponseEntity<ApiResponse<String>>  deleteProductOption (
             @Parameter(description = "옵션_ID") @PathVariable("id") UUID auId
     ) throws Exception {
         service.deleteProductOption(auId);
