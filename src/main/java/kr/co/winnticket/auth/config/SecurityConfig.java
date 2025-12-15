@@ -34,7 +34,15 @@ public class SecurityConfig {
                                 "/webjars/**"
 
                         ).permitAll() // 인증없이 허용
-                        .anyRequest().authenticated() // 나머지는 API 인증 필요
+                        //.anyRequest().authenticated() // 나머지는 API 인증 필요
+
+                        // 주문목록 API (관리자 + 현장관리자)
+                        .requestMatchers("/api/orders/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+
+                        // 그 외 모든 API는 관리자만
+                        .anyRequest()
+                        .hasAuthority("ROLE001")
                 )
                 .httpBasic(httpBasic -> httpBasic.disable()); // HTTP Basic 끔
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
