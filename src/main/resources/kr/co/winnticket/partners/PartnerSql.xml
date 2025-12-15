@@ -57,7 +57,8 @@
             p.MANAGER_EMAIL AS managerEmail,
             p.MANAGER_PHONE AS managerPhone,
             p.CONTRACT_START_DATE AS contractStartDate,
-            p.CONTRACT_END_DATE AS contractEndDate
+            p.CONTRACT_END_DATE AS contractEndDate,
+            P.LOGO_URL AS logoUrl
 
         FROM PARTNERS p
         WHERE p.ID = #{id}
@@ -109,7 +110,7 @@
     </insert>
 
 
-    <!-- 파트너 수정 (model 사용하도록 수정됨!) -->
+    <!-- 파트너 수정 -->
     <update id="updatePartner">
         UPDATE PARTNERS
         <set>
@@ -177,5 +178,16 @@
         SET status = #{status}, updated_at = NOW()
         WHERE id = #{id}
     </update>
+
+    <!--파트너 코드 중복 체크-->
+    <select id="existsCode" resultType="int">
+        SELECT COUNT(*)
+        FROM partners
+        WHERE CODE = #{code}
+        AND VISIBLE = TRUE
+        <if test="id != null">
+            AND ID != #{id}   <!-- 수정일 때만 본인 제외 -->
+        </if>
+    </select>
 
 </mapper>

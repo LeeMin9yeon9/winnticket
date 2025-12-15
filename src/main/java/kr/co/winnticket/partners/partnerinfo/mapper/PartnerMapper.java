@@ -4,6 +4,7 @@ import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPatchResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,12 +31,12 @@ public interface PartnerMapper {
 
     // 파트너 수정
     void updatePartner(@Param("id") UUID id,
-                       @Param("model") PartnerPostReqDto model);
+                       @Param("model") PartnerPatchResDto model);
 
     // 파트너 삭제
     void deletePartner(
             @Param("id")UUID id
-            );
+    );
 
     void disableProductsByPartnerId(UUID partnerId);
 
@@ -46,6 +47,9 @@ public interface PartnerMapper {
     // 파트너 활성/비활성화
     void updatePartnerStatus(@Param("id") UUID id,
                              @Param("status") PartnerStatus status);
+
+    // 파트너 중복 체크
+    int existsCode(@Param("id") UUID id, @Param("code") String code);
 
 
 }

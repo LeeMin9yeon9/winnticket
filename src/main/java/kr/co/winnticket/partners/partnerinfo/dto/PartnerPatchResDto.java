@@ -1,5 +1,6 @@
 package kr.co.winnticket.partners.partnerinfo.dto;
 
+
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -11,8 +12,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
-@Schema(title = "[파트너 > 파트너 추가 DTO ] PartnerPostReqDto")
-public class PartnerPostReqDto {
+@Schema(title = "[파트너 > 파트너 수정 DTO ] PartnerPatchResDto")
+public class PartnerPatchResDto {
+
     @Hidden
     @Schema(description = "파트너 ID")
     private UUID id;
@@ -62,7 +64,4 @@ public class PartnerPostReqDto {
 
     @Schema(description = "파트너 설명")
     private String description;
-
-
-
 }
