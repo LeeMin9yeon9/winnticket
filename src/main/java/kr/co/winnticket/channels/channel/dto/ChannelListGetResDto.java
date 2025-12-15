@@ -1,4 +1,4 @@
-package kr.co.winnticket.channels.dto;
+package kr.co.winnticket.channels.channel.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +15,6 @@ public class ChannelListGetResDto {
     @Schema(description = "채널아이디")
     private UUID id;
 
-    @NotBlank
     @Schema(description = "채널코드")
     private String code;
 
@@ -31,7 +30,7 @@ public class ChannelListGetResDto {
     private String companyName;
 
     @Schema(description = "활 / 비활성화")
-    private boolean status;
+    private boolean visible;
 
     @NotBlank
     @Schema(description = "도메인 URL")

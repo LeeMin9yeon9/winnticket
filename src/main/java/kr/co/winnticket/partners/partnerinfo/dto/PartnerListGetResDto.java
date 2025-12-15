@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
-@Schema(title = "[파트너 > 파트너 목록 ] PartnerListGetResDto")
+@Schema(title = "[파트너 > 파트너 목록 DTO ] PartnerListGetResDto")
 public class PartnerListGetResDto {
     @Hidden
     @Schema(description = "파트너 ID")

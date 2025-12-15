@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
-@Schema(title = "[파트너 > 파트너 기본정보 ] PartnerInfoGetResDto")
+@Schema(title = "[파트너 > 파트너 기본정보 DTO] PartnerInfoGetResDto")
 public class PartnerInfoGetResDto {
     @Hidden
     @Schema(description = "파트너 ID")
@@ -43,6 +43,9 @@ public class PartnerInfoGetResDto {
 
     @Schema(description = "담당자 전화번호")
     private String managerPhone;
+
+    @Schema(description = "로고URL")
+    private String logoUrl;
 
     @Schema(description = "계약 시작일")
     private LocalDate contractStartDate;

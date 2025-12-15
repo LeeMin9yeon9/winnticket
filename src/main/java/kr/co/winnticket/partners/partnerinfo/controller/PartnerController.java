@@ -8,6 +8,7 @@ import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPatchResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
 import kr.co.winnticket.partners.partnerinfo.service.PartnerService;
 import lombok.RequiredArgsConstructor;
@@ -61,9 +62,9 @@ public class PartnerController {
     public ResponseEntity<ApiResponse<Void>> patchPartner(
             @Parameter(description = "파트너ID")
             @PathVariable("id") UUID id,
-            @RequestBody PartnerPostReqDto postReqDto
+            @RequestBody PartnerPatchResDto patchResDto
     )throws Exception{
-        service.updatePartner(id, postReqDto);
+        service.updatePartner(id, patchResDto);
         return ResponseEntity.ok(ApiResponse.success("파트너가 수정되었습니다.", null));
     }
 
