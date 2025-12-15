@@ -2,6 +2,7 @@ package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SalesStatus;
 import lombok.Data;
 import lombok.ToString;
@@ -23,6 +24,9 @@ public class ProductDetailGetResDto {
 
     @Schema(description = "상품코드")
     private String code;
+
+    @Schema(description = "상품타입")
+    private ProductType type;
 
     @Schema(description = "카테고리_ID")
     private UUID categoryId;
@@ -53,6 +57,9 @@ public class ProductDetailGetResDto {
 
     @Schema(description = "반품/교환정보")
     private String returnInfo;
+
+    @Schema(description = "사용기한")
+    private String usagePeriod;
 
     @Schema(description = "상품상세설명")
     private String detailContent;

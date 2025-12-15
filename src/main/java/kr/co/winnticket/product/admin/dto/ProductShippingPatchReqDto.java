@@ -20,6 +20,9 @@ public class ProductShippingPatchReqDto {
     @Schema(description = "반품/교환정보")
     private String returnInfo;
 
+    @Schema(description = "사용기한")
+    private String usagePeriod;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
