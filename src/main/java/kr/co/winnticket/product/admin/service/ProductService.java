@@ -68,7 +68,7 @@ public class ProductService {
         mapper.updateProductDetailContent(auId, model.getDetailContent());
     }
 
-     // 상품 옵션 삭제
+     // 상품 삭제
     public void deleteProduct(UUID auId) {
         mapper.deleteProduct(auId);
     }
