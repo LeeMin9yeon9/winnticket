@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SalesStatus;
 import lombok.Data;
 import lombok.ToString;
@@ -20,15 +21,15 @@ public class ProductPostReqDto {
     @Schema(description = "상품명", example = "샌드아트 체험")
     private String name;
 
-    @NotEmpty
-    @Schema(description = "상품코드", example = "SD001")
-    private String code;
+    @NotNull
+    @Schema(description = "상품타입", example = "NORMAL")
+    private ProductType type;
 
     @NotNull
-    @Schema(description = "카테고리_ID", example = "a5f0933c-51ac-4fe0-8e88-7f982b8a09c6")
+    @Schema(description = "카테고리_ID", example = "436370c5-f491-4772-976b-d016a69c4ddb")
     private UUID categoryId;
 
-    @Schema(description = "파트너_ID", example = "6c820c44-f42d-47ad-8bbb-5675c482123a")
+    @Schema(description = "파트너_ID", example = "f706edba-f358-442a-b34f-dcf48bffc412")
     private UUID partnerId;
 
     @Schema(description = "상품설명", example = "아이들이 참여하는 샌드아트 체험 키트")
@@ -55,9 +56,6 @@ public class ProductPostReqDto {
 
     @Schema(description = "판매종료일", example = "2025-12-31")
     private LocalDate salesEndDate;
-
-    @Schema(description = "표시순서", example = "1")
-    private int displayOrder;
 
     @Schema(description = "활성화여부", example = "true")
     private boolean visible;

@@ -12,6 +12,7 @@
             a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
             a.CODE,  -- 상품코드
             a.NAME,  -- 상품명
+            a.TYPE,  -- 상품타입
             a.CATEGORY_ID,  -- 카테고리_ID
             a.PARTNER_ID,  -- 파트너_ID
             a.PRICE,  -- 정가
@@ -54,6 +55,7 @@
             a.ID,  -- 상품_ID
             a.NAME,  -- 상품명
             a.CODE,  -- 상품코드
+            a.TYPE,  -- 상품타입
             a.CATEGORY_ID,  -- 카테고리_ID
             a.PARTNER_ID,  -- 파트너_ID
             a.PRICE,  -- 정가
@@ -65,6 +67,7 @@
             a.WARRANTY_INFO,  -- 보증정보
             a.RETURN_INFO,  -- 반품/교환정보
             a.DETAIL_CONTENT,  -- 상세설명
+            a.USAGE_PERIOD,  -- 사용기한
             a.IMAGE_URL -- 이미지
         FROM
             PRODUCTS a
@@ -143,6 +146,7 @@
         (
             NAME,
             CODE,
+            TYPE,
             CATEGORY_ID,
             PARTNER_ID,
             DESCRIPTION,
@@ -159,7 +163,8 @@
         Values
         (
             #{name},
-            #{code},
+            'PRD' || nextval('product_code_seq'),
+            #{type}::product_type,
             #{categoryId},
             #{partnerId},
             #{description},
@@ -184,9 +189,6 @@
         <set>
             <if test="model.name != null and model.name != ''">
                 NAME = #{model.name},
-            </if>
-            <if test="model.code != null and model.code != ''">
-                CODE = #{model.code},
             </if>
             <if test="model.categoryId != null">
                 CATEGORY_ID = #{model.categoryId},
@@ -235,6 +237,9 @@
             </if>
             <if test="model.returnInfo != null and model.returnInfo != ''">
                 RETURN_INFO = #{model.returnInfo},
+            </if>
+            <if test="model.usagePeriod != null and model.usagePeriod != ''">
+                USAGE_PERIOD = #{model.usagePeriod},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
