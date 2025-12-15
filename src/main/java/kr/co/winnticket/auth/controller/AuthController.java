@@ -26,10 +26,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃" , description = "Access / Refresh Token 블랙리스트 처리")
-    public ApiResDto<Void> logout(HttpServletRequest request, @RequestBody LogoutRequestDto logoutRequestDto){
+    public ApiResDto<Void> logout(HttpServletRequest request){
         String token = extractToken(request);
-        authService.logout(token, logoutRequestDto);
-
+        authService.logout(token);
         return ApiResDto.success("로그아웃 성공",null);
     }
 

@@ -3,6 +3,70 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.channels.channelProducts.mapper.ChannelProductsMapper">
 
+    <!--채널 상품 목록 조회-->
+    <select id="selectChannelProducts" resultType="kr.co.winnticket.channels.channelProducts.dto.ChannelProductListResDto">
+        SELECT
+            p.id AS id,
+            p.code AS productCode,
+            p.name AS prodcuctName,
+
+            (p.image_url ->> 'main') AS logoUrl,
+
+            CASE
+                WHEN cp.id IS NOT NULL THEN TRUE
+                ELSE FALSE
+            END AS exclude
+
+        FROM products p
+        LEFT JOIN channel_products cp
+            ON cp.product_id = p.id
+            AND cp.channel_id = #{channelId}
+
+        WHERE p.visible = TRUE
+        <if test="keyword != null and keyword != ''">
+            AND (
+                p.name ILIKE CONCAT('%', #{keyword},'%')
+                OR p.code ILIKE CONCAT('%',#{keyword},'%')
+            )
+        </if>
+        <if test = "exclude != null">
+          <choose>
+              <when test="exclude == true">
+                  AND cp.id IS NOT NULL
+              </when>
+              <otherwise>
+                  AND cp.id IS NULL
+              </otherwise>
+          </choose>
+
+        ORDER BY p.display_order ASC
+
+        </if>
+    </select>
+
+    <!-- 채널 상품 제외-->
+    <insert id="excludeChannelProduct">
+        INSERT INTO channel_products(
+            channel_id,
+            product_id,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            #{channelId},
+            #{productId},
+            NOW(),
+            NOW()
+        )
+        ON CONFLICT (channel_id, product_id) DO NOTHING
+    </insert>
+
+    <!--채널 상품 복구-->
+    <delete id="includeChannelProduct">
+        DELETE FROM channel_products
+        WHERE channel_id = #{channelId}
+          AND product_id = #{productId}
+    </delete>
 
 
 
