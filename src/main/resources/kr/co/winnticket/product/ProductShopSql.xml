@@ -14,7 +14,8 @@
         a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
         a.DISCOUNT_PRICE,  -- 판매가
         FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
-        a.SALES_STATUS  -- 판매상태
+        a.SALES_STATUS,  -- 판매상태
+        a.USAGE_PERIOD  -- 사용기한
         FROM
         PRODUCTS a
         Where 1 = 1
@@ -40,7 +41,8 @@
             a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
             a.DISCOUNT_PRICE,  -- 판매가
             FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
-            a.SALES_STATUS  -- 판매상태
+            a.SALES_STATUS,  -- 판매상태
+            a.USAGE_PERIOD  -- 사용기한
         FROM
             PRODUCTS a
         Join MENU_CATEGORIES b
@@ -89,7 +91,8 @@
             a.SHIPPING_INFO,  -- 배송정보
             a.WARRANTY_INFO,  -- 보증정보
             a.RETURN_INFO,  -- 반품/교환정보
-            a.DETAIL_CONTENT  -- 상품상세설명
+            a.DETAIL_CONTENT,  -- 상품상세설명
+            a.USAGE_PERIOD  -- 사용기한
         FROM
             PRODUCTS a
         Where 1 = 1

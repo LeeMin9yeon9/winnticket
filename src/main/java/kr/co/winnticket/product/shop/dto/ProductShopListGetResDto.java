@@ -31,4 +31,7 @@ public class ProductShopListGetResDto {
 
     @Schema(description = "판매상태")
     private SalesStatus salesStatus;
+
+    @Schema(description = "사용기한")
+    private String usagePeriod;
 }

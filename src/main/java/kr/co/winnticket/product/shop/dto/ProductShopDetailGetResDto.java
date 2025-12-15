@@ -56,6 +56,9 @@ public class ProductShopDetailGetResDto {
     @Schema(description = "상품상세설명")
     private String detailContent;
 
+    @Schema(description = "사용기한")
+    private String usagePeriod;
+
     @Schema(description = " 옵션")
     private List<ProductOptionGetResDto> options = new ArrayList<>();
 }
