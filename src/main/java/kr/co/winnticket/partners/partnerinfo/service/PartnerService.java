@@ -4,6 +4,7 @@ import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto;
+import kr.co.winnticket.partners.partnerinfo.dto.PartnerPatchResDto;
 import kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto;
 import kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,17 @@ public class PartnerService {
 
     // 파트너 등록
     public void insertPartner(PartnerPostReqDto model){
+        if(mapper.existsCode(null, model.getCode()) > 0){
+            throw new IllegalArgumentException("이미 사용 중인 파트너코드입니다.");
+        }
         mapper.insertPartner(model);
     }
 
     // 파트너 수정
-    public void updatePartner(UUID id , PartnerPostReqDto model){
+    public void updatePartner(UUID id , PartnerPatchResDto model){
+        if(model.getCode() != null && !model.getCode().isEmpty()){
+            throw new IllegalArgumentException("이미 다른 파트너가 사용 중인 코드입니다.");
+        }
         mapper.updatePartner(id,model);
     }
 
