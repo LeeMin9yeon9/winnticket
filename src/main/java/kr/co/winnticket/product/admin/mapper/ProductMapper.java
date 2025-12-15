@@ -63,7 +63,7 @@ public interface ProductMapper {
     );
 
     // 상품 삭제
-    void deleteOptionValues(
+    void deleteProduct(
             @Param("id") UUID auid
     );
     
