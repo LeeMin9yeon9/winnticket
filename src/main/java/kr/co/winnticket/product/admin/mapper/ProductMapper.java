@@ -62,6 +62,11 @@ public interface ProductMapper {
             @Param("detailContent") String detailContent
     );
 
+    // 상품 삭제
+    void deleteProduct(
+            @Param("id") UUID auid
+    );
+    
     // 상품 옵션상세 조회
     ProductOptionGetResDto selectProductOptionDetail(
             @Param("id") UUID auId
