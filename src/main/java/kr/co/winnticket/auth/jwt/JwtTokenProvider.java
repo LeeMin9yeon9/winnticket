@@ -87,6 +87,15 @@ public class JwtTokenProvider {
         Claims claims = getClaims(token);
         return claims.getExpiration().getTime();
     }
+
+    // 만료된 토큰도 Claims 추출 (logout용)
+    public Claims getClaimsAllowExpired(String token) {
+        try {
+            return getClaims(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims(); // ⭐ 이게 핵심
+        }
+    }
 }
 
 
