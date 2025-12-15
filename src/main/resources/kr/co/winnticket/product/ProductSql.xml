@@ -288,6 +288,15 @@
     </update>
 
     <!--
+    - 상품 삭제
+    -->
+    <delete id="deleteProduct">
+        DELETE FROM PRODUCTS
+        WHERE 1 = 1
+        And ID = #{id}
+    </delete>
+        
+    <!--
     - 상품 옵션 등록
     -->
     <insert id="insertProductOption" parameterType="map" useGeneratedKeys="true" keyProperty="model.optionId">
