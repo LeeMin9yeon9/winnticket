@@ -18,8 +18,19 @@ public class ChannelProductService {
     public List<ChannelProductListResDto> getChannelProducts(
             UUID channelId,
             String keyword,
-            Boolean status
+            Boolean exclude
     ) {
-        return mapper.selectChannelProducts(channelId, keyword, status);
+        return mapper.selectChannelProducts(channelId, keyword, exclude);
     }
+
+    // 채널 상품 제외
+    public void excludeProduct(UUID channelId, UUID productId){
+        mapper.excludeChannelProduct(channelId,productId);
+    }
+
+    // 채널 상품 복구
+    public void includeProduct(UUID channelId, UUID productId){
+        mapper.includeChannelProduct(channelId,productId);
+    }
+
 }

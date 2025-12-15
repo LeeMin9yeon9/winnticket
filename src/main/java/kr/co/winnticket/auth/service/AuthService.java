@@ -1,5 +1,6 @@
 package kr.co.winnticket.auth.service;
 
+import io.jsonwebtoken.Claims;
 import kr.co.winnticket.auth.dto.*;
 import kr.co.winnticket.auth.jwt.JwtTokenProvider;
 import kr.co.winnticket.auth.mapper.AuthMapper;
@@ -108,26 +109,27 @@ public class AuthService {
                 .build();
 
     }
-    public void logout(String accessToken, LogoutRequestDto logoutRequestDto){
-        String refreshToken = logoutRequestDto.getRefreshToken();
-
-        // Access 블랙리스트
-        if(accessToken != null){
-            tokenBlacklistService.blacklistAccessToken(accessToken);
+    public void logout(String accessToken){
+        if (accessToken == null) {
+            return; // 토큰 없어도 로그아웃 성공 처리
         }
 
-        // Refresh 블랙리스트 + Redis에서 제거
-        if(refreshToken != null){
-            tokenBlacklistService.blacklistAccessToken(accessToken);
-            try{
-                var claims = jwtTokenProvider.getClaims(refreshToken);
-                String accountId = claims.get("accountId", String.class);
+        // Access Token 블랙리스트
+        tokenBlacklistService.blacklistAccessToken(accessToken);
+
+        try {
+            // Access Token에서 사용자 식별
+            Claims claims = jwtTokenProvider.getClaimsAllowExpired(accessToken);
+            String accountId = claims.get("accountId", String.class);
+            String role = claims.get("role", String.class);
+
+            // ROLE002만 Refresh Token 삭제
+            if ("ROLE002".equals(role)) {
                 refreshTokenService.refreshDelete(accountId);
-            }catch (Exception e){
-
             }
-        }
+        }catch(Exception e){
 
+        }
     }
 
 

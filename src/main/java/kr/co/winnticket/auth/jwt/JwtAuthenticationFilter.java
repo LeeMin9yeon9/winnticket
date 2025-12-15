@@ -15,9 +15,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
 
@@ -27,25 +29,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        //  logout은 무조건 통과
+        if (path.startsWith("/api/auth/logout")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validate(token)) {
+        if (token != null) {
+            try {
+                if (tokenBlacklistService.isBlacklisted(token)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
 
-            // 블랙리스트 체크
-            if (tokenBlacklistService.isBlacklisted(token)) {
+                if (!jwtTokenProvider.validate(token)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
+                Claims claims = jwtTokenProvider.getClaims(token);
+                String accountId = claims.getSubject();
+                String roleId = (String) claims.get("roleId");
+
+                SimpleGrantedAuthority authority =
+                        new SimpleGrantedAuthority(roleId);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                accountId, null, List.of(authority)
+                        );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
+
+            } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
-
-            Claims claims = jwtTokenProvider.getClaims(token);
-            String accountId = claims.getSubject();
-            String roleId = (String) claims.get("roleId");
-
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(accountId, null, List.of(authority));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
@@ -62,10 +86,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // 인증 없이 접근 허용할 API는 여기서 제외
         return path.startsWith("/api/auth/login")
                 || path.startsWith("/api/auth/refresh")
                 || path.startsWith("/api/auth/logout");
     }
-
 }

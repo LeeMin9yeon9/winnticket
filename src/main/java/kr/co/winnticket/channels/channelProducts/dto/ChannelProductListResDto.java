@@ -21,7 +21,7 @@ public class ChannelProductListResDto {
     @Schema(description = "로고이미지")
     private String logoUrl;
 
-    @Schema(description = "상품 제외 상태")
-    private Boolean status;
+    @Schema(description = "상품 제외 상태 (true=제외된것)")
+    private Boolean exclude;
 
 }

@@ -1,5 +1,6 @@
 package kr.co.winnticket.auth.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import kr.co.winnticket.auth.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -51,10 +52,17 @@ public class TokenBlacklistService {
     }
 
     // jwt 남은 TTL 계산
-    public long getRemainingTtlMs(String token){
-        long expiration = jwtTokenProvider.getExpiration(token);
-        long now = System.currentTimeMillis();
-        return expiration - now;
+    public long getRemainingTtlMs(String token) {
+        try {
+            long expiration = jwtTokenProvider.getExpiration(token);
+            long now = System.currentTimeMillis();
+            return expiration - now;
+        } catch (ExpiredJwtException e) {
+
+            return 0;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
 }
