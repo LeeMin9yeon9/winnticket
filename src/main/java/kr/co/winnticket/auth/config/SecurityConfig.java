@@ -36,14 +36,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",                      // 판매홈페이지
                                 "/api/menu/**",                      // 메뉴
-                                "api/product/shop/**" ,              // 상품
+                                "/api/product/shop/**" ,              // 상품
                                 "/api/community/**",                 // 커뮤니티
                                 "/api/admin/bank-accounts/visible",  // 은행 계좌
                                 "/api/admin/site-info/**",           // 회사정보
                                 "/api/admin/terms/visible",          // 약관정보
                                 "/api/cart/**",                      // 장바구니
                                 "/api/shop/banners/**",              //배너
-                                "/api/shop/order/**"                  // 주문
+                                "/api/shop/order/**",                 // 주문
+                                "/api/common/status"                    // 주문상태
 
 
                         ).permitAll()
@@ -59,7 +60,7 @@ public class SecurityConfig {
 
 
                         ).permitAll()
-                        
+
                         //.anyRequest().authenticated() // 나머지는 API 인증 필요
 
                         // 주문목록 API (관리자 + 현장관리자)
@@ -80,4 +81,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
 
