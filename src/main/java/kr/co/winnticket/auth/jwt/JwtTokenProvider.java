@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -21,7 +22,8 @@ public class JwtTokenProvider {
             @Value("${jwt.access-token-validity}") long accessTokenValidMs,
             @Value("${jwt.refresh-token-validity}") long refreshTokenValidMs
     ) {
-        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
+        //this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidMs = accessTokenValidMs;
         this.refreshTokenValidMs = refreshTokenValidMs;
     }
