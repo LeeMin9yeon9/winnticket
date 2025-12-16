@@ -23,15 +23,13 @@ public class SecurityConfig {
                 // .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()) // 모든요청 허용
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/api/auth/logout",
-                                "/api/auth/logout",
+                                "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/api/shop/**"
 
                         ).permitAll() // 인증없이 허용
                         //.anyRequest().authenticated() // 나머지는 API 인증 필요
