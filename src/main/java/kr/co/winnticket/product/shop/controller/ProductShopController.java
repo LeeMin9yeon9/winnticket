@@ -22,7 +22,7 @@ public class ProductShopController {
     private final ProductShopService service;
 
     // 상품 목록 검색
-    @GetMapping("api/product/search")
+    @GetMapping("api/product/shop/search")
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 목록 검색", description = "전달받은 코드의 상품을 검색합니다.")
     public ResponseEntity<ApiResponse<List<ProductShopListGetResDto>>>  getProductListSearch (
@@ -34,9 +34,9 @@ public class ProductShopController {
     }
 
     // 상품 목록조회
-    @GetMapping({"api/product",
-                "api/product/{mainCategory}",
-                "api/product/{mainCategory}/{subCategory}"})
+    @GetMapping({"api/product/shop",
+                "api/product/shop/{mainCategory}",
+                "api/product/shop/{mainCategory}/{subCategory}"})
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 목록 조회", description = "카테고리별 상품 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<ProductShopListGetResDto>>> getProductList (
@@ -49,7 +49,7 @@ public class ProductShopController {
     }
 
     // 상품 상세조회
-    @GetMapping("api/product/shop/{code}")
+    @GetMapping("api/product/shop/detail/{code}")
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 상세 조회", description = "전달받은 코드의 상품을 조회합니다.")
     public ResponseEntity<ApiResponse<ProductShopDetailGetResDto>> getProductDetail (
