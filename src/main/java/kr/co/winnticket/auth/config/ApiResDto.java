@@ -17,13 +17,13 @@ public class ApiResDto<T> {
     private String message;
 
     @Schema(description = "실제 데이터")
-    private T date;
+    private T data;
 
     public static <T> ApiResDto<T> success(String message, T data){
         return ApiResDto.<T>builder()
                 .success(true)
                 .message(message)
-                .date(data)
+                .data(data)
                 .build();
     }
 
@@ -31,7 +31,7 @@ public class ApiResDto<T> {
         return ApiResDto.<T>builder()
                 .success(false)
                 .message(message)
-                .date(null)
+                .data(null)
                 .build();
     }
 
