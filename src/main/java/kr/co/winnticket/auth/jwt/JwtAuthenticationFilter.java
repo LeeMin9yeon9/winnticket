@@ -28,68 +28,80 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        // 로그추가
-        System.out.println("=== JWT FILTER START ===");
-        System.out.println("REQUEST URI = " + request.getRequestURI());
-        System.out.println("AUTHORIZATION HEADER = " + request.getHeader("Authorization"));
 
         String path = request.getRequestURI();
-
-        //  logout은 무조건 통과
-        if (path.startsWith("/api/auth/logout")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String token = resolveToken(request);
 
-        if (token != null) {
-            try {
+        System.out.println("=== JWT FILTER START ===");
+        System.out.println("REQUEST URI = " + path);
+        System.out.println("AUTHORIZATION HEADER = " + request.getHeader("Authorization"));
+
+        try {
+            // 토큰 존재 시만 처리
+            if (token != null) {
+
+                // 블랙리스트 확인 (로그아웃된 토큰)
                 if (tokenBlacklistService.isBlacklisted(token)) {
+                    System.out.println("⛔ Blacklisted Token");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
 
+                // 토큰 유효성 검증
                 if (!jwtTokenProvider.validate(token)) {
+                    System.out.println("⛔ Invalid Token");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
 
+                // Claims 파싱
                 Claims claims = jwtTokenProvider.getClaims(token);
                 String accountId = claims.getSubject();
                 String roleId = (String) claims.get("roleId");
 
-                SimpleGrantedAuthority authority =
-                        new SimpleGrantedAuthority(roleId);
+                // 권한 생성
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
 
+                // 인증 정보 생성 후 SecurityContext 에 저장
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 accountId, null, List.of(authority)
                         );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+                System.out.println("✅ AUTH SUCCESS | USER = " + accountId + ", ROLE = " + roleId);
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            System.out.println("⛔ JWT Filter Exception: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }
     }
 
+    /**
+     * Authorization 헤더에서 Bearer Token 추출
+     */
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
+
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
+
         return null;
     }
 
+    /**
+     * 필터를 적용하지 않을 요청
+     * 로그인 / 토큰 재발급 / 로그아웃은 인증필터를 거치지 않음
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+
         return path.startsWith("/api/auth/login")
                 || path.startsWith("/api/auth/refresh")
                 || path.startsWith("/api/auth/logout");
