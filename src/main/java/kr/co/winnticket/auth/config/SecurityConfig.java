@@ -34,41 +34,32 @@ public class SecurityConfig {
 
                         ).permitAll() // 인증없이 허용
                         .requestMatchers(HttpMethod.GET,
-                                "/api/shop/**",
-                                "/api/menu/menuList",
-                                "/api/menu/menuList/**",
-                                "/api/menu/menuCategory",
-                                "/api/menu/menuCategory/**",
-                                "/api/product/**",
-                                "/api/menu/products/**",
-                                "/api/community/event",
-                                "/api/community/event/**",
-                                "/api/community/faq",
-                                "/api/community/faq/**",
-                                "/api/community/faq/categories",
-                                "/api/shop/popups",
-                                "/api/shop/banners",
-                                "/api/admin/bank-accounts/visible",
-                                "/api/admin/site-info",
-                                "/api/admin/site-info/company-intro",
-                                "/api/admin/terms/visible"
+                                "/api/shop/**",                      // 판매홈페이지
+                                "/api/menu/**",                      // 메뉴
+                                "api/product/shop/**" ,              // 상품
+                                "/api/community/**",                 // 커뮤니티
+                                "/api/admin/bank-accounts/visible",  // 은행 계좌
+                                "/api/admin/site-info/**",           // 회사정보
+                                "/api/admin/terms/visible",          // 약관정보
+                                "/api/cart/**",                      // 장바구니
+                                "/api/shop/banners/**",              //배너
+                                "/api/shop/order/**"                  // 주문
 
 
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
-                                "/api/orders",
-                                "/api/pay/**",
-                                "/api/community/qna",
-                                "api/community/faq"
+                                "/api/cart/**",                     // 장바구니 추가하기
+                                "/api/orders/**",                   // 주문하기
+                                "/api/pay/**",                       // 결제하기
+                                "/api/community/qna/**",            // 문의 등록
+                                "/api/community/faq/**",            // faq등록
+                                "/api/shop/popups/**",            // 팝안 안보이
+                                "/api/shop/banners/**"              // 배너 안보이기
 
 
                         ).permitAll()
-
-                        .requestMatchers(HttpMethod.PUT,
-                                "/api/shop/popups/**",
-                                "/api/shop/banners/**"
-                        ).permitAll()
+                        
                         //.anyRequest().authenticated() // 나머지는 API 인증 필요
 
                         // 주문목록 API (관리자 + 현장관리자)
