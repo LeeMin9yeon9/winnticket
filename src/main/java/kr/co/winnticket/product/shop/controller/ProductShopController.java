@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto;
 import kr.co.winnticket.product.shop.dto.ProductShopListGetResDto;
+import kr.co.winnticket.product.shop.dto.ShopMainResDto;
 import kr.co.winnticket.product.shop.service.ProductShopService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class ProductShopController {
                 "api/product/shop/{mainCategory}/{subCategory}"})
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 목록 조회", description = "카테고리별 상품 목록을 조회합니다.")
-    public ResponseEntity<ApiResponse<List<ProductShopListGetResDto>>> getProductList (
+    public ResponseEntity<ApiResponse<ShopMainResDto>> getProductList (
             @Parameter(description = "카테고리코드1") @PathVariable(required = false) String mainCategory,
             @Parameter(description = "카테고리코드2") @PathVariable(required = false) String subCategory
     ) throws Exception {

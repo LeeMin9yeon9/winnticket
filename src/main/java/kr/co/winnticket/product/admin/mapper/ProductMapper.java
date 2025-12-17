@@ -62,6 +62,12 @@ public interface ProductMapper {
             @Param("detailContent") String detailContent
     );
 
+    // 상품 활성화여부 수정
+    void updateProductVisible(
+            @Param("id") UUID auId,
+            @Param("visible") boolean visible
+    );
+
     // 상품 삭제
     void deleteProduct(
             @Param("id") UUID auid
