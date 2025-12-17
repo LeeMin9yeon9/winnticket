@@ -68,6 +68,11 @@ public class ProductService {
         mapper.updateProductDetailContent(auId, model.getDetailContent());
     }
 
+    // 상품 활성화여부 수정
+    public void updateProductVisible(UUID auId, boolean visible) {
+        mapper.updateProductVisible(auId, visible);
+    }
+
      // 상품 삭제
     public void deleteProduct(UUID auId) {
         mapper.deleteProduct(auId);
