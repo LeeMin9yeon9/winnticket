@@ -41,9 +41,6 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "상품설명")
     private String description;
 
-    @Schema(description = "판매상태")
-    private boolean visible;
-
     @Schema(description = "상품설명")
     private List<String> imageUrl;
 
