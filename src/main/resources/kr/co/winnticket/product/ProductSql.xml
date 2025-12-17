@@ -211,9 +211,6 @@
             <if test="model.description != null">
                 DESCRIPTION = #{model.description},
             </if>
-            <if test="model.visible != null">
-                VISIBLE = #{model.visible},
-            </if>
             <if test="model.imageUrl != null">
                 IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             </if>
@@ -285,6 +282,21 @@
         <set>
             <if test="detailContent != null and detailContent != ''">
                 DETAIL_CONTENT = #{detailContent},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
+
+    <!--
+    - 상품 활성화여부 수정
+    -->
+    <update id="updateProductVisible">
+        Update PRODUCTS
+        <set>
+            <if test="visible != null">
+                VISIBLE = #{visible},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>

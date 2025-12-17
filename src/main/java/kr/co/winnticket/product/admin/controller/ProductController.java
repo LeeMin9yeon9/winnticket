@@ -8,7 +8,6 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.product.admin.dto.*;
 import kr.co.winnticket.product.admin.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -109,6 +108,23 @@ public class ProductController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("수정 성공", model)
+        );
+    }
+
+    // 상품 상세내용 수정
+    @PatchMapping("api/product/admin/{id}/visible")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 활성화여부 수정", description = "전달받은 id의 상품 활성하여부를 수정합니다.")
+    public ResponseEntity<ApiResponse<String>> patchProductVisible (
+            @Parameter(description = "상품_ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "활성화여부") @RequestParam(value = "visible") boolean visible
+    ) throws Exception {
+        service.updateProductVisible(auId, visible);
+        String id = auId.toString();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("수정 성공", id)
         );
     }
 
