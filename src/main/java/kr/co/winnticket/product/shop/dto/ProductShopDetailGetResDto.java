@@ -3,6 +3,7 @@ package kr.co.winnticket.product.shop.dto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import lombok.Data;
 import lombok.ToString;
@@ -22,6 +23,9 @@ public class ProductShopDetailGetResDto {
     @NotEmpty
     @Schema(description = "상품코드")
     private String code;
+
+    @Schema(description = "상품타입")
+    private ProductType type;
 
     @Schema(description = "상품이미지")
     private List<String> imageUrl;
@@ -61,4 +65,7 @@ public class ProductShopDetailGetResDto {
 
     @Schema(description = " 옵션")
     private List<ProductOptionGetResDto> options = new ArrayList<>();
+
+    @Schema(description = "날짜별가격")
+    private List<ProductDatePriceGetResDto> datePrices = new ArrayList<>();
 }

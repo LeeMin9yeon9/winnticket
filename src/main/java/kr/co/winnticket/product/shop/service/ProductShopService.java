@@ -1,5 +1,6 @@
 package kr.co.winnticket.product.shop.service;
 
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
@@ -60,6 +61,11 @@ public class ProductShopService {
         }
 
         model.setOptions(options);
+
+        if (model.getType() == ProductType.STAY) {
+            List<ProductDatePriceGetResDto> datePrice =  mapper.selectStayDatePrices(code);
+            model.setDatePrices(datePrice);
+        }
 
         return model;
     }

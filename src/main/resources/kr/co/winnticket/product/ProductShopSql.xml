@@ -127,6 +127,7 @@
         Select
             a.id,  -- 상품id
             a.CODE,  -- 상품코드
+            a.TYPE,  -- 타입
             a.IMAGE_URL,  -- 대표사진
             a.NAME,  -- 상품명
             (
@@ -150,5 +151,29 @@
             PRODUCTS a
         Where 1 = 1
         And a.CODE = #{code}
+    </select>
+
+    <!--
+    - 상품 날짜별 가격 조회
+    -->
+    <select id="selectStayDatePrices" resultType="kr.co.winnticket.product.shop.dto.ProductDatePriceGetResDto">
+        SELECT
+            sd.option_value_id,
+            ov.value            AS option_value_name,
+            sd.price_date,
+        sd.price,
+        sd.discount_price,
+        sd.is_available
+        FROM stay_date_prices sd
+            JOIN product_option_values ov
+        ON ov.id = sd.option_value_id
+            JOIN product_options o
+            ON o.id = ov.option_id
+            join products p
+            on p.id = o.product_id
+        WHERE p.CODE = #{code}
+        ORDER BY
+            sd.option_value_id,
+            sd.price_date
     </select>
 </mapper>
