@@ -1,6 +1,7 @@
 package kr.co.winnticket.product.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.service.FileService;
 import kr.co.winnticket.product.admin.dto.*;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
@@ -8,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +37,11 @@ public class ProductService {
 
         model.setOptions(options);
         model.setSections(mapper.selectSections(auId));
+
+        if (model.getType() == ProductType.STAY) {
+            List<ProductPeriodGetResDto> periods = mapper.selectProductPeriods(auId);
+            model.setPeriods(periods);
+        }
 
         return model;
     }
@@ -122,6 +127,13 @@ public class ProductService {
         mapper.deleteProductOption(auId);
     }
 
+    // 상품 기간등록
+    public void insertProductPeriod(ProductPeriodPostReqDto model) {
+        int groupNo = mapper.selectNextGroupNo(model.getOptionValueId());
+        model.setGroupNo(groupNo);
+        mapper.insertProductPeriod(model);
+    }
+
     // 섹션 목록 조회
     public List<SectionListGetResDto> selectSectionList() {
         List<SectionListGetResDto> lModel = mapper.selectSectionList();
@@ -197,5 +209,9 @@ public class ProductService {
     public void deleteSection(UUID auId) {
         mapper.deleteSection(auId);
         mapper.reorderAllDisplayOrders();
+    }
+
+    public void deleteProductPeriod(UUID auId, int groupNo) {
+        mapper.deleteProductPeriod(auId, groupNo);
     }
 }

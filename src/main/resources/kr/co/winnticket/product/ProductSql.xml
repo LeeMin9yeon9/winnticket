@@ -130,11 +130,82 @@
             a.ID,  -- 옵션별가격_ID
             a.CODE,  -- 코드
             a.VALUE,  -- 옵션별가격명
+            a.PRICE_TYPE,  -- 옵션별가격타입
             a.ADDITIONAL_PRICE  -- 추가가격
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
         And a.OPTION_ID = #{id}
+    </select>
+
+    <!--
+    - 상품 옵션별 기간 Select
+    -->
+    <resultMap id="ProductPeriodResultMap"
+               type="kr.co.winnticket.product.admin.dto.ProductPeriodGetResDto">
+
+        <result property="optionId" column="option_id"/>
+        <result property="optionName" column="option_name"/>
+        <result property="optionValueId" column="option_value_id"/>
+        <result property="optionValueName" column="option_value_name"/>
+
+        <result property="periods"
+                column="periods"
+                typeHandler="kr.co.winnticket.common.typehandler.JsonStayPeriodListTypeHandler"/>
+    </resultMap>
+
+    <select id="selectProductPeriods" resultMap="ProductPeriodResultMap">
+    WITH period_base AS (
+        SELECT
+            o.id                AS option_id,
+            o.name              AS option_name,
+            ov.id               AS option_value_id,
+            ov.value       AS option_value_name,
+            sd.group_no,
+            MIN(sd.price_date)  AS start_date,
+            MAX(sd.price_date)  AS end_date,
+            sd.price,
+            sd.discount_price
+        FROM stay_date_prices sd
+        JOIN product_option_values ov
+            ON ov.id = sd.option_value_id
+        JOIN product_options o
+            ON o.id = ov.option_id
+        WHERE 1 = 1
+        And o.product_id = #{id}
+        GROUP BY
+            o.id,
+            o.name,
+            ov.id,
+            ov.value,
+            sd.group_no,
+            sd.price,
+            sd.discount_price
+    )
+    SELECT
+        option_id,
+        option_name,
+        option_value_id,
+        option_value_name,
+        json_agg(
+            json_build_object(
+                    'groupNo', group_no,
+                    'startDate', start_date,
+                    'endDate', end_date,
+                    'price', price,
+                    'discountPrice', discount_price
+            )
+            ORDER BY start_date
+        ) AS periods
+    FROM period_base
+    GROUP BY
+        option_id,
+        option_name,
+        option_value_id,
+        option_value_name
+    ORDER BY
+        option_id,
+        option_value_id;
     </select>
 
     <!--
@@ -363,6 +434,7 @@
             OPTION_ID,
             VALUE,
             CODE,
+            PRICE_TYPE,
             ADDITIONAL_PRICE
         )
         Values
@@ -370,6 +442,7 @@
             #{optionId},
             #{model.value},
             #{model.code},
+            #{model.priceType}::option_price_type,
             #{model.additionalPrice}
         )
     </insert>
@@ -401,6 +474,50 @@
         DELETE FROM PRODUCT_OPTIONS
         WHERE 1 = 1
         And ID = #{id}
+    </delete>
+
+    <!--
+     - 상품 기간 그룹번호 Select
+     -->
+    <select id="selectNextGroupNo" resultType="int">
+        SELECT COALESCE(MAX(group_no), 0) + 1
+        FROM stay_date_prices
+        WHERE option_value_id = #{id}
+    </select>
+
+    <!--
+    - 상품 기간 등록
+    -->
+    <insert id="insertProductPeriod" parameterType="kr.co.winnticket.product.admin.dto.ProductPeriodPostReqDto">
+        INSERT INTO stay_date_prices (
+            option_value_id,
+            price_date,
+            price,
+            discount_price,
+            group_no
+        )
+        SELECT
+            #{optionValueId},
+            d::date,
+            #{price},
+            #{discountPrice},
+            #{groupNo}
+        FROM
+            generate_series(
+                #{startDate}::date,
+                #{endDate}::date,
+                interval '1 day'
+            ) AS d
+    </insert>
+
+    <!--
+    - 상품 기간 삭제
+    -->
+    <delete id="deleteProductPeriod">
+        DELETE FROM stay_date_prices
+        WHERE 1 = 1
+        And option_value_id = #{id}
+        And GROUP_NO = #{groupNo}
     </delete>
 
     <!--
