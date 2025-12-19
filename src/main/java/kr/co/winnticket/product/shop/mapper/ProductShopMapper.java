@@ -1,9 +1,6 @@
 package kr.co.winnticket.product.shop.mapper;
 
-import kr.co.winnticket.product.shop.dto.ProductSectionListGetResDto;
-import kr.co.winnticket.product.shop.dto.ProductSectionProductGetResDto;
-import kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto;
-import kr.co.winnticket.product.shop.dto.ProductShopListGetResDto;
+import kr.co.winnticket.product.shop.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -36,4 +33,6 @@ public interface ProductShopMapper {
     ProductShopDetailGetResDto selectProductDetail(
             @Param("code") String code
     );
+
+    List<ProductDatePriceGetResDto> selectStayDatePrices(String code);
 }

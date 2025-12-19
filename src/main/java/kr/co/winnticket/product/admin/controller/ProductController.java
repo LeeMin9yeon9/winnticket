@@ -222,6 +222,38 @@ public class ProductController {
         );
     }
 
+    // 상품 기간 등록
+    @PostMapping("api/product/admin/period")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 기간 등록", description = "전달받은 id의 상품 기간을 등록합니다.")
+    public ResponseEntity<ApiResponse<ProductPeriodPostReqDto>> postProductPeriod (
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 기간 정보") @RequestBody @Valid ProductPeriodPostReqDto model
+    ) throws Exception {
+        service.insertProductPeriod(model);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("등록 성공", model)
+        );
+    }
+
+    // 상품 기간 삭제
+    @DeleteMapping("api/product/admin/period/{id}/{groupNo}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 기간 삭제", description = "전달받은 id의 상품 기간을 삭제합니다.")
+    public ResponseEntity<ApiResponse<String>> deleteProductPeriod (
+            @Parameter(description = "옵션값_ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "그룹번호") @PathVariable("groupNo") int groupNo
+    ) throws Exception {
+        service.deleteProductPeriod(auId, groupNo);
+        String id = auId.toString();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("등록 성공", id)
+        );
+    }
+
     // 섹션 목록 조회
     @GetMapping("api/product/admin/section/list")
     @Tag(name = "섹션", description = "섹션 관리")

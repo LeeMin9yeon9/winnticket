@@ -152,4 +152,22 @@ public interface ProductMapper {
 
     // 전체 재정렬(삭제 시 사용)
     void reorderAllDisplayOrders();
+
+    // 기간 조회
+    List<ProductPeriodGetResDto> selectProductPeriods(
+            @Param("id") UUID auId
+    );
+
+    // 기간 등록
+    void insertProductPeriod(ProductPeriodPostReqDto model);
+
+    // 기간 그룹번호 생성
+    int selectNextGroupNo(
+            @Param("id") UUID optionValueId
+    );
+
+    void deleteProductPeriod(
+            @Param("id") UUID auId,
+            @Param("groupNo") int groupNo
+    );
 }
