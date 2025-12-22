@@ -163,4 +163,13 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi cartApi() {
+        return GroupedOpenApi.builder()
+                .group("장바구니")
+                .packagesToScan("kr.co.winnticket.cart")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
 }

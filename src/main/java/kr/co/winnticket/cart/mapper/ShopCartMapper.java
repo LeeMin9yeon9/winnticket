@@ -1,0 +1,20 @@
+package kr.co.winnticket.cart.mapper;
+
+import kr.co.winnticket.cart.dto.mapperDto.OptionValueViewDto;
+import kr.co.winnticket.cart.dto.mapperDto.ProductCartViewDto;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.UUID;
+
+@Mapper
+public interface ShopCartMapper {
+
+        ProductCartViewDto selectProduct(UUID productId);
+
+        List<OptionValueViewDto> selectOptionValues(
+                @Param("id") List<UUID> optionValueIds
+        );
+    }
+
