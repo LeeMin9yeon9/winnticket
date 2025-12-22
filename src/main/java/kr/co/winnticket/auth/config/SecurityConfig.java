@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/cart/**",
                                 "/api/shop/banners/**",
                                 "/api/shop/order/**",
-                                "/api/common/status"
+                                "/api/common/status",
+                                "/api/shopCart/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
@@ -55,7 +56,15 @@ public class SecurityConfig {
                                 "/api/community/qna/**",
                                 "/api/community/faq/**",
                                 "/api/shop/popups/**",
-                                "/api/shop/banners/**"
+                                "/api/shop/banners/**",
+                                "/api/shopCart/**"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.PATCH,
+                                "/api/shopCart/**"
+                                ).permitAll()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/shopCart/**"
                         ).permitAll()
 
                         /* ---------- 주문 목록 (ROLE001 + ROLE002 가능) ---------- */

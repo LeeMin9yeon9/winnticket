@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.cart.mapper.ShopCartMapper">
+
+    <select id="selectProduct" resultType="ProductCartViewDto">
+        SELECT
+            id,
+            name,
+            image_url AS imageUrl,
+            price,
+            discount_price AS discountPrice
+        FROM products
+        WHERE id = #{productId}
+    </select>
+
+    <select id="selectOptionValues"
+            parameterType="list"
+            resultType="kr.co.winnticket.cart.dto.mapperDto.OptionValueViewDto">
+
+        SELECT
+        v.id,
+        o.name AS optionName,
+        v.value,
+        COALESCE(v.additional_price, 0) AS additionalPrice
+        FROM product_option_values v
+        JOIN product_options o ON o.id = v.option_id
+        WHERE v.id IN
+        <foreach collection="id"
+                 item="id"
+                 open="("
+                 separator=","
+                 close=")">
+            #{id}
+        </foreach>
+
+    </select>
+</mapper>
