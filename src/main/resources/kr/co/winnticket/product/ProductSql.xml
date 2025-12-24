@@ -132,6 +132,7 @@
             a.ID,  -- 옵션별가격_ID
             a.CODE,  -- 코드
             a.VALUE,  -- 옵션별가격명
+            a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE  -- 추가가격
         FROM
             PRODUCT_OPTION_VALUES a
@@ -440,6 +441,7 @@
             OPTION_ID,
             VALUE,
             CODE,
+            STOCK,
             ADDITIONAL_PRICE
         )
         Values
@@ -447,6 +449,7 @@
             #{optionId},
             #{model.value},
             #{model.code},
+            #{model.stock},
             #{model.additionalPrice}
         )
     </insert>
