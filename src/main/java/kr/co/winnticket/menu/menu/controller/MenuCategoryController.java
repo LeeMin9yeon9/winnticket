@@ -108,4 +108,11 @@ public class MenuCategoryController {
         return ResponseEntity.ok("visible updated");
     }
 
+
+    @GetMapping("/shopMenus")
+    @Operation(summary = "SHOP 쇼핑몰 메뉴 조회" , description = "판매 쇼핑몰 메뉴 조회합니다.")
+    public ResponseEntity<List<MenuListDto>> getShopMenus(){
+        return ResponseEntity.ok(menuService.getShopMenus());
+    }
+
 }

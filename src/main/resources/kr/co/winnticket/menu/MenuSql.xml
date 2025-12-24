@@ -5,6 +5,20 @@
 
 <mapper namespace="kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper">
 
+    <!--SHOP 메뉴-->
+    <select id="selectShopMenus" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT
+            id,
+            name,
+            code,
+            level,
+            parent_id     AS parentId,
+            display_order AS displayOrder
+        FROM menu_categories
+        WHERE visible = true
+        ORDER BY level ASC, display_order ASC
+    </select>
+
     <!-- =============================
          메뉴 검색
     ============================== -->
