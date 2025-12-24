@@ -17,6 +17,11 @@ public class MenuCategoryService {
     private final MenuCategoryMapper menuMapper;
     private final MenuValidator validator;
 
+    // 판매SHOP 메뉴 조회
+    public List<MenuListDto> getShopMenus(){
+        return menuMapper.selectShopMenus();
+    }
+
     // 메뉴 전체 + 검색 조회
     public List<MenuListDto> menuList(String name, String code) {
         List<MenuListDto> menuList = menuMapper.findMenus(name,code);

@@ -13,6 +13,9 @@ import java.util.UUID;
 @Mapper
 public interface MenuCategoryMapper {
 
+    // 쇼핑몰 SHOP 메뉴
+    List<MenuListDto> selectShopMenus();
+
     // 쇼핑몰 메뉴 조회(검색 조회)
     List<MenuListDto> findMenus(
             @Param("name") String name,
