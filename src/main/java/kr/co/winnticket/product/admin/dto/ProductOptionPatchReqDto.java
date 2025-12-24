@@ -2,6 +2,7 @@ package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
+import kr.co.winnticket.common.enums.OptionPriceType;
 import lombok.Data;
 import lombok.ToString;
 
@@ -21,6 +22,9 @@ public class ProductOptionPatchReqDto {
 
     @Schema(description = "필수여부")
     private boolean required;
+    
+    @Schema(description = "옵션별가격타입")
+    private OptionPriceType priceType;
 
     @Schema(description = "옵션별가격등록")
     private List<ProductOptionValuePostReqDto> valuesInsert = new ArrayList<>();
