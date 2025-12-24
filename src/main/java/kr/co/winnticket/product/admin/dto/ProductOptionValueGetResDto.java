@@ -19,9 +19,6 @@ public class ProductOptionValueGetResDto {
     @Schema(description = "옵션별가격코드")
     private String code;
 
-    @Schema(description = "옵션별가격타입")
-    private OptionPriceType priceType;
-
     @Schema(description = "옵션별가격명")
     private String value;
 
