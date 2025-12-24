@@ -100,6 +100,7 @@
             a.ID,  -- 옵션_ID
             a.NAME,  -- 옵션명
             a.CODE,  -- 옵션코드
+            a.PRICE_TYPE,  -- 옵션별가격타입
             a.REQUIRED  -- 필수여부
         FROM
             PRODUCT_OPTIONS a
@@ -115,6 +116,7 @@
             a.ID,  -- 옵션_ID
             a.NAME,  -- 옵션명
             a.CODE,  -- 옵션코드
+            a.PRICE_TYPE,  -- 옵션별가격타입
             a.REQUIRED  -- 필수여부
         FROM
             PRODUCT_OPTIONS a
@@ -130,7 +132,6 @@
             a.ID,  -- 옵션별가격_ID
             a.CODE,  -- 코드
             a.VALUE,  -- 옵션별가격명
-            a.PRICE_TYPE,  -- 옵션별가격타입
             a.ADDITIONAL_PRICE  -- 추가가격
         FROM
             PRODUCT_OPTION_VALUES a
@@ -393,6 +394,7 @@
             PRODUCT_ID,
             NAME,
             CODE,
+            PRICE_TYPE,
             REQUIRED
         )
         Values
@@ -400,6 +402,7 @@
             #{id},
             #{model.name},
             #{model.code},
+            #{model.priceType}::option_price_type,
             #{model.required}
         )
     </insert>
@@ -419,6 +422,9 @@
             <if test="model.required != null">
                 REQUIRED = #{model.required},
             </if>
+            <if test="model.priceType != null">
+                PRICE_TYPE = #{model.priceType}::option_price_type,
+            </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
@@ -434,7 +440,6 @@
             OPTION_ID,
             VALUE,
             CODE,
-            PRICE_TYPE,
             ADDITIONAL_PRICE
         )
         Values
@@ -442,7 +447,6 @@
             #{optionId},
             #{model.value},
             #{model.code},
-            #{model.priceType}::option_price_type,
             #{model.additionalPrice}
         )
     </insert>
