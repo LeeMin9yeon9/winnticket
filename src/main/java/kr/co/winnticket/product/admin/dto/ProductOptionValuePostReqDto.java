@@ -14,6 +14,9 @@ public class ProductOptionValuePostReqDto {
     @Schema(description = "옵션별가격코드")
     private String code;
 
+    @Schema(description = "옵션별가격재고")
+    private int stock;
+    
     @Schema(description = "옵션별가격")
     private int additionalPrice;
 }
