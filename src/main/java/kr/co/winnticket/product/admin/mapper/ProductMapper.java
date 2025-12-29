@@ -34,6 +34,9 @@ public interface ProductMapper {
     // 상품별 옵션별 가격조회
     List<ProductOptionValueGetResDto> selectOptionValues(UUID id);
 
+    // 상품별 옵션별 가격상세조회
+    ProductOptionValueGetResDto selectOptionValueDetail(UUID id);
+
     // 상품 등록
     void insertProduct(ProductPostReqDto model);
 

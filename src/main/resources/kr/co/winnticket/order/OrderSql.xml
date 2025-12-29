@@ -26,7 +26,7 @@
                When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then a.TOTAL_PRICE Else 0
             End) CANCELED_TOTAL_PRICE  -- 취소/환불 총액
         from
-            TICKET_ORDERS a
+            orders a
         Where 1 = 1
     </select>
 
@@ -35,22 +35,36 @@
     -->
     <select id="selectOrderAdminList" resultType="kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto">
         Select
-            a.ID,  -- 주문_ID
-            a.PAYMENT_DATE,  -- 주문일
-            a.ORDER_NUMBER,  -- 주문번호
-            -- 파트너사 ??
-            a.CUSTOMER_NAME,  -- 주문자
-            a.PRODUCT_NAME,  -- 상품명
-            a.QUANTITY,  -- 수량
-            a.UNIT_PRICE,  -- 상품가격
-            a.STATUS,  -- 주문상태
-            a.TOTAL_PRICE,  -- 총 주문금액
-            -- 결제상태??
-            -- 결제금액??
-            a.PAYMENT_METHOD,  -- 결제수단
-            a.CUSTOMER_PHONE  -- 연락처
+            *
         From
-            TICKET_ORDERS a
+        (
+            Select
+                a.id, -- 주문_ID
+                a.all_ticket_used,  -- 모든티켓사용여부
+                a.ordered_at, -- 주문일시
+                a.order_number, -- 주문번호
+                STRING_AGG(DISTINCT d.name, ', ') AS partner_name,
+                a.customer_name, -- 주문자
+                a.customer_phone, -- 주문자 연락처
+                STRING_AGG(b.product_name, ', ') AS product_name,
+                SUM(b.quantity) AS product_cnt,
+                a.total_price, -- 상품총금액
+                a.discount_price, -- 할인금액
+                a.status, -- 주문상태
+                a.payment_status, -- 결제상태
+                a.final_price, -- 결제금액
+                a.payment_method -- 결제수단
+            FROM
+                orders a
+            JOIN order_items b
+                ON b.order_id = a.id
+            JOIN products c
+                ON c.id = b.product_id
+            JOIN partners d
+                ON d.id = c.partner_id
+            GROUP BY
+                a.id
+        ) a
         Where 1 = 1
         <if test="srchWord != null and srchWord != ''">
             <![CDATA[
@@ -64,13 +78,13 @@
 
         <if test="begDate != null">
             <![CDATA[
-            AND Date(a.PAYMENT_DATE) >= #{begDate}
+            AND Date(a.ordered_at) >= #{begDate}
             ]]>
         </if>
 
         <if test="endDate != null">
             <![CDATA[
-            AND Date(a.PAYMENT_DATE) <= #{endDate}
+            AND Date(a.ordered_at) <= #{endDate}
             ]]>
         </if>
 
@@ -81,6 +95,177 @@
             ]]>
         </if>
         Order By
-        a.PAYMENT_DATE Desc
+            a.ordered_at Desc
     </select>
+
+    <!--
+   - 주문 상세 Select
+   -->
+    <select id="selectOrderAdminDetail" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
+        Select
+            a.id, -- 주문_ID
+            a.order_number, -- 주문번호
+            a.ordered_at, -- 주문일시
+            (
+                Select
+                    x.name
+                From
+                    channels x
+                Where 1 = 1
+                And x.id = a.channel_id
+            ) channel_name, -- 채널명
+            a.status, -- 주문상태
+            a.customer_name, -- 주문자
+            a.customer_phone, -- 주문자 연락처
+            a.customer_email,  -- 주문자이메일
+            a.payment_status, -- 결제상태
+            a.final_price, -- 결제금액
+            a.payment_method, -- 결제수단
+            a.paid_at,  -- 결제일시
+            a.total_price, -- 상품총금액
+            a.discount_price, -- 할인금액
+            a.all_ticket_used,  -- 모든티켓사용여부
+            (
+                select
+                    SUM(x.quantity)
+                from
+                    order_items x
+                Where 1 = 1
+                  And x.order_id = a.ID
+            ) all_cnt,  -- 상품개수
+            (
+                select
+                    count(*)
+                from
+                    order_tickets x
+                Join
+                    order_items y
+                On x.order_item_id = y.id
+                Where 1 = 1
+                And y.order_id = a.ID
+                And x.ticket_used = true
+            ) USED_TICKET_CNT,  -- 사용티켓수
+            a.memo -- 요청사항
+        FROM
+            orders a
+        Where 1 = 1
+        And a.ID = #{id}
+    </select>
+
+    <!--
+    - 주문 상품 목록 Select
+    -->
+    <select id="selectOrderProductList" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
+        Select
+            a.id, -- 주문상품_ID
+            a.product_id, -- 상품ID
+            a.product_name, -- 상품명
+            (
+                Select
+                    x.name
+                From menu_categories x
+                Join
+                    Products y
+                On x.id = y.category_id
+                where 1 = 1
+                And y.id = a.product_id
+            ) category_name, -- 카테고리명
+            d.name partner_name,  -- 파트너명
+            STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
+            a.quantity,
+            a.unit_price,
+            a.total_price
+        FROM
+            order_items a
+        JOIN orders b
+        ON b.id = a.order_id
+        JOIN products c
+        ON c.id = a.product_id
+        JOIN partners d
+        ON d.id = c.partner_id
+        LEFT JOIN order_item_options e
+        ON e.order_item_id = a.id
+        Where 1 = 1
+          And a.order_id = #{id}
+        GROUP BY
+            a.id,
+            a.product_name,
+            d.name,
+            a.quantity,
+            a.unit_price,
+            a.total_price
+    </select>
+
+    <!--
+    - 주문 티켓 목록 Select
+    -->
+    <select id="selectOrderTicketList" resultType="kr.co.winnticket.order.admin.dto.OrderTicketListGetResDto">
+        SELECT
+            a.id,  -- 티켓id
+            a.ticket_number,  -- 티켓번호
+            b.product_name || ' (' || STRING_AGG(f.option_value, ' ' ORDER BY f.id) || ')' product_name,  -- 상품명
+            e.name partner_name,  -- 파트너명
+            a.ticket_used,  -- 사용여부
+            a.ticket_used_date -- 사용일시
+        FROM order_tickets a
+        JOIN order_items b
+          ON b.id = a.order_item_id
+        JOIN orders c
+          ON c.id = b.order_id
+        JOIN products d
+          ON d.id = b.product_id
+        JOIN partners e
+          ON e.id = d.partner_id
+        LEFT JOIN order_item_options f
+               ON f.order_item_id = b.id
+        WHERE c.id = #{id}
+        GROUP BY
+            a.id,
+            a.ticket_number,
+            b.product_name,
+            e.name,
+            a.ticket_used,
+            a.ticket_used_date
+        ORDER BY
+            a.ticket_number;
+    </select>
+
+    <!--
+    - 결제완료 처리
+    -->
+    <update id="updatePaymentComplete">
+        UPDATE orders
+        SET
+            payment_status = 'PAID',
+            paid_at = #{paidAt}
+        WHERE id = #{id}
+        AND payment_status = 'READY'
+    </update>
+
+    <!--
+    - 주문상태 변경
+    -->
+    <update id="updateOrderStatus">
+        UPDATE orders
+        SET status = 'COMPLETED'
+        WHERE id = #{id}
+    </update>
+
+    <!--
+    - 티켓발행
+    -->
+    <insert id="insertOrderTicket">
+        INSERT INTO order_tickets
+        (
+            order_item_id,
+            ticket_number,
+            ticket_used
+        )
+        VALUES
+        (
+             #{orderItemId},
+             #{ticketNumber},
+             false
+        )
+    </insert>
 </mapper>
