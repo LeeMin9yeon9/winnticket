@@ -141,6 +141,22 @@
     </select>
 
     <!--
+     - 상품 옵션별 가격 상세 select
+     -->
+    <select id="selectOptionValueDetail" resultType="kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto">
+        Select
+            a.ID,  -- 옵션별가격_ID
+            a.CODE,  -- 코드
+            a.VALUE,  -- 옵션별가격명
+            a.STOCK,  -- 옵션별가격재고
+            a.ADDITIONAL_PRICE  -- 추가가격
+        FROM
+            PRODUCT_OPTION_VALUES a
+        Where 1 = 1
+      And a.ID = #{id}
+    </select>
+
+    <!--
     - 상품 옵션별 기간 Select
     -->
     <resultMap id="ProductPeriodResultMap"
