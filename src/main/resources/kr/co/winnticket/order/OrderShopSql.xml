@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.order.shop.mapper.OrderShopMapper">
+
+    <!--
+    - 주문테이블 insert
+    -->
+    <select id="insertOrder" resultType="map">
+        Insert Into ORDERS
+        (
+            ORDER_NUMBER,
+            CHANNEL_ID,
+            CUSTOMER_NAME,
+            CUSTOMER_PHONE,
+            CUSTOMER_EMAIL,
+            TOTAL_PRICE,
+            DISCOUNT_PRICE,
+            FINAL_PRICE,
+            STATUS,
+            PAYMENT_METHOD,
+            PAYMENT_STATUS
+        )
+        Values
+        (
+            'W'|| TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEXTVAL('seq_order_number'),
+            #{channelId},
+            #{customerName},
+            #{customerPhone},
+            #{customerEmail},
+            #{totalPrice},
+            #{discountPrice},
+            0,
+            'PENDING_PAYMENT',
+            'VIRTUAL_ACCOUNT',
+            'READY'
+        )
+        RETURNING id, order_number
+    </select>
+
+    <!--
+    - 주문상품별 insert
+    -->
+    <select id="insertOrderItem" resultType="java.util.UUID">
+        Insert Into ORDER_ITEMS
+        (
+            ORDER_ID,
+            PRODUCT_ID,
+            PRODUCT_NAME,
+            QUANTITY,
+            UNIT_PRICE,
+            TOTAL_PRICE
+        )
+        Values
+        (
+            #{orderId},
+            #{productId},
+            #{productName},
+            #{quantity},
+            #{unitPrice},
+            #{totalPrice}
+        )
+        RETURNING id
+    </select>
+
+    <!--
+    - 주문상품별 옵션 insert
+    -->
+    <insert id="insertOrderItemOption">
+        Insert Into ORDER_ITEM_OPTIONS
+        (
+            ORDER_ITEM_ID,
+            OPTION_NAME,
+            OPTION_VALUE,
+            ADDITIONAL_PRICE
+        )
+        Values
+        (
+            #{orderItemId},
+            #{optionName},
+            #{optionValueName},
+            #{additionalPrice}
+        )
+    </insert>
+
+    <!--
+    - 최종결제금액 update
+    -->
+    <update id="updateOrderPrice">
+        update ORDERS
+        Set
+            FINAL_PRICE = #{finalPrice}
+        Where 1 = 1
+        And id = #{orderId}
+    </update>
+</mapper>
