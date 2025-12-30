@@ -13,7 +13,8 @@
             code,
             level,
             parent_id     AS parentId,
-            display_order AS displayOrder
+            display_order AS displayOrder,
+            visible
         FROM menu_categories
         WHERE visible = true
         ORDER BY level ASC, display_order ASC

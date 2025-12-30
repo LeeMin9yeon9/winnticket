@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 "/api/shop/order/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
-                                "/api/menu/menuCategory/shopMenus"
+                                "/api/menu/menuCategory/shopMenus/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
