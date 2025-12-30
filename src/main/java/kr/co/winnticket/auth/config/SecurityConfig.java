@@ -44,7 +44,7 @@ public class SecurityConfig {
                                 "/api/admin/terms/visible",
                                 "/api/cart/**",
                                 "/api/shop/banners/**",
-                                "/api/shop/order/**",
+                                "/api/orders/shop/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
                                 "/api/menu/menuCategory/shopMenus/**"
@@ -69,7 +69,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /* ---------- 주문 목록 (ROLE001 + ROLE002 가능) ---------- */
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**")
+                        .requestMatchers(HttpMethod.GET, "/api/order/**")
                         .hasAnyAuthority("ROLE001", "ROLE002")
 
                         /* ---------- 관리자 API (ROLE001만 허용) ---------- */

@@ -1,7 +1,9 @@
 package kr.co.winnticket.order.shop.service;
 
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
+import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
@@ -20,6 +22,18 @@ import java.util.UUID;
 public class OrderShopService {
     private final ProductMapper productMapper;
     private final OrderShopMapper mapper;
+
+
+    public OrderShopGetResDto selectOrderShop(String orderNumber) {
+        OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
+
+        if (model == null) {
+            throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+        }
+
+        model.setProducts(mapper.selectOrderProductList(model.getId()));
+        return model;
+    }
 
     @Transactional
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto) {

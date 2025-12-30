@@ -3,11 +3,11 @@ package kr.co.winnticket.order.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
+import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.service.OrderService;
+import kr.co.winnticket.product.admin.dto.ProductDetailContentPatchReqDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,9 +51,20 @@ public class OrderController {
     @Operation(summary = "주문 상세 조회(관리자)", description = "전달받은 id의 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderAdminDetailGetResDto>> getOrderAdminDetail (
             @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
-    ) throws Exception {
+   ) throws Exception {
         return ResponseEntity.ok(
                 ApiResponse.success("조회 성공", service.selectOrderAdminDetail(auId))
+        );
+    }
+
+    // 티켓조회 (현장관리자)
+    @GetMapping("api/order/admin/{id}/tickets")
+    @Operation(summary = "티켓 조회(현장관리자)", description = "전달받은 주문id의 모든 티켓을 조회합니다.")
+    public ResponseEntity<ApiResponse<OrderAdminTicketCheckGetResDto>> getOrderAdminTicketList (
+            @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
+    ) throws Exception {
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", service.selectOrderAdminTicketList(auId))
         );
     }
 
@@ -68,6 +79,21 @@ public class OrderController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("결제 완료", id)
+        );
+    }
+
+    @PostMapping("/api/order/{orderId}/ticket/{ticketId}/use")
+    @Operation(summary = "티켓 사용완료 처리", description = "전달받은 id의 티켓을 사용완료 처리합니다.")
+    public ResponseEntity<ApiResponse<String>> useTicket(
+            @PathVariable UUID orderId,
+            @PathVariable UUID ticketId
+    ) throws Exception {
+        service.useTicket(orderId, ticketId);
+
+        String id = ticketId.toString();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("티켓사용 완료", id)
         );
     }
 }
