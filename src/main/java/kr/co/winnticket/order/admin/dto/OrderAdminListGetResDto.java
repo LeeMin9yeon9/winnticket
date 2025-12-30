@@ -57,7 +57,7 @@ public class OrderAdminListGetResDto {
     private PaymentStatus paymentStatus;
 
     @Schema(description = "결제금액")
-    private String finalPrice;
+    private int finalPrice;
 
     @Schema(description = "결제수단")
     private PaymentMethod paymentMethod;

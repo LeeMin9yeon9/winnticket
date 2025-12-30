@@ -59,4 +59,23 @@ public interface OrderMapper {
             @Param("orderItemId") UUID orderItemId,
             @Param("ticketNumber") String ticketNumber
     );
+
+    // 주문 + 티켓 헤더 조회
+    OrderAdminTicketCheckGetResDto selectOrderTicketHeader(
+            @Param("id") UUID auId
+    );
+
+    // 주문에 속한 티켓 목록 조회
+    List<OrderTicketDetailGetResDto> selectOrderTickets(
+            @Param("id") UUID auId
+    );
+
+    // 티켓 사용 처리
+    int updateTicketUsed(UUID ticketId);
+
+    // 주문 내 미사용 티켓 수
+    int countUnusedTickets(UUID orderId);
+
+    // 주문 상태 변경 (모두 사용 완료)
+    void updateOrderCompleted(UUID orderId);
 }

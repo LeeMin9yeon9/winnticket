@@ -3,10 +3,7 @@ package kr.co.winnticket.order.admin.service;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentStatus;
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
+import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +38,25 @@ public class OrderService {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));
         model.setTickets(mapper.selectOrderTicketList(auId));
+        return model;
+    }
+
+    // 티켓조회(현장관리자)
+    public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId) {
+        OrderAdminTicketCheckGetResDto model = mapper.selectOrderTicketHeader(auId);
+        List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId);
+
+        model.setTickets(tickets);
+
+        int total = tickets.size();
+        int used = (int) tickets.stream()
+                .filter(OrderTicketDetailGetResDto::isTicketUsed)
+                .count();
+
+        model.setTotalTicketCnt(total);
+        model.setUsedTicketCnt(used);
+        model.setUnusedTicketCnt(total - used);
+
         return model;
     }
 
@@ -86,5 +102,24 @@ public class OrderService {
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
                 + "-"
                 + UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    // 티켓 사용 처리
+    @Transactional
+    public void useTicket(UUID orderId, UUID ticketId) {
+        // 티켓 사용 처리
+        int updated = mapper.updateTicketUsed(ticketId);
+
+        if (updated == 0) {
+            throw new IllegalStateException("이미 사용된 티켓이거나 존재하지 않습니다.");
+        }
+
+        // 주문 내 미사용 티켓 존재 여부 확인
+        int remainCount = mapper.countUnusedTickets(orderId);
+
+        // 전부 사용됐으면 주문 상태 변경
+        if (remainCount == 0) {
+            mapper.updateOrderCompleted(orderId);
+        }
     }
 }
