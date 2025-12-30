@@ -2,6 +2,81 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.order.shop.mapper.OrderShopMapper">
+    <!--
+   - 주문 상세 Select
+   -->
+    <select id="selectOrderShop" resultType="kr.co.winnticket.order.shop.dto.OrderShopGetResDto">
+        Select
+            a.id, -- 주문_ID
+            a.order_number, -- 주문번호
+            a.ordered_at, -- 주문일시
+            (
+                Select
+                    x.name
+                From
+                    channels x
+                Where 1 = 1
+                  And x.id = a.channel_id
+            ) channel_name, -- 채널명
+            a.status, -- 주문상태
+            a.customer_name, -- 주문자
+            a.customer_phone, -- 주문자 연락처
+            a.customer_email,  -- 주문자이메일
+            a.payment_status, -- 결제상태
+            a.final_price, -- 결제금액
+            a.payment_method, -- 결제수단
+            a.paid_at,  -- 결제일시
+            a.total_price, -- 상품총금액
+            a.memo -- 요청사항
+        FROM
+            orders a
+        Where 1 = 1
+        And a.ORDER_NUMBER = #{orderNumber}
+    </select>
+
+    <!--
+    - 주문 상품 목록 Select
+    -->
+    <select id="selectOrderProductList" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
+        Select
+            a.id, -- 주문상품_ID
+            a.product_id, -- 상품ID
+            a.product_name, -- 상품명
+            (
+                Select
+                    x.name
+                From menu_categories x
+                         Join
+                     Products y
+                     On x.id = y.category_id
+                where 1 = 1
+                  And y.id = a.product_id
+            ) category_name, -- 카테고리명
+            d.name partner_name,  -- 파트너명
+            STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
+            a.quantity,
+            a.unit_price,
+            a.total_price
+        FROM
+            order_items a
+                JOIN orders b
+                     ON b.id = a.order_id
+                JOIN products c
+                     ON c.id = a.product_id
+                JOIN partners d
+                     ON d.id = c.partner_id
+                LEFT JOIN order_item_options e
+                          ON e.order_item_id = a.id
+        Where 1 = 1
+          And a.order_id = #{id}
+        GROUP BY
+            a.id,
+            a.product_name,
+            d.name,
+            a.quantity,
+            a.unit_price,
+            a.total_price
+    </select>
 
     <!--
     - 주문테이블 insert

@@ -1,14 +1,23 @@
 package kr.co.winnticket.order.shop.mapper;
 
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
+import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Mapper
 public interface OrderShopMapper {
+    // 주문정보조회
+    OrderShopGetResDto selectOrderShop(String orderNumber);
+
+    // 주문상품조회
+    List<OrderProductListGetResDto> selectOrderProductList(UUID id);
+
     // 주문테이블 insert
     Map<String, Object> insertOrder(
             @Param("channelId") UUID channelId,

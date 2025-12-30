@@ -1,14 +1,15 @@
-package kr.co.winnticket.order.admin.dto;
+package kr.co.winnticket.order.shop.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderTicketListGetResDto;
 import lombok.Data;
 import lombok.ToString;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +17,8 @@ import java.util.UUID;
 
 @Data
 @ToString(callSuper = true)
-@Schema(title = "[주문 > 주문 상세 조회] OrderAdminDetailGetResDto")
-public class OrderAdminDetailGetResDto {
+@Schema(title = "[주문 > 주문 조회] OrderShopGetResDto")
+public class OrderShopGetResDto {
     @NotNull
     @Schema(description = "주문_ID")
     private UUID id;
@@ -58,24 +59,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "상품총금액")
     private int totalPrice;
 
-    @Schema(description = "주문금액")
-    private int discountPrice;
-
-    @Schema(description = "티켓사용여부")
-    private boolean allTicketUsed;
-
-    @Schema(description = "총개수")
-    private int allCnt;
-
-    @Schema(description = "사용티켓수")
-    private int usedTicketCnt;
-
     @Schema(description = "요청사항")
     private String memo;
 
     @Schema(description = "주문상품")
     private List<OrderProductListGetResDto> products = new ArrayList<>();
-
-    @Schema(description = "티켓정보")
-    private List<OrderTicketListGetResDto> tickets = new ArrayList<>();
 }
