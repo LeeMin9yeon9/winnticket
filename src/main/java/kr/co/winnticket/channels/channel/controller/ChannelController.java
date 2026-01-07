@@ -10,6 +10,7 @@ import kr.co.winnticket.channels.channel.dto.ChannelPatchReqDto;
 import kr.co.winnticket.channels.channel.service.ChannelService;
 import kr.co.winnticket.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Tag(name = "채널", description = "채널 관리 > 채널 목록")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/channels")
+@RequestMapping("/api/admin/channels")
 public class ChannelController {
 
     private final ChannelService service;
@@ -76,6 +77,16 @@ public class ChannelController {
     ){
         service.deleteChannel(id);
         return ResponseEntity.ok(ApiResponse.success("채널이 삭제되었습니다.",null));
+    }
+
+    @PatchMapping("visible/{id}/{visible}")
+    @Operation(summary = "채널 활성/비활성 " , description = "채널 활/비활성화를 할 수있습니다.")
+    public ResponseEntity<ApiResponse<Void>> visibleChannel(
+            @PathVariable UUID id,
+            @PathVariable Boolean visible
+    ) throws NotFoundException {
+        service.visibleChannel(id,visible);
+        return ResponseEntity.ok(ApiResponse.success("채널 활성/비할성되었습니다.",null));
     }
 
 

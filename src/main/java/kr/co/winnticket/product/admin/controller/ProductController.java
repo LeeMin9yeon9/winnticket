@@ -16,11 +16,12 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/admin/product")
 public class ProductController {
     private final ProductService service;
 
     // 상품 목록조회
-    @GetMapping("api/product/admin")
+    @GetMapping
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<ProductListGetResDto>>> getProductList (
@@ -34,7 +35,7 @@ public class ProductController {
     }
 
     // 상품 기본정보 조회
-    @GetMapping("api/product/admin/{id}")
+    @GetMapping("/{id}")
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 기본정보 조회", description = "전달받은 id의 상품의 상세정보를 조회합니다.")
     public ResponseEntity<ApiResponse<ProductDetailGetResDto>> getProductDetail (
@@ -46,7 +47,7 @@ public class ProductController {
     }
 
     // 상품 등록
-    @PostMapping("api/product/admin")
+    @PostMapping
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 등록", description = "전달받은 상품의 정보를 등록합니다.")
@@ -61,7 +62,7 @@ public class ProductController {
     }
 
     // 상품 기본정보 수정
-    @PatchMapping("api/product/admin/{id}/basic")
+    @PatchMapping("/{id}/basic")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 기본정보 수정", description = "전달받은 id의 상품 기본정보를 수정합니다.")
@@ -78,7 +79,7 @@ public class ProductController {
     }
 
     // 상품 배송정보 수정
-    @PatchMapping("api/product/admin/{id}/shipping")
+    @PatchMapping("/{id}/shipping")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 배송정보 수정", description = "전달받은 id의 상품 배송정보를 수정합니다.")
@@ -95,7 +96,7 @@ public class ProductController {
     }
 
     // 상품 섹션수정
-    @PatchMapping("api/product/admin/{id}/section")
+    @PatchMapping("/{id}/section")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 섹션정보 등록/수정", description = "전달받은 id의 상품 섹션정보를 등록/수정합니다.")
@@ -112,7 +113,7 @@ public class ProductController {
     }
 
     // 상품 상세내용 수정
-    @PatchMapping("api/product/admin/{id}/visible")
+    @PatchMapping("/{id}/visible")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 활성화여부 수정", description = "전달받은 id의 상품 활성하여부를 수정합니다.")
@@ -129,7 +130,7 @@ public class ProductController {
     }
 
     // 상품 상세내용 수정
-    @PatchMapping("api/product/admin/{id}/detailContent")
+    @PatchMapping("/{id}/detailContent")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 상세내용 수정", description = "전달받은 id의 상품 상세내용을 수정합니다.")
@@ -146,7 +147,7 @@ public class ProductController {
     }
 
     // 상품 삭제
-    @DeleteMapping("api/product/admin/{id}")
+    @DeleteMapping("/{id}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 삭제", description = "전달받은 id의 상품을 삭제합니다.")
@@ -162,7 +163,7 @@ public class ProductController {
     }
     
     // 상품옵션 상세조회
-    @GetMapping("api/product/admin/option/{id}")
+    @GetMapping("/option/{id}")
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 옵션 상세 조회", description = "상품 옵션을 조회합니다.")
     public ResponseEntity<ApiResponse<ProductOptionGetResDto>> getProductOptionDetail (
@@ -174,7 +175,7 @@ public class ProductController {
     }
 
     // 상품 옵션 등록
-    @PostMapping("api/product/admin/{id}/option")
+    @PostMapping("/{id}/option")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 옵션 등록", description = "전달받은 id의 상품 옵션을 등록합니다.")
@@ -190,7 +191,7 @@ public class ProductController {
     }
 
     // 상품 옵션 수정
-    @PatchMapping("api/product/admin/option/{id}")
+    @PatchMapping("/option/{id}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 옵션 수정", description = "전달받은 id의 옵션을 수정합니다.")
@@ -207,7 +208,7 @@ public class ProductController {
     }
 
     // 상품 옵션 삭제
-    @DeleteMapping("api/product/admin/option/{id}")
+    @DeleteMapping("/option/{id}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 옵션 삭제", description = "전달받은 id의 옵션을 삭제합니다.")
@@ -223,7 +224,7 @@ public class ProductController {
     }
 
     // 상품 기간 등록
-    @PostMapping("api/product/admin/period")
+    @PostMapping("/period")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 기간 등록", description = "전달받은 id의 상품 기간을 등록합니다.")
@@ -238,7 +239,7 @@ public class ProductController {
     }
 
     // 상품 기간 삭제
-    @DeleteMapping("api/product/admin/period/{id}/{groupNo}")
+    @DeleteMapping("/period/{id}/{groupNo}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 기간 삭제", description = "전달받은 id의 상품 기간을 삭제합니다.")
@@ -255,7 +256,7 @@ public class ProductController {
     }
 
     // 섹션 목록 조회
-    @GetMapping("api/product/admin/section/list")
+    @GetMapping("/section/list")
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "섹션 목록 조회", description = "섹션 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<SectionListGetResDto>>> getSectionList (
@@ -267,7 +268,7 @@ public class ProductController {
     }
 
     // 활성화 섹션 목록 조회
-    @GetMapping("api/product/admin/section/list/active")
+    @GetMapping("/section/list/active")
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "활성화 섹션 목록 조회", description = "활성화된 섹션 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<SectionListActiveGetResDto>>> getSectionListActive (
@@ -278,7 +279,7 @@ public class ProductController {
     }
 
     // 섹션 상세 조회
-    @GetMapping("api/product/admin/section/{id}")
+    @GetMapping("/section/{id}")
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "섹션 상세 조회", description = "전달받은 id의 섹션을 조회합니다.")
     public ResponseEntity<ApiResponse<SectionDetailGetResDto>> getSectionDetailActive (
@@ -290,7 +291,7 @@ public class ProductController {
     }
 
     // 섹션 등록
-    @PostMapping("api/product/admin/section")
+    @PostMapping("/section")
     @ResponseBody
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "섹션 등록", description = "섹션을 등록합니다.")
@@ -305,7 +306,7 @@ public class ProductController {
     }
 
     // 섹션 수정
-    @PatchMapping("api/product/admin/section/{id}")
+    @PatchMapping("/section/{id}")
     @ResponseBody
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "섹션 수정", description = "전달받은 id의 섹션을 수정합니다.")
@@ -322,7 +323,7 @@ public class ProductController {
     }
 
     // 섹션 삭제
-    @DeleteMapping("api/product/admin/section/{id}")
+    @DeleteMapping("/section/{id}")
     @ResponseBody
     @Tag(name = "섹션", description = "섹션 관리")
     @Operation(summary = "섹션 삭제", description = "전달받은 id의 섹션을 삭제합니다.")

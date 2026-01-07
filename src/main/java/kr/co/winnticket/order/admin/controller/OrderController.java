@@ -3,11 +3,12 @@ package kr.co.winnticket.order.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.order.admin.dto.*;
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderAdminTicketCheckGetResDto;
 import kr.co.winnticket.order.admin.service.OrderService;
-import kr.co.winnticket.product.admin.dto.ProductDetailContentPatchReqDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,15 @@ import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "주문", description = "주문 관리")
+@RequestMapping("/api/admin/order")
 @RestController
 @RequiredArgsConstructor
+
 public class OrderController {
     private final OrderService service;
 
     // 주문 상태별 카운트 조회
-    @GetMapping("api/order/admin/status")
+    @GetMapping("/status")
     @Operation(summary = "주문 상태별 카운트/총액 조회", description = "QNA 상태별 카운트및 총액을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderAdminStatusGetResDto>> getOrderStatusCount(
     ) throws Exception {
@@ -33,7 +36,7 @@ public class OrderController {
     }
 
     // 주문 목록조회 (관리자)
-    @GetMapping("api/order/admin")
+    @GetMapping
     @Operation(summary = "주문 목록 조회(관리자)", description = "주문 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<OrderAdminListGetResDto>>> getOrderAdminList (
             @Parameter(description = "검색어") @RequestParam(value = "srchWord", required = false) String asSrchWord,
@@ -47,7 +50,7 @@ public class OrderController {
     }
 
     // 주문 상세조회 (관리자)
-    @GetMapping("api/order/admin/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "주문 상세 조회(관리자)", description = "전달받은 id의 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderAdminDetailGetResDto>> getOrderAdminDetail (
             @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
@@ -58,7 +61,7 @@ public class OrderController {
     }
 
     // 티켓조회 (현장관리자)
-    @GetMapping("api/order/admin/{id}/tickets")
+    @GetMapping("/tickets/{id}")
     @Operation(summary = "티켓 조회(현장관리자)", description = "전달받은 주문id의 모든 티켓을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderAdminTicketCheckGetResDto>> getOrderAdminTicketList (
             @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
@@ -68,7 +71,7 @@ public class OrderController {
         );
     }
 
-    @PostMapping("/api/order/{id}/pay")
+    @PostMapping("/{id}/pay")
     @Operation(summary = "주문 결제 완료 처리", description = "전달받은 id의 주문을 결재완료 처리합니다.")
     public ResponseEntity<ApiResponse<String>> completePayment(
             @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
@@ -82,7 +85,7 @@ public class OrderController {
         );
     }
 
-    @PostMapping("/api/order/{orderId}/ticket/{ticketId}/use")
+    @PostMapping("/tickets/{orderId}/{ticketId}/use")
     @Operation(summary = "티켓 사용완료 처리", description = "전달받은 id의 티켓을 사용완료 처리합니다.")
     public ResponseEntity<ApiResponse<String>> useTicket(
             @PathVariable UUID orderId,
