@@ -4,6 +4,7 @@ import kr.co.winnticket.product.admin.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -172,5 +173,49 @@ public interface ProductMapper {
     void deleteProductPeriod(
             @Param("id") UUID auId,
             @Param("groupNo") int groupNo
+    );
+
+    // 상품 채널별 할인 목록 조회
+    List<ProductChannelDiscountListGetResDto> selectProductChannelDiscountsList(
+            @Param("id") UUID auId,
+            @Param("channelName") String channelName,
+            @Param("status") String status,
+            @Param("period") String period
+    );
+
+    // 상품 채널별 할인 상세 조회
+    ProductChannelDiscountDetailGetResDto selectProductChannelDiscountsDetail(
+            @Param("id") UUID auId,
+            @Param("discountId") UUID discountId
+    );
+
+    // 상품 채널별 할인 등록
+    void insertProductChannelDiscount(
+            @Param("id") UUID auId,
+            @Param("channelId") UUID channelId,
+            @Param("originalPrice") int originalPrice,
+            @Param("discountRate") int discountRate,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("isActive") boolean active
+    );
+
+    // 상품 채널별 할인 수정
+    void updateProductChannelDiscount(
+            @Param("id") UUID discountId,
+            @Param("discountRate") int discountRate,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    // 상품 채널별 할인 삭제
+    void deleteProductChannelDiscount(
+            @Param("id") UUID discountId
+    );
+
+    // 상품 채널별 할인 활성화여부 수정
+    void updateProductChannelDiscountIsActive(
+            @Param("id") UUID discountId,
+            @Param("isActive") boolean abIsActive
     );
 }

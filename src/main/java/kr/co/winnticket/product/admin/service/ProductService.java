@@ -211,7 +211,57 @@ public class ProductService {
         mapper.reorderAllDisplayOrders();
     }
 
+    //기간 삭제
     public void deleteProductPeriod(UUID auId, int groupNo) {
         mapper.deleteProductPeriod(auId, groupNo);
+    }
+
+    // 상품 채널별 할인 목록 조회
+    public List<ProductChannelDiscountListGetResDto> selectProductChannelDiscountsList(UUID auId, String channelName, String status, String period) {
+        List<ProductChannelDiscountListGetResDto> lModel = mapper.selectProductChannelDiscountsList(auId, channelName, status, period);
+
+        return lModel;
+    }
+
+    // 상품 채널별 할인 상세 조회
+    public ProductChannelDiscountDetailGetResDto selectProductChannelDiscountsDetail(UUID auId, UUID discountId) {
+        ProductChannelDiscountDetailGetResDto model = mapper.selectProductChannelDiscountsDetail(auId, discountId);
+
+        return model;
+    }
+
+    // 상품 채널별 할인 등록
+    public void insertProductChannelDiscount(UUID auId, ProductChannelDiscountPostReqDto model) {
+        ProductDetailGetResDto product = mapper.selectProductDetail(auId);
+        if (product == null) {
+            throw new IllegalArgumentException("상품 없음");
+        }
+
+        int originalPrice = product.getPrice(); // ⬅️ 여기서 정가 확정
+
+        mapper.insertProductChannelDiscount(
+                auId,
+                model.getChannelId(),
+                originalPrice,
+                model.getDiscountRate(),
+                model.getStartDate(),
+                model.getEndDate(),
+                model.isActive()
+        );
+    }
+
+    // 상품 채널별 할인 수정
+    public void updateProductChannelDiscount(UUID auId, UUID discountId, ProductChannelDiscountPatchReqDto model) {
+        mapper.updateProductChannelDiscount(discountId, model.getDiscountRate(), model.getStartDate(), model.getEndDate());
+    }
+
+    // 상품 채널별 할인 삭제
+    public void deleteProductChannelDiscount(UUID auId, UUID discountId) {
+        mapper.deleteProductChannelDiscount(discountId);
+    }
+
+    // 상품 채널별 할인 활성화여부 수정
+    public void updateProductChannelDiscountIsActive(UUID auId, UUID discountId, boolean abIsActive) {
+        mapper.updateProductChannelDiscountIsActive(discountId, abIsActive);
     }
 }
