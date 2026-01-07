@@ -337,4 +337,98 @@ public class ProductController {
                 ApiResponse.success("삭제 성공", id)
         );
     }
+
+    // 상품 채널별 할인 목록 조회
+    @GetMapping("/{id}/channelDiscounts")
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 목록 조회", description = "전달받은 id의 상품의 채널별 할인 목록을 조회합니다.")
+    public ResponseEntity<ApiResponse<List<ProductChannelDiscountListGetResDto>>> getProductChannelDiscountsList (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널명") @RequestParam(value = "channelName", required = false) String channelName,
+            @Parameter(description = "상태 [ALL:전체, ENABLED:활성, DISABLED:비활성, UPCOMING:예정, ENDED:만료]") @RequestParam(value = "status") String status,
+            @Parameter(description = "기간 [ALL:전체, ONGOING:진행중, UPCOMING:예정, ENDED:만료]") @RequestParam(value = "period") String period
+    ) throws Exception {
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", service.selectProductChannelDiscountsList(auId, channelName, status, period))
+        );
+    }
+
+    // 상품 채널별 할인 상세조회
+    @GetMapping("/{id}/channelDiscounts/{discountId}")
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 상세 조회", description = "전달받은 id의 상품의 채널별 할인을 상세조회합니다.")
+    public ResponseEntity<ApiResponse<ProductChannelDiscountDetailGetResDto>> getProductChannelDiscountsDetail (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널별할인 ID") @PathVariable("discountId") UUID discountId
+    ) throws Exception {
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", service.selectProductChannelDiscountsDetail(auId, discountId))
+        );
+    }
+
+    // 상품 채널별 할인 등록
+    @PostMapping("/{id}/channelDiscounts")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 등록", description = "상품 채널별 할인을 등록합니다.")
+    public ResponseEntity<ApiResponse<ProductChannelDiscountPostReqDto>> postProductChannelDiscount (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "채널별할인 정보") @RequestBody @Valid ProductChannelDiscountPostReqDto model
+    ) throws Exception {
+        service.insertProductChannelDiscount(auId, model);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("등록 성공", model)
+        );
+    }
+
+    // 상품 채널별 할인 수정
+    @PatchMapping("/{id}/channelDiscounts/{discountId}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 수정", description = "상품 채널별 할인을 수정합니다.")
+    public ResponseEntity<ApiResponse<ProductChannelDiscountPatchReqDto>> patchProductChannelDiscount (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널별할인 ID") @PathVariable("discountId") UUID discountId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "채널별할인 정보") @RequestBody @Valid ProductChannelDiscountPatchReqDto model
+    ) throws Exception {
+        service.updateProductChannelDiscount(auId, discountId, model);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("수정 성공", model)
+        );
+    }
+
+    // 상품 채널별 할인 삭제
+    @DeleteMapping("/{id}/channelDiscounts/{discountId}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 삭제", description = "상품 채널별 할인을 삭제합니다.")
+    public ResponseEntity<ApiResponse<String>> deleteProductChannelDiscount (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널별할인 ID") @PathVariable("discountId") UUID discountId
+    ) throws Exception {
+        service.deleteProductChannelDiscount(auId, discountId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("삭제 성공", discountId.toString())
+        );
+    }
+
+    // 상품 채널별 할인 활성화여부 수정
+    @PatchMapping("/{id}/channelDiscounts/{discountId}/isActive")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 할인 활성화여부 수정", description = "상품 채널별 할인 활성화여부를 수정합니다.")
+    public ResponseEntity<ApiResponse<String>> patchProductChannelDiscountIsActive (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널별할인 ID") @PathVariable("discountId") UUID discountId,
+            @Parameter(description = "활성화여부") @RequestParam(value = "isActive") boolean abIsActive
+    ) throws Exception {
+        service.updateProductChannelDiscountIsActive(auId, discountId, abIsActive);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("수정 성공", discountId.toString())
+        );
+    }
 }

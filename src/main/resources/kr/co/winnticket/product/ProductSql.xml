@@ -714,4 +714,167 @@
         Where 1 = 1
         And a.id = x.id
     </update>
+
+    <!--
+    - 상품 채널별할인 목록 Select
+    -->
+    <select id="selectProductChannelDiscountsList" resultType="kr.co.winnticket.product.admin.dto.ProductChannelDiscountListGetResDto">
+        <![CDATA[
+        SELECT
+            pcd.id,
+            pcd.product_id,
+            c.id   AS channelId,
+            c.name AS channelName,
+            pcd.discount_rate,
+            pcd.start_date,
+            pcd.end_date,
+            pcd.is_active,
+            pcd.original_price,
+            (pcd.original_price * (100 - pcd.discount_rate) / 100) AS salePrice,
+            -- 화면 표시용 상태 계산
+            CASE
+            WHEN pcd.is_active = false THEN '비활성'
+            WHEN CURRENT_DATE < pcd.start_date THEN '예정'
+            WHEN CURRENT_DATE > pcd.end_date THEN '만료'
+            ELSE '활성'
+            END AS status,
+            CASE
+            WHEN CURRENT_DATE < pcd.start_date THEN '예정'
+            WHEN CURRENT_DATE > pcd.end_date THEN '만료'
+            ELSE '진행중'
+            END AS period
+        FROM
+            product_channel_discounts pcd
+        JOIN products p  ON p.id = pcd.product_id
+        JOIN channels c  ON c.id = pcd.channel_id
+        WHERE pcd.product_id = #{id}
+        ]]>
+        <!-- 채널 -->
+        <if test="channelName != null">
+            AND Upper(c.name) Like '%' || Upper(#{channelName}) || '%'
+        </if>
+
+        <!-- 상태 필터 -->
+        <if test="status != 'ALL'">
+            <choose>
+                <when test="status == 'ACTIVE'">
+                    AND pcd.is_active = true
+                    AND CURRENT_DATE BETWEEN pcd.start_date AND pcd.end_date
+                </when>
+                <when test="status == 'INACTIVE'">
+                    AND pcd.is_active = false
+                </when>
+                <when test="status == 'SCHEDULED'">
+                    AND pcd.is_active = true
+                    AND CURRENT_DATE &lt; pcd.start_date
+                </when>
+                <when test="status == 'EXPIRED'">
+                    AND CURRENT_DATE &gt; pcd.end_date
+                </when>
+            </choose>
+        </if>
+
+        <!-- 기간 필터 -->
+        <if test="period != 'ALL'">
+            <choose>
+                <when test="period == 'ONGOING'">
+                    AND CURRENT_DATE BETWEEN pcd.start_date AND pcd.end_date
+                </when>
+                <when test="period == 'UPCOMING'">
+                    AND CURRENT_DATE &lt; pcd.start_date
+                </when>
+                <when test="period == 'ENDED'">
+                    AND CURRENT_DATE &gt; pcd.end_date
+                </when>
+            </choose>
+        </if>
+        ORDER BY pcd.created_at DESC
+    </select>
+
+    <!--
+    - 상품 채널별할인 상세 Select
+    -->
+    <select id="selectProductChannelDiscountsDetail" resultType="kr.co.winnticket.product.admin.dto.ProductChannelDiscountDetailGetResDto">
+        SELECT
+            pcd.id,
+            c.id   AS channelId,
+            c.name AS channelName,
+            pcd.discount_rate,
+            pcd.start_date,
+            pcd.end_date,
+            pcd.is_active,
+            pcd.original_price,
+            (pcd.original_price * (100 - pcd.discount_rate) / 100) AS salePrice
+        FROM product_channel_discounts pcd
+        JOIN products p ON p.id = pcd.product_id
+        JOIN channels c ON c.id = pcd.channel_id
+        WHERE pcd.product_id = #{id}
+        AND pcd.id = #{discountId}
+    </select>
+
+    <!--
+    - 상품 채널별할인 등록
+    -->
+    <insert id="insertProductChannelDiscount">
+        INSERT INTO product_channel_discounts
+        (
+            product_id,
+            channel_id,
+            original_price,
+            discount_rate,
+            start_date,
+            end_date,
+            is_active
+        )
+        VALUES
+        (
+             #{id},
+             #{channelId},
+             #{originalPrice},
+             #{discountRate},
+             #{startDate},
+             #{endDate},
+             #{isActive}
+         )
+    </insert>
+
+    <!--
+    - 상품 채널별할인 수정
+    -->
+    <update id="updateProductChannelDiscount">
+        UPDATE product_channel_discounts
+        <set>
+        <if test="discountRate != null">
+            discount_rate = #{discountRate},
+        </if>
+        <if test="startDate != null">
+            start_date = #{startDate},
+        </if>
+        <if test="endDate != null">
+            end_date = #{endDate},
+        </if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!--
+    - 상품 채널별할인 삭제
+    -->
+    <delete id="deleteProductChannelDiscount">
+        DELETE
+        FROM product_channel_discounts
+        WHERE id = #{id}
+    </delete>
+
+    <!--
+    - 상품 채널별할인 활성화여부 수정
+    -->
+    <update id="updateProductChannelDiscountIsActive">
+        UPDATE product_channel_discounts
+        SET
+            is_active = #{isActive},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
 </mapper>
