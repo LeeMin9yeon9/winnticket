@@ -20,7 +20,7 @@ import java.util.UUID;
 @Tag(name = "쇼핑몰 메뉴 관리", description = "쇼핑몰 메뉴 관리 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/menu/menuCategory")
+@RequestMapping("/api/admin/menu/menuCategory")
 public class MenuCategoryController {
 
     private final MenuCategoryService menuService;

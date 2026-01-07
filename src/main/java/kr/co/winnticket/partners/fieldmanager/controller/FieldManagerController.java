@@ -14,7 +14,7 @@ import java.util.UUID;
 @Tag(name="현장관리자", description = "파트너 관리 > 파트너 목록 / 현장관리자")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/partners")
+@RequestMapping("/api/admin/partners")
 public class FieldManagerController {
 
     private final FieldManagerService service;

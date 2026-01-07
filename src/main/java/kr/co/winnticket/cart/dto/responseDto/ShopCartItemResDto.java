@@ -20,7 +20,7 @@ public class ShopCartItemResDto {
     private String productName;
 
     @Schema(description = "상품이미지")
-    private String imageUrl;
+    private List<String> imageUrl;
 
     @Schema(description = "상품 수량")
     private int quantity;

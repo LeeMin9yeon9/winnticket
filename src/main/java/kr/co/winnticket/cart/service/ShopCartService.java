@@ -1,5 +1,7 @@
 package kr.co.winnticket.cart.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.cart.dto.mapperDto.OptionValueViewDto;
 import kr.co.winnticket.cart.dto.mapperDto.ProductCartViewDto;
@@ -20,7 +22,24 @@ import java.util.*;
 public class ShopCartService {
 
     private final ShopCartMapper mapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CART_SESSION_KEY = "SHOP_CART";
+
+    private List<String> parseImageUrls(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return objectMapper.readValue(
+                    imageUrl,
+                    new TypeReference<List<String>>() {}
+            );
+        } catch (Exception e) {
+            // JSON 깨졌을 경우 방어
+            return Collections.emptyList();
+        }
+    }
 
     // 장바구니 조회
     public List<CartItemSessionDto> getCart(HttpSession session) {
@@ -126,7 +145,7 @@ public class ShopCartService {
             res.setId(c.getId());                       // 장바구니 ID
             res.setProductId(product.getId());          // 상품 ID
             res.setProductName(product.getName());      // 상품 이름
-            res.setImageUrl(product.getImageUrl());     // 상품 이미지
+            res.setImageUrl(parseImageUrls(product.getImageUrl()));     // 상품 이미지
             res.setQuantity(c.getQuantity());           // 상품 수량
 
             res.setUnitOriginPrice(unitOriginPrice);   // 정가
