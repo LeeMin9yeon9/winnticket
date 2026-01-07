@@ -36,7 +36,6 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
-                                "/api/menu/**",
                                 "/api/product/shop/**",
                                 "/api/community/**",
                                 "/api/admin/bank-accounts/visible",
@@ -47,7 +46,7 @@ public class SecurityConfig {
                                 "/api/orders/shop/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
-                                "/api/menu/menuCategory/shopMenus/**"
+                                "/api/admin/menu/menuCategory/shopMenus/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
@@ -63,17 +62,37 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.PATCH,
                                 "/api/shopCart/**"
-                                ).permitAll()
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.DELETE,
                                 "/api/shopCart/**"
                         ).permitAll()
 
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/shopCart/**"
+                        ).permitAll()
+
                         /* ---------- 주문 목록 (ROLE001 + ROLE002 가능) ---------- */
-                        .requestMatchers(HttpMethod.GET, "/api/order/**")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/order/tickets/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/order/tickets/**")
                         .hasAnyAuthority("ROLE001", "ROLE002")
 
+
                         /* ---------- 관리자 API (ROLE001만 허용) ---------- */
-                        .requestMatchers("/api/admin/**")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/**")
+                        .hasAuthority("ROLE001")
+
+                        .requestMatchers(HttpMethod.POST, "/api/admin/**")
+                        .hasAuthority("ROLE001")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/**")
+                        .hasAuthority("ROLE001")
+
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/**")
+                        .hasAuthority("ROLE001")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/admin/**")
                         .hasAuthority("ROLE001")
 
                         /* ---------- 나머지는 인증 필요 ---------- */

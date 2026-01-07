@@ -19,7 +19,7 @@ import java.util.UUID;
 @Tag(name = "관리자 메뉴 관리", description = "관리자 메뉴 관리 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/menu/adminMenus")
+@RequestMapping("/api/admin/menu")
 public class AdminMenuController {
 
     private final AdminMenuService adminMenuService;

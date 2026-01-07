@@ -36,4 +36,8 @@ public interface ChannelMapper {
     // 채널 중복 체크
     int existsCode(@Param("id") UUID id, @Param("code") String code);
 
+    // 채널 활성/비활성화
+    void visibleChannel(@Param("id") UUID id,
+                        @Param("visible")Boolean visible);
+
 }

@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "파트너 판매현황", description = "파트너 상세 > 파트너 판매현황")
-@RequestMapping("/api/partners/{partnerId}/stats")
+@RequestMapping("/api/admin/partners/{partnerId}/stats")
 public class PartnerStatsController {
 
     private final PartnerStatsService service;

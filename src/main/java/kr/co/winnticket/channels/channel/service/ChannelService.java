@@ -50,6 +50,14 @@ public class ChannelService {
         mapper.deleteChannel(id);
     }
 
+    // 채널 활성 / 비활성화
+    public void visibleChannel(UUID id, Boolean visible){
+        if(visible == null){
+            throw new IllegalArgumentException("visible 값은 true 또는 false 여야합니다.");
+        }
+        mapper.visibleChannel(id,visible);
+    }
+
 
 
 
