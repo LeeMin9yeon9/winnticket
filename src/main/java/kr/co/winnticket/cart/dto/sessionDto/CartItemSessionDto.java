@@ -23,6 +23,7 @@ public class CartItemSessionDto {
     @Schema(description = "상품옵션")
     private List<CartOptionSessionDto> options;
 
+
     @Schema(description = "숙박 옵션값 ID (객실 타입)")
     private UUID stayOptionValueId;
 
