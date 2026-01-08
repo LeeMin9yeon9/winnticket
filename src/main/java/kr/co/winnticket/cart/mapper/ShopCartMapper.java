@@ -5,6 +5,7 @@ import kr.co.winnticket.cart.dto.mapperDto.ProductCartViewDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,7 +15,12 @@ public interface ShopCartMapper {
         ProductCartViewDto selectProduct(UUID productId);
 
         List<OptionValueViewDto> selectOptionValues(
-                @Param("id") List<UUID> optionValueIds
+                @Param("list") List<UUID> optionValueIds
+        );
+
+        List<StayDatePriceDto> selectStayDatePrices(
+                @Param("optionValueId") UUID optionValueId,
+                @Param("dates") List<LocalDate> dates
         );
     }
 
