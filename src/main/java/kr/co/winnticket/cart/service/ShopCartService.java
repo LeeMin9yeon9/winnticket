@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class ShopCartService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CART_SESSION_KEY = "SHOP_CART";
 
+    // ㅈㅏㅇㅂㅏㄱㅜㄴㅣ ㅇㅣㅁㅣㅈㅣ ㄱㅡㄹㅆㅣ ㅇㅗㅐㅇㅣㄹㅐ
     private List<String> parseImageUrls(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {
             return Collections.emptyList();
@@ -56,27 +58,61 @@ public class ShopCartService {
     public void addCart(HttpSession session, ShopCartAddReqDto model) {
         List<CartItemSessionDto> cart = getCart(session);
 
-        // 장바구니에 같은 상품, 옵션 있으면 수량 증가
-        for(CartItemSessionDto c : cart){
-            if(c.getProductId().equals(model.getProductId()) && Objects.equals(c.getOptions(),model.getOptions())){
-                c.setQuantity(c.getQuantity()+model.getQuantity());
+        if (model.getOptions() == null || model.getOptions().isEmpty()) {
+            throw new IllegalArgumentException("옵션이 없는 상품은 장바구니에 담을 수 없습니다.");
+        }
+
+        // 요청 옵션 → 세션 옵션으로 변환
+        List<CartOptionSessionDto> sessionOptions =
+                model.getOptions().stream()
+                        .map(reqOpt -> {
+                            CartOptionSessionDto opt = new CartOptionSessionDto();
+                            opt.setOptionId(reqOpt.getOptionId());
+                            opt.setOptionValueId(reqOpt.getOptionValueId());
+                            return opt;
+                        })
+                        .toList();
+
+        // 같은 상품 + 같은 옵션이면 수량 증가
+        for (CartItemSessionDto c : cart) {
+            if (c.getProductId().equals(model.getProductId())
+                    && sameOptions(c.getOptions(), sessionOptions)) {
+
+                c.setQuantity(c.getQuantity() + model.getQuantity());
                 return;
             }
         }
-            CartItemSessionDto item = new CartItemSessionDto();
-            item.setId(UUID.randomUUID());
-            item.setProductId(model.getProductId());
-            item.setOptions(model.getOptions());
-            item.setQuantity(model.getQuantity());
-            cart.add(item);
 
-            // 주문 콘솔 디버깅용ㅇㄴ머이ㅓㅁㄴㅇ
-        for (CartOptionSessionDto o : model.getOptions()) {
-            System.out.println("optionId = " + o.getOptionId());
-            System.out.println("optionValueId = " + o.getOptionValueId());
-        }
+        // 신규 장바구니 아이템 추가
+        CartItemSessionDto item = new CartItemSessionDto();
+        item.setId(UUID.randomUUID());
+        item.setProductId(model.getProductId());
+        item.setQuantity(model.getQuantity());
+        item.setOptions(sessionOptions);
 
+        cart.add(item);
     }
+    private boolean sameOptions(
+            List<CartOptionSessionDto> a,
+            List<CartOptionSessionDto> b
+    ) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+
+        Set<UUID> aSet = a.stream()
+                .map(CartOptionSessionDto::getOptionValueId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Set<UUID> bSet = b.stream()
+                .map(CartOptionSessionDto::getOptionValueId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        return aSet.equals(bSet);
+    }
+
+
 
     // 장바구니 리스트
     public ShopCartResDto getCartView(HttpSession session) {
@@ -98,7 +134,6 @@ public class ShopCartService {
             // 상품 조회
             ProductCartViewDto product = mapper.selectProduct(c.getProductId());
             System.out.println("PRODUCT = " + product);
-
             if (product == null) {
                 iterator.remove();
                 continue;
@@ -108,18 +143,23 @@ public class ShopCartService {
                     (c.getOptions() == null) ? Collections.emptyList() : c.getOptions();
 
             // optionValueId 추출
-            List<UUID> optionValueIds = new ArrayList<>();
-            for (CartOptionSessionDto o : sessionOptions) {
-                if (o != null && o.getOptionValueId() != null) {
-                    optionValueIds.add(o.getOptionValueId());
-                }
-            }
+            List<UUID> optionValueIds = sessionOptions.stream()
+                    .map(CartOptionSessionDto::getOptionValueId)
+                    .filter(Objects::nonNull)
+                    .toList();
 
+            System.out.println("SESSION OPTIONS = " + sessionOptions);
+
+            System.out.println("OPTION VALUE IDS = " + optionValueIds);
             // 옵션 조회 (비어있으면 조회 안 함)
             List<OptionValueViewDto> options =
                     optionValueIds.isEmpty()
                             ? Collections.emptyList()
-                            : mapper.selectOptionValues(optionValueIds);
+                            : Optional.ofNullable(mapper.selectOptionValues(optionValueIds))
+                            .orElse(Collections.emptyList());
+
+            System.out.println("OPTIONS FROM DB = " + options);
+
 
             int optionPrice = options.stream()
                     .mapToInt(OptionValueViewDto::getAdditionalPrice)
@@ -145,7 +185,8 @@ public class ShopCartService {
             res.setId(c.getId());                       // 장바구니 ID
             res.setProductId(product.getId());          // 상품 ID
             res.setProductName(product.getName());      // 상품 이름
-            res.setImageUrl(parseImageUrls(product.getImageUrl()));     // 상품 이미지
+            List<String> images = parseImageUrls(product.getImageUrl());
+            res.setImageUrl(images.isEmpty() ? null : images.get(0));     // 상품 이미지
             res.setQuantity(c.getQuantity());           // 상품 수량
 
             res.setUnitOriginPrice(unitOriginPrice);   // 정가
@@ -156,8 +197,10 @@ public class ShopCartService {
             res.setOptions(
                     options.stream().map(o -> {
                         ShopCartOptionResDto model = new ShopCartOptionResDto();
+                        model.setOptionId(o.getOptionId());
+                        model.setOptionValueId(o.getOptionValueId());
                         model.setOptionName(o.getOptionName());
-                        model.setOptionValue(o.getValue());
+                        model.setOptionValue(o.getOptionValue());
                         return model;
                     }).toList()
 
@@ -188,6 +231,22 @@ public class ShopCartService {
     // 장바구니 삭제
     public void deleteItem(HttpSession session , UUID id){
         getCart(session).removeIf(i->i.getId().equals(id));
+    }
+
+    // 장바구니 수량 api용
+    public int getCartCount(HttpSession session) {
+        List<CartItemSessionDto> cart =
+                (List<CartItemSessionDto>) session.getAttribute("SHOP_CART");
+
+        if (cart == null) return 0;
+
+        return cart.stream()
+                .mapToInt(CartItemSessionDto::getQuantity)
+                .sum();
+    }
+    // 주문 완료 시 장바구니 비우기
+    public void clearCart(HttpSession session) {
+        session.removeAttribute(CART_SESSION_KEY);
     }
 
 

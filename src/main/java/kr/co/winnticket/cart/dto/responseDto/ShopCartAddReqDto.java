@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.cart.dto.sessionDto.CartOptionSessionDto;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,15 @@ public class ShopCartAddReqDto {
     @Min(1)
     @Schema(description = "상품수량")
     private int quantity;
+
+    @Schema(description = "숙박 옵션값 ID (객실 타입)")
+    private UUID stayOptionValueId;
+
+    @Schema(description = "체크인 날짜")
+    private LocalDate startDate;
+
+    @Schema(description = "체크아웃 날짜")
+    private LocalDate endDate;
 
     private List<CartOptionSessionDto> options;
 

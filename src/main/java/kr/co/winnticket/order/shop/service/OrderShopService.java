@@ -1,6 +1,7 @@
 package kr.co.winnticket.order.shop.service;
 
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import jakarta.servlet.http.HttpSession;
+import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class OrderShopService {
     private final ProductMapper productMapper;
     private final OrderShopMapper mapper;
+    private final ShopCartService shopCartService;
 
 
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
@@ -36,7 +38,7 @@ public class OrderShopService {
     }
 
     @Transactional
-    public OrderCreateResDto createOrder(OrderCreateReqDto reqDto) {
+    public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
         try {
         log.info("createOrder start, channelId={}", reqDto.getChannelId());
         // 주문 테이블 생성(입력한 정보들로)
@@ -95,6 +97,9 @@ public class OrderShopService {
         int finalPrice = reqDto.getTotalPrice() - reqDto.getDiscountPrice();
 
         mapper.updateOrderPrice(orderId, finalPrice);
+
+        // 주문성공 시 장바구니 비우기
+        shopCartService.clearCart(session);
 
         OrderCreateResDto resDto = new OrderCreateResDto();
         resDto.setOrderId(orderId);

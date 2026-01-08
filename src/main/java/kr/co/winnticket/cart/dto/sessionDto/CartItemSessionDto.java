@@ -3,6 +3,7 @@ package kr.co.winnticket.cart.dto.sessionDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,4 +22,13 @@ public class CartItemSessionDto {
 
     @Schema(description = "상품옵션")
     private List<CartOptionSessionDto> options;
+
+    @Schema(description = "숙박 옵션값 ID (객실 타입)")
+    private UUID stayOptionValueId;
+
+    @Schema(description = "체크인 날짜")
+    private LocalDate startDate;
+
+    @Schema(description = "체크아웃 날짜")
+    private LocalDate endDate;
 }

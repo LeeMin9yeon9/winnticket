@@ -79,7 +79,7 @@ public class ChannelController {
         return ResponseEntity.ok(ApiResponse.success("채널이 삭제되었습니다.",null));
     }
 
-    @PatchMapping("visible/{id}/{visible}")
+    @PatchMapping("visible/{id}")
     @Operation(summary = "채널 활성/비활성 " , description = "채널 활/비활성화를 할 수있습니다.")
     public ResponseEntity<ApiResponse<Void>> visibleChannel(
             @PathVariable UUID id,

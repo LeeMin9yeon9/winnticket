@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.co.winnticket.cart.dto.responseDto.ShopCartAddReqDto;
+import kr.co.winnticket.cart.dto.responseDto.ShopCartCountResDto;
 import kr.co.winnticket.cart.dto.responseDto.ShopCartResDto;
 import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.common.dto.ApiResponse;
@@ -26,6 +27,7 @@ public class ShopCartController {
     @GetMapping
     @Operation(summary = "장바구니 조회")
     public ResponseEntity<ApiResponse<ShopCartResDto>> getCart(HttpSession session){
+        System.out.println("SESSION CART = " + session.getAttribute("SHOP_CART"));
         return ResponseEntity.ok(
                 ApiResponse.success(service.getCartView(session))
         );
@@ -52,6 +54,18 @@ public class ShopCartController {
     ){
         service.updateQuantity(session,id,quantity);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @GetMapping("/count")
+    @Operation(summary = "장바구트 수량 카운트")
+    public ResponseEntity<ApiResponse<ShopCartCountResDto>> getCartCount(HttpSession session
+    ) {
+        int count = service.getCartCount(session);
+
+        ShopCartCountResDto res = new ShopCartCountResDto();
+        res.setCount(count);
+
+        return ResponseEntity.ok(ApiResponse.success(res));
     }
 
     @DeleteMapping("/{id}")
