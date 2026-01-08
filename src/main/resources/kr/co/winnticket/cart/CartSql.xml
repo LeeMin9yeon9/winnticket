@@ -19,14 +19,15 @@
             resultType="kr.co.winnticket.cart.dto.mapperDto.OptionValueViewDto">
 
         SELECT
-        v.id,
+        v.id AS optionValueId,
+        v.option_id AS optionId,
         o.name AS optionName,
-        v.value,
+        v.value AS optionValue,
         COALESCE(v.additional_price, 0) AS additionalPrice
         FROM product_option_values v
         JOIN product_options o ON o.id = v.option_id
         WHERE v.id IN
-        <foreach collection="id"
+        <foreach collection="list"
                  item="id"
                  open="("
                  separator=","

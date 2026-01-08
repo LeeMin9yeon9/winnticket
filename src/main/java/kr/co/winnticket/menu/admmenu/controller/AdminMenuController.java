@@ -75,7 +75,7 @@ public class AdminMenuController {
     }
 
     // 메뉴 활성/비활성 변경
-    @PatchMapping("visible/{id}/{visible}")
+    @PatchMapping("visible/{id}")
     @Operation(summary = "관리자 메뉴 활성/비활성 변경", description = "관리자 메뉴의 표시 상태를 변경합니다.")
     public ResponseEntity<String> changeAdmVisible(
             @PathVariable UUID id,
