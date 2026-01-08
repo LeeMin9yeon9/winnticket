@@ -40,4 +40,6 @@ public interface ChannelMapper {
     void visibleChannel(@Param("id") UUID id,
                         @Param("visible")Boolean visible);
 
+    // 채널코드로 id 찾기
+    UUID selectChannelIdByCode(String channelCode);
 }
