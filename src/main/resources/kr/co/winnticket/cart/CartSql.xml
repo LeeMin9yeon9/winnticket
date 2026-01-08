@@ -36,4 +36,32 @@
         </foreach>
 
     </select>
+
+    <!--날짜 숙박 -->
+    <select id="selectStayDatePrices"
+            resultType="kr.co.winnticket.cart.dto.mapperDto.StayDatePriceDto">
+
+        SELECT
+        id,
+        option_value_id    AS optionValueId,
+        price_date         AS priceDate,
+        price,
+        discount_price     AS discountPrice,
+        is_available       AS isAvailable,
+        group_no           AS groupNo
+        FROM stay_date_prices
+        WHERE option_value_id = #{optionValueId}
+        AND price_date IN
+        <foreach collection="dates"
+                 item="d"
+                 open="("
+                 separator=","
+                 close=")">
+            #{d}
+        </foreach>
+        AND is_available = true
+
+    </select>
+
+
 </mapper>

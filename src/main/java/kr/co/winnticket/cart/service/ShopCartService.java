@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.cart.dto.mapperDto.OptionValueViewDto;
 import kr.co.winnticket.cart.dto.mapperDto.ProductCartViewDto;
+import kr.co.winnticket.cart.dto.mapperDto.StayDatePriceDto;
 import kr.co.winnticket.cart.dto.responseDto.ShopCartAddReqDto;
 import kr.co.winnticket.cart.dto.responseDto.ShopCartItemResDto;
 import kr.co.winnticket.cart.dto.responseDto.ShopCartOptionResDto;
@@ -15,6 +16,7 @@ import kr.co.winnticket.cart.mapper.ShopCartMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,39 +60,73 @@ public class ShopCartService {
     public void addCart(HttpSession session, ShopCartAddReqDto model) {
         List<CartItemSessionDto> cart = getCart(session);
 
-        if (model.getOptions() == null || model.getOptions().isEmpty()) {
-            throw new IllegalArgumentException("옵션이 없는 상품은 장바구니에 담을 수 없습니다.");
-        }
-
-        // 요청 옵션 → 세션 옵션으로 변환
-        List<CartOptionSessionDto> sessionOptions =
-                model.getOptions().stream()
-                        .map(reqOpt -> {
-                            CartOptionSessionDto opt = new CartOptionSessionDto();
-                            opt.setOptionId(reqOpt.getOptionId());
-                            opt.setOptionValueId(reqOpt.getOptionValueId());
-                            return opt;
-                        })
-                        .toList();
-
-        // 같은 상품 + 같은 옵션이면 수량 증가
-        for (CartItemSessionDto c : cart) {
-            if (c.getProductId().equals(model.getProductId())
-                    && sameOptions(c.getOptions(), sessionOptions)) {
-
-                c.setQuantity(c.getQuantity() + model.getQuantity());
-                return;
-            }
-        }
-
         // 신규 장바구니 아이템 추가
         CartItemSessionDto item = new CartItemSessionDto();
         item.setId(UUID.randomUUID());
         item.setProductId(model.getProductId());
         item.setQuantity(model.getQuantity());
-        item.setOptions(sessionOptions);
 
-        cart.add(item);
+        // 숙박상품
+        if (model.getStartDate() != null && model.getEndDate() != null) {
+
+            if (model.getStartDate() == null || model.getEndDate() == null) {
+                throw new IllegalArgumentException("체크인/체크아웃 날짜를 모두 입력해야 합니다.");
+            }
+
+            if (!model.getEndDate().isAfter(model.getStartDate())) {
+                throw new IllegalArgumentException("체크아웃 날짜는 체크인 이후여야 합니다.");
+            }
+
+            if (model.getStayOptionValueId() == null) {
+                throw new IllegalArgumentException("숙박 옵션값이 없습니다.");
+            }
+
+            for(CartItemSessionDto c : cart){
+                if(
+                        c.getProductId().equals(model.getProductId()) &&
+                                Objects.equals(c.getStayOptionValueId(),model.getStayOptionValueId()) &&
+                                Objects.equals(c.getStartDate(), model.getStartDate()) &&
+                                Objects.equals(c.getEndDate(), model.getEndDate())
+                ) {
+                    c.setQuantity(c.getQuantity() + model.getQuantity());
+                    return;
+                }
+            }
+
+            item.setStayOptionValueId(model.getStayOptionValueId());
+            item.setStartDate(model.getStartDate());
+            item.setEndDate(model.getEndDate());
+
+            cart.add(item);
+            return;
+
+        } else {
+
+            // 요청 옵션 → 세션 옵션으로 변환
+            List<CartOptionSessionDto> sessionOptions =
+                    model.getOptions().stream()
+                            .map(reqOpt -> {
+                                CartOptionSessionDto opt = new CartOptionSessionDto();
+                                opt.setOptionId(reqOpt.getOptionId());
+                                opt.setOptionValueId(reqOpt.getOptionValueId());
+                                return opt;
+                            })
+                            .toList();
+
+            // 같은 상품 + 같은 옵션이면 수량 증가
+            for (CartItemSessionDto c : cart) {
+                if (c.getProductId().equals(model.getProductId())
+                        && sameOptions(c.getOptions(), sessionOptions)) {
+
+                    c.setQuantity(c.getQuantity() + model.getQuantity());
+                    return;
+                }
+            }
+
+            item.setOptions(sessionOptions);
+
+            cart.add(item);
+        }
     }
     private boolean sameOptions(
             List<CartOptionSessionDto> a,
@@ -119,8 +155,6 @@ public class ShopCartService {
 
         List<CartItemSessionDto> cart = getCart(session);
         List<ShopCartItemResDto> items = new ArrayList<>();
-
-
 
         int orderAmount = 0; // 정가 총금액
         int discountAmount = 0;  // 할인금액 총 금액
@@ -160,26 +194,76 @@ public class ShopCartService {
 
             System.out.println("OPTIONS FROM DB = " + options);
 
-
-            int optionPrice = options.stream()
-                    .mapToInt(OptionValueViewDto::getAdditionalPrice)
-                    .sum();
-
+            List<UUID> stayPeriodIds = null;
+            Integer groupNo = null;
 
             // 가격 계산
-            int unitOriginPrice = product.getPrice() + optionPrice;          // 정가
-            int unitFinalPrice  = product.getDiscountPrice() + optionPrice;  // 실제 결제 단가
-            int unitDiscount    = unitOriginPrice - unitFinalPrice;          // 할인금액
+
+            int unitOriginPrice;
+            int unitFinalPrice;
+            int unitDiscount;
+
+
+            if (c.getStartDate() != null && c.getEndDate() != null) {
+                // 숙박 상품
+                List<LocalDate> dates =
+                        c.getStartDate()
+                                .datesUntil(c.getEndDate()) // 체크아웃 미포함
+                                .toList();
+
+                List<StayDatePriceDto> prices =
+                        mapper.selectStayDatePrices(
+                                c.getStayOptionValueId(),
+                                dates
+                        );
+
+                if (prices.size() != dates.size()) {
+                    throw new IllegalStateException("가격이 설정되지 않은 날짜가 있습니다.");
+                }
+
+
+                // 숙박 정가 합계
+                int originStayPrice = prices.stream()
+                        .mapToInt(StayDatePriceDto::getPrice)
+                        .sum();
+
+                // 숙박 결제가 합계
+                int finalStayPrice = prices.stream()
+                        .mapToInt(p ->
+                                p.getDiscountPrice() != null ? p.getDiscountPrice() : p.getPrice()
+                                ).sum();
+
+                // 장바구니 단가 계산
+                unitOriginPrice = originStayPrice;
+                unitFinalPrice = finalStayPrice;
+                unitDiscount = originStayPrice - finalStayPrice;
+
+                stayPeriodIds = prices.stream()
+                        .map(StayDatePriceDto::getId)
+                        .toList();
+
+                groupNo = prices.get(0).getGroupNo();
+
+            } else {
+                // 일반 상품
+                int optionPrice = options.stream()
+                        .mapToInt(OptionValueViewDto::getAdditionalPrice)
+                        .sum();
+
+                unitOriginPrice = product.getPrice() + optionPrice;
+                unitFinalPrice = product.getDiscountPrice() + optionPrice;
+                unitDiscount = unitOriginPrice - unitFinalPrice;
+            }
 
             int quantity = c.getQuantity();
 
             int itemOrderPrice = unitOriginPrice * quantity;
-            int itemDiscount   = unitDiscount * quantity;
+            int itemDiscount = unitDiscount * quantity;
             int itemFinalPrice = unitFinalPrice * quantity;
 
-            orderAmount    += itemOrderPrice;
+            orderAmount += itemOrderPrice;
             discountAmount += itemDiscount;
-            finalAmount    += itemFinalPrice;
+            finalAmount += itemFinalPrice;
 
             ShopCartItemResDto res = new ShopCartItemResDto();
             res.setId(c.getId());                       // 장바구니 ID
@@ -194,20 +278,31 @@ public class ShopCartService {
             res.setUnitFinalPrice(unitFinalPrice);     // 실제판매가
             res.setItemTotalPrice(itemFinalPrice);     // 최종 금액
 
-            res.setOptions(
-                    options.stream().map(o -> {
-                        ShopCartOptionResDto model = new ShopCartOptionResDto();
-                        model.setOptionId(o.getOptionId());
-                        model.setOptionValueId(o.getOptionValueId());
-                        model.setOptionName(o.getOptionName());
-                        model.setOptionValue(o.getOptionValue());
-                        return model;
-                    }).toList()
+            if (c.getStartDate() != null && c.getEndDate() != null) {
+                // 숙박 상품 옵션
+                ShopCartOptionResDto opt = new ShopCartOptionResDto();
+                opt.setStayOptionValueId(c.getStayOptionValueId());
+                opt.setStartDate(c.getStartDate());
+                opt.setEndDate(c.getEndDate());
+                opt.setStayPeriodIds(stayPeriodIds);
+                opt.setGroupNo(groupNo);
 
-            );
+                res.setOptions(List.of(opt));
+            } else {
+                // 일반 상품 옵션
+                res.setOptions(
+                        options.stream().map(o -> {
+                            ShopCartOptionResDto model = new ShopCartOptionResDto();
+                            model.setOptionId(o.getOptionId());
+                            model.setOptionValueId(o.getOptionValueId());
+                            model.setOptionName(o.getOptionName());
+                            model.setOptionValue(o.getOptionValue());
+                            return model;
+                        }).toList()
+                );
+            }
             items.add(res);
         }
-
         ShopCartResDto result = new ShopCartResDto();
         result.setItems(items);
         result.setOrderAmount(orderAmount);   // 정가총합
@@ -217,7 +312,6 @@ public class ShopCartService {
         return result;
 
     }
-
 
     // 장바구니 수량 변경
     public void updateQuantity(HttpSession session , UUID id, int quantity){
