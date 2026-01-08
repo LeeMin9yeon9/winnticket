@@ -58,7 +58,8 @@ public class ChannelService {
         mapper.visibleChannel(id,visible);
     }
 
-
-
-
+    // 채널코드로 아이디찾기
+    public UUID selectChannelIdByCode(String channelCode) {
+        return mapper.selectChannelIdByCode(channelCode);
+    }
 }
