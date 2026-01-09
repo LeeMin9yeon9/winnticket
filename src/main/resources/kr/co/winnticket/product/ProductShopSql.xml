@@ -21,10 +21,14 @@
                 PRODUCT_SECTION x
             Join PRODUCTS y
             On x.PRODUCT_ID = y.ID
+            LEFT JOIN channel_products z
+            ON z.product_id = y.id
+            AND z.channel_id = #{channelId}
             Where 1 = 1
             And x.SECTION_ID = a.ID
             And y.VISIBLE = true
             And y.SALES_STATUS In ('READY', 'ON_SALE')
+            AND z.product_id IS NULL
         )
         ORDER BY
             a.DISPLAY_ORDER;
@@ -34,13 +38,25 @@
     - 섹션별상품 조회
     -->
     <select id="selectSectionProduct" resultType="kr.co.winnticket.product.shop.dto.ProductSectionProductGetResDto">
+        <![CDATA[
         Select
             b.CODE,  -- 상품코드
             b.NAME,  -- 상품명
             b.PRICE,  -- 정가
             b.IMAGE_URL->>0 As IMAGE,  -- 대표사진
-            b.DISCOUNT_PRICE,  -- 판매가
-            FLOOR(( (b.PRICE - b.DISCOUNT_PRICE) / b.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+            CASE
+            WHEN cpd.discount_rate IS NOT NULL
+            THEN
+            b.PRICE * (100 - cpd.discount_rate) / 100
+            ELSE
+            b.DISCOUNT_PRICE
+        END AS DISCOUNT_PRICE,
+            COALESCE(cpd.discount_rate,
+            FLOOR(
+            (b.PRICE
+                    - COALESCE(b.DISCOUNT_PRICE)
+                ) / b.PRICE::float * 100)
+            ) AS DISCOUNT_RATE,  -- 할인율
             b.SALES_STATUS,  -- 판매상태
             b.USAGE_PERIOD  -- 사용기한
         From
@@ -48,12 +64,23 @@
         Join
             PRODUCTS b
         On a.PRODUCT_ID = b.ID
+        LEFT JOIN channel_products c
+        ON c.product_id = b.id
+        AND c.channel_id = #{channelId}
+        LEFT JOIN product_channel_discounts cpd
+        ON cpd.product_id = b.id
+        AND cpd.channel_id = #{channelId}
+        AND cpd.is_active = true
+        AND cpd.start_date <= NOW()
+        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
         Where 1 = 1
         And a.SECTION_ID = #{sectionId}
         And b.SALES_STATUS IN ('READY', 'ON_SALE')
         And b.VISIBLE = true
+        AND c.product_id IS NULL
         Order By
             b.CREATED_AT desc
+        ]]>
     </select>
 
     <!--
@@ -65,12 +92,34 @@
         a.NAME,  -- 상품명
         a.PRICE,  -- 정가
         a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
-        a.DISCOUNT_PRICE,  -- 판매가
-        FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+        CASE
+        WHEN cpd.discount_rate IS NOT NULL
+        THEN
+        a.PRICE * (100 - cpd.discount_rate) / 100
+        ELSE
+        a.DISCOUNT_PRICE
+        END AS DISCOUNT_PRICE,
+        COALESCE(cpd.discount_rate,
+        FLOOR(
+        (a.PRICE
+        - COALESCE(a.DISCOUNT_PRICE)
+        ) / a.PRICE::float * 100)
+        ) AS DISCOUNT_RATE,  -- 할인율
         a.SALES_STATUS,  -- 판매상태
         a.USAGE_PERIOD  -- 사용기한
         FROM
         PRODUCTS a
+        LEFT JOIN CHANNEL_PRODUCTS cp
+        ON cp.PRODUCT_ID = a.ID
+        AND cp.CHANNEL_ID = #{channelId}
+        LEFT JOIN product_channel_discounts cpd
+        ON cpd.product_id = a.id
+        AND cpd.channel_id = #{channelId}
+        AND cpd.is_active = true
+        <![CDATA[
+        AND cpd.start_date <= NOW()
+        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
+        ]]>
         Where 1 = 1
         <if test="name != null and name != ''">
             <![CDATA[
@@ -79,6 +128,7 @@
         </if>
         And a.SALES_STATUS IN ('READY', 'ON_SALE')
         And a.VISIBLE = true
+        AND cp.PRODUCT_ID IS NULL
         Order By
         a.CREATED_AT Desc
     </select>
@@ -92,14 +142,36 @@
             a.NAME,  -- 상품명
             a.PRICE,  -- 정가
             a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
-            a.DISCOUNT_PRICE,  -- 판매가
-            FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+            CASE
+            WHEN cpd.discount_rate IS NOT NULL
+            THEN
+                a.PRICE * (100 - cpd.discount_rate) / 100
+            ELSE
+                a.DISCOUNT_PRICE
+            END AS DISCOUNT_PRICE,
+        COALESCE(cpd.discount_rate,
+        FLOOR(
+        (a.PRICE
+        - COALESCE(a.DISCOUNT_PRICE)
+        ) / a.PRICE::float * 100)
+        ) AS DISCOUNT_RATE,  -- 할인율
             a.SALES_STATUS,  -- 판매상태
             a.USAGE_PERIOD  -- 사용기한
         FROM
             PRODUCTS a
         Join MENU_CATEGORIES b
         On a.CATEGORY_ID = b.ID
+        LEFT JOIN CHANNEL_PRODUCTS cp
+        ON cp.PRODUCT_ID = a.ID
+        AND cp.CHANNEL_ID = #{channelId}
+        LEFT JOIN product_channel_discounts cpd
+        ON cpd.product_id = a.id
+        AND cpd.channel_id = #{channelId}
+        AND cpd.is_active = true
+        <![CDATA[
+        AND cpd.start_date <= NOW()
+        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
+        ]]>
         Where 1 = 1
         <if test="subCategory != null and subCategory != ''">
             <![CDATA[
@@ -116,6 +188,7 @@
         </if>
         And a.SALES_STATUS IN ('READY', 'ON_SALE')
         And a.VISIBLE = true
+        AND cp.PRODUCT_ID IS NULL
         Order By
         a.CREATED_AT Desc
     </select>
@@ -124,6 +197,7 @@
     - 상품 상세 조회
     -->
     <select id="selectProductDetail" resultType="kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto">
+        <![CDATA[
         Select
             a.id,  -- 상품id
             a.CODE,  -- 상품코드
@@ -140,8 +214,19 @@
             ) CATEGORY_NAME,  -- 카테고리명
             a.DESCRIPTION,  -- 상품설
             a.PRICE,  -- 정가
-            a.DISCOUNT_PRICE,  -- 판매가
-            FLOOR(( (a.PRICE - a.DISCOUNT_PRICE) / a.PRICE::float ) * 100) As DISCOUNT_RATE,  -- 할인율
+            CASE
+                WHEN cpd.discount_rate IS NOT NULL
+                    THEN
+                    a.PRICE * (100 - cpd.discount_rate) / 100
+                ELSE
+                    a.DISCOUNT_PRICE
+                END AS DISCOUNT_PRICE,
+            COALESCE(cpd.discount_rate,
+            FLOOR(
+            (a.PRICE
+                    - COALESCE(a.DISCOUNT_PRICE)
+                ) / a.PRICE::float * 100)
+            ) AS DISCOUNT_RATE,  -- 할인율
             a.SHIPPING_INFO,  -- 배송정보
             a.WARRANTY_INFO,  -- 보증정보
             a.RETURN_INFO,  -- 반품/교환정보
@@ -149,8 +234,15 @@
             a.USAGE_PERIOD  -- 사용기한
         FROM
             PRODUCTS a
+        LEFT JOIN product_channel_discounts cpd
+        ON cpd.product_id = a.id
+        AND cpd.channel_id = #{channelId}
+        AND cpd.is_active = true
+        AND cpd.start_date <= NOW()
+        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
         Where 1 = 1
         And a.CODE = #{code}
+        ]]>
     </select>
 
     <!--

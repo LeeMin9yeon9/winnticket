@@ -3,6 +3,7 @@ package kr.co.winnticket.product.shop.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.winnticket.channels.channel.service.ChannelService;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto;
 import kr.co.winnticket.product.shop.dto.ProductShopListGetResDto;
@@ -16,21 +17,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 public class ProductShopController {
     private final ProductShopService service;
+    private final ChannelService channelService;
 
     // 상품 목록 검색
     @GetMapping("api/product/shop/search")
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 목록 검색", description = "전달받은 코드의 상품을 검색합니다.")
     public ResponseEntity<ApiResponse<List<ProductShopListGetResDto>>>  getProductListSearch (
-            @Parameter(description = "상품명") @RequestParam(value = "name", required = false) String name
+            @Parameter(description = "상품명") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "채널코드") @RequestParam(value = "channelCode") String channelCode
             ) throws Exception {
+                UUID channelId = channelService.selectChannelIdByCode(channelCode);
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.selectProductListSearch(name))
+                ApiResponse.success("조회 성공", service.selectProductListSearch(name, channelId))
         );
     }
 
@@ -42,10 +47,12 @@ public class ProductShopController {
     @Operation(summary = "상품 목록 조회", description = "카테고리별 상품 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<ShopMainResDto>> getProductList (
             @Parameter(description = "카테고리코드1") @PathVariable(required = false) String mainCategory,
-            @Parameter(description = "카테고리코드2") @PathVariable(required = false) String subCategory
+            @Parameter(description = "카테고리코드2") @PathVariable(required = false) String subCategory,
+            @Parameter(description = "채널코드") @RequestParam(value = "channelCode") String channelCode
     ) throws Exception {
+        UUID channelId = channelService.selectChannelIdByCode(channelCode);
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.selectProductList(mainCategory, subCategory))
+                ApiResponse.success("조회 성공", service.selectProductList(mainCategory, subCategory, channelId))
         );
     }
 
@@ -54,10 +61,12 @@ public class ProductShopController {
     @Tag(name = "상품_쇼핑몰", description = "상품 관리")
     @Operation(summary = "상품 상세 조회", description = "전달받은 코드의 상품을 조회합니다.")
     public ResponseEntity<ApiResponse<ProductShopDetailGetResDto>> getProductDetail (
-            @Parameter(description = "상품코드") @PathVariable("code") String code
+            @Parameter(description = "상품코드") @PathVariable("code") String code,
+            @Parameter(description = "채널코드") @RequestParam(value = "channelCode") String channelCode
     ) throws Exception {
+        UUID channelId = channelService.selectChannelIdByCode(channelCode);
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.selectProductDetail(code))
+                ApiResponse.success("조회 성공", service.selectProductDetail(code, channelId))
         );
     }
 
