@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers("/benepia/**").permitAll()
                         /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
                                 "/api/auth/**",
@@ -46,7 +47,8 @@ public class SecurityConfig {
                                 "/api/orders/shop/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
-                                "/api/admin/menu/menuCategory/shopMenus/**"
+                                "/api/admin/menu/menuCategory/shopMenus/**",
+                                "/api/channels/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
