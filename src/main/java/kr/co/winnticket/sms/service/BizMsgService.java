@@ -27,7 +27,7 @@ public class BizMsgService {
                 SEND_PHONE, SEND_NAME,
                 MSG_BODY
             )
-            VALUES (?,0,0,NOW(),NOW(),?,?,?,?,?)
+            VALUES (?,5,0,NOW(),NOW(),?,?,?,?,?)
         """;
 
         String cmid = "ORD-" + orderNumber + "-PAY";
