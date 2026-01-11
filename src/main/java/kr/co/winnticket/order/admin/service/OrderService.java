@@ -3,9 +3,19 @@ package kr.co.winnticket.order.admin.service;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentStatus;
+import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
+import kr.co.winnticket.order.admin.mapper.OrderStatusSmsMapper;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
+import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
+import kr.co.winnticket.product.admin.service.ProductSmsTemplateService;
+import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoRequest;
+import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
+import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
+import kr.co.winnticket.sms.service.BizMsgService;
+import kr.co.winnticket.sms.service.SmsTemplateFinder;
+import kr.co.winnticket.sms.service.TemplateRenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,14 +24,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderMapper mapper;
-    private final ApplicationEventPublisher eventPublisher;  // ✅ 추가
+    private final SmsTemplateFinder smsTemplateFinder;
+    private final TemplateRenderService templateRenderService;
+    private final BizMsgService bizMsgService;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -93,17 +107,64 @@ public class OrderService {
             // 주문 상태 변경
             mapper.updateOrderStatus(auId);
 
-            eventPublisher.publishEvent(
-                    new OrderPaymentCompletedEvent(
-                            auId,
-                            order.getCustomerPhone(),
-                            order.getCustomerName(),
-                            order.getOrderNumber()
-                    )
-            );
+            // 문자 발송 (결제완료)
+            sendOrderSmsByStatus(order, items, OrderStatus.COMPLETED);
         } catch (Exception e) {
             log.error("주문 생성 중 오류 발생", e);
             throw e; // 다시 던짐 (중요)
+        }
+    }
+
+    // 문자 발송
+    private void sendOrderSmsByStatus(OrderAdminDetailGetResDto order,
+                                      List<OrderProductListGetResDto> items,
+                                      OrderStatus status) {
+
+        List<SmsTemplateCode> codes =
+                OrderStatusSmsMapper.map(status);
+
+        if (codes.isEmpty()) return;
+
+        // 대표상품 1개 기준
+        OrderProductListGetResDto first = items.get(0);
+        UUID productId = first.getProductId();
+
+        for (SmsTemplateCode code : codes) {
+
+            // 1. 템플릿 조회
+            ProductSmsTemplateDto template =
+                    smsTemplateFinder.findTemplate(productId, code);
+
+            if (template == null || template.getContent() == null) continue;
+
+            // 2. 변수 구성
+            Map<String,String> vars = new HashMap<>();
+            vars.put("상품명", first.getProductName());                 // DTO 필드명에 맞춰 수정
+            vars.put("주문번호", order.getOrderNumber());
+            vars.put("주문자명", order.getCustomerName());
+            vars.put("주문수량", String.valueOf(first.getQuantity()));
+            vars.put("주문금액", String.valueOf(order.getTotalPrice())); // 포맷 필요하면 format
+            vars.put("입금계좌", "국민은행\t123-456-789012\t(주)티켓박스");     // 없으면 공통값/설정값 사용
+            vars.put("티켓링크", "https://winnticket.store/ticket/" + order.getOrderNumber());         // 아래 함수 예시
+            vars.put("고객센터", "1588-1234");
+
+            // 3. 템플릿 치환
+            String message =
+                    templateRenderService.render(template.getContent(), vars);
+
+            // 4. CMID 생성 (중복 방지)
+            String cmid =
+                    "ORDER:" + order.getOrderNumber() + ":" + code.name();
+
+            // 5. 비즈뿌리오 INSERT
+            bizMsgService.sendSms(
+                    cmid,
+                    order.getCustomerPhone(),
+                    order.getCustomerName(),
+                    "025118691",      // 발신번호 (비즈뿌리오 등록번호)
+                    "윈앤티켓",        // 발신자명
+                    message
+            );
         }
     }
 
