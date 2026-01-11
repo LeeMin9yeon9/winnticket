@@ -10,12 +10,12 @@ public class BizMsgService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void sendSms(String destPhone,
+    public void sendSms(String cmid,
+                        String destPhone,
                         String destName,
-                        String message,
-                        String cmid,
                         String sendPhone,
-                        String sendName) {
+                        String sendName,
+                        String message) {
 
         // (선택) 중복 방지: cmid가 이미 있으면 스킵
         if (existsCmid(cmid)) return;
