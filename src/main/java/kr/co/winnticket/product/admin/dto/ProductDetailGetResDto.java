@@ -75,7 +75,4 @@ public class ProductDetailGetResDto {
 
     @Schema(description = "기간 관리")
     private List<ProductPeriodGetResDto> periods = new ArrayList<>();
-
-    @Schema(description = "sms 설정")
-    private ProductSmsSettingGetResDto sms;
 }

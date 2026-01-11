@@ -10,14 +10,17 @@ public class BizMsgService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void sendPaymentCompletedSms(String destPhone, String customerName, String orderNumber) {
+    public void sendSms(String destPhone,
+                        String destName,
+                        String message,
+                        String cmid,
+                        String sendPhone,
+                        String sendName) {
 
-        String message = """
-        [윈앤티켓]
-        %s님 주문번호 %s
-        입금이 확인되어 티켓이 발급되었습니다.
-        감사합니다.
-        """.formatted(customerName, orderNumber);
+        // (선택) 중복 방지: cmid가 이미 있으면 스킵
+        if (existsCmid(cmid)) return;
+
+        int msgType = decideMsgType(message); // 0=SMS, 1=LMS 같은 규칙(환경에 맞게)
 
         String sql = """
             INSERT INTO BIZ_MSG (
@@ -27,18 +30,37 @@ public class BizMsgService {
                 SEND_PHONE, SEND_NAME,
                 MSG_BODY
             )
-            VALUES (?,5,0,NOW(),NOW(),?,?,?,?,?)
+            VALUES (?, ?, 0, NOW(), NOW(), ?, ?, ?, ?, ?)
         """;
-
-        String cmid = "ORD-" + orderNumber + "-PAY";
 
         jdbcTemplate.update(sql,
                 cmid,
-                destPhone,          // DEST_PHONE
-                customerName,       // DEST_NAME
-                "025118691",        // SEND_PHONE
-                "윈앤티켓",          // SEND_NAME (브랜드명)
-                message             // MSG_BODY
+                msgType,
+                destPhone,
+                safe(destName),
+                sendPhone,
+                sendName,
+                message
         );
+    }
+
+    private boolean existsCmid(String cmid) {
+        Integer cnt = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM BIZ_MSG WHERE CMID = ?",
+                Integer.class,
+                cmid
+        );
+        return cnt != null && cnt > 0;
+    }
+
+    private int decideMsgType(String msg) {
+        // 간단 규칙: 글자 수 기준(환경별로 조정 가능)
+        // SMS 90자, LMS 90자 초과
+        int len = msg == null ? 0 : msg.length();
+        return (len > 90) ? 1 : 0;
+    }
+
+    private String safe(String s) {
+        return (s == null) ? "" : s;
     }
 }
