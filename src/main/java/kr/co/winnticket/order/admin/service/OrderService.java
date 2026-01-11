@@ -154,7 +154,7 @@ public class OrderService {
 
             // 4. CMID 생성 (중복 방지)
             String cmid =
-                    "ORDER:" + order.getOrderNumber() + ":" + code.name();
+                    UUID.randomUUID().toString().replace("-", "").substring(0, 20);
 
             // 5. 비즈뿌리오 INSERT
             bizMsgService.sendSms(
