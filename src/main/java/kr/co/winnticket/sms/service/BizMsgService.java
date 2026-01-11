@@ -55,9 +55,9 @@ public class BizMsgService {
 
     private int decideMsgType(String msg) {
         // 간단 규칙: 글자 수 기준(환경별로 조정 가능)
-        // SMS 90자, LMS 90자 초과
+        // SMS 90자, MMS 90자 초과
         int len = msg == null ? 0 : msg.length();
-        return (len > 90) ? 1 : 0;
+        return (len > 90) ? 5 : 0;
     }
 
     private String safe(String s) {
