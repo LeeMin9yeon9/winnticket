@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/channels/{channelId}/products")
+@RequestMapping("/api/admin/channels/{channelId}/products")
 @Tag(name = "채널", description = "채널 관리 > 채널 상세 > 상품 관리")
 public class ChannelProductController {
 
