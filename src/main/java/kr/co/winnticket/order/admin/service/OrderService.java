@@ -8,6 +8,7 @@ import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderMapper mapper;
+    private final ApplicationEventPublisher eventPublisher;  // ✅ 추가
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -90,6 +92,15 @@ public class OrderService {
 
             // 주문 상태 변경
             mapper.updateOrderStatus(auId);
+
+            eventPublisher.publishEvent(
+                    new OrderPaymentCompletedEvent(
+                            auId,
+                            order.getCustomerPhone(),
+                            order.getCustomerName(),
+                            order.getOrderNumber()
+                    )
+            );
         } catch (Exception e) {
             log.error("주문 생성 중 오류 발생", e);
             throw e; // 다시 던짐 (중요)
