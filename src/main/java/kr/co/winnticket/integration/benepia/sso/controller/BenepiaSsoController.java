@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.benepia.sso.controller;
 
+import kr.co.winnticket.integration.benepia.sso.dto.BenepiaSsoResDto;
 import kr.co.winnticket.integration.benepia.sso.service.BenepiaSsoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,8 +17,25 @@ public class BenepiaSsoController {
 
     @GetMapping("/confirm")
     public String confirm(@RequestParam String tknKey){
-        return ssoService.confirm(tknKey)
-                ? "SSO CONFIRM SUCCESS (S000)"
-                : "SSO CONFIRM FAIL";
+        BenepiaSsoResDto res = ssoService.confirm(tknKey);
+
+        if (res == null) {
+            return """
+            ===== BENEP SSO CONFIRM RESULT =====
+            RESPONSE IS NULL
+            ==================================
+            """;
+        }
+
+        return """
+        ===== BENEP SSO CONFIRM RESULT =====
+        responseCode    : %s
+        responseMessage : %s
+        ==================================
+        """.formatted(
+                res.getResponseCode(),
+                res.getResponseMessage()
+        );
+
     }
 }
