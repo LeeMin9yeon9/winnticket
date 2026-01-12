@@ -42,14 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // 블랙리스트 확인 (로그아웃된 토큰)
                 if (tokenBlacklistService.isBlacklisted(token)) {
-                    System.out.println("⛔ Blacklisted Token");
+                    System.out.println("Blacklisted Token");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
 
                 // 토큰 유효성 검증
                 if (!jwtTokenProvider.validate(token)) {
-                    System.out.println("⛔ Invalid Token");
+                    System.out.println("Invalid Token");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
@@ -70,13 +70,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                System.out.println("✅ AUTH SUCCESS | USER = " + accountId + ", ROLE = " + roleId);
+                System.out.println("AUTH SUCCESS | USER = " + accountId + ", ROLE = " + roleId);
             }
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            System.out.println("⛔ JWT Filter Exception: " + e.getMessage());
+            System.out.println("JWT Filter Exception: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
@@ -101,7 +101,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        if (path.startsWith("/benepia/")) {
+        if (path.equals("/benepia") || path.startsWith("/benepia/")) {
             return true;
         }
 
