@@ -21,17 +21,12 @@ public class BenepiaSsoController {
 
         if (res == null) {
             return """
-            ===== BENEP SSO CONFIRM RESULT =====
             RESPONSE IS NULL
-            ==================================
             """;
         }
-
         return """
-        ===== BENEP SSO CONFIRM RESULT =====
         responseCode    : %s
         responseMessage : %s
-        ==================================
         """.formatted(
                 res.getResponseCode(),
                 res.getResponseMessage()

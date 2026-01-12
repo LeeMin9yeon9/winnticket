@@ -45,4 +45,5 @@ file:
 benepia:
   seed-key: 93bf2sd0324em312
   cust-co-cd: z381
-  confirm-url: https://auth.benepia.co.kr/api/token/confirm.json
+  confirm-url: https://auth.benepia.co.kr/api/token/confirm
+  token-create-url: https://auth.benepia.co.kr/api/token/request
