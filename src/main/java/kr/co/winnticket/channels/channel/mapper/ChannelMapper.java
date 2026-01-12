@@ -13,6 +13,9 @@ import java.util.UUID;
 @Mapper
 public interface ChannelMapper {
 
+    // 채널 코드로 상세조회
+    ChannelInfoResGetDto selectChannelByCode(@Param("code") String code);
+
     // 채널조회 + 검색
     List<ChannelListGetResDto> selectPartnerList(
             @Param("code") String code,

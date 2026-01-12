@@ -140,4 +140,29 @@
         WHERE code = #{channelCode}
           AND VISIBLE = true
     </select>
+
+    <!--채널코드로 기본정보-->
+    <select id="selectChannelByCode"
+            parameterType="string"
+            resultType="kr.co.winnticket.channels.channel.dto.ChannelInfoResGetDto">
+
+        SELECT
+            id,
+            code,
+            name,
+            company_name AS companyName,
+            commission_rate AS commissionRate,
+            logo_url AS logoUrl,
+            favicon_url AS faviconUrl,
+            email,
+            phone,
+            domain,
+            description,
+            visible,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM channels
+        WHERE code = #{code}
+
+    </select>
 </mapper>
