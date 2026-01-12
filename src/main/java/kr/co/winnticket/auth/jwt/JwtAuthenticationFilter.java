@@ -101,6 +101,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        if (path.startsWith("/benepia/")) {
+            return true;
+        }
 
         return path.startsWith("/api/auth/login")
                 || path.startsWith("/api/auth/refresh")
