@@ -26,12 +26,12 @@ public class BenepiaController {
             @RequestParam(value = "returnurl", required = false) String returnurl,
             HttpSession session
     ) {
-        if (encParam == null || encParam.isBlank()){
-            return "redirect:https://winnticket.store/shop";
+        if (encParam != null && !encParam.isBlank()) {
+            entryService.process(encParam, returnurl, session);
+            session.setAttribute("CHANNEL", "BENE");
         }
-        entryService.process(encParam, returnurl, session);
 
-        return "redirect:https://winnticket.store/shop?channel=BENE";
+        // 🔥 핵심 한 줄
+        return "forward:/index.html";
     }
 }
-
