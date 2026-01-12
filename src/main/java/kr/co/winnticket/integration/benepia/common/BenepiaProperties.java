@@ -12,6 +12,12 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix="benepia")
 @Schema(title = "[베네피아 공통 설정] BenepiaProperties")
 public class BenepiaProperties {
-
+    //seed key
     private String seedKey;
+
+    // 고객사 코드
+    private String custCoCd;
+
+    // SSO confirm API URL
+    private String confirmUrl;
 }

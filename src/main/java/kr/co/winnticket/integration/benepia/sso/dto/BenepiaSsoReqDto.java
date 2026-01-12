@@ -1,17 +1,17 @@
 package kr.co.winnticket.integration.benepia.sso.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
+@Builder
 @Schema(title = "[encParam 수신용] BenepiaSsoReqDto")
 public class BenepiaSsoReqDto {
 
-    @Schema(description = "베네피아에서 로그인 후 넘어올때 전달되는 암호화 파라미터")
-    private String encParam;
+    @Schema(description = "고객사코드 = z381")
+    private String custCoCd;
 
-    @Schema(description = "암호화 안된 returnUrl")
-    private String returnUrl;
+    @Schema(description = "SSO 인증토큰 = test용 : 6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61")
+    private String thnKey;
 }

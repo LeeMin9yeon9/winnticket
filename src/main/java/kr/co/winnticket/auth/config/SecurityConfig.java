@@ -34,7 +34,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
                                 "/webjars/**",
-                                "/benepia/**"
+                                "/benepia/**",
+                                "/benepia"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
