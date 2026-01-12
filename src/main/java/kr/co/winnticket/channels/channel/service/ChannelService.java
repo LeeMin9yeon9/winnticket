@@ -45,6 +45,11 @@ public class ChannelService {
         mapper.updateChannel(id,model);
     }
 
+    // 채널 코드 조회
+    public ChannelInfoResGetDto getChannelInfoByCode(String code){
+        return mapper.selectChannelByCode(code);
+    }
+
     // 채널 삭제
     public void deleteChannel(UUID id){
         mapper.deleteChannel(id);
