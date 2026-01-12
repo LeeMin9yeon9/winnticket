@@ -27,6 +27,9 @@ public class SecurityConfig {
                         "/benepia")
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable())
+                )
                 .requestCache(cache -> cache.disable())
                 .securityContext(ctx -> ctx.disable())
                 .sessionManagement(sess -> sess.disable());
@@ -41,6 +44,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable())
+                )
                 .authorizeHttpRequests(auth -> auth
 
 
