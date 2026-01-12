@@ -22,10 +22,13 @@ public class BenepiaController {
     @Operation(summary = "베네피아 > 윈앤티켓", description = "베네피아에서 전달된 encParam을 복호화하여 사용자 식별 정보 확인한다."
     )
     public String entry(
-            @RequestParam("encParam") String encParam,
+            @RequestParam(value = "encParam", required = false) String encParam,
             @RequestParam(value = "returnurl", required = false) String returnurl,
             HttpSession session
     ) {
+        if (encParam == null || encParam.isBlank()){
+            return "redirect:https://winnticket.store/shop";
+        }
         entryService.process(encParam, returnurl, session);
 
         return "redirect:https://winnticket.store/shop?channel=BENE";

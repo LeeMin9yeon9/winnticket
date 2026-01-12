@@ -1,8 +1,6 @@
 package kr.co.winnticket.integration.benepia.crypto;
 
 import jakarta.annotation.PostConstruct;
-import kr.co.winnticket.integration.benepia.common.BenepiaErrorCode;
-import kr.co.winnticket.integration.benepia.common.BenepiaException;
 import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -46,9 +44,7 @@ public class BenepiaSeedEcbCrypto {
             return new String(decrypted, StandardCharsets.UTF_8).trim();
 
         } catch (Exception e) {
-            throw new BenepiaException(
-                    BenepiaErrorCode.BENEPIA_DECRYPT_FAIL,
-                    "Benepia SEED 복호화 실패",
+            throw new RuntimeException("Benepia SEED 복호화 실패",
                     e
             );
         }
@@ -77,10 +73,8 @@ public class BenepiaSeedEcbCrypto {
             return URLEncoder.encode(base64Encoded, StandardCharsets.UTF_8);
 
         } catch (Exception e) {
-            throw new BenepiaException(
-                    BenepiaErrorCode.BENEPIA_DECRYPT_FAIL,
-                    "Benepia SEED 암호화 실패",
-                    e
+            throw new RuntimeException(
+                    "Benepia SEED 암호화 실패",e
             );
         }
     }
