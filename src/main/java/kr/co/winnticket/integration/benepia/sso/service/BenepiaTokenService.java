@@ -1,6 +1,7 @@
 package kr.co.winnticket.integration.benepia.sso.service;
 
 import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
+import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,14 +17,19 @@ import org.springframework.web.client.RestTemplate;
 public class BenepiaTokenService {
 
     private final BenepiaProperties properties;
+    private BenepiaSeedEcbCrypto seedEcbCrypto;
     private final RestTemplate restTemplate = new RestTemplate();
 
     // 베네피아 SSO 토큰 생성 요청
-    public String createToken(String userid){
+    public String createToken(String loginid){
+
+        String plain = "loginid=" +loginid;
+
+        String encParam = seedEcbCrypto.encrypt(plain);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("custCoCd", properties.getCustCoCd()); // z381
-        body.add("userid", userid);
+        body.add("encParam", encParam);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

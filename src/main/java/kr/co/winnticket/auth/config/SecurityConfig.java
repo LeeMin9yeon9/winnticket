@@ -4,6 +4,7 @@ import kr.co.winnticket.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +18,24 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    //베네피아 SSO용
     @Bean
+    @Order(0)
+    public SecurityFilterChain benepiaChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/benepia/**",
+                        "/benepia")
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .requestCache(cache -> cache.disable())
+                .securityContext(ctx -> ctx.disable())
+                .sessionManagement(sess -> sess.disable());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(1)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
@@ -33,9 +51,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
-                                "/webjars/**",
-                                "/benepia/**",
-                                "/benepia"
+                                "/webjars/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
