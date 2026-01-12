@@ -1,6 +1,10 @@
 server:
   port: 8080
   url: https://api.winnticket.store
+  logging:
+    level:
+      root: DEBUG
+
 spring:
   config:
     activate:
@@ -17,3 +21,13 @@ spring:
      host: localhost
      port: 6379
      password: null
+
+
+# Benepia 연동 (local 테스트용)
+benepia:
+  base-url: https://auth.benepia.co.kr
+  cust-co-cd: z381
+  seed-key: 93bf2sd0324em312
+  plain-charset: EUC-KR
+
+
