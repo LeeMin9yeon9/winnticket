@@ -29,10 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable())
-                )
-                .requestCache(cache -> cache.disable())
-                .securityContext(ctx -> ctx.disable())
-                .sessionManagement(sess -> sess.disable());
+                );
 
         return http.build();
     }
