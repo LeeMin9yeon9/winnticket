@@ -21,39 +21,48 @@ public class BenepiaEntryService {
 
     public void process(String encParam, String returnurl, HttpSession session) {
 
+        if (encParam == null || encParam.isBlank()) {
+            log.warn("[BENEPia] encParam is null or blank");
+            return;
+        }
+
         try {
+            log.info("[BENEPia] encParam raw = {}", encParam);
+
             // 1. 복호화
             String decrypted = crypto.decrypt(encParam);
+            log.info("[BENEPia] decrypted = {}", decrypted);
 
             // 2. 파싱
             BenepiaDecryptedParamDto dto = parser.parse(decrypted);
             dto.setReturnurl(returnurl);
+            log.info("[BENEPia] parsed dto = {}", dto);
 
             // 3. SSO Confirm
             BenepiaSsoResDto confirmRes = sso.confirm(dto.getTknKey());
 
             if (confirmRes == null) {
-                // 로그만 남기고 종료
-                log.warn("Benepia SSO confirm response is null");
+                log.warn("[BENEPia] SSO confirm response is null");
                 return;
             }
 
             if (!"S000".equals(confirmRes.getResponseCode())) {
-                log.warn("Benepia SSO failed: {} / {}",
+                log.warn("[BENEPia] SSO failed: {} / {}",
                         confirmRes.getResponseCode(),
                         confirmRes.getResponseMessage());
                 return;
             }
 
-            // 4. 세션 저장 (세션 있을 때만)
+            // 4. 세션 저장
             if (session != null) {
                 session.setAttribute("BENE_USER", dto);
                 session.setAttribute("CHANNEL", "BENE");
             }
 
+            log.info("[BENEPia] SSO success. Session stored.");
+
         } catch (Exception e) {
-            // 절대 throw 하지 말 것
-            log.error("Benepia SSO process error", e);
+            log.error("[BENEPia] SSO process error", e);
         }
     }
 }
