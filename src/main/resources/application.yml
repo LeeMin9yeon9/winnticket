@@ -36,3 +36,6 @@ logging:
 
 file:
   upload-dir: /Users/kimhb/uploads
+
+benepia:
+  seed-key: 93bf2sd0324em312
