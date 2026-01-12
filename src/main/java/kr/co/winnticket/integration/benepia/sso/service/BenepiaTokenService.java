@@ -1,7 +1,6 @@
 package kr.co.winnticket.integration.benepia.sso.service;
 
 import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
-import kr.co.winnticket.integration.benepia.sso.dto.BenepiaTokenCreateResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +19,7 @@ public class BenepiaTokenService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // 베네피아 SSO 토큰 생성 요청
-    public BenepiaTokenCreateResDto createToken(String userid){
+    public String createToken(String userid){
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("custCoCd", properties.getCustCoCd()); // z381
@@ -32,12 +31,11 @@ public class BenepiaTokenService {
         HttpEntity<MultiValueMap<String, String>> request =
                 new HttpEntity<>(body, headers);
 
-        ResponseEntity<BenepiaTokenCreateResDto> response =
-                restTemplate.exchange(
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(
                         properties.getTokenCreateUrl(),
-                        HttpMethod.POST,
                         request,
-                        BenepiaTokenCreateResDto.class
+                        String.class
                 );
 
         return response.getBody();

@@ -1,7 +1,6 @@
 package kr.co.winnticket.integration.benepia.sso.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.winnticket.integration.benepia.sso.dto.BenepiaTokenCreateResDto;
 import kr.co.winnticket.integration.benepia.sso.service.BenepiaTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,22 +16,20 @@ public class BenepiaTokenController {
 
     private final BenepiaTokenService tokenService;
     @GetMapping("/token")
-    public String generate(@RequestParam String userId) {
+    public String generate(@RequestParam String userid) {
 
-        BenepiaTokenCreateResDto res = tokenService.createToken(userId);
+        String response = tokenService.createToken(userid);
 
-        if (res == null) {
-            return "TOKEN CREATE RESPONSE NULL";
+        if(response == null || response.isBlank()){
+            return """
+            RESPONSE IS NULL OR EMPTY
+            """;
         }
 
         return """
-        responseCode    : %s
-        responseMessage : %s
-        tknKey          : %s
-        """.formatted(
-                res.getResponseCode(),
-                res.getResponseMessage(),
-                res.getTknKey()
-        );
+         RESPONSE :
+        """.formatted(response);
     }
-}
+
+
+    }
