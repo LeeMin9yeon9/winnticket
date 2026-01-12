@@ -27,8 +27,8 @@ public class BenepiaController {
             HttpSession session
     ) {
         entryService.process(encParam, returnurl, session);
-
-        return "redirect:/shop?channel=BENE";
+        
+        return "redirect:https://winnticket.store/shop?channel=BENE";
     }
 }
 
