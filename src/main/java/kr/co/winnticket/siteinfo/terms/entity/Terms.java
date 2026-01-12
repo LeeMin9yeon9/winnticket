@@ -32,14 +32,17 @@ public class Terms {
     @Comment("약관 내용 (HTML)")
     private String content;
 
+    @Builder.Default
     @Column(name = "required", nullable = false)
     @Comment("필수 약관 여부")
     private Boolean required = true;
 
+    @Builder.Default
     @Column(name = "display_order", nullable = false)
     @Comment("표시 순서")
     private Integer displayOrder = 0;
 
+    @Builder.Default
     @Column(name = "visible", nullable = false)
     @Comment("노출 여부")
     private Boolean visible = true;
