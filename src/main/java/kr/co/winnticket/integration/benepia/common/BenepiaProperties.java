@@ -18,6 +18,9 @@ public class BenepiaProperties {
     // 고객사 코드
     private String custCoCd;
 
-    // SSO confirm API URL
+    // SSO 확인 API URL
     private String confirmUrl;
+
+    // 토큰 생성 APU URL
+    private String tokenCreateUrl;
 }
