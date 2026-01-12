@@ -31,7 +31,7 @@ public class BenepiaController {
             session.setAttribute("CHANNEL", "BENE");
         }
 
-        // 🔥 핵심 한 줄
-        return "forward:/index.html";
+
+        return "redirect:/shop?channel=BENE";
     }
 }
