@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaParamParser;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
+import kr.co.winnticket.integration.benepia.sso.dto.BenepiaSsoResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,10 +27,18 @@ public class BenepiaEntryService {
             dto.setReturnurl(returnurl);
 
             // 3. SSO Confirm
-            if (!sso.confirm(dto.getTknKey())) {
-                throw new IllegalStateException("베네피아 SSO 토큰 검증 실패");
+            BenepiaSsoResDto confirmRes = sso.confirm(dto.getTknKey());
+            if (confirmRes == null) {
+                throw new IllegalStateException("베네피아 SSO Confirm 응답 없음");
             }
-
+            if (!"S000".equals(confirmRes.getResponseCode())) {
+                throw new IllegalStateException(
+                        "베네피아 SSO 토큰 검증 실패 - "
+                                + confirmRes.getResponseCode()
+                                + " / "
+                                + confirmRes.getResponseMessage()
+                );
+            }
             // 4. 세션 저장
             session.setAttribute("BENE_USER", dto);
             session.setAttribute("CHANNEL", "BENE");
