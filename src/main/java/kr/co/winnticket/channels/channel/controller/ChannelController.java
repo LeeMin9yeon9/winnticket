@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @Tag(name = "채널(주문용)", description = "채널 관리 > 채널 목록")
 @RestController
 @RequiredArgsConstructor
@@ -23,14 +21,15 @@ public class ChannelController {
 
     private final ChannelService service;
 
-    @GetMapping("/{id}")
+    @GetMapping("/{code}")
     @Operation(summary = "(주문용) 채널 기본 정보", description = "주문 시 채널의 기본 정보를 조회합니다.")
-    public ResponseEntity<ApiResponse<ChannelInfoResGetDto>> getChannelInfo(
-            @Parameter(description = "채널_ID")
-            @PathVariable UUID id
-    ){
-        ChannelInfoResGetDto info = service.selectChannel(id);
-        return ResponseEntity.ok(ApiResponse.success(info));
+    public ResponseEntity<ApiResponse<ChannelInfoResGetDto>> getChannelByCode(
+            @Parameter(description = "채널 코드", example = "CODE001")
+            @PathVariable String code
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success(service.getChannelInfoByCode(code))
+        );
     }
 
 
