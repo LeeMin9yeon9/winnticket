@@ -53,10 +53,10 @@ public class BenepiaSeedEcbCrypto {
 
      //encrypt (테스트용 암호화)
 
-    public String encrypt(String plainText) {
+    public String encrypt(String plain) {
         try {
             // 1. 평문 → byte[]
-            byte[] plainBytes = plainText.getBytes(StandardCharsets.UTF_8);
+            byte[] plainBytes = plain.getBytes(StandardCharsets.UTF_8);
 
             // 2. SEED ECB Encrypt
             byte[] encrypted = KISA_SEED_ECB.SEED_ECB_Encrypt(
