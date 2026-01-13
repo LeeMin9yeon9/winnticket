@@ -10,10 +10,16 @@ import org.springframework.stereotype.Component;
 @Setter
 @Component
 @ConfigurationProperties(prefix="benepia")
-@Schema(title = "[베네피아 공통 설정] BenepiaProperties")
+@Schema(title = "[베네피아 연동 설정] BenepiaProperties")
 public class BenepiaProperties {
-    //seed key
+
+    @Schema(description = "SEED ECB 암호화 키")
     private String seedKey;
+
+    @Schema(description = "세션 키")
+    private String sessionPrefix;
+
+
 
     // 고객사 코드
     private String custCoCd;
