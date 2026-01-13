@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(title = "[웹 제휴몰 복호화 결과 paramDTO] BenepiaDecryptedParamDto")
+@Schema(title = "[복호화 결과 paramDTO] BenepiaDecryptedParamDto")
 public class BenepiaDecryptedParamDto {
 
     @Schema(description="고객사 코드")
@@ -33,4 +33,7 @@ public class BenepiaDecryptedParamDto {
 
     @Schema(description="제휴사 returnurl(암호화 제외)")
     private String returnurl;
+
+    @Schema(description = "sitecode+userid+benepiafitid")
+    private String userKey;
 }
