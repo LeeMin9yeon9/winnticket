@@ -7,6 +7,7 @@ import kr.co.winnticket.integration.benepia.batch.dto.BenepiaProductsJson;
 import kr.co.winnticket.integration.benepia.batch.mapper.BenepiaBatchMapper;
 import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BenepiaBatchUploadService {
@@ -124,6 +126,8 @@ public class BenepiaBatchUploadService {
                 + "/v1/partners/"
                 + props.getKcpCoCd()
                 + path;
+
+        log.info(">>> BENEP API CALL URL = {}", url);
 
         ByteArrayResource file = new ByteArrayResource(data){
             @Override public String getFilename(){ return fileName; }
