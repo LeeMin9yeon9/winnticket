@@ -19,8 +19,6 @@ public class BenepiaProperties {
     @Schema(description = "세션 키")
     private String sessionPrefix;
 
-
-
     // 고객사 코드
     private String custCoCd;
 
@@ -29,4 +27,13 @@ public class BenepiaProperties {
 
     // 토큰 생성 APU URL
     private String tokenCreateUrl;
+
+    // 배치 서버 url
+    private String batchBaseUrl;
+
+    // ticket (파일명용)
+    private String prdgbFile;
+
+    // Kcp코드
+    private String KcpCoCd;
 }
