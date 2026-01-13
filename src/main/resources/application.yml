@@ -45,8 +45,8 @@ file:
 benepia:
   seed-key: 93bf2sd0324em312
   cust-co-cd: z381
-  confirm-url: https://auth.benepia.co.kr/api/token/confirm
-  token-create-url: https://auth.benepia.co.kr/api/token/request
+  confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
+  token-create-url: https://stg-auth.benepia.co.kr/api/token/request
   batch-base-url: https://stg-collections.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: A8MCD

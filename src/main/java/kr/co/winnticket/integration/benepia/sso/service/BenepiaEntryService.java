@@ -23,7 +23,7 @@ public class BenepiaEntryService {
         try {
             // 복호화
             String decrypted = crypto.decrypt(encParam, properties.getSeedKey());
-            log.info("[베네피아 복호화 성공] decrypted={}", decrypted);
+            log.info("[베네피아 복호화 성공!!!!] ");
 
             // 파싱
             BenepiaDecryptedParamDto dto = parser.parse(decrypted);
