@@ -20,6 +20,11 @@ public class BenepiaEntryService {
     private final BenepiaParamParser parser;
 
     public BenepiaDecryptedParamDto handle(String encParam, HttpSession session){
+
+        log.info("[BENEPIA][ENTRY][SERVICE] START");
+        log.info("[BENEPIA][ENTRY][SERVICE] sessionId={}", session.getId());
+        log.info("[BENEPIA][ENTRY][SERVICE] encParam null?={}", encParam == null);
+
         try {
             // 복호화
             String decrypted = crypto.decrypt(encParam, properties.getSeedKey());
@@ -27,10 +32,16 @@ public class BenepiaEntryService {
 
             // 파싱
             BenepiaDecryptedParamDto dto = parser.parse(decrypted);
+            log.info("[BENEPIA][ENTRY][SERVICE] benefit_id={}", dto.getBenefit_id());
+            log.info("[BENEPIA][ENTRY][SERVICE] userid={}", dto.getUserid());
+            log.info("[BENEPIA][ENTRY][SERVICE] tknKey={}", dto.getTknKey());
 
             // redirect 대비 세션 저장
             session.setAttribute("BENEP_DECRYPTED", dto);
             session.setAttribute("BENEP_TKN_KEY", dto.getTknKey());
+            log.info("[BENEPIA][ENTRY][SERVICE] SESSION SET DONE");
+            log.info("[BENEPIA][ENTRY][SERVICE] SESSION.BENEP_TKN_KEY={}",
+                    session.getAttribute("BENEP_TKN_KEY"));
 
             return dto;
         }catch (Exception e){
