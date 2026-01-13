@@ -21,6 +21,9 @@ public class BenepiaTokenController {
     public String createConfirm(HttpSession session){
 
         log.info("[BENEPIA][TOKEN][CTRL HIT]");
+        log.info("[BENEPIA][TOKEN][CTRL] sessionId={}", session.getId());
+        log.info("[BENEPIA][TOKEN][CTRL] BENEP_TKN_KEY={}",
+                session.getAttribute("BENEP_TKN_KEY"));
 
         BenepiaDecryptedParamDto decryptedParamDto = (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED");
 
