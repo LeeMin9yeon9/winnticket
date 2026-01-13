@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.benepia.sso.service.BenepiaTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ public class BenepiaTokenController {
 
     private final BenepiaTokenService tokenService;
     @PostMapping("/create")
+    @GetMapping("/create")
     public String createConfirm(HttpSession session){
         BenepiaDecryptedParamDto decryptedParamDto = (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED");
 
