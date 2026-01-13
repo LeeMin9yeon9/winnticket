@@ -13,16 +13,16 @@ import org.springframework.stereotype.Component;
 @Schema(title = "[베네피아 연동 설정] BenepiaProperties")
 public class BenepiaProperties {
 
-    @Schema(description = "SEED ECB 암호화 키")
+    // SEED ECB 암호화 키
     private String seedKey;
 
-    @Schema(description = "세션 키")
+    // 세션 키
     private String sessionPrefix;
 
     // 고객사 코드
     private String custCoCd;
 
-    // SSO 확인 API URL
+    // 토큰 확인 API URL
     private String confirmUrl;
 
     // 토큰 생성 APU URL
