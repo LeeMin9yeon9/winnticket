@@ -42,6 +42,6 @@ benepia:
   cust-co-cd: z381
   confirm-url: https://auth.benepia.co.kr/api/token/confirm
   token-create-url: https://auth.benepia.co.kr/api/token/request
-  batch-upload-url: https://stg-collections.benepia.co.kr
+  batch-base-url: https://stg-collections.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: T000
