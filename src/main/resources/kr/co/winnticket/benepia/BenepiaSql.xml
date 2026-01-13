@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.benepia.batch.mapper.BenepiaBatchMapper">
+    <!--
+    - 베네피아 배치 상품id 조회
+    -->
+    <select id="selectBenepiaIds" resultType="map">
+        SELECT
+            'z381' AS coopCoCd,
+            p.code AS prdId
+        FROM products p
+        WHERE p.visible = true
+        AND p.sales_status = 'ON_SALE';
+    </select>
+
+    <!--
+    - 베네피아 배치 상품정보 조회
+    -->
+    <select id="selectTicketProductsForBenepia" resultType="map">
+        SELECT
+        'z381'                                 AS coopCoCd,       -- 제휴사코드
+        p.code                                AS prdId,
+        p.name                                AS prdNm,
+        p.price                               AS orgnPrc,
+        COALESCE(p.discount_price, p.price)  AS salePrc,
+        p.image_url                           AS prdImgUrl,
+        'L'                                   AS prdDtlUrlTyp,
+        CONCAT('https://winnticket.store/product/', p.code) AS prdDtlUrl,
+        'L'                                   AS prdMobDtlUrlTyp,
+        CONCAT('https://m.winnticket.store/product/', p.code) AS prdMobDtlUrl,
+        '10'                                  AS prdType,        -- 여행 고정
+        COALESCE(p.detail_content, p.description) AS prdDesc,
+        p.created_at                          AS regDate,
+        p.updated_at                          AS updDate,
+        '03'                                  AS prdGb,          -- 티켓 고정
+        'KR'                                  AS nationalCd,     -- 국가 고정
+        p.region_code                         AS regionCd,
+        p.ticket_type                         AS ticketType
+        FROM products p
+        WHERE p.visible = true
+        AND p.sales_status = 'ON_SALE';
+    </select>
+</mapper>
