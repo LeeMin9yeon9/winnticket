@@ -49,4 +49,4 @@ benepia:
   token-create-url: https://auth.benepia.co.kr/api/token/request
   batch-base-url: https://stg-collections.benepia.co.kr
   prdgb-file: ticket
-  kcp-co-cd: T000
+  kcp-co-cd: A8MCD
