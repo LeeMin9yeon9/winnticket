@@ -43,7 +43,10 @@ file:
   upload-dir: /Users/kimhb/uploads
 
 benepia:
-  seed-key: 93bf2sd0324em312
+  seed-key: 93bddsadsadsa
   cust-co-cd: z381
-  confirm-url: https://auth.benepia.co.kr/api/token/confirm
-  token-create-url: https://auth.benepia.co.kr/api/token/request
+  confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
+  token-create-url: https://stg-auth.benepia.co.kr/api/token/request
+  sessionPrefix: BENEP
+  prdgb-file: ticket
+  kcp-co-cd: T000
