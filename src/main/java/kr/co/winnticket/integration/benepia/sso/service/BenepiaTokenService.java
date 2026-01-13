@@ -25,11 +25,11 @@ public class BenepiaTokenService {
 
         String plain = "loginid=" +loginid;
 
-        String encParam = seedEcbCrypto.encrypt(plain);
+       // String encParam = seedEcbCrypto.encrypt(plain);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("custCoCd", properties.getCustCoCd()); // z381
-        body.add("encParam", encParam);
+     //   body.add("encParam", encParam);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
