@@ -9,7 +9,6 @@ server:
         path: /
         same-site: none
         secure: true
-  spring:
 
 spring:
   config:
