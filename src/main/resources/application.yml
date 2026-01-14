@@ -5,7 +5,6 @@ server:
     session:
       cookie:
         name: JSESSIONID
-        domain: .winnticket.store
         path: /
         same-site: none
         secure: true
