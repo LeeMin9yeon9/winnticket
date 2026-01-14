@@ -24,7 +24,9 @@ public class SecurityConfig {
     public SecurityFilterChain benepiaChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/benepia/**",
-                        "/benepia")
+                        "/benepia",
+                        "/benepia-batch/**"   // ✅ 배치 URL 추가
+                )
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .headers(headers -> headers
