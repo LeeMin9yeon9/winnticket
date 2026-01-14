@@ -1,15 +1,6 @@
 server:
   forward-headers-strategy: framework
   port: 8080
-  servlet:
-    session:
-      cookie:
-        name: JSESSIONID
-        domain: .winnticket.store
-        path: /
-        same-site: none
-        secure: true
-  spring:
 
 spring:
   config:
