@@ -19,7 +19,7 @@ public class BenepiaTokenService {
 
     private final BenepiaProperties properties;
     private final BenepiaTokenEncParamBuilder encParamBuilder;
-    private final RestClient restClient = RestClient.create();
+    private final RestClient benepiaRestClient;
 
     // 토큰 생성
     public String createToken(BenepiaDecryptedParamDto decryptedParamDto){
@@ -35,12 +35,16 @@ public class BenepiaTokenService {
         form.add("encParam", encParam);
         form.add("custCoCd", properties.getCustCoCd());
 
-        BenepiaTokenResDto res = restClient.post()
+        BenepiaTokenResDto res = benepiaRestClient.post()
                 .uri(properties.getTokenCreateUrl())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .contentType(MediaType.parseMediaType("application/x-www-form-urlencoded;charset=UTF-8"))
                 .body(form)
                 .retrieve()
                 .body(BenepiaTokenResDto.class);
+
+        if(res == null){
+            throw new IllegalStateException("TOKEN CREATE NO RESPONSE");
+        }
 
         if(!"S000".equals(res.getResponseCode())){
             throw new IllegalStateException("TOKEN CREATE FAILED : " + res.getResponseMessage());
@@ -57,7 +61,7 @@ public class BenepiaTokenService {
         form.add("tknKey",tknKey);   // 발급받은 TOKEN KEY
         form.add("custCoCd",properties.getCustCoCd());  // 고객사 코드
 
-        BenepiaTokenResDto res = restClient.post()
+        BenepiaTokenResDto res = benepiaRestClient.post()
                 .uri(properties.getConfirmUrl())  // 토큰확인 url
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(form)
