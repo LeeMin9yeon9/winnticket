@@ -1,12 +1,13 @@
 server:
   port: 8080
-  url: https://api.winnticket.store
   servlet:
-    cookie:
-      name: JSESSIONID
-      same-site: none
-      secure: true
-      
+    session:
+      cookie:
+        name: JSESSIONID
+        domain: .winnticket.store
+        path: /
+        same-site: none
+        secure: true
 spring:
   profiles:
     active: local   # 기본은 local
