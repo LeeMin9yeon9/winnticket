@@ -32,9 +32,9 @@ public class BenepiaEntryService {
 
             // 파싱
             BenepiaDecryptedParamDto dto = parser.parse(decrypted);
-            log.info("[BENEPIA][ENTRY][SERVICE] benefit_id={}", dto.getBenefit_id());
-            log.info("[BENEPIA][ENTRY][SERVICE] userid={}", dto.getUserid());
-            log.info("[BENEPIA][ENTRY][SERVICE] tknKey={}", dto.getTknKey());
+            log.info("[BENEPIA][ENTRY][SERVICE] 베네피아ID_benefit_id={}", dto.getBenefit_id());
+            log.info("[BENEPIA][ENTRY][SERVICE] 베네피아사번_userid={}", dto.getUserid());
+            log.info("[BENEPIA][ENTRY][SERVICE] 베네피아 토큰키_tknKey={}", dto.getTknKey());
 
             // redirect 대비 세션 저장
             session.setAttribute("BENEP_DECRYPTED", dto);
