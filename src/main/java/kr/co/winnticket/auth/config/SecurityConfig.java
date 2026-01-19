@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         /* ---------- 플러스앤 테스트 API (인증 없이 허용) ---------- */
-                        .requestMatchers("/plusn/test/**").permitAll()
+                        .requestMatchers("/api/plusn/test/**").permitAll()
                         /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
                                 "/payletter/**",
