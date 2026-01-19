@@ -107,7 +107,7 @@
             #{discountPrice},
             0,
             'PENDING_PAYMENT',
-            #{paymentMethod},
+            #{paymentMethod}::payment_method,
             'READY'
         )
         RETURNING id, order_number
