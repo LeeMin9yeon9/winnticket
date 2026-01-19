@@ -107,7 +107,7 @@
             #{discountPrice},
             0,
             'PENDING_PAYMENT',
-            'VIRTUAL_ACCOUNT',
+            #{paymentMethod},
             'READY'
         )
         RETURNING id, order_number

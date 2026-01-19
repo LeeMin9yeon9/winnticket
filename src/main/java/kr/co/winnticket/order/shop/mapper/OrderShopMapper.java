@@ -24,7 +24,8 @@ public interface OrderShopMapper {
             @Param("customerPhone") String customerPhone,
             @Param("customerEmail") String customerEmail,
             @Param("totalPrice") int totalPrice,
-            @Param("discountPrice") int discountPrice
+            @Param("discountPrice") int discountPrice,
+            @Param("paymentMethod") String paymentMethod
     );
 
     // 주문별 상품별 insert
