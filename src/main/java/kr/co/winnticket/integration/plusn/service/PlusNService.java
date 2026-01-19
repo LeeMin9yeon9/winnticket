@@ -55,7 +55,6 @@ public class PlusNService {
     // 취소 테스트
     public PlusNCancelResponse testCancel(String orderId, String orderSales) {
         PlusNCancelRequest req = new PlusNCancelRequest();
-        req.setOrder_company(orderCompany);
         req.setOrder_id(orderId);
         req.setOrder_sales(orderSales);
         req.setResult_date(LocalDateTime.now()
