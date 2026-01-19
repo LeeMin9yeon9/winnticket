@@ -172,4 +172,13 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi intergrationApi() {
+        return GroupedOpenApi.builder()
+                .group("api연동테스트")
+                .packagesToScan("kr.co.winnticket.integration")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
 }
