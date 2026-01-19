@@ -48,9 +48,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
-                        /* ---------- 플러스앤 테스트 API (인증 없이 허용) ---------- */
-                        .requestMatchers("/api/plusn/test/**").permitAll()
-                        /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
+                     /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
                                 "/payletter/**",
                                 "/api/auth/**",
@@ -58,9 +56,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
-                                "/webjars/**"
-                        ).permitAll()
-
+                                "/webjars/**",
+                                "/api/plusn/test/**"
+                ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
                                 "/api/product/shop/**",
