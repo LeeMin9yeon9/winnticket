@@ -39,12 +39,7 @@ jwt:
 
 logging:
   level:
-    org.springframework.web: INFO
     kr.co.winnticket: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    org.springframework.jdbc: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.hibernate.SQL: DEBUG
 
 file:
   upload-dir: /Users/kimhb/uploads
@@ -58,6 +53,18 @@ benepia:
   prdgb-file: ticket
   kcp-co-cd: A8MCD
 
+<<<<<<< HEAD
+payletter:
+  base-url: https://testpgapi.payletter.com
+  client-id: pay_test
+  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
+  service-name: 페이레터
+
+  return-url: https://api.winnticket.store/payletter/return
+  callback-url: https://api.winnticket.store/payletter/callback
+  cancel-url: https://api.winnticket.store/payletter/cancel
+=======
 plusn:
   base-url: http://partnerdev.tourok.co.kr   # 운영은 https://partner.tourok.co.kr
   order-company: "148"
+>>>>>>> e638598191decabf9bbe8a65f1f7ea857edfdd62

@@ -36,5 +36,8 @@ public class ChannelListGetResDto {
     @Schema(description = "도메인 URL")
     private String domain;
 
+    @Schema(description = "카드결제 사용 여부",example = "false")
+    private Boolean useCard;
+
 
 }

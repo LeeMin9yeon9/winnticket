@@ -54,6 +54,9 @@ public class ChannelCreateReqDto {
     @Schema(description = "활성 여부")
     private Boolean visible;
 
+    @Schema(description = "카드결제 사용 여부",example = "false")
+    private Boolean useCard;
+
 
 
     public void setCode(String code) {

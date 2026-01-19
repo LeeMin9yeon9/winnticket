@@ -2,7 +2,6 @@ package kr.co.winnticket.banner.controller;
 
 
 import kr.co.winnticket.banner.dto.*;
-import kr.co.winnticket.banner.enums.BannerPosition;
 import kr.co.winnticket.banner.service.BannerService;
 import kr.co.winnticket.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/banners")
@@ -24,11 +20,11 @@ public class BannerController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
-    public ApiResponse<List<BannerDto>> getBanners(
-            @RequestParam BannerPosition position,
-            @RequestParam(required = false) UUID channelId
+    public ApiResponse<Page<BannerDto>> getBanners(
+            @ModelAttribute BannerFilter filter,
+            Pageable pageable
     ) {
-        return bannerService.getShopBanners(position, channelId);
+        return bannerService.getBanners(filter, pageable);
     }
 
     @GetMapping("/{id}")

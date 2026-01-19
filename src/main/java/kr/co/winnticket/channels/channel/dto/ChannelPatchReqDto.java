@@ -48,6 +48,9 @@ public class ChannelPatchReqDto {
     @Schema(description = "웹사이트 URL")
     private String domain;
 
+    @Schema(description = "카드결제 사용 여부",example = "false")
+    private Boolean useCard;
+
     public void setCode(String code) {
         if (code != null) {
             this.code = code.toUpperCase(); // 소문자로 들어와도 대문자로 변환

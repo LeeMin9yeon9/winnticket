@@ -43,6 +43,7 @@
             phone,
             domain,
             description,
+            use_card,
             visible,
             created_at,
             updated_at
@@ -59,6 +60,7 @@
             #{phone},
             #{domain},
             #{description},
+            COALESCE(#{useCard}, FALSE),
             COALESCE(#{visible},TRUE),
             NOW(),
             NOW()
@@ -80,6 +82,7 @@
             domain,
             description,
             visible,
+            use_card AS useCard,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
@@ -102,7 +105,7 @@
             <if test="model.email != null">EMAIL = #{model.email},</if>
             <if test="model.phone != null">PHONE = #{model.phone},</if>
             <if test="model.domain != null">DOMAIN = #{model.domain},</if>
-
+            <if test="model.useCard != null">USE_CARD = #{model.useCard},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
@@ -164,5 +167,12 @@
         FROM channels
         WHERE code = #{code}
 
+    </select>
+
+    <!--카드결제 사용 여부-->
+    <select id="selectUseCardById" resultType="boolean">
+        SELECT use_card
+        FROM channels
+        WHERE id = #{id}
     </select>
 </mapper>
