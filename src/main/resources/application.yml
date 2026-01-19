@@ -57,3 +57,7 @@ benepia:
   batch-base-url: https://stg-collections.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: A8MCD
+
+plusn:
+  base-url: http://partnerdev.tourok.co.kr   # 운영은 https://partner.tourok.co.kr
+  order-company: "148"
