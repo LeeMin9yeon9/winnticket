@@ -138,7 +138,6 @@ public class OrderShopService {
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone()
                 );
-
             resDto.setPaymentStatus("REQUESTED");
             resDto.setPgProvider("PAYLETTER");
             resDto.setPgTid(String.valueOf(payRes.getToken()));
