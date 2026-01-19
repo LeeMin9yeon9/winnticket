@@ -57,7 +57,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/api/plusn/test/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
