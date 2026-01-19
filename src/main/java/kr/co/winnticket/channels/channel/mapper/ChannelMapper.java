@@ -45,4 +45,8 @@ public interface ChannelMapper {
 
     // 채널코드로 id 찾기
     UUID selectChannelIdByCode(String channelCode);
+
+    // 채널id로 code찾기
+    Boolean selectUseCardById(@Param("id") UUID id);
+
 }

@@ -11,7 +11,6 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -71,7 +70,7 @@ public class BannerService {
         banner = bannerRepository.save(banner);
 
         if (dto.getChannelIds() != null) {
-            for (UUID channelId : dto.getChannelIds()) {
+            for (String channelId : dto.getChannelIds()) {
                 BannerChannel bc = new BannerChannel();
                 bc.setBanner(banner);
                 bc.setChannelId(channelId);
@@ -109,10 +108,10 @@ public class BannerService {
 
         if (dto.getChannelIds() != null) {
             bannerChannelRepository.deleteByBannerId(id);
-            for (UUID channelId : dto.getChannelIds()) {
+            for (String channelId : dto.getChannelIds()) {
                 BannerChannel bc = new BannerChannel();
                 bc.setBanner(banner);
-                bc.setChannelId(channelId); // UUID 그대로
+                bc.setChannelId(channelId);
                 bannerChannelRepository.save(bc);
             }
         }
@@ -128,19 +127,15 @@ public class BannerService {
         bannerRepository.delete(banner);
         return ApiResponse.success("배너가 삭제되었습니다.", null);
     }
-    public ApiResponse<List<BannerDto>> getShopBanners(
-            BannerPosition position,
-            UUID channelId
-    ) {
+
+    public ApiResponse<List<BannerDto>> getShopBanners(BannerPosition position, String channelId) {
         List<Banner> banners;
         LocalDateTime now = LocalDateTime.now();
 
-        if (channelId != null) {
-            banners = bannerRepository
-                    .findActiveBannersByPositionAndChannel(position, channelId, now);
+        if (channelId != null && !channelId.isBlank()) {
+            banners = bannerRepository.findActiveBannersByPositionAndChannel(position, channelId, now);
         } else {
-            banners = bannerRepository
-                    .findActiveBannersByPosition(position, now);
+            banners = bannerRepository.findActiveBannersByPosition(position, now);
         }
 
         List<BannerDto> dtos = banners.stream()

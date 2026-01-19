@@ -68,6 +68,10 @@ dependencies {
     // 암호 라이브러리
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 
+    // Payletter 결제 API 호출용 HTTP 클라이언트(WebClient 기반)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
 }
 
 springBoot {

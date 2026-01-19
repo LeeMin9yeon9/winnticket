@@ -3,7 +3,6 @@ package kr.co.winnticket.banner.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -15,10 +14,11 @@ public class BannerChannel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "banner_id")
-    private Banner banner;
+    // 예: 쇼핑몰/도메인/채널 ID 등
+    @Column(nullable = false, length = 50)
+    private String channelId;
 
-    @Column(name = "channel_id", nullable = false)
-    private UUID channelId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "banner_id", nullable = false)
+    private Banner banner;
 }

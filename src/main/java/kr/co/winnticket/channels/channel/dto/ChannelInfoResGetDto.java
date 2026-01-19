@@ -55,6 +55,9 @@ public class ChannelInfoResGetDto {
     @Schema(description = "수정일")
     private String updatedAt;
 
+    @Schema(description = "카드결제 사용 여부",example = "false")
+    private Boolean useCard;
+
 
 
 }

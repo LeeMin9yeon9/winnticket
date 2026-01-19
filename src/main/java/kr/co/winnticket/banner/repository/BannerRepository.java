@@ -6,8 +6,6 @@ import kr.co.winnticket.banner.entity.Banner;
 import kr.co.winnticket.banner.enums.BannerPosition;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -43,7 +41,7 @@ public interface BannerRepository extends JpaRepository<Banner, String>, JpaSpec
         """)
     List<Banner> findActiveBannersByPositionAndChannel(
             @Param("position") BannerPosition position,
-            @Param("channelId") UUID channelId,
+            @Param("channelId") String channelId,
             @Param("now") LocalDateTime now
     );
 
