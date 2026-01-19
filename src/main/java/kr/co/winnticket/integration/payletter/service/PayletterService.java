@@ -36,12 +36,12 @@ public class PayletterService {
         Map<String, Object> summary = orderShopMapper.selectPayletterProductSummary(orderId);
 
         String firstProductName = summary != null ? (String) summary.get("first_product_name") : null;
-        Integer itemCount = summary != null ? (Integer) summary.get("item_count") : null;
+        Number itemCountNum = summary != null ? (Number) summary.get("item_count") : null;
+        int itemCount = (itemCountNum != null) ? itemCountNum.intValue() : 1;
 
         if (firstProductName == null || firstProductName.isBlank()) {
             firstProductName = "윈앤티켓 주문";
         }
-        if (itemCount == null || itemCount < 1) itemCount = 1;
 
         String productName = (itemCount == 1)
                 ? firstProductName
