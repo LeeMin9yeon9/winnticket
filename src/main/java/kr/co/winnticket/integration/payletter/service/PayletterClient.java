@@ -25,7 +25,8 @@ public class PayletterClient {
                 .baseUrl(props.getBaseUrl())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 // 헤더 인증키
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY" + props.getPaymentApiKey())
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+
                 .build()
                 // post요청수행
                 .post()
