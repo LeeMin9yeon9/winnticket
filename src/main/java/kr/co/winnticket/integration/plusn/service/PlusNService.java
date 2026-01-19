@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.plusn.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.plusn.client.PlusNClient;
 import kr.co.winnticket.integration.plusn.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,16 @@ public class PlusNService {
         div.setSelected_date("");
 
         req.setClass_div(List.of(div));
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            System.out.println("\n==============================");
+            System.out.println("▶▶▶ PLUSN REQUEST JSON");
+            System.out.println(mapper.writeValueAsString(req));
+            System.out.println("==============================\n");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return client.order(req);
     }
