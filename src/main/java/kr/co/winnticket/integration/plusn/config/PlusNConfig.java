@@ -15,24 +15,18 @@ public class PlusNConfig {
 
     @Bean
     public RestTemplate plusNRestTemplate() {
+
         RestTemplate restTemplate = new RestTemplate();
 
-        // Jackson 컨버터 생성
-        MappingJackson2HttpMessageConverter jacksonConverter =
+        // Jackson 컨버터가 text/html 도 JSON으로 읽게 설정
+        MappingJackson2HttpMessageConverter converter =
                 new MappingJackson2HttpMessageConverter();
 
-        // text/html 도 JSON으로 파싱하도록 추가
-        List<MediaType> mediaTypes = new ArrayList<>(jacksonConverter.getSupportedMediaTypes());
-        mediaTypes.add(MediaType.TEXT_HTML);
-        mediaTypes.add(MediaType.TEXT_PLAIN);
-        jacksonConverter.setSupportedMediaTypes(mediaTypes);
+        converter.setSupportedMediaTypes(
+                List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_HTML)
+        );
 
-        // 기존 컨버터 앞에 삽입
-        List<HttpMessageConverter<?>> converters =
-                new ArrayList<>(restTemplate.getMessageConverters());
-        converters.add(0, jacksonConverter);
-
-        restTemplate.setMessageConverters(converters);
+        restTemplate.getMessageConverters().add(0, converter);
 
         return restTemplate;
     }
