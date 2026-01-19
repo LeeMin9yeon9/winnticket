@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.plusn.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.plusn.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,14 +29,27 @@ public class PlusNClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
         HttpEntity<Object> entity = new HttpEntity<>(req, headers);
 
-        ResponseEntity<T> response =
-                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        // 먼저 String으로 받음
+        ResponseEntity<String> response =
+                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-        return response.getBody();
+        // RAW 로그 출력
+        System.out.println("\n==============================");
+        System.out.println("PLUSN URL = " + url);
+        System.out.println("PLUSN REQUEST = " + req);
+        System.out.println("PLUSN RAW RESPONSE BODY = " + response.getBody());
+        System.out.println("==============================\n");
+
+        // 직접 DTO 변환
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(response.getBody(), responseType);
+        } catch (Exception e) {
+            throw new RuntimeException("PLUSN JSON PARSE ERROR", e);
+        }
     }
 
     // 주문
