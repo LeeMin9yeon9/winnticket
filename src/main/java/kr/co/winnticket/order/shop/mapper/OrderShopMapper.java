@@ -1,7 +1,6 @@
 package kr.co.winnticket.order.shop.mapper;
 
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
-import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -50,5 +49,23 @@ public interface OrderShopMapper {
     void updateOrderPrice(
             @Param("orderId") UUID orderId,
             @Param("finalPrice") int finalPrice
+    );
+
+    // payletter 결제요청 결과 저장
+    void updatePayletterRequest(
+            @Param("orderId") UUID orderId,
+            @Param("pgProvider") String pgProvider,
+            @Param("pgTid") String pgTid,
+            @Param("pgOnlineUrl") String pgOnlineUrl,
+            @Param("pgMobileUrl") String pgMobileUrl
+    );
+
+    // payletter productName + 개수
+    Map<String, Object> selectPayletterProductSummary(@Param("orderId") UUID orderId);
+
+    // payletter 콜백 저장 + 결제 완료처리
+    void updatePayletterCallbackSuccess(
+            @Param("orderId") UUID orderId,
+            @Param("payload") String payloadJson
     );
 }

@@ -2,6 +2,10 @@ package kr.co.winnticket.order.shop.service;
 
 import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.cart.service.ShopCartService;
+import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
+import kr.co.winnticket.common.enums.PaymentMethod;
+import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
+import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
@@ -24,6 +28,8 @@ public class OrderShopService {
     private final ProductMapper productMapper;
     private final OrderShopMapper mapper;
     private final ShopCartService shopCartService;
+    private final ChannelMapper channelMapper;
+    private final PayletterService paymentService;
 
 
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
@@ -41,6 +47,17 @@ public class OrderShopService {
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
         try {
         log.info("createOrder start, channelId={}", reqDto.getChannelId());
+
+        Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
+        Boolean cardAllowed = (useCard != null && useCard);
+
+            // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
+            PaymentMethod paymentMethod = reqDto.getPaymentMethod();
+            if (!cardAllowed) {
+                paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
+            }
+
+
         // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
             reqDto.getChannelId(),
@@ -103,11 +120,35 @@ public class OrderShopService {
 
         OrderCreateResDto resDto = new OrderCreateResDto();
         resDto.setOrderId(orderId);
-        resDto.setPaymentStatus("READY");
+        // resDto.setPaymentStatus("READY");
         resDto.setOrderNumber(orderNumber);
         resDto.setFinalPrice(finalPrice);
 
+        // 무통장(일반/베네피아 가능)
+        if(paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT){
+            resDto.setPaymentStatus("READY");
+            return resDto;
+        }
+            if (paymentMethod == PaymentMethod.CARD) {
+                PayletterPaymentResDto payRes = paymentService.paymentRequest(
+                        orderId,
+                        orderNumber,
+                        finalPrice,
+                        reqDto.getCustomerName(),
+                        reqDto.getCustomerEmail()
+                );
+
+            resDto.setPaymentStatus("REQUESTED");
+            resDto.setPgProvider("PAYLETTER");
+            resDto.setPgTid(String.valueOf(payRes.getToken()));
+            resDto.setPgOnlineUrl(payRes.getOnlineUrl());
+            resDto.setPgMobileUrl(payRes.getMobileUrl());
+            return resDto;
+        }
+        resDto.setPaymentStatus("READY");
         return resDto;
+
+
         } catch (Exception e) {
             log.error("결재완료 중 오류 발생", e);
             throw e; // 다시 던짐 (중요)

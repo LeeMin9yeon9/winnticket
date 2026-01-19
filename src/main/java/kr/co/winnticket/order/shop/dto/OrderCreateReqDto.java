@@ -3,6 +3,7 @@ package kr.co.winnticket.order.shop.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import kr.co.winnticket.common.enums.PaymentMethod;
 import lombok.Data;
 import lombok.ToString;
 
@@ -13,6 +14,8 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @Schema(title = "[주문 > 주문 생성 요청] OrderCreateReqDto")
 public class OrderCreateReqDto {
+
+
     @NotNull
     @Schema(description = "채널ID")
     private UUID channelId;
@@ -36,6 +39,10 @@ public class OrderCreateReqDto {
     @Min(0)
     @Schema(description = "할인금액")
     private int discountPrice;
+
+    @NotNull
+    @Schema(description = "결제수단", example = "BANK_TRANSFER 또는 CARD")
+    private PaymentMethod paymentMethod;
 
     @Valid
     @NotEmpty
