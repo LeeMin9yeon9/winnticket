@@ -20,7 +20,14 @@ public class PayletterClient {
 
     // payletter 결제 요청 API 호출 HTTP클라이언트
     public PayletterPaymentResDto requestPayment(PayletterPaymentReqDto request){
+
+        String apiKey = props.getPaymentApiKey();
+
+        log.info("[PAYLETTER] baseUrl={}", props.getBaseUrl());
+        log.info("[PAYLETTER] clientId={}", props.getClientId());
+        log.info("[PAYLETTER] apiKey length={}", apiKey == null ? "null" : apiKey.length());
         try{
+
         return WebClient.builder()
                 .baseUrl(props.getBaseUrl())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

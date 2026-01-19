@@ -64,6 +64,7 @@ public class PayletterService {
                 .orderNo(orderNumber)//  가맹점 주문번호
                 .amount(finalPrice)//   결제금액
                 .taxfreeAmount(0) // 비과세 금액
+                .taxAmount(0)
                 .productName(productName)  // 결제상품이름
                 .emailFlag(hasEmail ? "Y" : "N")    // 결제내역 메일 수신 여부
                 .emailAddr(hasEmail ? customerEmail : null)    // 결제 내역 메일 수신 주소
