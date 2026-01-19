@@ -135,7 +135,8 @@ public class OrderShopService {
                         orderNumber,
                         finalPrice,
                         reqDto.getCustomerName(),
-                        reqDto.getCustomerEmail()
+                        reqDto.getCustomerEmail(),
+                        reqDto.getCustomerPhone()
                 );
 
             resDto.setPaymentStatus("REQUESTED");
