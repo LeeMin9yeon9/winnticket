@@ -185,14 +185,14 @@
     <!--payletter 결제 요청 시 상품이름+개수-->
     <select id="selectPayletterProductSummary" resultType="map">
         SELECT
-            (SELECT oi.product_name
-             FROM order_items oi
-             WHERE oi.order_id = #{orderId}::uuid
-        ORDER BY oi.created_at ASC
+            (SELECT product_name
+             FROM order_items
+             WHERE order_id = #{orderId}::uuid
+        ORDER BY created_at ASC
             LIMIT 1) AS first_product_name,
         (SELECT COUNT(*)
-        FROM order_items oi
-        WHERE oi.order_id = #{orderId}::uuid) AS item_count
+        FROM order_items
+        WHERE order_id = #{orderId}::uuid) AS item_count
     </select>
 
     <!--콜백 성공 처리-->
