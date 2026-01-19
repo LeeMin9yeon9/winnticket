@@ -65,7 +65,8 @@ public class OrderShopService {
             reqDto.getCustomerPhone(),
             reqDto.getCustomerEmail(),
             reqDto.getTotalPrice(),
-            reqDto.getDiscountPrice()
+            reqDto.getDiscountPrice(),
+                paymentMethod.name()
         );
 
         UUID orderId = (UUID) result.get("id");
