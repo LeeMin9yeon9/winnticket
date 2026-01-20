@@ -25,8 +25,8 @@ public class PlusNService {
 
         PlusNOrderRequest req = new PlusNOrderRequest();
         req.setOrder_id("TEST_" + System.currentTimeMillis());
-        req.setUser_name("홍길동");
-        req.setUser_hp("01012341234");
+        req.setUser_name("이민걍");
+        req.setUser_hp("01094618018");
         req.setUser_email("test@test.com");
         req.setOrder_date(LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
