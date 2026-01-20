@@ -59,9 +59,9 @@ payletter:
   payment-api-key: NUMzRDJFQzVERkRBNTQzQjY1MkUzMTQ3NThFREU2Mzg=
   service-name: 페이레터
 
-  return-url: https://api.winnticket.store/payletter/return
-  callback-url: https://api.winnticket.store/payletter/callback
-  cancel-url: https://api.winnticket.store/payletter/cancel
+  return-url: https://api.winnticket.store/api/payletter/return
+  callback-url: https://api.winnticket.store/api/payletter/callback
+  cancel-url: https://api.winnticket.store/api/payletter/cancel
 
 # 파트너 연동 (플러스앤)
 plusn:
