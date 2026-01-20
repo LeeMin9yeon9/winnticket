@@ -25,8 +25,8 @@ public class CoreWorksService {
         req.setOrderSeq("CW_TEST_" + System.currentTimeMillis());
         req.setBuyDate(LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
-        req.setName("홍길동");
-        req.setHp("01012341234");
+        req.setName("이민걍");
+        req.setHp("01094618018");
 
         CWOrderRequest.Item item = new CWOrderRequest.Item();
         item.setPin("");
@@ -71,4 +71,12 @@ public class CoreWorksService {
         return client.useSearch(req);
     }
 
+    // 티켓문자 재발송
+    public CWMmsResendResponse testMmsResend(String orderSeq, String hp) {
+        CWMmsResendRequest req = new CWMmsResendRequest();
+        req.setChannelCd(props.getChannelCd());
+        req.setOrderSeq(orderSeq);
+        req.setHp(hp);
+        return client.mmsResend(req);
+    }
 }
