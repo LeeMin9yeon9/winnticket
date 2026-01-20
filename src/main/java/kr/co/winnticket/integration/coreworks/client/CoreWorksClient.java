@@ -51,4 +51,9 @@ public class CoreWorksClient {
     public CWUseSearchResponse useSearch(CWUseSearchRequest req) {
         return post("/channel/general/v11/useSearch", req, CWUseSearchResponse.class);
     }
+
+    // 티켓문자 재발송
+    public CWMmsResendResponse mmsResend(CWMmsResendRequest req) {
+        return post("/channel/general/v11/mmsResend", req, CWMmsResendResponse.class);
+    }
 }
