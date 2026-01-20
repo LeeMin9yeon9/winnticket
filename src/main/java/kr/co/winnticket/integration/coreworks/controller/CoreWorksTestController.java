@@ -18,13 +18,13 @@ public class CoreWorksTestController {
         return service.testOrder();
     }
 
-    @GetMapping("/search")
-    public CWSearchResponse search(@ModelAttribute CWSearchRequest req) {
+    @PostMapping("/search")
+    public CWSearchResponse search(@RequestBody CWSearchRequest req) {
         return service.testSearch(req);
     }
 
     @PostMapping("/cancel")
-    public CWCancelResponse cancel(@ModelAttribute CWCancelRequest req) {
+    public CWCancelResponse cancel(@RequestBody CWCancelRequest req) {
         return service.testCancel(req);
     }
 
