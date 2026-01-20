@@ -138,7 +138,7 @@ public class OrderShopService {
                         reqDto.getCustomerName(),
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone(),
-                        "card"
+                        "creditcard"
                 );
             resDto.setPaymentStatus("REQUESTED");
             resDto.setPgProvider("PAYLETTER");
