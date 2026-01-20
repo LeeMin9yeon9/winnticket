@@ -8,10 +8,9 @@ import kr.co.winnticket.integration.payletter.service.PayletterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
-
 
 import java.util.Map;
+import java.util.UUID;
 
 @Log4j2
 @RestController
@@ -30,9 +29,11 @@ public class PayletterController {
                                                  @RequestParam Integer amount,
                                                  @RequestParam String customerName,
                                                  @RequestParam(required = false) String customerEmail,
-                                                 @RequestParam(required = false) String customerPhone) {
+                                                 @RequestParam(required = false) String customerPhone,
+                                                 @RequestParam(defaultValue ="card") String pdCode
+    ) {
 
-        return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone);
+        return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pdCode);
     }
 
     // Payletter 콜백 (성공시에만 옴)
