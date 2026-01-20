@@ -40,21 +40,25 @@ public class CoreWorksService {
 
     // 조회
     public CWSearchResponse testSearch(CWSearchRequest req) {
-        req.setChannelCd(props.getChannelCd());
-        req.setOrderSeq(req.getOrderSeq());
+        CWSearchRequest newReq = new CWSearchRequest();
+        newReq.setChannelCd(props.getChannelCd());
+        newReq.setOrderSeq(req.getOrderSeq());
 
-        CWSearchRequest.Pin pin = new CWSearchRequest.Pin();
-        pin.setPin(pin.getPin());
+        CWSearchRequest.Pin pinObj = new CWSearchRequest.Pin();
+        pinObj.setPin(req.getPinList().get(0).getPin());
+        newReq.setPinList(List.of(pinObj));
         return client.search(req);
     }
 
     // 취소
     public CWCancelResponse testCancel(CWCancelRequest req) {
-        req.setChannelCd(props.getChannelCd());
-        req.setOrderSeq(req.getOrderSeq());
+        CWCancelRequest newReq = new CWCancelRequest();
+        newReq.setChannelCd(props.getChannelCd());
+        newReq.setOrderSeq(req.getOrderSeq());
 
-        CWSearchRequest.Pin pin = new CWSearchRequest.Pin();
-        pin.setPin(pin.getPin());
+        CWCancelRequest.Pin pinObj = new CWCancelRequest.Pin();
+        pinObj.setPin(req.getPinList().get(0).getPin());
+        newReq.setPinList(List.of(pinObj));
         return client.cancel(req);
     }
 
