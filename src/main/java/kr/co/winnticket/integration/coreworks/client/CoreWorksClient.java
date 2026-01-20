@@ -1,7 +1,6 @@
 package kr.co.winnticket.integration.coreworks.client;
 
-import kr.co.winnticket.integration.coreworks.dto.CWOrderRequest;
-import kr.co.winnticket.integration.coreworks.dto.CWOrderResponse;
+import kr.co.winnticket.integration.coreworks.dto.*;
 import kr.co.winnticket.integration.coreworks.props.CoreWorksProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -36,5 +35,20 @@ public class CoreWorksClient {
     // 주문 등록
     public CWOrderResponse order(CWOrderRequest req) {
         return post("/channel/general/v11/order", req, CWOrderResponse.class);
+    }
+
+    // 조회
+    public CWSearchResponse search(CWSearchRequest req) {
+        return post("/channel/general/v11/search", req, CWSearchResponse.class);
+    }
+
+    // 취소
+    public CWCancelResponse cancel(CWCancelRequest req) {
+        return post("/channel/general/v11/cancel", req, CWCancelResponse.class);
+    }
+
+    // 사용조회
+    public CWUseSearchResponse useSearch(CWUseSearchRequest req) {
+        return post("/channel/general/v11/useSearch", req, CWUseSearchResponse.class);
     }
 }
