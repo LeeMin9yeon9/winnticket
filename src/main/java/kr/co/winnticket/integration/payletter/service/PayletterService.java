@@ -52,9 +52,15 @@ public class PayletterService {
                 : firstProductName + " 외 " + (itemCount - 1) + "건";
 
         // user_id는 "결제자 식별값"이라 전화번호/이메일/세션값 추천
-        String userId = (customerPhone != null && !customerPhone.isBlank())
-                ? customerPhone
-                : (customerEmail != null ? customerEmail : orderNumber);
+        String userId = null;
+
+        if (customerPhone != null && !customerPhone.isBlank()) {
+            userId = customerPhone.replaceAll("[^0-9]", ""); // 숫자만
+        } else if (customerEmail != null && !customerEmail.isBlank()) {
+            userId = customerEmail;
+        } else {
+            userId = orderNumber;
+        }
 
         boolean hasEmail = customerEmail != null && !customerEmail.isBlank();
 
