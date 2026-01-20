@@ -34,4 +34,10 @@ public class CoreWorksTestController {
             @RequestParam String end) {
         return service.testUseSearch(start, end);
     }
+
+    @PostMapping("/mmsResend")
+    public CWMmsResendResponse mmsResend(@RequestBody CWMmsResendRequest req) {
+        // Swagger에서 orderSeq/hp만 넣어도 되게
+        return service.testMmsResend(req.getOrderSeq(), req.getHp());
+    }
 }
