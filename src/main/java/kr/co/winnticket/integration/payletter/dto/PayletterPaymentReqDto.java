@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.payletter.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,6 +17,7 @@ import lombok.Setter;
 public class PayletterPaymentReqDto {
 
     @NotNull
+    @JsonProperty("pgcode")
     @Schema(description = "결제수단 코드",  example = "creditcard")
     private String pgCode;
 
@@ -41,6 +43,7 @@ public class PayletterPaymentReqDto {
     private String orderNo;
 
     @NotNull
+    @JsonProperty("amount")
     @Schema(description = "결제금액")
     private Integer amount;
 
