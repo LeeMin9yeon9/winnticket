@@ -196,14 +196,46 @@
     </select>
 
     <!--콜백 성공 처리-->
-    <update id="updatePayletterCallbackSuccess">
+    <update id="updatePayletterCallbackSuccessIfNotPaid">
         UPDATE orders
         SET
-            pg_callback_payload = CAST(#{payload} AS jsonb),
-            pg_callback_received_at = NOW(),
-            payment_status = 'PAID',
-            paid_at = NOW(),
-            updated_at = NOW()
-        WHERE id = #{orderId}::uuid
+        payment_status = 'PAID'::payment_status,
+        paid_at = CURRENT_TIMESTAMP,
+        pg_provider = 'PAYLETTER',
+        pg_tid = #{tid},
+        pg_approval_no = #{cid},
+        pg_callback_payload = CAST(#{payloadJson} AS jsonb),
+        pg_callback_received_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{orderId}
+        AND payment_status <> 'PAID'::payment_status
     </update>
+
+    <!--콜백 실패 처리-->
+    <update id="updatePayletterCallbackFailed">
+        UPDATE orders
+        SET
+            payment_status = 'FAILED'::payment_status,
+            payment_fail_reason = #{failReason},
+
+            pg_callback_payload = CAST(#{payloadJson} AS jsonb),
+            pg_callback_received_at = CURRENT_TIMESTAMP,
+
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{orderId}
+    </update>
+
+    <!--주문 결제정보 조회 검증용임-->
+    <select id="selectOrderPaymentInfo" resultType="map">
+        SELECT
+            id,
+            order_number,
+            final_price,
+            payment_status,
+            pg_provider,
+            pg_tid,
+            pg_approval_no
+        FROM orders
+        WHERE id = #{orderId}
+    </select>
 </mapper>

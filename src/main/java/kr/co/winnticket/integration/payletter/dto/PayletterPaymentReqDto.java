@@ -8,12 +8,12 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@Schema(title = "[Payletter 결제요청 응답DTO] PayMentRequestResDto")
+@Schema(title = "[Payletter 결제요청 DTO] PayMentRequestResDto")
 public class PayletterPaymentReqDto {
 
     @NotNull
     @JsonProperty("pgcode")
-    @Schema(description = "결제수단 코드")
+    @Schema(description = "결제수단 코드",  example = "creditcard")
     private String pgCode;
 
     @NotNull
@@ -43,7 +43,7 @@ public class PayletterPaymentReqDto {
     private Integer amount;
 
     @JsonProperty("taxfree_amount")
-    @Schema(description = "비과세금액")
+    @Schema(description = "비과세 금액")
     private Integer taxfreeAmount;
 
     @JsonProperty("tax_amount")
