@@ -1,6 +1,7 @@
 package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
@@ -36,9 +37,12 @@ public class PayletterService {
         Map<String, Object> summary = orderShopMapper.selectPayletterProductSummary(orderId);
 
         String firstProductName = summary != null ? (String) summary.get("first_product_name") : null;
+
+        // 주문 내 상품 개수
         Number itemCountNum = summary != null ? (Number) summary.get("item_count") : null;
         int itemCount = (itemCountNum != null) ? itemCountNum.intValue() : 1;
 
+        // 상품명이 없으면 기본 문구 대체
         if (firstProductName == null || firstProductName.isBlank()) {
             firstProductName = "윈앤티켓 주문";
         }
@@ -54,7 +58,7 @@ public class PayletterService {
 
         boolean hasEmail = customerEmail != null && !customerEmail.isBlank();
 
-        // 주문조회
+        // payletter 결제 요청dto 생성
         PayletterPaymentReqDto req = PayletterPaymentReqDto.builder()
                 .pgCode("creditcard")  // 결제수단
                 .userId(userId)       // 주문자ID
@@ -75,10 +79,8 @@ public class PayletterService {
                 .returnUrl(properties.getReturnUrl())    // 결제 완료 후 URL
                 .build();
 
-        log.info("[PAYLETTER] paymentRequest start. orderId={}, orderNo={}, amount={}",
-                orderId, orderNumber, finalPrice);
 
-        // payletter API 호출
+        // payletter  결제 요청 API 호출
         PayletterPaymentResDto res = payletterClient.requestPayment(req);
 
         if (res == null) {
@@ -89,13 +91,13 @@ public class PayletterService {
             throw new IllegalStateException("Payletter 결제요청 실패 code=" + res.getCode() + ", message=" + res.getMessage());
         }
 
-        // orders 테이블 업데이트 (요청 단계에서는 pg_tid에 token저장)
+        // order DB 업데이트 (요청 단계에서는 pg_tid에 token저장)
         orderShopMapper.updatePayletterRequest(
                 orderId,
-                "PAYLETTER",
-                String.valueOf(res.getToken()),
-                res.getOnlineUrl(),
-                res.getMobileUrl()
+                "PAYLETTER",    // PG사 코드
+                String.valueOf(res.getToken()),     // token저장(tid 임시)
+                res.getOnlineUrl(),     // PC 결제 URL
+                res.getMobileUrl()      // 모바일 결제 URL
         );
 
         log.info("[PAYLETTER] paymentRequest success. orderId={}, token={}", orderId, res.getToken());
@@ -106,17 +108,90 @@ public class PayletterService {
     //callback payload 그대로 저장 + 결제완료 처리
     @Transactional
     public void handleCallback(Map<String, Object> payload) {
+
+        String payloadJson = null;
+
         try {
+
+            // custom_parameter에서 orderId ㄲㅓㄴㅐㅁ
             String custom = payload.get("custom_parameter") != null ? String.valueOf(payload.get("custom_parameter")) : null;
             if (custom == null || custom.isBlank()) throw new IllegalArgumentException("custom_parameter missing");
 
             UUID orderId = UUID.fromString(custom);
 
-            String payloadJson = objectMapper.writeValueAsString(payload);
+            // payload(Map) Json 문자열로 저장
+            payloadJson = objectMapper.writeValueAsString(payload);
 
-            orderShopMapper.updatePayletterCallbackSuccess(orderId, payloadJson);
+            // 콜백 필수 값 추출
+            String userId = payload.get("user_id") != null ? String.valueOf(payload.get("user_id")) : null;
+            Integer amount = payload.get("amount") != null ? Integer.parseInt(String.valueOf(payload.get("amount"))) : null;
+
+            String tid = payload.get("tid") != null ? String.valueOf(payload.get("tid")) : null;  // 거래ID
+            String cid = payload.get("cid") != null ? String.valueOf(payload.get("cid")) : null;  // 승인번호(문서상 cid)
+            String payhash = payload.get("payhash") != null ? String.valueOf(payload.get("payhash")) : null;
+
+            if (userId == null || userId.isBlank()) throw new IllegalArgumentException("user_id missing");
+            if (amount == null) throw new IllegalArgumentException("amount missing");
+            if (tid == null || tid.isBlank()) throw new IllegalArgumentException("tid missing");
+            if (payhash == null || payhash.isBlank()) throw new IllegalArgumentException("payhash missing");
+
+            // 주문 정보 조회
+            Map<String, Object> orderInfo = orderShopMapper.selectOrderPaymentInfo(orderId);
+            if (orderInfo == null) {
+                throw new IllegalStateException("주문 없음 orderId=" + orderId);
+            }
+            Integer finalPrice = orderInfo.get("final_price") != null
+                    ? ((Number) orderInfo.get("final_price")).intValue()
+                    : null;
+
+            if (finalPrice == null) throw new IllegalStateException("final_price 없음");
+
+            // 결제금액 불일치 시 실패 처리
+            if (amount == null || !amount.equals(finalPrice)) {
+                throw new IllegalStateException("결제금액 불일치. order=" + finalPrice + ", callback=" + amount);
+            }
+
+            // payhash 검증
+            // payhash = SHA256(user_id + amount + tid + 결제요청 API Key)
+            String apiKey = properties.getPaymentApiKey();
+            if (apiKey == null || apiKey.isBlank()) {
+                throw new IllegalStateException("paymentApiKey 설정 없음");
+            }
+
+            String expected = PayletterHashUtil.sha256(userId + amount + tid + apiKey);
+
+            if (!expected.equalsIgnoreCase(payhash)) {
+                throw new IllegalStateException("payhash 검증 실패");
+            }
+
+            // 결제완료 업데이트
+            int updated = orderShopMapper.updatePayletterCallbackSuccessIfNotPaid(orderId, payloadJson, tid, cid);
+
+            // 이미 누군가 먼저 처리했으면 updated=0
+            if (updated == 0) {
+                log.info("[PAYLETTER] callback already processed. orderId={}", orderId);
+                return;
+            }
+
+            log.info("[PAYLETTER] callback success. orderId={}, tid={}, cid={}", orderId, tid, cid);
 
         } catch (Exception e) {
+            log.error("[PAYLETTER] callback 처리 실패 payload={}", payloadJson, e);
+
+            // orderId가 파싱되면 FAILED로 기록
+            try {
+                String custom = payload.get("custom_parameter") != null
+                        ? String.valueOf(payload.get("custom_parameter"))
+                        : null;
+
+                if (custom != null && !custom.isBlank()) {
+                    UUID orderId = UUID.fromString(custom);
+                    orderShopMapper.updatePayletterCallbackFailed(orderId, payloadJson, e.getMessage());
+                }
+            } catch (Exception ignore) {
+                // 여기서는 추가 예외 무시
+            }
+
             throw new IllegalStateException("콜백 처리 실패", e);
         }
     }
