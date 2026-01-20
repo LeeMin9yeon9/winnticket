@@ -199,16 +199,18 @@
     <update id="updatePayletterCallbackSuccessIfNotPaid">
         UPDATE orders
         SET
-        payment_status = 'PAID'::payment_status,
+            payment_status = 'PAID'::payment_status,
         paid_at = CURRENT_TIMESTAMP,
         pg_provider = 'PAYLETTER',
         pg_tid = #{tid},
-        pg_approval_no = #{cid},
-        pg_callback_payload = CAST(#{payloadJson} AS jsonb),
-        pg_callback_received_at = CURRENT_TIMESTAMP,
-        updated_at = CURRENT_TIMESTAMP
+            pg_approval_no = #{cid},
+            pg_callback_payload = CAST(#{payloadJson} AS jsonb),
+            pg_callback_received_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}
-        AND payment_status <> 'PAID'::payment_status
+      <![CDATA[
+          AND payment_status <> 'PAID'::payment_status
+        ]]>
     </update>
 
     <!--콜백 실패 처리-->
