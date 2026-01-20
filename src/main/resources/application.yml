@@ -63,7 +63,13 @@ payletter:
   callback-url: https://api.winnticket.store/payletter/callback
   cancel-url: https://api.winnticket.store/payletter/cancel
 
+# 파트너 연동 (플러스앤)
 plusn:
-  base-url: http://partnerdev.tourok.co.kr   # 운영은 https://partner.tourok.co.kr
+  base-url: http://partnerdev.tourok.co.kr   # 운영 : https://partner.tourok.co.kr
   order-company: "148"
 
+# 파트너 연동 (민속촌 코어웍스)
+coreworks:
+  base-url: http://dev-api.core-works.co.kr:8050 # 운영 : https://api.core-works.co.kr/channel/general/v11/order
+  auth-token: "1505ee1f89cc000efdda3b34ee2485fbd9e50be4943ad0c9acf3ceab7bfc225a" #운영 : 59bee29ea0f864ad803b8af2ff1f029d51dba857a2732015b286f4f622a1f094
+  channel-cd: "HYUNDAINTOUR"
