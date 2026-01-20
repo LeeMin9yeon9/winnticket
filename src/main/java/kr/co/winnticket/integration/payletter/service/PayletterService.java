@@ -58,9 +58,13 @@ public class PayletterService {
 
         boolean hasEmail = customerEmail != null && !customerEmail.isBlank();
 
+        // pgCode 기본값 강제
+        // 넘어온 값이 비어있으면 card로 강제
+        String safePgCode = (pgCode == null || pgCode.isBlank()) ? "card" : pgCode;
+
         // payletter 결제 요청dto 생성
         PayletterPaymentReqDto req = PayletterPaymentReqDto.builder()
-                .pgCode(pgCode)  // 결제수단
+                .pgCode(safePgCode)  // 결제수단
                 .userId(userId)       // 주문자ID
                 .userName(customerName)  // 주문자이름
                 .serviceName(properties.getServiceName())   //결제 서비스명

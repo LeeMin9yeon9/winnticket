@@ -1,8 +1,7 @@
 package kr.co.winnticket.integration.coreworks.service;
 
 import kr.co.winnticket.integration.coreworks.client.CoreWorksClient;
-import kr.co.winnticket.integration.coreworks.dto.CWOrderRequest;
-import kr.co.winnticket.integration.coreworks.dto.CWOrderResponse;
+import kr.co.winnticket.integration.coreworks.dto.*;
 import kr.co.winnticket.integration.coreworks.props.CoreWorksProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,4 +37,34 @@ public class CoreWorksService {
 
         return client.order(req);
     }
+
+    // 조회
+    public CWSearchResponse testSearch(CWSearchRequest req) {
+        req.setChannelCd(props.getChannelCd());
+        req.setOrderSeq(req.getOrderSeq());
+
+        CWSearchRequest.Pin pin = new CWSearchRequest.Pin();
+        pin.setPin(pin.getPin());
+        return client.search(req);
+    }
+
+    // 취소
+    public CWCancelResponse testCancel(CWCancelRequest req) {
+        req.setChannelCd(props.getChannelCd());
+        req.setOrderSeq(req.getOrderSeq());
+
+        CWSearchRequest.Pin pin = new CWSearchRequest.Pin();
+        pin.setPin(pin.getPin());
+        return client.cancel(req);
+    }
+
+    // 사용조회
+    public CWUseSearchResponse testUseSearch(String start, String end) {
+        CWUseSearchRequest req = new CWUseSearchRequest();
+        req.setChannelCd(props.getChannelCd());
+        req.setUseStartDate(start);
+        req.setUseEndDate(end);
+        return client.useSearch(req);
+    }
+
 }

@@ -1,6 +1,6 @@
 package kr.co.winnticket.integration.coreworks.controller;
 
-import kr.co.winnticket.integration.coreworks.dto.CWOrderResponse;
+import kr.co.winnticket.integration.coreworks.dto.*;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,5 +16,22 @@ public class CoreWorksTestController {
     @GetMapping("/order")
     public CWOrderResponse testOrder() {
         return service.testOrder();
+    }
+
+    @GetMapping("/search")
+    public CWSearchResponse search(@ModelAttribute CWSearchRequest req) {
+        return service.testSearch(req);
+    }
+
+    @PostMapping("/cancel")
+    public CWCancelResponse cancel(@ModelAttribute CWCancelRequest req) {
+        return service.testCancel(req);
+    }
+
+    @GetMapping("/useSearch")
+    public CWUseSearchResponse useSearch(
+            @RequestParam String start,
+            @RequestParam String end) {
+        return service.testUseSearch(start, end);
     }
 }
