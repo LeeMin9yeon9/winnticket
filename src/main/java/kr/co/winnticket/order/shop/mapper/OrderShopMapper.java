@@ -53,7 +53,7 @@ public interface OrderShopMapper {
     );
 
     // payletter 결제요청 결과 저장
-    void updatePayletterRequest(
+    int updatePayletterRequest(
             @Param("orderId") UUID orderId,
             @Param("pgProvider") String pgProvider,
             @Param("pgTid") String pgTid,
@@ -64,9 +64,23 @@ public interface OrderShopMapper {
     // payletter productName + 개수
     Map<String, Object> selectPayletterProductSummary(@Param("orderId") UUID orderId);
 
-    // payletter 콜백 저장 + 결제 완료처리
-    void updatePayletterCallbackSuccess(
+
+    //payletter 콜백 실패
+    int updatePayletterCallbackFailed(
             @Param("orderId") UUID orderId,
-            @Param("payload") String payloadJson
+            @Param("payloadJson") String payloadJson,
+            @Param("failReason") String failReason
     );
+
+    Map<String, Object> selectOrderPaymentInfo(@Param("orderId") UUID orderId);
+
+    // 결제 성공 콜백 처리 중복 방지
+    int updatePayletterCallbackSuccessIfNotPaid(
+            @Param("orderId") UUID orderId,
+            @Param("payloadJson") String payloadJson,
+            @Param("tid") String tid,
+            @Param("cid") String cid
+    );
+
+
 }

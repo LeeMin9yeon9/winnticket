@@ -25,7 +25,7 @@ public class SecurityConfig {
         http
                 .securityMatcher("/benepia/**",
                         "/benepia",
-                        "/benepia-batch/**"   // ✅ 배치 URL 추가
+                        "/benepia-batch/**"   // 배치 URL 추가
                 )
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
