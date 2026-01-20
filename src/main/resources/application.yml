@@ -55,8 +55,8 @@ benepia:
 
 payletter:
   base-url: https://testpgapi.payletter.com
-  client-id: auto_test1
-  payment-api-key: NUMzRDJFQzVERkRBNTQzQjY1MkUzMTQ3NThFREU2Mzg=
+  client-id: pay_test
+  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
   service-name: 페이레터
 
   return-url: https://api.winnticket.store/api/payletter/return
