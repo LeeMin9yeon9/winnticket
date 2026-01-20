@@ -26,6 +26,7 @@ public class PayletterClient {
         log.info("[PAYLETTER] baseUrl={}", props.getBaseUrl());
         log.info("[PAYLETTER] clientId={}", props.getClientId());
         log.info("[PAYLETTER] apiKey length={}", apiKey == null ? "null" : apiKey.length());
+        log.info("[PAYLETTER] pgCode={}", request.getPgCode());
         try{
 
         return WebClient.builder()
