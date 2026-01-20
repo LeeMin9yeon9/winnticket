@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.payletter.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
@@ -17,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class PayletterClient {
 
     private final PayletterProperties props;
+    private final ObjectMapper objectMapper;
 
     // payletter 결제 요청 API 호출 HTTP클라이언트
     public PayletterPaymentResDto requestPayment(PayletterPaymentReqDto request){
@@ -29,7 +31,9 @@ public class PayletterClient {
         log.info("[PAYLETTER] pgCode={}", request.getPgCode());
         try{
 
-        return WebClient.builder()
+            log.info("[PAYLETTER] requestJson={}", objectMapper.writeValueAsString(request));
+            return WebClient.builder()
+
                 .baseUrl(props.getBaseUrl())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 // 헤더 인증키
@@ -49,6 +53,8 @@ public class PayletterClient {
             fail.setCode(e.getStatusCode().value());
             fail.setMessage(e.getResponseBodyAsString());
             return fail;
+        }catch (Exception e) {
+            throw new IllegalStateException("Payletter requestPayment error", e);
         }
     }
 }
