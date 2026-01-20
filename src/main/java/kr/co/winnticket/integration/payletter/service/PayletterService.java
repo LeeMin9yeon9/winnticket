@@ -26,7 +26,7 @@ public class PayletterService {
 
     // Payletter 결제요청
     @Transactional
-    public PayletterPaymentResDto paymentRequest(UUID orderId, String orderNumber, Integer finalPrice, String customerName, String customerEmail,String customerPhone){
+    public PayletterPaymentResDto paymentRequest(UUID orderId, String orderNumber, Integer finalPrice, String customerName, String customerEmail,String customerPhone, String pgCode){
 
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
         if (orderNumber == null || orderNumber.isBlank()) throw new IllegalArgumentException("orderNumber is empty");
@@ -60,7 +60,7 @@ public class PayletterService {
 
         // payletter 결제 요청dto 생성
         PayletterPaymentReqDto req = PayletterPaymentReqDto.builder()
-                .pgCode("creditcard")  // 결제수단
+                .pgCode(pgCode)  // 결제수단
                 .userId(userId)       // 주문자ID
                 .userName(customerName)  // 주문자이름
                 .serviceName(properties.getServiceName())   //결제 서비스명
