@@ -53,7 +53,7 @@ public class OrderShopService {
 
             // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
             PaymentMethod paymentMethod = reqDto.getPaymentMethod();
-            if (!cardAllowed) {
+            if (!cardAllowed && paymentMethod == PaymentMethod.CARD) {
                 paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
             }
 
@@ -130,7 +130,13 @@ public class OrderShopService {
             resDto.setPaymentStatus("READY");
             return resDto;
         }
+
             if (paymentMethod == PaymentMethod.CARD) {
+                String pgCode = reqDto.getPgCode();
+                if (pgCode == null || pgCode.isBlank()) {
+                    pgCode = "creditcard";
+                }
+
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,
                         orderNumber,
@@ -138,7 +144,7 @@ public class OrderShopService {
                         reqDto.getCustomerName(),
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone(),
-                        "creditcard"
+                        pgCode
                 );
             resDto.setPaymentStatus("REQUESTED");
             resDto.setPgProvider("PAYLETTER");

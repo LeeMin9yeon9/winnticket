@@ -44,6 +44,9 @@ public class OrderCreateReqDto {
     @Schema(description = "결제수단", example = "BANK_TRANSFER 또는 CARD")
     private PaymentMethod paymentMethod;
 
+    @Schema(description = "PG 결제수단 코드(CARD일 때만 사용)", example = "creditcard")
+    private String pgCode;
+
     @Valid
     @NotEmpty
     @Schema(description = "주문 상품 목록")
