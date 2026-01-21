@@ -36,7 +36,7 @@ public class PayletterCancelResDto {
     @Schema(description = "에러 메세지")
     private String message;
 
-    public boolean isSuccess() {
-        return code != null && code == 0;
+    public boolean isCanceled() {
+        return tid != null && !tid.isBlank();
     }
 }

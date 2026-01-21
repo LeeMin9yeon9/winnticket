@@ -2,10 +2,8 @@ package kr.co.winnticket.integration.payletter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import kr.co.winnticket.integration.payletter.dto.PayletterCallbackReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterCallbackResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +15,14 @@ import java.util.UUID;
 @Log4j2
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/payletter")
+//@RequestMapping("/api/payletter")
 @Tag(name = "Paylatter" , description = "Paylatter 연동 API")
 public class PayletterController {
 
     private final PayletterService service;
 
     // (테스트용) 결제요청 API
-    @PostMapping("/request/{orderId}")
+    @PostMapping("api/payletter/request/{orderId}")
     @Operation(summary = "Payletter 결제요청(테스트)", description = "orderId로 결제요청 후 결제 URL 리턴")
     public PayletterPaymentResDto requestPayment(@PathVariable UUID orderId,
                                                  @RequestParam String orderNumber,
@@ -52,7 +50,7 @@ public class PayletterController {
 //        }
 //    }
 // Payletter 콜백 (성공시에만 옴)
-    @PostMapping("/callback")
+    @PostMapping("api/payletter/callback")
     @Operation(summary = "Payletter callback_url", description = "결제 성공 시 Payletter가 호출")
     public PayletterCallbackResDto callback(@RequestBody PayletterCallbackReqDto req) {
         try {
@@ -64,23 +62,23 @@ public class PayletterController {
         }
     }
 
-    // 취소(환불) API
-    @PostMapping("/cancel/{orderId}")
-    @Operation(summary = "Payletter 결제취소", description = "Payletter 주문취소 API 호출 후 orders.payment_status=CANCELED 처리")
-    public PayletterCancelResDto cancel(@PathVariable UUID orderId, HttpServletRequest request) {
+    // 취소(환불테스트용) API
+//    @PostMapping("api/admin/payletter/cancel/{orderId}")
+//    @Operation(summary = "Payletter 결제취소", description = "Payletter 주문취소 API 호출 후 orders.payment_status=CANCELED 처리")
+//    public PayletterCancelResDto cancel(@PathVariable UUID orderId, HttpServletRequest request) {
+//
+//        String ipAddr = request.getRemoteAddr();
+//
+//        return service.cancel(orderId, ipAddr);
+//    }
 
-        String ipAddr = request.getRemoteAddr();
 
-        return service.cancel(orderId, ipAddr);
-    }
-
-
-    @GetMapping("/return")
+    @GetMapping("api/payletter/return")
     public String payReturn() {
         return "RETURN_OK";
     }
 
-    @GetMapping("/cancel")
+    @GetMapping("api/payletter/cancel")
     public String payCancel() {
         return "CANCEL_OK";
     }

@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.mapper;
 
-import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.order.admin.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

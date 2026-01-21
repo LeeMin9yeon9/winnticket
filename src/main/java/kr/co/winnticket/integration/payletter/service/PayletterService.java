@@ -105,7 +105,8 @@ public class PayletterService {
                 "PAYLETTER",    // PG사 코드
                 String.valueOf(res.getToken()),     // token저장(tid 임시)
                 res.getOnlineUrl(),     // PC 결제 URL
-                res.getMobileUrl()      // 모바일 결제 URL
+                res.getMobileUrl(),      // 모바일 결제 URL
+                pgCode
         );
 
         log.info("[PAYLETTER] paymentRequest success. orderId={}, token={}", orderId, res.getToken());
@@ -249,7 +250,7 @@ public class PayletterService {
         PayletterCancelResDto res = payletterClient.cancelPayment(req);
 
         if (res == null) throw new IllegalStateException("[Payletter] 취소 실패: 응답 null");
-        if (!res.isSuccess()) {
+        if (!res.isCanceled()) {
             throw new IllegalStateException("[Payletter] 취소 실패 code=" + res.getCode() + ", message=" + res.getMessage());
         }
         // DB 업데이트
