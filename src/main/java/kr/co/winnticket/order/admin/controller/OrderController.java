@@ -3,7 +3,10 @@ package kr.co.winnticket.order.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import kr.co.winnticket.common.dto.ApiResponse;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
+import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
@@ -24,6 +27,7 @@ import java.util.UUID;
 
 public class OrderController {
     private final OrderService service;
+    private final PayletterService payletterService;
 
     // 주문 상태별 카운트 조회
     @GetMapping("/status")
@@ -98,5 +102,15 @@ public class OrderController {
         return ResponseEntity.ok(
                 ApiResponse.success("티켓사용 완료", id)
         );
+    }
+
+    // payletter 취소(환불) API
+    @PostMapping("/payletter/cancel/{orderId}")
+    @Operation(summary = "Payletter 결제취소", description = "Payletter 주문취소 API 호출 후 orders.payment_status=CANCELED 처리")
+    public PayletterCancelResDto cancel(@PathVariable UUID orderId, HttpServletRequest request) {
+
+        String ipAddr = request.getRemoteAddr();
+
+        return payletterService.cancel(orderId, ipAddr);
     }
 }
