@@ -177,6 +177,7 @@
             pg_tid = #{pgTid},
             pg_online_url = #{pgOnlineUrl},
             pg_mobile_url = #{pgMobileUrl},
+            pg_code = #{pgCode},
             payment_status = 'REQUESTED',
             updated_at = NOW()
         WHERE id = #{orderId}::uuid
@@ -241,4 +242,18 @@
         FROM orders
         WHERE id = #{orderId}
     </select>
+
+    <!--payletter 주문취소 -->
+    <update id="updatePayletterCancelSuccess">
+        UPDATE orders
+        SET
+        payment_status = 'CANCELED'::payment_status,
+        canceled_at = NOW(),
+        pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
+        updated_at = NOW()
+        WHERE id = #{orderId}::uuid
+        <![CDATA[
+          AND payment_status <> 'CANCELED'::payment_status
+        ]]>
+    </update>
 </mapper>

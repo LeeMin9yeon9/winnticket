@@ -58,7 +58,8 @@ public interface OrderShopMapper {
             @Param("pgProvider") String pgProvider,
             @Param("pgTid") String pgTid,
             @Param("pgOnlineUrl") String pgOnlineUrl,
-            @Param("pgMobileUrl") String pgMobileUrl
+            @Param("pgMobileUrl") String pgMobileUrl,
+            @Param("pgCode") String pgCode
     );
 
     // payletter 상품명 + 개수
