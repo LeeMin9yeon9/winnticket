@@ -333,4 +333,40 @@
             updated_at = NOW()
         WHERE id = #{orderId}
     </update>
+
+    <!--payletter 결제 연동 정보 조회-->
+    <select id="selectOrderPayInfoByOrderNo" resultType="map">
+        SELECT
+            id,
+            order_number,
+            payment_status,
+            final_price,
+            pg_provider,
+            pg_tid,
+            pg_online_url,
+            pg_mobile_url,
+            customer_name,
+            customer_phone,
+            customer_email,
+            canceled_at,
+            pg_cancel_payload,
+            created_at,
+            updated_at
+        FROM orders
+        WHERE order_number = #{orderNo}
+    </select>
+
+    <!--payletter 주문취소 -->
+    <update id="updatePayletterCancelSuccess">
+        UPDATE orders
+        SET
+            payment_status = 'CANCELED'::payment_status,
+        canceled_at = NOW(),
+        pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
+            updated_at = NOW()
+        WHERE id = #{orderId}::uuid
+        <![CDATA[
+          AND payment_status <> 'CANCELED'::payment_status
+        ]]>
+    </update>
 </mapper>
