@@ -61,17 +61,11 @@ public interface OrderShopMapper {
             @Param("pgMobileUrl") String pgMobileUrl
     );
 
-    // payletter productName + 개수
+    // payletter 상품명 + 개수
     Map<String, Object> selectPayletterProductSummary(@Param("orderId") UUID orderId);
 
 
-    //payletter 콜백 실패
-    int updatePayletterCallbackFailed(
-            @Param("orderId") UUID orderId,
-            @Param("payloadJson") String payloadJson,
-            @Param("failReason") String failReason
-    );
-
+    // payletter 주문 결제정보 조회(금액검증.취소)
     Map<String, Object> selectOrderPaymentInfo(@Param("orderId") UUID orderId);
 
     // 결제 성공 콜백 처리 중복 방지
@@ -80,6 +74,19 @@ public interface OrderShopMapper {
             @Param("payloadJson") String payloadJson,
             @Param("tid") String tid,
             @Param("cid") String cid
+    );
+
+    //payletter 콜백 실패
+    int updatePayletterCallbackFailed(
+            @Param("orderId") UUID orderId,
+            @Param("payloadJson") String payloadJson,
+            @Param("failReason") String failReason
+    );
+
+    // payletter 취소 성공 처리
+    int updatePayletterCancelSuccess(
+            @Param("orderId") UUID orderId,
+            @Param("payloadJson") String payloadJson
     );
 
 

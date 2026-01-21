@@ -207,7 +207,7 @@
             pg_callback_payload = CAST(#{payloadJson} AS jsonb),
             pg_callback_received_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{orderId}
+        WHERE id = #{orderId}::uuid
       <![CDATA[
           AND payment_status <> 'PAID'::payment_status
         ]]>
@@ -221,10 +221,11 @@
             payment_fail_reason = #{failReason},
 
             pg_callback_payload = CAST(#{payloadJson} AS jsonb),
+            payment_fail_reason = #{reason},
             pg_callback_received_at = CURRENT_TIMESTAMP,
 
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{orderId}
+        WHERE id = #{orderId}::uuid
     </update>
 
     <!--주문 결제정보 조회 검증용임-->
