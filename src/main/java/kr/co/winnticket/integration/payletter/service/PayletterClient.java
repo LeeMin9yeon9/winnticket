@@ -104,7 +104,7 @@ public class PayletterClient {
             return WebClient.builder()
                     .baseUrl(props.getBaseUrl())
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getSearchApiKey())
                     .build()
                     .get()
                     .uri(uriBuilder -> uriBuilder
@@ -137,7 +137,7 @@ public class PayletterClient {
             return WebClient.builder()
                     .baseUrl(props.getBaseUrl())
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getSearchApiKey())
                     .build()
                     .post()
                     .uri("v1.0/payments/status")
