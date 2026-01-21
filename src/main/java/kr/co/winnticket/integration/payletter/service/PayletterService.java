@@ -66,13 +66,9 @@ public class PayletterService {
 
         boolean hasEmail = customerEmail != null && !customerEmail.isBlank();
 
-        // pgCode 기본값 강제
-        // 넘어온 값이 비어있으면 card로 강제
-        String safePgCode = (pgCode == null || pgCode.isBlank()) ? "card" : pgCode;
-
         // payletter 결제 요청dto 생성
         PayletterPaymentReqDto req = PayletterPaymentReqDto.builder()
-                .pgCode(safePgCode)  // 결제수단
+                .pgCode(pgCode)  // 결제수단
                 .userId(userId)       // 주문자ID
                 .userName(customerName)  // 주문자이름
                 .serviceName(properties.getServiceName())   //결제 서비스명
@@ -227,16 +223,23 @@ public class PayletterService {
         if (tid == null || tid.isBlank()) throw new IllegalStateException("취소 불가: pg_tid(tid) 없음");
 
 
-        String userId;
         String phone = orderInfo.get("customer_phone") != null ? String.valueOf(orderInfo.get("customer_phone")) : null;
         String email = orderInfo.get("customer_email") != null ? String.valueOf(orderInfo.get("customer_email")) : null;
+        String orderNumber = orderInfo.get("order_number") != null ? String.valueOf(orderInfo.get("order_number")) : null;
 
+        String userId;
         if (phone != null && !phone.isBlank()) userId = phone.replaceAll("[^0-9]", "");
         else if (email != null && !email.isBlank()) userId = email;
-        else userId = String.valueOf(orderInfo.get("order_number"));
+        else userId = orderNumber;
+
+        //pgCode
+        String pgCode = orderInfo.get("pg_code") != null ? String.valueOf(orderInfo.get("pg_code")) : null;
+        if (pgCode == null || pgCode.isBlank()) {
+            pgCode = "creditcard";
+        }
 
         PayletterCancelReqDto req = PayletterCancelReqDto.builder()
-                .pgCode("kakaopay") // creditcard
+                .pgCode(pgCode) // creditcard
                 .clientId(properties.getClientId())
                 .userId(userId)
                 .tid(tid)
