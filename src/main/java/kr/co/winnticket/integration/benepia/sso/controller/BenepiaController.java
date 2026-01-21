@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Tag(name = "베네피아", description = "베네피아 -> 윈앤티켓 웹연동(ECB)1")
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/benepia")
+@RequestMapping({"/benepia", "/api/benepia"})
 public class BenepiaController {
 
     private final BenepiaEntryService entryService;

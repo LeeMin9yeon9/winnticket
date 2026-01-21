@@ -3,6 +3,8 @@ package kr.co.winnticket.integration.payletter.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelReqDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
@@ -204,5 +206,61 @@ public class PayletterService {
 
             throw new IllegalStateException("콜백 처리 실패", e);
         }
+    }
+
+    // 결제 취소
+    @Transactional
+    public PayletterCancelResDto cancel(UUID orderId, String ipAddr){
+
+        if (orderId == null) throw new IllegalArgumentException("orderId is null");
+        if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
+
+        Map<String, Object> orderInfo = orderShopMapper.selectOrderPaymentInfo(orderId);
+        if(orderInfo == null) throw new IllegalStateException("주문 없음 orderId="+orderId);
+
+        String pgProvider = orderInfo.get("pg_provider") != null ? String.valueOf(orderInfo.get("pg_provider")) : null;
+        if(pgProvider == null || !"PAYLETTER".equalsIgnoreCase(pgProvider)){
+            throw new IllegalStateException("PAYLETTER 주문이 아닙니다. pgProvider=" + pgProvider);
+        }
+
+        String tid = orderInfo.get("pg_tid") != null ? String.valueOf(orderInfo.get("pg_tid")) : null;
+        if (tid == null || tid.isBlank()) throw new IllegalStateException("취소 불가: pg_tid(tid) 없음");
+
+
+        String userId;
+        String phone = orderInfo.get("customer_phone") != null ? String.valueOf(orderInfo.get("customer_phone")) : null;
+        String email = orderInfo.get("customer_email") != null ? String.valueOf(orderInfo.get("customer_email")) : null;
+
+        if (phone != null && !phone.isBlank()) userId = phone.replaceAll("[^0-9]", "");
+        else if (email != null && !email.isBlank()) userId = email;
+        else userId = String.valueOf(orderInfo.get("order_number"));
+
+        PayletterCancelReqDto req = PayletterCancelReqDto.builder()
+                .pgCode("kakaopay") // creditcard
+                .clientId(properties.getClientId())
+                .userId(userId)
+                .tid(tid)
+                .ipAddr(ipAddr)
+                .build();
+
+        PayletterCancelResDto res = payletterClient.cancelPayment(req);
+
+        if (res == null) throw new IllegalStateException("[Payletter] 취소 실패: 응답 null");
+        if (!res.isSuccess()) {
+            throw new IllegalStateException("[Payletter] 취소 실패 code=" + res.getCode() + ", message=" + res.getMessage());
+        }
+        // DB 업데이트
+        String payloadJson;
+        try {
+            payloadJson = objectMapper.writeValueAsString(res);
+        } catch (Exception e) {
+            payloadJson = null;
+        }
+
+        orderShopMapper.updatePayletterCancelSuccess(orderId, payloadJson);
+
+        log.info("[PAYLETTER] cancel success orderId={}, tid={}", orderId, tid);
+        return res;
+
     }
 }
