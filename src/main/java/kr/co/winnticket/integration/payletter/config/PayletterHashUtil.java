@@ -17,4 +17,18 @@ public class PayletterHashUtil {
             throw new RuntimeException(e);
         }
     }
+
+    public static String makePayhash(String clientId, String tid, Integer amount, String apiKey) {
+        if (clientId == null || tid == null || amount == null || apiKey == null) {
+            throw new IllegalArgumentException("payhash param missing");
+        }
+        String raw = clientId + tid + amount + apiKey;
+        return sha256(raw);
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
 }

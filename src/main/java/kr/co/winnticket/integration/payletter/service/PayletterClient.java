@@ -2,6 +2,8 @@ package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelReqDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +56,45 @@ public class PayletterClient {
             fail.setMessage(e.getResponseBodyAsString());
             return fail;
         }catch (Exception e) {
-            throw new IllegalStateException("Payletter requestPayment error", e);
+            throw new IllegalStateException("[Paylette] requestPayment error", e);
+        }
+    }
+
+
+    // payletter 취소 요청
+    public PayletterCancelResDto cancelPayment(PayletterCancelReqDto reqDto){
+
+        String apiKey = props.getPaymentApiKey();
+
+        log.info("[PAYLETTER] baseUrl={}", props.getBaseUrl());
+        log.info("[PAYLETTER] clientId={}", props.getClientId());
+        log.info("[PAYLETTER] apiKey length={}", apiKey == null ? "null" : apiKey.length());
+        log.info("[PAYLETTER] cancel pgcode={}", reqDto.getPgCode());
+        log.info("[PAYLETTER] cancel tid={}", reqDto.getTid());
+
+        try{
+            log.info("[PAYLETTER] cancel requsetJson={}",objectMapper.writeValueAsString(reqDto));
+
+            return WebClient.builder()
+                    .baseUrl((props.getBaseUrl()))
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY "+apiKey)
+                    .build()
+                    .post()
+                    .uri("v1.0/payments/cancel")
+                    .bodyValue(reqDto)
+                    .retrieve()
+                    .bodyToMono(PayletterCancelResDto.class)
+                    .block();
+        } catch (WebClientResponseException e){
+            PayletterCancelResDto fail = new PayletterCancelResDto();
+            fail.setCode(e.getStatusCode().value());
+            fail.setMessage(e.getResponseBodyAsString());
+
+            return fail;
+
+        } catch (Exception e) {
+            throw new IllegalStateException("[Payletter] cancelPayment error", e);
         }
     }
 }

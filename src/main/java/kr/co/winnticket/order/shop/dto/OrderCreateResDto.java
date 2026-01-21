@@ -24,7 +24,7 @@ public class OrderCreateResDto {
     private int finalPrice;
 
     // 베네피아(Payletter 카드결제)일 때만 내려줌
-    @Schema(description = "PG 제공자", nullable = true)
+    @Schema(description = "PG 제공자(PAYLETTER)", nullable = true)
     private String pgProvider;
 
     @Schema(description = "PG 거래키(token)", nullable = true)
