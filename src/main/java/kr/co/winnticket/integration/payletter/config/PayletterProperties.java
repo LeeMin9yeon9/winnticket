@@ -22,6 +22,9 @@ public class PayletterProperties {
     @Schema(description = "Payletter 결제 API Key 노출금지", example = "MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=")
     private String paymentApiKey;
 
+    @Schema(description = "Payletter 조회 API Key")
+    private String searchApiKey;
+
     @Schema(description = "서비스명" , example = "페이레터")
     private String serviceName;
 
