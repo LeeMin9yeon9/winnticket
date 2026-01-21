@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
@@ -104,13 +106,38 @@ public class OrderController {
         );
     }
 
-    // payletter 취소(환불) API
     @PostMapping("/payletter/cancel/{orderId}")
     @Operation(summary = "Payletter 결제취소", description = "Payletter 주문취소 API 호출 후 orders.payment_status=CANCELED 처리")
-    public PayletterCancelResDto cancel(@PathVariable UUID orderId, HttpServletRequest request) {
+    public PayletterCancelResDto cancel(
+            @Parameter(description = "주문_ID") @PathVariable UUID orderId, HttpServletRequest request) {
 
         String ipAddr = request.getRemoteAddr();
 
         return payletterService.cancel(orderId, ipAddr);
+    }
+
+
+    @GetMapping("/payletter/transaction/list")
+    @Operation(summary = "Payletter 결제내역조회", description = "Payletter 거래내역 조회(transaction/list)")
+    public PayletterTransactionListResDto transactionList(
+            @Parameter(description = "조회 일자", example = "yyyyMMdd")
+            @RequestParam(required = false) String date,
+
+            @Parameter(description = "조회 기준", example = "transaction/settle")
+            @RequestParam(required = false) String dateType,
+
+            @Parameter(description = "결제수단 코드", example = "creditcard")
+            @RequestParam(required = false) String pgCode,
+
+            @Parameter(description = "주문번호")
+            @RequestParam(required = false) String orderNumber
+    ) {
+        return payletterService.getTransactionList(date, dateType, pgCode, orderNumber);
+    }
+
+    @GetMapping("/payletter/status/{orderNumber}")
+    @Operation(summary = "Payletter 거래상태조회", description = "Payletter 거래상태 조회(payments/status)")
+    public PayletterPaymentStatusResDto paymentStatus(@PathVariable String orderNumber) {
+        return payletterService.getPaymentStatus(orderNumber);
     }
 }
