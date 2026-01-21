@@ -32,7 +32,7 @@ public class PayletterController {
                                                  @RequestParam String customerName,
                                                  @RequestParam(required = false) String customerEmail,
                                                  @RequestParam(required = false) String customerPhone,
-                                                 @RequestParam(defaultValue ="creditcard") String pdCode
+                                                 @RequestParam String pdCode
     ) {
 
         return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pdCode);
