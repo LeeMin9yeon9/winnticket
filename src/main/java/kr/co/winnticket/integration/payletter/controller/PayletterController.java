@@ -1,6 +1,7 @@
 package kr.co.winnticket.integration.payletter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.integration.payletter.dto.PayletterCallbackReqDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterCallbackResDto;
@@ -24,13 +25,14 @@ public class PayletterController {
     // (테스트용) 결제요청 API
     @PostMapping("api/payletter/request/{orderId}")
     @Operation(summary = "Payletter 결제요청(테스트)", description = "orderId로 결제요청 후 결제 URL 리턴")
-    public PayletterPaymentResDto requestPayment(@PathVariable UUID orderId,
-                                                 @RequestParam String orderNumber,
-                                                 @RequestParam Integer amount,
-                                                 @RequestParam String customerName,
-                                                 @RequestParam(required = false) String customerEmail,
-                                                 @RequestParam(required = false) String customerPhone,
-                                                 @RequestParam String pdCode
+    public PayletterPaymentResDto requestPayment(
+            @Parameter(description = "주문 ID") @PathVariable UUID orderId,
+            @Parameter(description = "주문번호") @RequestParam String orderNumber,
+            @Parameter(description = "결제 금액") @RequestParam Integer amount,
+            @Parameter(description = "주문자 이름") @RequestParam String customerName,
+            @Parameter(description = "주문자 이메일") @RequestParam(required = false) String customerEmail,
+            @Parameter(description = "주문자 핸드폰") @RequestParam(required = false) String customerPhone,
+            @Parameter(description = "결제수단 코드") @RequestParam String pdCode
     ) {
 
         return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pdCode);
@@ -82,5 +84,7 @@ public class PayletterController {
     public String payCancel() {
         return "CANCEL_OK";
     }
+
+
 
 }

@@ -2,10 +2,7 @@ package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelReqDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
+import kr.co.winnticket.integration.payletter.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
@@ -97,4 +94,66 @@ public class PayletterClient {
             throw new IllegalStateException("[Payletter] cancelPayment error", e);
         }
     }
+
+    // 거래내역 조회
+    public PayletterTransactionListResDto getTransactionList(String clientId, String date, String dateType, String pgCode, String orderNumber){
+        try {
+            log.info("[PAYLETTER] getTransactionList clientId={}, date={}, dateType={}, pgcode={}, orderNo={}",
+                    clientId, date, dateType, pgCode, orderNumber);
+
+            return WebClient.builder()
+                    .baseUrl(props.getBaseUrl())
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+                    .build()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("v1.0/payments/transaction/list")
+                            .queryParam("client_id", clientId)
+                            .queryParam("date", date)
+                            .queryParam("date_type", dateType)
+                            .queryParamIfPresent("pgcode", (pgCode == null || pgCode.isBlank()) ? java.util.Optional.empty() : java.util.Optional.of(pgCode))
+                            .queryParamIfPresent("order_no", (orderNumber == null || orderNumber.isBlank()) ? java.util.Optional.empty() : java.util.Optional.of(orderNumber))
+                            .build())
+                    .retrieve()
+                    .bodyToMono(PayletterTransactionListResDto.class)
+                    .block();
+
+        } catch (WebClientResponseException e) {
+            return PayletterTransactionListResDto.builder()
+                    .code(e.getStatusCode().value())
+                    .message(e.getResponseBodyAsString())
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("Payletter getTransactionList error", e);
+        }
+    }
+
+    // 거래상태 조회
+    public PayletterPaymentStatusResDto getPaymentStatus(PayletterPaymentStatusReqDto request) {
+        try {
+            log.info("[PAYLETTER] getPaymentStatus requestJson={}", objectMapper.writeValueAsString(request));
+
+            return WebClient.builder()
+                    .baseUrl(props.getBaseUrl())
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+                    .build()
+                    .post()
+                    .uri("v1.0/payments/status")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(PayletterPaymentStatusResDto.class)
+                    .block();
+
+        } catch (WebClientResponseException e) {
+            return PayletterPaymentStatusResDto.builder()
+                    .code(e.getStatusCode().value())
+                    .message(e.getResponseBodyAsString())
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("Payletter getPaymentStatus error", e);
+        }
+    }
 }
+

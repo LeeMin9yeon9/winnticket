@@ -3,16 +3,15 @@ package kr.co.winnticket.integration.payletter.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelReqDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentReqDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
+import kr.co.winnticket.integration.payletter.dto.*;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
 @Log4j2
@@ -266,5 +265,70 @@ public class PayletterService {
         log.info("[PAYLETTER] cancel success orderId={}, tid={}", orderId, tid);
         return res;
 
+    }
+
+    // 결제내역 조회
+    public PayletterTransactionListResDto getTransactionList(String date, String dateType, String pgCode, String orderNumber) {
+
+        // date 기본값 - 오늘
+        if (date == null || date.isBlank()) {
+            date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        }
+
+        // dateType 기본값 - transaction
+        if (dateType == null || dateType.isBlank()) {
+            dateType = "transaction";
+        }
+
+        // pgCode 기본값: creditcard
+        if (pgCode == null || pgCode.isBlank()) {
+            pgCode = "creditcard";
+        }
+
+        PayletterTransactionListResDto res = payletterClient.getTransactionList(
+                properties.getClientId(),
+                date,
+                dateType,
+                pgCode,
+                orderNumber
+        );
+
+        if (res == null) {
+            throw new IllegalStateException("[PAYLETTER] transaction/list 응답 null");
+        }
+
+        // 페이레터 응답이 실패일 때 방지
+        if (res.getCode() != null && res.getCode() != 0) {
+            throw new IllegalStateException("[PAYLETTER] transaction/list 실패 code=" + res.getCode()
+                    + ", message=" + res.getMessage());
+        }
+
+        return res;
+    }
+
+    //거래상태조회
+    public PayletterPaymentStatusResDto getPaymentStatus(String orderNumber) {
+
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalArgumentException("orderNo is empty");
+        }
+
+        PayletterPaymentStatusReqDto req = PayletterPaymentStatusReqDto.builder()
+                .clientId(properties.getClientId())
+                .orderNo(orderNumber) // Payletter는 order_no로 받음
+                .build();
+
+        PayletterPaymentStatusResDto res = payletterClient.getPaymentStatus(req);
+
+        if (res == null) {
+            throw new IllegalStateException("[PAYLETTER] payments/status 응답 null");
+        }
+
+        if (res.getCode() != null && res.getCode() != 0) {
+            throw new IllegalStateException("[PAYLETTER] payments/status 실패 code=" + res.getCode()
+                    + ", message=" + res.getMessage());
+        }
+
+        return res;
     }
 }
