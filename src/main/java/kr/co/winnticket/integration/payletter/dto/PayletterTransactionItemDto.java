@@ -30,7 +30,7 @@ public class PayletterTransactionItemDto {
     @Schema(description = "결제 고유 번호")
     private String tid;
 
-    @JsonProperty("승인번호")
+    @Schema(description = "승인번호")
     private String cid;
 
     @Schema(description = "취소 금액")
