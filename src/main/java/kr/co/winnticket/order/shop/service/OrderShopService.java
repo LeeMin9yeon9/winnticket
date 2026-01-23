@@ -130,12 +130,12 @@ public class OrderShopService {
             return resDto;
         }
 
-            if (paymentMethod == PaymentMethod.CARD) {
-                String pgCode = String.valueOf(reqDto.getPaymentMethod());
-                if (pgCode == null || pgCode.isBlank()) {
-                    pgCode = "creditcard";
-                }
-
+            if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
+//                String pgCode = String.valueOf(reqDto.getPaymentMethod());
+//                if (pgCode == null || pgCode.isBlank()) {
+//                    pgCode = "creditcard";
+//                }
+                String paymentMethodValue = paymentMethod.name();
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,
                         orderNumber,
@@ -143,7 +143,7 @@ public class OrderShopService {
                         reqDto.getCustomerName(),
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone(),
-                        pgCode
+                        paymentMethodValue
                 );
             resDto.setPaymentStatus("REQUESTED");
             resDto.setPgProvider("PAYLETTER");

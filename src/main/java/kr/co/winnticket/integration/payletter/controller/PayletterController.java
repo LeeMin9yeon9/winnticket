@@ -31,10 +31,10 @@ public class PayletterController {
             @Parameter(description = "주문자 이름") @RequestParam String customerName,
             @Parameter(description = "주문자 이메일") @RequestParam(required = false) String customerEmail,
             @Parameter(description = "주문자 핸드폰") @RequestParam(required = false) String customerPhone,
-            @Parameter(description = "결제수단 코드") @RequestParam String pdCode
+            @Parameter(description = "결제수단 코드") @RequestParam String pgCode
     ) {
 
-        return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pdCode);
+        return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pgCode);
     }
 
     // Payletter 콜백 (성공시에만 옴)
