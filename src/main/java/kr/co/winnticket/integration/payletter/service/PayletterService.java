@@ -228,7 +228,7 @@ public class PayletterService {
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
         if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
 
-        Map<String, Object> orderInfo = orderShopMapper.selectOrderPaymentInfo(orderId);
+        Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
         if(orderInfo == null) throw new IllegalStateException("주문 없음 orderId="+orderId);
 
         String pgProvider = orderInfo.get("pg_provider") != null ? String.valueOf(orderInfo.get("pg_provider")) : null;
