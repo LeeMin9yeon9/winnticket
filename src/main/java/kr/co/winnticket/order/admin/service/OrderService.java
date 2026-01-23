@@ -2,23 +2,19 @@ package kr.co.winnticket.order.admin.service;
 
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
+import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.mapper.OrderStatusSmsMapper;
-import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
-import kr.co.winnticket.product.admin.service.ProductSmsTemplateService;
-import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoRequest;
-import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
-import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
 import kr.co.winnticket.sms.service.BizMsgService;
 import kr.co.winnticket.sms.service.SmsTemplateFinder;
 import kr.co.winnticket.sms.service.TemplateRenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,6 +32,7 @@ public class OrderService {
     private final SmsTemplateFinder smsTemplateFinder;
     private final TemplateRenderService templateRenderService;
     private final BizMsgService bizMsgService;
+    private final PayletterService payletterService;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -194,4 +191,49 @@ public class OrderService {
             mapper.updateOrderCompleted(orderId);
         }
     }
+
+    // 주문 취소
+    @Transactional
+    public void cancelOrder(UUID orderId){
+
+        // 주문 조회
+        OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
+        if(order == null){
+            throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
+        }
+
+        if (order.getPaymentStatus() == PaymentStatus.CANCELED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
+        // 결제 완료만 취소
+        if (order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalStateException("결제 완료된 주문만 취소할 수 있습니다.");
+        }
+
+        // 사용된 티켓 확인
+        int usedTicketCount = mapper.countUsedTickets(orderId);
+        if (usedTicketCount > 0) {
+            throw new IllegalStateException("사용된 티켓이 포함된 주문은 취소할 수 없습니다.");
+        }
+        // 2) 결제수단 분기
+        PaymentMethod method = order.getPaymentMethod();
+
+        if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            //cancelVirtualAccount(order);
+        } else if (method == PaymentMethod.CARD) {
+            payletterService.cancel(orderId);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
+        }
+
+       int updated = mapper.updateOrderCancelStatus(orderId);
+       if(updated != 1){
+           throw new IllegalStateException("주문 취소 상태 변경 실패");
+       }
+
+        log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
+
+    }
 }
+

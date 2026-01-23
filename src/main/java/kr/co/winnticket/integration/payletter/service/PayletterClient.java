@@ -98,7 +98,7 @@ public class PayletterClient {
     // 거래내역 조회
     public PayletterTransactionListResDto getTransactionList(String clientId, String date, String dateType, String pgCode, String orderNumber){
         try {
-            log.info("[PAYLETTER] getTransactionList clientId={}, date={}, dateType={}, pgcode={}, orderNo={}",
+            log.info("[PAYLETTER] getTransactionList clientId={}, date={}, dateType={}, pgcode={}, orderNumber={}",
                     clientId, date, dateType, pgCode, orderNumber);
 
             return WebClient.builder()
@@ -137,7 +137,7 @@ public class PayletterClient {
             return WebClient.builder()
                     .baseUrl(props.getBaseUrl())
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getSearchApiKey())
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
                     .build()
                     .post()
                     .uri("v1.0/payments/status")

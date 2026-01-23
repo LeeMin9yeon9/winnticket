@@ -1,9 +1,11 @@
 package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.common.util.ClientIpProvider;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.*;
+import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,7 +24,10 @@ public class PayletterService {
     private final PayletterClient payletterClient;
     private final PayletterProperties properties;
     private final OrderShopMapper orderShopMapper;
+    private final OrderMapper orderAdminMapper;
     private final ObjectMapper objectMapper;
+    private final ClientIpProvider clientIpProvider;
+
 
 
     // Payletter 결제요청
@@ -204,9 +209,21 @@ public class PayletterService {
         }
     }
 
-    // 결제 취소
+    // order 취소 호출
     @Transactional
-    public PayletterCancelResDto cancel(UUID orderId, String ipAddr){
+    public PayletterCancelResDto cancel(UUID orderId) {
+        if (orderId == null) throw new IllegalArgumentException("orderId is null");
+
+        String ipAddr = clientIpProvider.getClientIp();
+        if (ipAddr == null || ipAddr.isBlank()) {
+            throw new IllegalArgumentException("ipAddr is null");
+        }
+
+        return cancel(orderId, ipAddr);
+    }
+    // 결제 취소(payletter)
+    @Transactional
+    public PayletterCancelResDto cancel(UUID orderId,String ipAddr){
 
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
         if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
@@ -260,7 +277,7 @@ public class PayletterService {
             payloadJson = null;
         }
 
-        orderShopMapper.updatePayletterCancelSuccess(orderId, payloadJson);
+        orderAdminMapper.updatePayletterCancelSuccess(orderId, payloadJson);
 
         log.info("[PAYLETTER] cancel success orderId={}, tid={}", orderId, tid);
         return res;
