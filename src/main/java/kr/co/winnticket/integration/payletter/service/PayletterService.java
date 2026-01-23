@@ -1,7 +1,6 @@
 package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.util.ClientIpProvider;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
@@ -159,7 +158,7 @@ public class PayletterService {
                     orderId, userId, amount, tid, cid, payhash);
 
             // 주문 정보 조회
-            Map<String, Object> orderInfo = orderShopMapper.selectOrderPaymentInfo(orderId);
+            Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
             if (orderInfo == null) {
                 throw new IllegalStateException("주문 없음 orderId=" + orderId);
             }
@@ -340,10 +339,6 @@ public class PayletterService {
             dateType = "transaction";
         }
 
-        // pgCode 기본값: creditcard
-        if (pgCode == null || pgCode.isBlank()) {
-            pgCode = "creditcard";
-        }
 
         PayletterTransactionListResDto res = payletterClient.getTransactionList(
                 properties.getClientId(),
