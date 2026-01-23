@@ -57,8 +57,7 @@ public class OrderShopService {
                 paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
             }
 
-
-        // 주문 테이블 생성(입력한 정보들로)
+            // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
             reqDto.getChannelId(),
             reqDto.getCustomerName(),
@@ -132,7 +131,7 @@ public class OrderShopService {
         }
 
             if (paymentMethod == PaymentMethod.CARD) {
-                String pgCode = reqDto.getPgCode();
+                String pgCode = String.valueOf(reqDto.getPaymentMethod());
                 if (pgCode == null || pgCode.isBlank()) {
                     pgCode = "creditcard";
                 }

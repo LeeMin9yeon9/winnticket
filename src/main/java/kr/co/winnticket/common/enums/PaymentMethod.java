@@ -3,7 +3,9 @@ package kr.co.winnticket.common.enums;
 public enum PaymentMethod {
     CARD("카드"),
     VIRTUAL_ACCOUNT("무통장입금"),
-    POINT("베네피아 포인트");
+    POINT("베네피아 포인트"),
+
+    KAKAOPAY("카카오페이테스트용");
 
 
 
