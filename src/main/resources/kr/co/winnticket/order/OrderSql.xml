@@ -369,7 +369,6 @@
             pg_approval_no,
             customer_phone,
             customer_email,
-            pg_code,
             payment_method,
             status,
             all_ticket_used,
