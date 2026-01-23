@@ -356,17 +356,74 @@
         WHERE order_number = #{orderNo}
     </select>
 
-    <!--payletter 주문취소 -->
+
+    <!--주문 결제정보 조회 검증용임-->
+    <select id="selectOrderPaymentInfo" resultType="map">
+        SELECT
+            id,
+            order_number,
+            final_price,
+            payment_status,
+            pg_provider,
+            pg_tid,
+            pg_approval_no,
+            customer_phone,
+            customer_email,
+            pg_code,
+            payment_method,
+            status,
+            all_ticket_used,
+            canceled_at,
+            pg_cancel_payload
+        FROM orders
+        WHERE id = #{orderId}::uuid
+    </select>
+
+    <!--payletter 취소 성공 처리-->
     <update id="updatePayletterCancelSuccess">
         UPDATE orders
         SET
-            payment_status = 'CANCELED'::payment_status,
-        canceled_at = NOW(),
-        pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
-            updated_at = NOW()
+            pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
-        <![CDATA[
-          AND payment_status <> 'CANCELED'::payment_status
-        ]]>
     </update>
+
+    <!--주문 취소 상태 업데이트 -->
+    <update id="updateOrderCancelStatus">
+        UPDATE orders
+        SET
+            status = 'CANCELLED'::order_status,
+        payment_status = 'CANCELLED'::payment_status,
+        canceled_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{orderId}::uuid
+    </update>
+
+    <!--취소 대상 조회-->
+    <select id="selectCancelTarget" resultType="map">
+        SELECT
+            id,
+            order_number,
+            status,
+            payment_status,
+            payment_method,
+            final_price,
+            pg_provider,
+            pg_tid,
+            pg_code,
+            all_ticket_used,
+            canceled_at
+        FROM orders
+        WHERE id = #{orderId}::uuid
+    </select>
+
+    <!--사용된 티켓 수 조회-->
+    <select id="countUsedTickets" resultType="int">
+        SELECT COUNT(1)
+        FROM order_tickets t
+                 JOIN order_items oi
+                      ON oi.id = t.order_item_id
+        WHERE oi.order_id = #{orderId}::uuid
+      AND t.ticket_used = true
+    </select>
 </mapper>

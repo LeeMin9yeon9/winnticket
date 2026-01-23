@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.dto;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.OrderStatus;
@@ -8,7 +9,6 @@ import kr.co.winnticket.common.enums.PaymentStatus;
 import lombok.Data;
 import lombok.ToString;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +72,10 @@ public class OrderAdminDetailGetResDto {
 
     @Schema(description = "요청사항")
     private String memo;
+
+    @Hidden
+    @Schema(description = "신용카드 승인번호")
+    private String tid;
 
     @Schema(description = "주문상품")
     private List<OrderProductListGetResDto> products = new ArrayList<>();

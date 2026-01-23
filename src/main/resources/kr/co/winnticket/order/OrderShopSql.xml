@@ -195,7 +195,7 @@
         WHERE order_id = #{orderId}::uuid) AS item_count
     </select>
 
-    <!--콜백 성공 처리-->
+    <!--payletter 콜백 성공 처리-->
     <update id="updatePayletterCallbackSuccessIfNotPaid">
         UPDATE orders
         SET
@@ -213,7 +213,7 @@
         ]]>
     </update>
 
-    <!--콜백 실패 처리-->
+    <!--payletter 콜백 실패 처리-->
     <update id="updatePayletterCallbackFailed">
         UPDATE orders
         SET
@@ -228,18 +228,6 @@
         WHERE id = #{orderId}::uuid
     </update>
 
-    <!--주문 결제정보 조회 검증용임-->
-    <select id="selectOrderPaymentInfo" resultType="map">
-        SELECT
-            id,
-            order_number,
-            final_price,
-            payment_status,
-            pg_provider,
-            pg_tid,
-            pg_approval_no
-        FROM orders
-        WHERE id = #{orderId}
-    </select>
+
 
 </mapper>

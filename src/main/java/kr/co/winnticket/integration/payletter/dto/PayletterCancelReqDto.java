@@ -35,6 +35,9 @@ public class PayletterCancelReqDto {
     @Schema(description = "결제 고유 번호(tid)")
     private String tid;
 
+    @Schema(description = "결제금액")
+    private Integer amount;
+
     @NotNull
     @JsonProperty("ip_addr")
     @Schema(description = "요청 IP")

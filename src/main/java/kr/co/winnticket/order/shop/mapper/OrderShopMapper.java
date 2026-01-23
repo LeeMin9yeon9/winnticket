@@ -84,11 +84,4 @@ public interface OrderShopMapper {
             @Param("failReason") String failReason
     );
 
-    // payletter 취소 성공 처리
-    int updatePayletterCancelSuccess(
-            @Param("orderId") UUID orderId,
-            @Param("payloadJson") String payloadJson
-    );
-
-
 }
