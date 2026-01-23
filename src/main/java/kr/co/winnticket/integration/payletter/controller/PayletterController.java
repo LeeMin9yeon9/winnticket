@@ -63,15 +63,6 @@ public class PayletterController {
         }
     }
 
-    // 취소(환불테스트용) API
-//    @PostMapping("api/admin/payletter/cancel/{orderId}")
-//    @Operation(summary = "Payletter 결제취소", description = "Payletter 주문취소 API 호출 후 orders.payment_status=CANCELED 처리")
-//    public PayletterCancelResDto cancel(@PathVariable UUID orderId, HttpServletRequest request) {
-//
-//        String ipAddr = request.getRemoteAddr();
-//
-//        return service.cancel(orderId, ipAddr);
-//    }
 
 
     @GetMapping("/return")
@@ -90,7 +81,7 @@ public class PayletterController {
             @Parameter(description = "주문_ID") @PathVariable UUID orderId, HttpServletRequest request) {
 
         String ipAddr = request.getRemoteAddr();
-
+        log.info("[ADMIN][PAYLETTER] cancel request orderId={}", orderId);
         return service.cancel(orderId, ipAddr);
     }
 
@@ -101,10 +92,10 @@ public class PayletterController {
             @Parameter(description = "조회 일자", example = "yyyyMMdd")
             @RequestParam(required = false) String date,
 
-            @Parameter(description = "조회 기준", example = "transaction/settle")
+            @Parameter(description = "조회 기준", example = "transaction: 결제일기준 /settle:취소일기준")
             @RequestParam(required = false) String dateType,
 
-            @Parameter(description = "결제수단 코드", example = "creditcard")
+            @Parameter(description = "결제수단 코드", example = "creditcard(테스트는kakaopay)")
             @RequestParam(required = false) String pgCode,
 
             @Parameter(description = "주문번호")

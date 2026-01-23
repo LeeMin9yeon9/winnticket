@@ -1,6 +1,7 @@
 package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.util.ClientIpProvider;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 @Log4j2
@@ -32,12 +34,13 @@ public class PayletterService {
 
     // Payletter 결제요청
     @Transactional
-    public PayletterPaymentResDto paymentRequest(UUID orderId, String orderNumber, Integer finalPrice, String customerName, String customerEmail,String customerPhone, String pgCode){
+    public PayletterPaymentResDto paymentRequest(UUID orderId, String orderNumber, Integer finalPrice, String customerName, String customerEmail,String customerPhone, String paymentMethod){
 
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
         if (orderNumber == null || orderNumber.isBlank()) throw new IllegalArgumentException("orderNumber is empty");
         if (finalPrice <= 0) throw new IllegalArgumentException("finalPrice must be > 0");
 
+        String pgCode = kr.co.winnticket.integration.payletter.config.PayletterMapper.toPayletterPgCode(paymentMethod);
 
         //상품명 만들기 (DB에서 첫 상품 + 건수)
         Map<String, Object> summary = orderShopMapper.selectPayletterProductSummary(orderId);
@@ -135,6 +138,9 @@ public class PayletterService {
             // payload(Map) Json 문자열로 저장
             payloadJson = objectMapper.writeValueAsString(payload);
 
+
+            log.info("[PAYLETTER] callback received payload={}", payloadJson);
+
             // 콜백 필수 값 추출
             String userId = payload.get("user_id") != null ? String.valueOf(payload.get("user_id")) : null;
             Integer amount = payload.get("amount") != null ? Integer.parseInt(String.valueOf(payload.get("amount"))) : null;
@@ -148,6 +154,10 @@ public class PayletterService {
             if (tid == null || tid.isBlank()) throw new IllegalArgumentException("tid missing");
             if (payhash == null || payhash.isBlank()) throw new IllegalArgumentException("payhash missing");
 
+
+            log.info("[PAYLETTER] callback parsed orderId={}, userId={}, amount={}, tid={}, cid={}, payhash={}",
+                    orderId, userId, amount, tid, cid, payhash);
+
             // 주문 정보 조회
             Map<String, Object> orderInfo = orderShopMapper.selectOrderPaymentInfo(orderId);
             if (orderInfo == null) {
@@ -156,6 +166,8 @@ public class PayletterService {
             Integer finalPrice = orderInfo.get("final_price") != null
                     ? ((Number) orderInfo.get("final_price")).intValue()
                     : null;
+
+            log.info("[PAYLETTER] callback compare amount orderFinalPrice={}, callbackAmount={}", finalPrice, amount);
 
             if (finalPrice == null) throw new IllegalStateException("final_price 없음");
 
@@ -173,12 +185,16 @@ public class PayletterService {
 
             String expected = PayletterHashUtil.sha256(userId + amount + tid + apiKey);
 
+            log.info("[PAYLETTER] callback payhash check expected={}, actual={}", expected, payhash);
+
             if (!expected.equalsIgnoreCase(payhash)) {
                 throw new IllegalStateException("payhash 검증 실패");
             }
 
             // 결제완료 업데이트
             int updated = orderShopMapper.updatePayletterCallbackSuccessIfNotPaid(orderId, payloadJson, tid, cid);
+
+            log.info("[PAYLETTER] callback update result orderId={}, updated={}", orderId, updated);
 
             // 이미 누군가 먼저 처리했으면 updated=0
             if (updated == 0) {
@@ -189,7 +205,7 @@ public class PayletterService {
             log.info("[PAYLETTER] callback success. orderId={}, tid={}, cid={}", orderId, tid, cid);
 
         } catch (Exception e) {
-            log.error("[PAYLETTER] callback 처리 실패 payload={}", payloadJson, e);
+            log.error("[PAYLETTER] callback 처리 실패 payload={}",e.getMessage(), payloadJson, e);
 
             // orderId가 파싱되면 FAILED로 기록
             try {
@@ -205,7 +221,7 @@ public class PayletterService {
                 // 여기서는 추가 예외 무시
             }
 
-            throw new IllegalStateException("콜백 처리 실패", e);
+            throw new IllegalStateException("콜백 처리 실패:"+e.getMessage(), e);
         }
     }
 
@@ -236,24 +252,51 @@ public class PayletterService {
             throw new IllegalStateException("PAYLETTER 주문이 아닙니다. pgProvider=" + pgProvider);
         }
 
-        String tid = orderInfo.get("pg_tid") != null ? String.valueOf(orderInfo.get("pg_tid")) : null;
-        if (tid == null || tid.isBlank()) throw new IllegalStateException("취소 불가: pg_tid(tid) 없음");
+        String orderNumber = orderInfo.get("order_number") != null ? String.valueOf(orderInfo.get("order_number")) : null;
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalStateException("order_number 없음");
+        }
 
 
         String phone = orderInfo.get("customer_phone") != null ? String.valueOf(orderInfo.get("customer_phone")) : null;
         String email = orderInfo.get("customer_email") != null ? String.valueOf(orderInfo.get("customer_email")) : null;
-        String orderNumber = orderInfo.get("order_number") != null ? String.valueOf(orderInfo.get("order_number")) : null;
+
 
         String userId;
         if (phone != null && !phone.isBlank()) userId = phone.replaceAll("[^0-9]", "");
         else if (email != null && !email.isBlank()) userId = email;
         else userId = orderNumber;
 
-        //pgCode
-        String pgCode = orderInfo.get("pg_code") != null ? String.valueOf(orderInfo.get("pg_code")) : null;
-        if (pgCode == null || pgCode.isBlank()) {
-            pgCode = "creditcard";
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String dateType = "transaction";
+
+        PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
+                properties.getClientId(),
+                date,
+                dateType,
+                null,        // pgcode 모르면 null로(필터 X)
+                orderNumber  // order_no
+            );
+
+        if (txRes == null) throw new IllegalStateException("[PAYLETTER] transaction/list 응답 null");
+        if (!Boolean.TRUE.equals(txRes.isSuccess())) {
+            throw new IllegalStateException("[PAYLETTER] transaction/list 실패 code=" + txRes.getCode() + ", message=" + txRes.getMessage());
         }
+        List<PayletterTransactionItemDto>list = txRes.getList();
+        if (list == null || list.isEmpty()) {
+            throw new IllegalStateException("[PAYLETTER] 거래내역 없음 orderNumber=" + orderNumber);
+        }
+
+        PayletterTransactionItemDto item = list.get(0);
+
+        String tid = item.getTid();
+        String pgCode = item.getPgCode();
+
+        if (tid == null || tid.isBlank()) throw new IllegalStateException("[PAYLETTER] tid 없음");
+        if (pgCode == null || pgCode.isBlank()) throw new IllegalStateException("[PAYLETTER] pgcode 없음");
+
+        log.info("[PAYLETTER] cancel start orderId={}, orderNumber={}, tid={}, pgCode={}, ip={}",
+                orderId, orderNumber, tid, pgCode, ipAddr);
 
         PayletterCancelReqDto req = PayletterCancelReqDto.builder()
                 .pgCode(pgCode) // creditcard
