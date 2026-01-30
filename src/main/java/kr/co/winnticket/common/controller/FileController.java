@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/common/files")
+@RequestMapping("/api/admin/common/files")
 public class FileController {
     private final FileService fileService;
 

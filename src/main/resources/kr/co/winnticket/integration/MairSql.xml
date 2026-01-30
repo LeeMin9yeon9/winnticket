@@ -17,7 +17,7 @@
         ORDER BY oi.created_at ASC
     </select>
 
-    
+
     <!--티켓저장 테스트 -->
     <insert id="insertOrderTicket">
         INSERT INTO order_tickets (
