@@ -17,39 +17,7 @@
         ORDER BY oi.created_at ASC
     </select>
 
-        <!--
-           주문아이템 조회
-        -->
-        <select id="selectOrderItemInfos" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
-            SELECT
-                oi.id AS orderItemId,
-                oi.product_id AS productId,
-                p.code AS productCode,
-                oi.quantity AS quantity
-            FROM order_items oi
-                     JOIN product_option_values p ON p.id = oi.product_id
-            WHERE oi.order_id = #{orderId}
-            ORDER BY oi.created_at ASC
-        </select>
-
-        <!--
-           티켓 저장 운영용
-        -->
-<!--        <insert id="insertOrderTicket">-->
-<!--            INSERT INTO order_tickets (-->
-<!--                id,-->
-<!--                order_item_id,-->
-<!--                ticket_number,-->
-<!--                ticket_used,-->
-<!--                created_at-->
-<!--            ) VALUES (-->
-<!--                         uuid_generate_v4(),-->
-<!--                         #{orderItemId},-->
-<!--                         #{ticketNumber},-->
-<!--                         false,-->
-<!--                         CURRENT_TIMESTAMP-->
-<!--                     )-->
-<!--        </insert>-->
+    
     <!--티켓저장 테스트 -->
     <insert id="insertOrderTicket">
         INSERT INTO order_tickets (
