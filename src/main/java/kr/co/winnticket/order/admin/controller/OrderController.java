@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -106,7 +107,7 @@ public class OrderController {
     @Operation(summary = "주문 취소(관리자)", description = "관리자가 주문을 취소합니다.")
     public ResponseEntity<ApiResponse<String>> cancelOrder(
             @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
-    ){
+    ) throws JsonProcessingException {
         service.cancelOrder(orderId);
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료",orderId.toString()));
     }

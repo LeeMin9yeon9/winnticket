@@ -1,25 +1,22 @@
 package kr.co.winnticket.integration.benepia.batch.service;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.benepia.batch.dto.BenepiaIdsJson;
 import kr.co.winnticket.integration.benepia.batch.dto.BenepiaProductsJson;
 import kr.co.winnticket.integration.benepia.batch.mapper.BenepiaBatchMapper;
-import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
+import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 

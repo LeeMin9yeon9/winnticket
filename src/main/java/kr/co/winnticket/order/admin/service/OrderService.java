@@ -1,10 +1,13 @@
 package kr.co.winnticket.order.admin.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
@@ -24,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,6 +38,7 @@ public class OrderService {
     private final TemplateRenderService templateRenderService;
     private final BizMsgService bizMsgService;
     private final PayletterService payletterService;
+    private final ObjectMapper objectMapper;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -194,7 +200,7 @@ public class OrderService {
 
     // 주문 취소
     @Transactional
-    public void cancelOrder(UUID orderId){
+    public void cancelOrder(UUID orderId) throws JsonProcessingException{
 
         // 주문 조회
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
@@ -219,15 +225,20 @@ public class OrderService {
         // 2) 결제수단 분기
         PaymentMethod method = order.getPaymentMethod();
 
+        PayletterCancelResDto res = null;
+
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             //cancelVirtualAccount(order);
         } else if (method == PaymentMethod.CARD) {
-            payletterService.cancel(orderId);
+           res =  payletterService.cancel(orderId);
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
 
-       int updated = mapper.updateOrderCancelStatus(orderId);
+        String payloadJson = objectMapper.writeValueAsString(res);
+        int updated = mapper.updatePayletterCancelSuccess(orderId, payloadJson);
+
+
        if(updated != 1){
            throw new IllegalStateException("주문 취소 상태 변경 실패");
        }

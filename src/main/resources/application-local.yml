@@ -22,5 +22,3 @@ spring:
      port: 6379
      password: null
 
-benepia:
-  seed-key: 93bf2sd0324em312

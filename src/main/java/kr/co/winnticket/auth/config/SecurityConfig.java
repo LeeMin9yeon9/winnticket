@@ -50,6 +50,7 @@ public class SecurityConfig {
 
                      /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
+                                "/api/mair/**",
                                 "/api/payletter/**",
                                 "/api/auth/**",
                                 "/swagger-ui/**",

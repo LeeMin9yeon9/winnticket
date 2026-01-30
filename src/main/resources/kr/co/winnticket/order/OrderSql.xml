@@ -382,21 +382,14 @@
     <update id="updatePayletterCancelSuccess">
         UPDATE orders
         SET
+            status = 'CANCELED'::order_status,
+            payment_status = 'CANCELED'::payment_status,
+            canceled_at = CURRENT_TIMESTAMP,
             pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
     </update>
 
-    <!--주문 취소 상태 업데이트 -->
-    <update id="updateOrderCancelStatus">
-        UPDATE orders
-        SET
-            status = 'CANCELLED'::order_status,
-        payment_status = 'CANCELLED'::payment_status,
-        canceled_at = CURRENT_TIMESTAMP,
-        updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{orderId}::uuid
-    </update>
 
     <!--취소 대상 조회-->
     <select id="selectCancelTarget" resultType="map">
