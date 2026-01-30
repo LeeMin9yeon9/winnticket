@@ -1,7 +1,7 @@
 package kr.co.winnticket.integration.benepia.crypto;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
+import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
