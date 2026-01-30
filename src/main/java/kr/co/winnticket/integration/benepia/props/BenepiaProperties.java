@@ -1,4 +1,4 @@
-package kr.co.winnticket.integration.benepia.common;
+package kr.co.winnticket.integration.benepia.props;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

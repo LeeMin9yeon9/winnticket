@@ -1,7 +1,7 @@
 package kr.co.winnticket.integration.benepia.sso.service;
 
 import jakarta.servlet.http.HttpSession;
-import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
+import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaParamParser;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;

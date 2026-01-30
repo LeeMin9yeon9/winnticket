@@ -50,6 +50,7 @@ public class SecurityConfig {
 
                      /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
+                                "/api/mair/**",
                                 "/api/payletter/**",
                                 "/api/auth/**",
                                 "/swagger-ui/**",
@@ -58,7 +59,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/webjars/**",
                                 "/api/plusn/test/**",
-                                "/api/coreworks/test/**"
+                                "/api/coreworks/test/**",
+                                "/api/woongjin/test/**"
                 ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",

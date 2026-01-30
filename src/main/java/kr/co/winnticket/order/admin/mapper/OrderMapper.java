@@ -79,14 +79,14 @@ public interface OrderMapper {
     // 주문 상태 변경 (모두 사용 완료)
     void updateOrderCompleted(UUID orderId);
 
-    // 취소시 주문상태 변경
-    int updatePaymentStatus(UUID orderId, String paymentStatus);
 
     Map<String, Object> selectOrderPaymentInfo(UUID orderId);
 
-    int updatePayletterCancelSuccess(UUID orderId, String payloadJson);
-
-    int updateOrderCancelStatus(UUID orderId);
+    // 취소 성공
+    int updatePayletterCancelSuccess(
+            @Param("orderId") UUID orderId,
+            @Param("payloadJson") String payloadJson
+    );
 
     int countUsedTickets(UUID orderId); // 테이블명 맞춰서
 

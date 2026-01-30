@@ -1,6 +1,6 @@
 package kr.co.winnticket.integration.benepia.sso.service;
 
-import kr.co.winnticket.integration.benepia.common.BenepiaProperties;
+import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaTokenResDto;
 import lombok.RequiredArgsConstructor;

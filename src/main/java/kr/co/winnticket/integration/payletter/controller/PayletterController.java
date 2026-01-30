@@ -96,12 +96,12 @@ public class PayletterController {
             @RequestParam(required = false) String dateType,
 
             @Parameter(description = "결제수단 코드", example = "creditcard(테스트는kakaopay)")
-            @RequestParam(required = false) String pgCode,
+            @RequestParam(required = false) String paymentMethod,
 
             @Parameter(description = "주문번호")
             @RequestParam(required = false) String orderNumber
     ) {
-        return service.getTransactionList(date, dateType, pgCode, orderNumber);
+        return service.getTransactionList(date, dateType, paymentMethod, orderNumber);
     }
 
     @GetMapping("/status/{orderNumber}")

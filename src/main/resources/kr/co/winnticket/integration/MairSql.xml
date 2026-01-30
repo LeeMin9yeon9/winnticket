@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.mair.mapper.MairOrderMapper">
+
+
+        <!-- 주문 조회-->
+    <select id="selectOrderItemInfos" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
+        SELECT
+            oi.id AS orderItemId,
+            oi.product_id AS productId,
+            pov.code AS productCode,   -- ⭐ 엠에어 ITCD
+            oi.quantity AS quantity
+        FROM order_items oi
+                 JOIN product_option_values pov ON pov.id = oi.product_option_value_id
+        WHERE oi.order_id = #{orderId}
+        ORDER BY oi.created_at ASC
+    </select>
+
+        <!--
+           주문아이템 조회
+        -->
+        <select id="selectOrderItemInfos" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
+            SELECT
+                oi.id AS orderItemId,
+                oi.product_id AS productId,
+                p.code AS productCode,
+                oi.quantity AS quantity
+            FROM order_items oi
+                     JOIN product_option_values p ON p.id = oi.product_id
+            WHERE oi.order_id = #{orderId}
+            ORDER BY oi.created_at ASC
+        </select>
+
+        <!--
+           티켓 저장 운영용
+        -->
+<!--        <insert id="insertOrderTicket">-->
+<!--            INSERT INTO order_tickets (-->
+<!--                id,-->
+<!--                order_item_id,-->
+<!--                ticket_number,-->
+<!--                ticket_used,-->
+<!--                created_at-->
+<!--            ) VALUES (-->
+<!--                         uuid_generate_v4(),-->
+<!--                         #{orderItemId},-->
+<!--                         #{ticketNumber},-->
+<!--                         false,-->
+<!--                         CURRENT_TIMESTAMP-->
+<!--                     )-->
+<!--        </insert>-->
+    <!--티켓저장 테스트 -->
+    <insert id="insertOrderTicket">
+        INSERT INTO order_tickets (
+            id,
+            order_item_id,
+            ticket_number,
+            ticket_used,
+            ticket_canceled,
+            created_at
+        ) VALUES (
+                     uuid_generate_v4(),
+                     #{orderItemId},
+                     #{ticketNumber},
+                     false,
+                     false,
+                     CURRENT_TIMESTAMP
+                 )
+    </insert>
+
+    <!-- 중복 발송 방지용 -->
+    <select id="countOrderTickets" resultType="int">
+        SELECT COUNT(1)
+        FROM order_tickets
+        WHERE order_item_id = #{orderItemId}
+    </select>
+
+    <!-- orderItemId에 속한 티켓번호 조회 -->
+    <select id="selectTicketNumbers" resultType="string">
+        SELECT ot.ticket_number
+        FROM order_tickets ot
+        WHERE ot.order_item_id = #{orderItemId}
+        ORDER BY ot.created_at ASC
+    </select>
+
+    <!-- 취소 , 상태 업데이트 -->
+    <update id="updateTicketsCanceled">
+        UPDATE order_tickets
+        SET ticket_canceled = true
+        WHERE order_item_id = #{orderItemId}
+          AND ticket_canceled = false
+          AND ticket_used = false
+    </update>
+
+    <!-- 취소 가능한 티켓 개수(미사용 + 미취소) -->
+    <select id="countCancelableTickets" resultType="int">
+        SELECT COUNT(1)
+        FROM order_tickets ot
+        WHERE ot.order_item_id = #{orderItemId}
+          AND ot.ticket_canceled = false
+          AND ot.ticket_used = false
+    </select>
+
+</mapper>

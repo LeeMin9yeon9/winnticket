@@ -44,6 +44,7 @@ logging:
 file:
   upload-dir: /Users/kimhb/uploads
 
+# 채널 연동 (베네피아)
 benepia:
   seed-key: 93bf2sd0324em312
   cust-co-cd: z381
@@ -53,17 +54,16 @@ benepia:
   prdgb-file: ticket
   kcp-co-cd: A8MCD
 
+# 신용카드 연동
 payletter:
   base-url: https://testpgapi.payletter.com
   client-id: pay_test
   payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
-  search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=
   service-name: 페이레터
 
   return-url: https://api.winnticket.store/api/payletter/return
   callback-url: https://api.winnticket.store/api/payletter/callback
   cancel-url: https://api.winnticket.store/api/payletter/cancel
-
 
 # 파트너 연동 (플러스앤)
 plusn:
@@ -75,3 +75,19 @@ coreworks:
   base-url: http://dev-api.core-works.co.kr:8050 # 운영 : https://api.core-works.co.kr/channel/general/v11/order
   auth-token: "1505ee1f89cc000efdda3b34ee2485fbd9e50be4943ad0c9acf3ceab7bfc225a" #운영 : 59bee29ea0f864ad803b8af2ff1f029d51dba857a2732015b286f4f622a1f094
   channel-cd: "HYUNDAINTOUR"
+
+# 파트너 연동 (웅진)
+woongjin:
+  base-url: https://channel-api.nolbal.com # 토큰만 다른거같음..?
+  api-token: "bm9sYmFsLTIyLTIwMjUtMDMtMjRUMDc6NTQ6NDAuNjcwMzkz"
+
+# 파트너 연동 (엠에어)
+mair:
+  mode: prod # dev | prod
+  mkno: "HDGH"     # 채널 구분 코드
+  mkid: "HDGH1"    # 채널 아이디
+  connectTimeoutMs: 2000
+  responseTimeoutMs: 5000
+  issueUrl: "https://cp.mair.co.kr/dev/_cp_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_jsonp.asp
+  cancelUrl: "https://cp.mair.co.kr/dev/_cp_cc_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_cc_jsonp.asp
+  useCheckUrl: "https://cp.mair.co.kr/dev/_cp_use_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_use_jsonp.asp
