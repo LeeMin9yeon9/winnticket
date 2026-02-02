@@ -25,6 +25,12 @@ public class ProductDetailGetResDto {
     @Schema(description = "상품코드")
     private String code;
 
+    @Schema(description = "지역코드")
+    private String regionCode;
+
+    @Schema(description = "티켓타입")
+    private String ticketType;
+
     @Schema(description = "상품타입")
     private ProductType type;
 

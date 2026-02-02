@@ -55,6 +55,8 @@
             a.ID,  -- 상품_ID
             a.NAME,  -- 상품명
             a.CODE,  -- 상품코드
+            a.REGION_CODE,  -- 지역코드
+            a.TICKET_TYPE,  -- 티켓타입
             a.TYPE,  -- 상품타입
             a.CATEGORY_ID,  -- 카테고리_ID
             a.PARTNER_ID,  -- 파트너_ID
@@ -283,6 +285,9 @@
             <if test="model.name != null and model.name != ''">
                 NAME = #{model.name},
             </if>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
             <if test="model.categoryId != null">
                 CATEGORY_ID = #{model.categoryId},
             </if>
@@ -308,10 +313,10 @@
                 IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             </if>
             <if test="model.regionCode != null and model.regionCode != ''">
-                NAME = #{model.regionCode},
+                REGION_CODE = #{model.regionCode},
             </if>
             <if test="model.ticketType != null and model.ticketType != ''">
-                NAME = #{model.ticketType},
+                TICKET_TYPE = #{model.ticketType},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
