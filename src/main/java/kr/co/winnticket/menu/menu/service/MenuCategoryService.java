@@ -3,6 +3,7 @@ package kr.co.winnticket.menu.menu.service;
 import kr.co.winnticket.menu.common.MenuValidator;
 import kr.co.winnticket.menu.menu.dto.*;
 import kr.co.winnticket.menu.menu.mapper.MenuCategoryMapper;
+import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class MenuCategoryService {
 
     private final MenuCategoryMapper menuMapper;
     private final MenuValidator validator;
+    private final ProductMapper productMapper;
 
     // 판매SHOP 메뉴 조회
     public List<MenuListDto> getShopMenus(){
@@ -112,12 +114,18 @@ public class MenuCategoryService {
     // 메뉴삭제
     public void deleteMenu(UUID id) throws NotFoundException {
 
-        if(menuMapper.countChildMenus(id) > 0)
-            throw  new IllegalStateException("하위메뉴가 있어 삭제 불가합니다.");
-
         if(menuMapper.menuDelete(id) == 0){
             throw new NotFoundException("삭제할 메뉴가 존재하지 않습니다.");
         }
+
+        if(menuMapper.countChildMenus(id) > 0)
+            throw  new IllegalStateException("하위메뉴가 있어 삭제 불가합니다.");
+
+        if (productMapper.countByCategoryId(id) > 0) {
+            throw new IllegalStateException("해당 메뉴를 사용하는 상품이 존재하여 삭제할 수 없습니다.");
+        }
+        menuMapper.menuDelete(id);
+
     }
 
 

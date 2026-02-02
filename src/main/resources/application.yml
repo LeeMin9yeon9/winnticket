@@ -41,9 +41,6 @@ logging:
   level:
     kr.co.winnticket: DEBUG
 
-file:
-  upload-dir: /Users/kimhb/uploads
-
 # 채널 연동 (베네피아)
 benepia:
   seed-key: 93bf2sd0324em312
