@@ -29,11 +29,30 @@ public class PartnerController {
     @GetMapping
     @Operation(summary = "파트너 목록 조회", description = "파트너 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<PartnerListGetResDto>>> getPartnerList(
-            @Parameter(description = "검색어") @RequestParam(required = false) String keyword,
-            @Parameter(description = "상태") @RequestParam(required = false, name = "AllStatus") PartnerStatus scStatus,
-            @Parameter(description = "타입") @RequestParam(required = false, name = "AllType") PartnerType scType
+
+            @RequestParam(required = false) String keyword,
+
+            @Parameter(description = "상태 (ACTIVE, INACTIVE, PENDING, SUSPENDED)")
+            @RequestParam(required = false, name = "AllStatus") String scStatus,
+
+            @Parameter(description = "타입 (VENUE, PROMOTER, AGENCY, ARTIST, CORPORATE)")
+            @RequestParam(required = false, name = "AllType") String scType
     ) {
-        List<PartnerListGetResDto> list = service.selectPartnerList(keyword, scStatus, scType);
+
+        PartnerStatus status = null;
+        PartnerType type = null;
+
+        if (scStatus != null && !scStatus.isBlank()) {
+            status = PartnerStatus.valueOf(scStatus);
+        }
+
+        if (scType != null && !scType.isBlank()) {
+            type = PartnerType.valueOf(scType);
+        }
+
+        List<PartnerListGetResDto> list =
+                service.selectPartnerList(keyword, status, type);
+
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
