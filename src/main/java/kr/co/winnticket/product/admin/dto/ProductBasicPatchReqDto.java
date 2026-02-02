@@ -19,6 +19,10 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "상품명")
     private String name;
 
+    @NotEmpty
+    @Schema(description = "상품코드")
+    private String code;
+
     @Schema(description = "카테고리_ID")
     private UUID categoryId;
 
