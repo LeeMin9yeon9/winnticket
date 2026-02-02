@@ -76,7 +76,7 @@ public interface ProductMapper {
     void deleteProduct(
             @Param("id") UUID auid
     );
-    
+
     // 상품 옵션상세 조회
     ProductOptionGetResDto selectProductOptionDetail(
             @Param("id") UUID auId
@@ -218,4 +218,7 @@ public interface ProductMapper {
             @Param("id") UUID discountId,
             @Param("isActive") boolean abIsActive
     );
+
+    // 해당 카테코리 상품 확인
+    int countByCategoryId(@Param("categoryId") UUID categoryId);
 }

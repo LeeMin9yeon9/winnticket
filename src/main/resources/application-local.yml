@@ -22,3 +22,6 @@ spring:
      port: 6379
      password: null
 
+file:
+  upload-dir: /Users/kimhb/uploads
+
