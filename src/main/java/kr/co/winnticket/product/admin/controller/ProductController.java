@@ -112,7 +112,7 @@ public class ProductController {
         );
     }
 
-    // 상품 상세내용 수정
+    // 상품 활성화여부 수정
     @PatchMapping("/{id}/visible")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")

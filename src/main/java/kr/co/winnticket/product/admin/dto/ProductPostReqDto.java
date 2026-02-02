@@ -60,6 +60,15 @@ public class ProductPostReqDto {
     @Schema(description = "활성화여부", example = "true")
     private boolean visible;
 
+    @Schema(description = "지역코드", example = "1")
+    private String regionCode;
+
+    @Schema(description = "티켓타입", example = "01")
+    private String ticketType;
+
+    @Schema(description = "표시순서", example = "01")
+    private String displayOrder;
+
     @Hidden
     private UUID id;
 }
