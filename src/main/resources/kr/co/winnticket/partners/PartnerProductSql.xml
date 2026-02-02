@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.partners.partnerproduct.mapper.PartnerProductMapper">
+
+    <select id="selectPartnerProductList">
+
+        SELECT
+            p.id AS productId,
+            pov.id AS optionValueId,
+            p.name AS productName,
+            pov.value AS optionValue,
+            mc.name AS categoryName,
+
+            (p.price + COALESCE(pov.additional_price, 0)) AS price,
+
+            CASE
+                WHEN pov.id IS NOT NULL THEN pov.stock
+                ELSE p.stock
+                END AS stock,
+
+            COALESCE(SUM(oi.quantity), 0) AS salesCount,
+
+            COALESCE(
+                    SUM(oi.quantity * (p.price + COALESCE(pov.additional_price, 0))),
+                    0
+            ) AS totalSalesAmount,
+
+            p.sales_status AS salesStatus
+
+        FROM products p
+
+                 LEFT JOIN menu_categories mc
+                           ON mc.id = p.category_id
+
+                 LEFT JOIN product_options po
+                           ON po.product_id = p.id
+                               AND po.visible = true
+
+                 LEFT JOIN product_option_values pov
+                           ON pov.option_id = po.id
+                               AND pov.visible = true
+
+                 LEFT JOIN order_items oi
+                           ON oi.product_id = p.id
+
+                 LEFT JOIN order_item_options oio
+                           ON oio.order_item_id = oi.id
+                               AND oio.option_value = pov.value
+
+        WHERE p.partner_id = #{partnerId}
+          AND p.visible = true
+
+        GROUP BY
+            p.id,
+            pov.id,
+            mc.name
+
+        ORDER BY p.created_at DESC
+
+    </select>
+
+
+
+</mapper>
