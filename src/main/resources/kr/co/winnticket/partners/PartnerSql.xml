@@ -28,11 +28,11 @@
             )
         </if>
 
-        <if test="AllType != null and AllType != '' and AllType != '--'">
+        <if test="AllType != null">
             AND p.TYPE = #{AllType}
         </if>
 
-        <if test="AllStatus != null and AllStatus != '' and AllStatus != '--'">
+        <if test="AllStatus != null">
             AND p.STATUS = #{AllStatus}
         </if>
 
