@@ -1,0 +1,101 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  url: https://api.winnticket.store
+  servlet:
+    session:
+      cookie:
+        name: JSESSIONID
+        path: /
+        same-site: none
+        secure: true
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://winnticket-prod-db.c5ykoswqgy2y.ap-northeast-2.rds.amazonaws.com:5432/winnticket_prod
+    username: winnticket
+    password: ${DB_PASSWORD}
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+mybatis:
+  mapper-locations: classpath*:/**/*Sql.xml
+  type-aliases-package: kr.co.winnticket
+  configuration:
+    map-underscore-to-camel-case: true
+  type-handlers-package: kr.co.winnticket.common.typehandler
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity: 3600000
+  refresh-token-validity: 2592000000
+
+logging:
+  level:
+    kr.co.winnticket: INFO
+
+file:
+  upload-dir: /home/ubuntu/uploads
+
+
+# 채널 연동 (베네피아 운영)
+benepia:
+  seed-key: ${BENEPIA_SEED_KEY}
+  cust-co-cd: z381
+  confirm-url: https://auth.benepia.co.kr/api/token/confirm
+  token-create-url: https://auth.benepia.co.kr/api/token/request
+  batch-base-url: https://collections.benepia.co.kr
+  prdgb-file: ticket
+  kcp-co-cd: A8MCD
+
+
+# 신용카드 연동 (페이레터 운영)
+
+payletter:
+  base-url: https://pgapi.payletter.com
+  client-id: pay_test #운영은 문의해봐야함
+  payment-api-key: ${PAYLETTER_PAYMENT_API_KEY}
+  search-api-key: ${PAYLETTER_SEARCH_API_KEY}
+  service-name: 페이레터
+
+  return-url: https://api.winnticket.store/api/payletter/return
+  callback-url: https://api.winnticket.store/api/payletter/callback
+  cancel-url: https://api.winnticket.store/api/payletter/cancel
+
+
+# 파트너 연동 (플러스앤 운영)
+plusn:
+  base-url: https://partner.tourok.co.kr
+  order-company: "148"
+
+# 파트너 연동 (코어웍스 운영)
+coreworks:
+  base-url: https://api.core-works.co.kr/channel/general/v11/order
+  auth-token: ${COREWORKS_AUTH_TOKEN}
+  channel-cd: HYUNDAINTOUR
+
+# 파트너 연동 (웅진 운영)
+woongjin:
+  base-url: https://channel-api.nolbal.com
+  api-token: ${WOONGJIN_API_TOKEN}
+
+# 엠에어 운영
+mair:
+  mode: prod
+  mkno: HDGH
+  mkid: HDGH1
+  connectTimeoutMs: 2000
+  responseTimeoutMs: 5000
+  issueUrl: https://cp.mair.co.kr/_cp_jsonp.asp
+  cancelUrl: https://cp.mair.co.kr/_cp_cc_jsonp.asp
+  useCheckUrl: https://cp.mair.co.kr/_cp_use_jsonp.asp
