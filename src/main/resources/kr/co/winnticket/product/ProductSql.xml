@@ -246,6 +246,8 @@
             STOCK,
             SALES_START_DATE,
             SALES_END_DATE,
+            REGION_CODE,
+            TICKET_TYPE,
             DISPLAY_ORDER,
             VISIBLE
         )
@@ -264,6 +266,8 @@
             #{stock},
             #{salesStartDate},
             #{salesEndDate},
+            #{regionCode},
+            #{ticketType},
             COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
             #{visible}
         )
@@ -302,6 +306,12 @@
             </if>
             <if test="model.imageUrl != null">
                 IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
+            </if>
+            <if test="model.regionCode != null and model.regionCode != ''">
+                NAME = #{model.regionCode},
+            </if>
+            <if test="model.ticketType != null and model.ticketType != ''">
+                NAME = #{model.ticketType},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
