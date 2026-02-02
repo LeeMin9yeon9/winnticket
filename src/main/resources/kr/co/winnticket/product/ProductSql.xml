@@ -877,4 +877,11 @@
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
+
+    <!--해당 카테고리 상품 수 -->
+    <select id="countByCategoryId" >
+        SELECT COUNT(*)
+        FROM products
+        WHERE category_id = #{categoryId}
+    </select>
 </mapper>

@@ -2,6 +2,7 @@ package kr.co.winnticket.partners.fieldmanager.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.partners.fieldmanager.dto.*;
 import kr.co.winnticket.partners.fieldmanager.service.FieldManagerService;
 import lombok.RequiredArgsConstructor;
@@ -20,71 +21,80 @@ public class FieldManagerController {
     private final FieldManagerService service;
 
     @GetMapping("/{partnerId}/fieldManager")
-    @Operation(summary = "현장관리자 목록", description = "담당 현장관리자를 확인합니다.")
-    public ResponseEntity<List<FieldManagerListGetResDto>> getManagerByPartner(
+    @Operation(summary = "현장관리자 목록")
+    public ResponseEntity<ApiResponse<List<FieldManagerListGetResDto>>> getManagerByPartner(
             @PathVariable String partnerId
     ){
-        return ResponseEntity.ok(service.getListByPartner(partnerId));
+        return ResponseEntity.ok(
+                ApiResponse.success(service.getListByPartner(partnerId))
+        );
     }
 
     @GetMapping("/{partnerId}/fieldManager/{id}")
-    @Operation(summary = "현장관리자 상세조회", description = "담당 현장관리자 상세정보를 조회합니다.")
-    public ResponseEntity<FieldManagerResDto> getManagerDetail(
+    @Operation(summary = "현장관리자 상세조회")
+    public ResponseEntity<ApiResponse<FieldManagerResDto>> getManagerDetail(
             @PathVariable UUID id
     ){
-        return ResponseEntity.ok(service.getDetail(id));
+        return ResponseEntity.ok(
+                ApiResponse.success(service.getDetail(id))
+        );
     }
 
     @PostMapping("/{partnerId}/fieldManager")
-    @Operation(summary = "현장관리자 추가" , description = "담당 현장관리자를 추가합니다.")
-    public ResponseEntity<FieldManagerResDto> createManager(
+    @Operation(summary = "현장관리자 추가")
+    public ResponseEntity<ApiResponse<FieldManagerResDto>> createManager(
             @PathVariable String partnerId,
             @RequestBody FieldManagerInsertPostDto model
     ){
         model.setPartnerId(partnerId);
-        return ResponseEntity.ok(service.create(model));
+        return ResponseEntity.ok(
+                ApiResponse.success("현장관리자가 생성되었습니다.", service.create(model))
+        );
     }
 
     @PatchMapping("/{partnerId}/fieldManager/{id}")
-    @Operation(summary = "현장관리자 수정" , description = "담당 현장관리자를 수정합니다.")
-    public ResponseEntity<FieldManagerResDto> updateManager(
+    @Operation(summary = "현장관리자 수정")
+    public ResponseEntity<ApiResponse<FieldManagerResDto>> updateManager(
             @PathVariable UUID id,
             @RequestBody UpdateFieldManagerDto model
-            ){
-        return ResponseEntity.ok(service.update(id,model));
+    ){
+        return ResponseEntity.ok(
+                ApiResponse.success("현장관리자가 수정되었습니다.", service.update(id, model))
+        );
     }
 
     @PutMapping("/{partnerId}/fieldManager/{id}/password")
-    @Operation(summary = "현장관리자 비밀번호 수정" , description = "담당 현장관리자를 비밀번호를 수정합니다.")
-    public ResponseEntity<Void> changePassword(
+    @Operation(summary = "현장관리자 비밀번호 수정")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
             @PathVariable UUID id,
             @RequestBody ChangePasswordDto model
     ){
-        service.changePassword(id,model);
-        return ResponseEntity.noContent().build();
+        service.changePassword(id, model);
+        return ResponseEntity.ok(
+                ApiResponse.success("비밀번호가 변경되었습니다.", null)
+        );
     }
 
-
-
     @PutMapping("/{partnerId}/fieldManager/{id}/resetPassword")
-    @Operation(summary = "관리자 비밀번호 초기화" , description = "담당 현장관리자를 비밀번호를 초기화합니다.")
-    public ResponseEntity<Void> resetPassword(
+    @Operation(summary = "관리자 비밀번호 초기화")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
             @PathVariable UUID id,
             @RequestBody ResetPasswordDto model
     ){
-        service.resetPassword(id,model);
-        return ResponseEntity.noContent().build();
+        service.resetPassword(id, model);
+        return ResponseEntity.ok(
+                ApiResponse.success("비밀번호가 초기화되었습니다.", null)
+        );
     }
 
     @DeleteMapping("/{partnerId}/fieldManager/{id}")
-    @Operation(summary = "현장관리자 삭제" , description = "담당 현장관리자를 삭제합니다.")
-    public ResponseEntity<Void> deleteManager(
+    @Operation(summary = "현장관리자 삭제")
+    public ResponseEntity<ApiResponse<Void>> deleteManager(
             @PathVariable UUID id
     ){
         service.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                ApiResponse.success("현장관리자가 삭제되었습니다.", null)
+        );
     }
-
-
-
 }
