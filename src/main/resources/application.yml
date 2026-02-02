@@ -57,9 +57,10 @@ benepia:
 
 # 신용카드 연동
 payletter:
-  base-url: https://testpgapi.payletter.com
+  base-url: https://testpgapi.payletter.com #운영 : https://pgapi.payletter.com/
   client-id: pay_test
-  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
+  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA= #운영 : NUMyN0E1QTVEQzBGRDU0MTBGMDQyNzNFMUU1Q0FGOEY=
+  search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=  # 운영: NUZENTJGOTAwMjY1ODg4QURGRDhFNkZCNDVCNjdEMUE=
   service-name: 페이레터
 
   return-url: https://api.winnticket.store/api/payletter/return
