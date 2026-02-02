@@ -218,17 +218,17 @@
 
 
 
-    <!-- =============================
+    <!--
          하위 메뉴 개수
-    ============================== -->
+    -->
     <select id="countChildMenus" resultType="int">
         SELECT COUNT(*) FROM menu_categories WHERE parent_id = #{id}
     </select>
 
 
-    <!-- =============================
+    <!--
          parent 그룹의 최대 displayOrder
-    ============================== -->
+     -->
     <select id="findMaxOrder" resultType="int">
         SELECT MAX(display_order)
         FROM menu_categories
@@ -242,11 +242,32 @@
     </select>
 
 
-    <!-- =============================
+    <!--
          코드 중복 체크
-    ============================== -->
+    -->
     <select id="existsByCode" resultType="int">
-        SELECT COUNT(*) FROM menu_categories WHERE code = #{code}
+        SELECT COUNT(*)
+        FROM menu_categories
+        WHERE code = #{code}
     </select>
+
+    <select id="existsByCodeAndNotId" resultType="int">
+        SELECT COUNT(*)
+        FROM menu_categories
+        WHERE code = #{code}
+          AND id != #{id}
+    </select>
+
+    <!--메뉴삭제 시 자동정렬-->
+    <update id="reorderAfterDelete">
+        UPDATE menu_categories
+        SET display_order = display_order - 1
+        WHERE
+            (
+                    (parent_id = #{parentId})
+                    OR (parent_id IS NULL AND #{parentId} IS NULL)
+                )
+          AND display_order > #{deletedOrder}
+    </update>
 
 </mapper>

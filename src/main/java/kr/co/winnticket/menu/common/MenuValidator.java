@@ -22,8 +22,8 @@ public class MenuValidator {
         }
     }
     // code 중복 체크
-    public void validateCodeDup(String code){
-        if(mapper.existsByCode(code) > 0) {
+    public void validateCodeDup(String code, UUID id){
+        if(mapper.existsByCodeAndNotId(code, id) > 0) {
             throw new IllegalArgumentException("이미 존재하는 메뉴 코드입니다.");
         }
     }
