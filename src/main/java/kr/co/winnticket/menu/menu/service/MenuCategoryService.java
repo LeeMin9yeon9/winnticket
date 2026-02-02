@@ -35,7 +35,7 @@ public class MenuCategoryService {
     public void createMenu(CreateMenuDto createMenuDto) {
         // 공통 검증
         validator.validateCode(createMenuDto.getCode());
-        validator.validateCodeDup(createMenuDto.getCode());
+        validator.validateCodeDup(createMenuDto.getCode(),null);
         validator.validateLevel(createMenuDto.getLevel());
 
         UUID parentId = createMenuDto.getParentId();
@@ -96,8 +96,10 @@ public class MenuCategoryService {
         if (updateMenuDto.getCode() != null) {
             // code 유무 + 소문자
             validator.validateCode(updateMenuDto.getCode());
-            // code 중복체크
-            validator.validateCodeDup(updateMenuDto.getCode());
+            // 기존 코드와 다를 때만 중복 검사
+            if (!updateMenuDto.getCode().equals(menuListDto.getCode())) {
+                validator.validateCodeDup(updateMenuDto.getCode(), id);
+            }
         }
 
         // 메뉴 순서 변경 시 자동
@@ -114,18 +116,24 @@ public class MenuCategoryService {
     // 메뉴삭제
     public void deleteMenu(UUID id) throws NotFoundException {
 
-        if(menuMapper.menuDelete(id) == 0){
+        MenuListDto menu = menuMapper.menuFindById(id);
+        if(menu == null){
             throw new NotFoundException("삭제할 메뉴가 존재하지 않습니다.");
         }
 
         if(menuMapper.countChildMenus(id) > 0)
-            throw  new IllegalStateException("하위메뉴가 있어 삭제 불가합니다.");
+            throw new IllegalStateException("하위메뉴가 있어 삭제 불가합니다.");
 
         if (productMapper.countByCategoryId(id) > 0) {
             throw new IllegalStateException("해당 메뉴를 사용하는 상품이 존재하여 삭제할 수 없습니다.");
         }
-        menuMapper.menuDelete(id);
 
+        UUID parentId = menu.getParentId();
+        Integer deletedOrder = menu.getDisplayOrder();
+
+        menuMapper.menuDelete(id);
+        // 삭제된 순서 이후 메뉴들 자동 정렬
+        menuMapper.reorderAfterDelete(parentId, deletedOrder);
     }
 
 

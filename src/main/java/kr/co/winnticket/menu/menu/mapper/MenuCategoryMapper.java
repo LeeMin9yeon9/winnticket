@@ -69,7 +69,12 @@ public interface MenuCategoryMapper {
     );
 
     // 중복체크
-    int existsByCode(String code);
+    int existsByCode(@Param("code") String code);
+
+    // 수정시 코드 중복체크 본인제외
+    int existsByCodeAndNotId(@Param("code") String code,
+                             @Param("id") UUID id);
+
     // parentId 내에서 최대 order 조회
     Integer findMaxOrder(UUID parentId);
 
@@ -91,6 +96,10 @@ public interface MenuCategoryMapper {
             @Param("newOrder") Integer newOrder,
             @Param("oldOrder") Integer oldOrder
     );
+
+    // 삭제 시 메뉴정렬
+    void reorderAfterDelete(@Param("parentId") UUID parentId,
+                            @Param("deletedOrder") Integer deletedOrder);
 
 
 }
