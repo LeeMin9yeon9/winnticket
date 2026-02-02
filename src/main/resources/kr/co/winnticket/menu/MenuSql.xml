@@ -122,9 +122,9 @@
     </insert>
 
 
-    <!-- =============================
+    <!--
          메뉴 수정 (Null 이면 기존 유지)
-    ============================== -->
+     -->
     <update id="menuUpdate">
         UPDATE menu_categories
         <set>
@@ -154,17 +154,17 @@
     </update>
 
 
-    <!-- =============================
+    <!--
          메뉴 삭제
-    ============================== -->
+     -->
     <delete id="menuDelete">
         DELETE FROM menu_categories WHERE id = #{id}
     </delete>
 
 
-    <!-- =============================
+    <!--
          visible 변경
-    ============================== -->
+    -->
     <update id="menuUpdateVisible">
         UPDATE menu_categories
         SET visible = #{visible}, updated_at = CURRENT_TIMESTAMP
@@ -172,9 +172,9 @@
     </update>
 
 
-    <!-- =============================
+    <!--
          순서 변경
-    ============================== -->
+   -->
     <update id="menuUpdateOrder">
         UPDATE menu_categories
         SET display_order = #{displayOrder}, updated_at = CURRENT_TIMESTAMP
@@ -182,9 +182,9 @@
     </update>
 
 
-    <!-- =============================
+    <!--
          순서 밀기 (끼워넣기)
-    ============================== -->
+    -->
     <update id="shiftDisplayOrder">
         UPDATE menu_categories
         SET display_order = display_order + 1
@@ -262,12 +262,8 @@
     <update id="reorderAfterDelete">
         UPDATE menu_categories
         SET display_order = display_order - 1
-        WHERE
-            (
-                    (parent_id = #{parentId})
-                    OR (parent_id IS NULL AND #{parentId} IS NULL)
-                )
-          AND display_order > #{deletedOrder}
+        WHERE parent_id IS NOT DISTINCT FROM #{parentId}
+            AND display_order > #{deletedOrder}
     </update>
 
 </mapper>
