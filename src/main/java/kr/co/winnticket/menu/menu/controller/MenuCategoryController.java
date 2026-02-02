@@ -113,10 +113,5 @@ public class MenuCategoryController {
         return ResponseEntity.ok(ApiResponse.success("메뉴 활성/비활성 처리되었습니다.", null));
     }
 
-    @GetMapping("/shopMenus")
-    @Operation(summary = "SHOP 쇼핑몰 메뉴 조회")
-    public ResponseEntity<ApiResponse<List<MenuListDto>>> getShopMenus(){
-        List<MenuListDto> list = menuService.getShopMenus();
-        return ResponseEntity.ok(ApiResponse.success(list));
-    }
+
 }
