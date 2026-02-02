@@ -66,7 +66,7 @@ public class ProductPostReqDto {
     @Schema(description = "티켓타입", example = "01")
     private String ticketType;
 
-    @Schema(description = "표시순서", example = "01")
+    @Schema(description = "표시순서", example = "1")
     private String displayOrder;
 
     @Hidden
