@@ -44,6 +44,12 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "상품설명")
     private List<String> imageUrl;
 
+    @Schema(description = "지역코드")
+    private String regionCode;
+
+    @Schema(description = "티켓타입")
+    private String ticketType;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
