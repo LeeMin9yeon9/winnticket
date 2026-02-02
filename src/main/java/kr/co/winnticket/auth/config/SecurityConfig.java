@@ -74,7 +74,6 @@ public class SecurityConfig {
                                 "/api/orders/shop/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
-                                "/api/admin/menu/menuCategory/shopMenus/**",
                                 "/api/channels/**"
                         ).permitAll()
 
