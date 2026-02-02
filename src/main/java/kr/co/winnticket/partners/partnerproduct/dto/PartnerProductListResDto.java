@@ -14,6 +14,9 @@ public class PartnerProductListResDto {
     @Schema(description = "옵션값 ID (없으면 null)")
     private UUID optionValueId;
 
+    @Schema(description = "상품 대표 이미지 URL")
+    private String imageUrl;
+
     @Schema(description = "상품명")
     private String productName;
 
