@@ -38,47 +38,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("AUTHORIZATION HEADER = " + request.getHeader("Authorization"));
 
         try {
-            // 토큰 존재 시만 처리
+            // Authorization 헤더에 Bearer 토큰이 존재할 때만 처리
+            // (토큰이 없으면 그냥 익명 사용자로 통과)
             if (token != null) {
 
                 // 블랙리스트 확인 (로그아웃된 토큰)
                 if (tokenBlacklistService.isBlacklisted(token)) {
                     System.out.println("Blacklisted Token");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
+                    SecurityContextHolder.clearContext();
                 }
+                // 토큰 유효성 검증(실패해도 401 던지지 않음)
+                else if (jwtTokenProvider.validate(token)) {
 
-                // 토큰 유효성 검증
-                if (!jwtTokenProvider.validate(token)) {
-                    System.out.println("Invalid Token");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
+                    // Claims 파싱
+                    Claims claims = jwtTokenProvider.getClaims(token);
+                    String accountId = claims.getSubject();
+                    String roleId = (String) claims.get("roleId");
+
+                    // 권한 생성
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
+
+                    // 인증 정보 생성 후 SecurityContext 에 저장
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    accountId, null, List.of(authority)
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    System.out.println("AUTH SUCCESS | USER = " + accountId + ", ROLE = " + roleId);
+                } else {
+                    // 토큰이 존재하지만 유효하지 않은 경우 -> 인증 없이 통과 후 SecurityConfig에서 필요한 API만 401처리
+                    System.out.println("Invalid Token → ignore and continue");
+                    SecurityContextHolder.clearContext();
                 }
-
-                // Claims 파싱
-                Claims claims = jwtTokenProvider.getClaims(token);
-                String accountId = claims.getSubject();
-                String roleId = (String) claims.get("roleId");
-
-                // 권한 생성
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
-
-                // 인증 정보 생성 후 SecurityContext 에 저장
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                accountId, null, List.of(authority)
-                        );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                System.out.println("AUTH SUCCESS | USER = " + accountId + ", ROLE = " + roleId);
             }
-
+            // JWT 필터에서는 절대 401을 직접 던지지 않음
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             System.out.println("JWT Filter Exception: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request, response);
         }
     }
 
