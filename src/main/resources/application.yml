@@ -8,88 +8,25 @@ server:
         path: /
         same-site: none
         secure: true
+
 spring:
-  profiles:
-    active: local   # 기본은 local
   servlet:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
 
 mybatis:
-  mapper-locations: classpath*:/**/*Sql.xml
+  mapper-locations:
+    classpath:/kr/co/winnticket/**/*.xml
   type-aliases-package: kr.co.winnticket
   configuration:
     map-underscore-to-camel-case: true
   type-handlers-package: kr.co.winnticket.common.typehandler
 
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
-    path: /api-docs
-  group-configs: []
-    
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
-  override-with-generic-response: false
-
 jwt:
-  #secret: ${JWT_SECRET:local-secret}
-  secret: fW8Lr3RkZJq92xu3x6Qm2TZZV9DPuG3EJm1Q8zv9pO4Z6rjVJt5vZkBj0U9y3BTsPR3A1GjWJq8N0Kj7WTfF1Q
   access-token-validity: 3600000 #1시간
   refresh-token-validity: 2592000000 #30일
 
 logging:
   level:
     kr.co.winnticket: DEBUG
-
-# 채널 연동 (베네피아)
-benepia:
-  seed-key: 93bf2sd0324em312
-  cust-co-cd: z381
-  confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
-  token-create-url: https://stg-auth.benepia.co.kr/api/token/request
-  batch-base-url: https://stg-collections.benepia.co.kr
-  prdgb-file: ticket
-  kcp-co-cd: A8MCD
-
-# 신용카드 연동
-payletter:
-  base-url: https://testpgapi.payletter.com #운영 : https://pgapi.payletter.com/
-  client-id: pay_test
-  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA= #운영 : NUMyN0E1QTVEQzBGRDU0MTBGMDQyNzNFMUU1Q0FGOEY=
-  search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=  # 운영: NUZENTJGOTAwMjY1ODg4QURGRDhFNkZCNDVCNjdEMUE=
-  service-name: 페이레터
-
-  return-url: https://api.winnticket.store/api/payletter/return
-  callback-url: https://api.winnticket.store/api/payletter/callback
-  cancel-url: https://api.winnticket.store/api/payletter/cancel
-
-# 파트너 연동 (플러스앤)
-plusn:
-  base-url: http://partnerdev.tourok.co.kr   # 운영 : https://partner.tourok.co.kr
-  order-company: "148"
-
-# 파트너 연동 (민속촌 코어웍스)
-coreworks:
-  base-url: http://dev-api.core-works.co.kr:8050 # 운영 : https://api.core-works.co.kr/channel/general/v11/order
-  auth-token: "1505ee1f89cc000efdda3b34ee2485fbd9e50be4943ad0c9acf3ceab7bfc225a" #운영 : 59bee29ea0f864ad803b8af2ff1f029d51dba857a2732015b286f4f622a1f094
-  channel-cd: "HYUNDAINTOUR"
-
-# 파트너 연동 (웅진)
-woongjin:
-  base-url: https://channel-api.nolbal.com # 토큰만 다른거같음..?
-  api-token: "bm9sYmFsLTIyLTIwMjUtMDMtMjRUMDc6NTQ6NDAuNjcwMzkz"
-
-# 파트너 연동 (엠에어)
-mair:
-  mode: prod # dev | prod
-  mkno: "HDGH"     # 채널 구분 코드
-  mkid: "HDGH1"    # 채널 아이디
-  connectTimeoutMs: 2000
-  responseTimeoutMs: 5000
-  issueUrl: "https://cp.mair.co.kr/dev/_cp_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_jsonp.asp
-  cancelUrl: "https://cp.mair.co.kr/dev/_cp_cc_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_cc_jsonp.asp
-  useCheckUrl: "https://cp.mair.co.kr/dev/_cp_use_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_use_jsonp.asp
