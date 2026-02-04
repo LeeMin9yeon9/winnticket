@@ -1,48 +1,35 @@
 server:
   port: 8080
   forward-headers-strategy: framework
-  url: https://api.winnticket.store
-  servlet:
-    session:
-      cookie:
-        name: JSESSIONID
-        path: /
-        same-site: none
-        secure: true
 
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
+    #driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://winnticket-prod-db.c5ykoswqgy2y.ap-northeast-2.rds.amazonaws.com:5432/winnticket_prod
     username: winnticket
     password: ${DB_PASSWORD}
+
+  Jpa:
+    open-in-view: false
 
   data:
     redis:
       host: 127.0.0.1
       port: 6379
 
-mybatis:
-  mapper-locations: classpath*:/**/*Sql.xml
-  type-aliases-package: kr.co.winnticket
-  configuration:
-    map-underscore-to-camel-case: true
-  type-handlers-package: kr.co.winnticket.common.typehandler
-
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
-
-jwt:
-  secret: ${JWT_SECRET}
-  access-token-validity: 3600000
-  refresh-token-validity: 2592000000
-
 logging:
   level:
     kr.co.winnticket: INFO
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    url: https://api.winnticket.co.kr
+
+jwt:
+  secret: ${JWT_SECRET}
 
 file:
   upload-dir: /home/ubuntu/uploads
