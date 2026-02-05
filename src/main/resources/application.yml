@@ -10,6 +10,9 @@ server:
         secure: true
 
 spring:
+  profiles:
+    active: local
+
   servlet:
     multipart:
       max-file-size: 30MB
@@ -24,7 +27,7 @@ mybatis:
   type-handlers-package: kr.co.winnticket.common.typehandler
 
 jwt:
-  access-token-validity: 1800000 #30분
+  access-token-validity: 18000000 #1800000 #30분
   refresh-token-validity: 1209600000 #7일
 
 logging:
