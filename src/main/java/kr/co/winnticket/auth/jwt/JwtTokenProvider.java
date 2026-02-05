@@ -4,12 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -25,14 +25,14 @@ public class JwtTokenProvider {
             @Value("${jwt.refresh-token-validity}") long refreshTokenValidMs
     ) {
          System.out.println("=== SERVER SECRET ===");
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-       // this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
+        //this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
         this.accessTokenValidMs = accessTokenValidMs;
         this.refreshTokenValidMs = refreshTokenValidMs;
     }
 
     // Access Token 생성
-    public String createAccessToken(String id, String name, String accountId, String roleId, String userType, String partnerId){
+    public String createAccessToken(String id, String name, String accountId, String roleId, String userType, String partnerId, String sid){
         long now = System.currentTimeMillis();
 
         Claims claims = Jwts.claims().setSubject(id);
@@ -40,6 +40,7 @@ public class JwtTokenProvider {
         claims.put("accountId", accountId);
         claims.put("roleId", roleId);
         claims.put("userType", userType);
+        claims.put("sid", sid);
         if (partnerId != null) claims.put("partnerId", partnerId);
 
         return Jwts.builder()
@@ -51,7 +52,7 @@ public class JwtTokenProvider {
     }
 
     // Refresh Token 생성
-    public String createRefreshToken(String id, String accountId, String roleId){
+    public String createRefreshToken(String id, String accountId, String roleId, String sid){
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
@@ -59,6 +60,7 @@ public class JwtTokenProvider {
                 .claim("accountId",accountId)
                 .claim("roleId",roleId)
                 .claim("type", "refresh")
+                .claim("sid", sid)
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + refreshTokenValidMs))
                 .signWith(secretKey)
@@ -98,7 +100,7 @@ public class JwtTokenProvider {
         try {
             return getClaims(token);
         } catch (ExpiredJwtException e) {
-            return e.getClaims(); // ⭐ 이게 핵심
+            return e.getClaims(); // 이게 핵심
         }
     }
 }
