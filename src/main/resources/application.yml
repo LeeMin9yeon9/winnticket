@@ -24,8 +24,8 @@ mybatis:
   type-handlers-package: kr.co.winnticket.common.typehandler
 
 jwt:
-  access-token-validity: 3600000 #1시간
-  refresh-token-validity: 2592000000 #30일
+  access-token-validity: 1800000 #30분
+  refresh-token-validity: 1209600000 #7일
 
 logging:
   level:

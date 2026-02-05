@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -17,6 +19,8 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final TokenBlacklistService tokenBlacklistService;
     private final RefreshTokenService refreshTokenService;
+    private final FieldSessionService fieldSessionService;
+
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto){
         String accountId = loginRequestDto.getAccountId();
@@ -31,6 +35,11 @@ public class AuthService {
         }
         if(loginUser == null){
             throw new RuntimeException("Account not found");
+        }
+        String sid = null;
+
+        if ("ROLE002".equals(loginUser.getRoleId())) {
+            sid = UUID.randomUUID().toString();
         }
 
         String roleId = loginUser.getRoleId();
@@ -69,8 +78,6 @@ public class AuthService {
             authmapper.updateLastLoginAt(loginUser.getId());
         }
 
-
-
         // JWT 생성
         String accessToken = jwtTokenProvider.createAccessToken(
                 loginUser.getId(),
@@ -78,7 +85,8 @@ public class AuthService {
                 loginUser.getAccountId(),
                 loginUser.getRoleId(),
                 loginUser.getUserType(),
-                loginUser.getPartnerId()
+                loginUser.getPartnerId(),
+                sid
         );
         String refreshToken = null;
         if("ROLE002".equals(loginUser.getRoleId())) {
@@ -86,10 +94,12 @@ public class AuthService {
             refreshToken = jwtTokenProvider.createRefreshToken(
                     loginUser.getId(),
                     loginUser.getAccountId(),
-                    loginUser.getRoleId()
+                    loginUser.getRoleId(),
+                    sid
             );
             long refreshTtl = jwtTokenProvider.getExpiration(refreshToken) - System.currentTimeMillis();
             refreshTokenService.refreshStore(loginUser.getAccountId(),refreshToken,refreshTtl);
+            fieldSessionService.store(loginUser.getAccountId(), sid, refreshTtl);
         }
         // JWT 응답
         AuthUserDto authUser = AuthUserDto.builder()
@@ -109,6 +119,8 @@ public class AuthService {
                 .build();
 
     }
+
+
     public void logout(String accessToken){
         if (accessToken == null) {
             return; // 토큰 없어도 로그아웃 성공 처리
@@ -121,11 +133,14 @@ public class AuthService {
             // Access Token에서 사용자 식별
             Claims claims = jwtTokenProvider.getClaimsAllowExpired(accessToken);
             String accountId = claims.get("accountId", String.class);
-            String role = claims.get("role", String.class);
+            String role = claims.get("roleId", String.class);
+
+
 
             // ROLE002만 Refresh Token 삭제
             if ("ROLE002".equals(role)) {
                 refreshTokenService.refreshDelete(accountId);
+                fieldSessionService.delete(accountId);
             }
         }catch(Exception e){
 
@@ -153,6 +168,16 @@ public class AuthService {
         String accountId = claims.get("accountId", String.class);
         String roleId    = claims.get("roleId", String.class);
         String type      = claims.get("type", String.class);
+        String sid = claims.get("sid", String.class);
+
+        if (sid == null) {
+            throw new RuntimeException("Session expired. Please login again.");
+        }
+
+        String currentSid = fieldSessionService.get(accountId);
+        if (currentSid == null || !currentSid.equals(sid)) {
+            throw new RuntimeException("다른 기기에서 로그인되었습니다.");
+        }
 
         // Refresh 타입, ROLE002(현장관리자)만 허용
         if (!"refresh".equals(type)) {
@@ -185,17 +210,21 @@ public class AuthService {
                 user.getAccountId(),
                 user.getRoleId(),
                 user.getUserType(),
-                user.getPartnerId()
+                user.getPartnerId(),
+                sid
         );
 
         String newRefreshToken = jwtTokenProvider.createRefreshToken(
                 user.getId(),
                 user.getAccountId(),
-                user.getRoleId()
+                user.getRoleId(),
+                sid
         );
 
         long refreshTtl = jwtTokenProvider.getExpiration(newRefreshToken) - System.currentTimeMillis();
         refreshTokenService.refreshStore(user.getAccountId(), newRefreshToken, refreshTtl);
+        // 세션 TTL 갱신
+        fieldSessionService.store(user.getAccountId(), sid, refreshTtl);
 
         return TokenResponseDto.builder()
                 .accessToken(newAccessToken)
