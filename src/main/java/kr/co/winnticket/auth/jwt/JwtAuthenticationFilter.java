@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import kr.co.winnticket.auth.service.FieldSessionService;
 import kr.co.winnticket.auth.service.TokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
+    private final FieldSessionService fieldSessionService;
+
 
 
     @Override
@@ -52,8 +55,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // Claims 파싱
                     Claims claims = jwtTokenProvider.getClaims(token);
-                    String accountId = claims.getSubject();
+                    String userId = claims.getSubject(); // subject는 id
+                    String accountId = claims.get("accountId", String.class);
                     String roleId = (String) claims.get("roleId");
+
+                    // ROLE002(현장관리자) 동시 로그인 차단
+                    if ("ROLE002".equals(roleId)) {
+                        String sid = (String) claims.get("sid", String.class);
+
+                        if (sid == null) {
+                            System.out.println("SID missing → force logout");
+                            SecurityContextHolder.clearContext();
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            return;
+                        }
+
+                        String currentSid = fieldSessionService.get(accountId);
+
+                        if (currentSid == null || !currentSid.equals(sid)) {
+                            System.out.println("Concurrent login detected → force logout");
+                            SecurityContextHolder.clearContext();
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"SESSION_INVALID\"}");
+
+                            return;
+                        }
+                    }
 
                     // 권한 생성
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
@@ -75,6 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             // JWT 필터에서는 절대 401을 직접 던지지 않음
             filterChain.doFilter(request, response);
+
 
         } catch (Exception e) {
             System.out.println("JWT Filter Exception: " + e.getMessage());

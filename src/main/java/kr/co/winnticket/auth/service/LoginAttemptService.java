@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class LoginAttemptService {
+public class LoginAttemptService { // 로그인 실패 관리
 
     private final StringRedisTemplate redisTemplate;
 

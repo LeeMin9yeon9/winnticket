@@ -19,7 +19,7 @@ logging:
     kr.co.winnticket: DEBUG
 
 jwt:
-  secret: Iczda1sYG5fGJ4029k3c9IR5d2fSMTGFMIxOdipalKT4bIOtRJBhKz6WCv4qdZqZV905zpgNeBPM7U+fHuuPjg==
+  secret: ${JWT_SECRET}
 
 springdoc:
   api-docs:
