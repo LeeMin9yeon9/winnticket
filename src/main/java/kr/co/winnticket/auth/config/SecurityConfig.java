@@ -63,7 +63,9 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/api/plusn/test/**",
                                 "/api/coreworks/test/**",
-                                "/api/woongjin/test/**"
+                                "/api/woongjin/test/**",
+                                "/api/spavis/test/**",
+                                "/api/playstory/test/**"
                 ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
