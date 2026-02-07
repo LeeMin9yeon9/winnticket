@@ -10,8 +10,8 @@ server:
         secure: true
 
 spring:
-  profiles:
-    active: local
+  #profiles:
+   # active: local
 
   servlet:
     multipart:
