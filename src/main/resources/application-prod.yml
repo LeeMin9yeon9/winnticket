@@ -1,6 +1,8 @@
 server:
   port: 8080
   forward-headers-strategy: framework
+  profiles:
+    active: prod
 
 spring:
   datasource:
@@ -31,8 +33,17 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET}
 
-file:
-  upload-dir: /home/winnticket/uploads
+# S3 이미지
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: winnticket-prod-uploads
+
+# CloudFront URL
+cdn:
+  url: https://d2f2qj7j8l0gx6.cloudfront.net
 
 
 # 채널 연동 (베네피아 운영)
