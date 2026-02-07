@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Profile("prod")
-public class S3FileService {
+public class S3FileService implements FileStorageService {
     private final AmazonS3 amazonS3;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -50,12 +50,19 @@ public class S3FileService {
         return urls;
     }
 
-    public void deleteFiles(List<String> imageUrls) {
+    @Override
+    public List<String> deleteFiles(List<String> imageUrls) {
+
+        List<String> deletedKeys = new ArrayList<>();
 
         for (String url : imageUrls) {
 
             String key = url.replace(cdnUrl + "/", "");
+
             amazonS3.deleteObject(bucket, key);
+            deletedKeys.add(key);
         }
+
+        return deletedKeys;
     }
 }
