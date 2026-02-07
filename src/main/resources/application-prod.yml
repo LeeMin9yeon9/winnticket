@@ -32,7 +32,7 @@ jwt:
   secret: ${JWT_SECRET}
 
 file:
-  upload-dir: /home/ubuntu/uploads
+  upload-dir: /home/winnticket/uploads
 
 
 # 채널 연동 (베네피아 운영)
