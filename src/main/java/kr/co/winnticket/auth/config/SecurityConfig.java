@@ -150,11 +150,12 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
 
         // 운영 도메인 + CloudFront 패턴 허용
-        config.setAllowedOrigins(List.of(
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
                 "https://winnticket.store",
                 "https://www.winnticket.store",
-                "https://d2f2qj7j8l0gx6.cloudfront.net",
-                "http://localhost:3000"
+                "https://d2f2qj7j8l0gx6.cloudfront.net"
         ));
 
         config.addAllowedHeader("*");
