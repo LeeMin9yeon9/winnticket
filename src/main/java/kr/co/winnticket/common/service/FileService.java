@@ -19,7 +19,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Profile("dev")
-public class FileService {
+public class FileService implements FileStorageService  {
 
     @Value("${file.upload-dir}")
     private String uploadDir;

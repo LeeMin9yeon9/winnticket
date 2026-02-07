@@ -2,21 +2,23 @@ package kr.co.winnticket.product.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.common.enums.ProductType;
-import kr.co.winnticket.common.service.FileService;
+import kr.co.winnticket.common.service.FileStorageService;
 import kr.co.winnticket.product.admin.dto.*;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductMapper mapper;
     private final ObjectMapper objectMapper;
-    private final FileService fileService;
+    //private final FileService fileService;
+    private final FileStorageService fileStorageService;
 
     // 상품 목록 조회
     public List<ProductListGetResDto> selectProductList(String srchWord, UUID categoryId, String salesStatus) {
