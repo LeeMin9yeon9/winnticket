@@ -18,17 +18,15 @@ spring:
 
   redis:
     data:
-     host: localhost
-     port: 6379
-     password: null
+      host: localhost
+      port: 6379
+      password: null
 
 file:
   upload-dir: /Users/kimhb/uploads
 
-
   jwt:
     secret: ${JWT_SECRET}
-
 
 # 채널 연동 (베네피아)
 benepia:
@@ -79,4 +77,12 @@ mair:
   cancelUrl: "https://cp.mair.co.kr/dev/_cp_cc_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_cc_jsonp.asp
   useCheckUrl: "https://cp.mair.co.kr/dev/_cp_use_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_use_jsonp.asp
 
+# 파트너 연동 (스파비스)
+spavis:
+  base-url: "https://www.spavis.co.kr/social_interface/couponif03.asp" # 스파비스 운영 url
+  cust-id: 410268 # 채널 코드
 
+# 파트너 연동 (플레이스토리)
+playstory:
+  base-url: "http://out.dev.pscms.co.kr"
+  chn-id: "hyundaiplanandtour"

@@ -56,18 +56,18 @@ payletter:
 
 # 파트너 연동 (플러스앤)
 plusn:
-  base-url: http://partnerdev.tourok.co.kr   # 운영 : https://partner.tourok.co.kr
+  base-url: http://partnerdev.tourok.co.kr
   order-company: "148"
 
 # 파트너 연동 (민속촌 코어웍스)
 coreworks:
-  base-url: http://dev-api.core-works.co.kr:8050 # 운영 : https://api.core-works.co.kr/channel/general/v11/order
+  base-url: http://dev-api.core-works.co.kr:8050
   auth-token: "1505ee1f89cc000efdda3b34ee2485fbd9e50be4943ad0c9acf3ceab7bfc225a"
   channel-cd: "HYUNDAINTOUR"
 
 # 파트너 연동 (웅진)
 woongjin:
-  base-url: https://channel-api.nolbal.com # 토큰만 다른거같음..?
+  base-url: https://channel-api.nolbal.com
   api-token: "bm9sYmFsLTIyLTIwMjUtMDMtMjRUMDc6NTQ6NDAuNjcwMzkz"
 
 # 파트너 연동 (엠에어)
@@ -81,5 +81,13 @@ mair:
   cancelUrl: "https://cp.mair.co.kr/dev/_cp_cc_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_cc_jsonp.asp
   useCheckUrl: "https://cp.mair.co.kr/dev/_cp_use_jsonp.asp" # 운영 : https://cp.mair.co.kr/_cp_use_jsonp.asp
 
+# 파트너 연동 (스파비스)
+spavis:
+  base-url: "https://www.spavis.co.kr/social_interface/couponif03.asp" # 스파비스 운영 url
+  cust-id: 410268 # 채널 코드
 
+# 파트너 연동 (플레이스토리)
+playstory:
+  base-url: "http://out.dev.pscms.co.kr"
+  chn-id: "hyundaiplanandtour"
 
