@@ -47,10 +47,10 @@ public class SecurityConfig {
         http
                 .securityMatcher("/**")
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(form -> form.disable())
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable())
-                )
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
 
                      /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
@@ -146,15 +146,24 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://winnticket.store"));
-        config.setAllowedMethods(List.of("*"));
-        config.setAllowedHeaders(List.of("*"));
+
         config.setAllowCredentials(true);
+
+        // 운영 도메인 + CloudFront 패턴 허용
+        config.setAllowedOrigins(List.of(
+                "https://winnticket.store",
+                "https://www.winnticket.store",
+                "https://d2f2qj7j8l0gx6.cloudfront.net",
+                "http://localhost:3000"
+        ));
+
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/**", config);
 
         return source;
     }
