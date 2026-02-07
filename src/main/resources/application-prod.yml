@@ -86,3 +86,13 @@ mair:
   issueUrl: https://cp.mair.co.kr/_cp_jsonp.asp
   cancelUrl: https://cp.mair.co.kr/_cp_cc_jsonp.asp
   useCheckUrl: https://cp.mair.co.kr/_cp_use_jsonp.asp
+
+# 파트너 연동 (스파비스)
+spavis:
+  base-url: "https://www.spavis.co.kr/social_interface/couponif03.asp"
+  cust-id: 410268
+
+# 파트너 연동 (플레이스토리)
+playstory:
+  base-url: "https://storeapi.pscms.co.kr"
+  chn-id: "P240076"
