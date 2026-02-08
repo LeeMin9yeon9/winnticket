@@ -7,11 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Data
-public class SISearchRequest {
+public class SIOrderSearchRequest {
 
     @JsonProperty("order_no")
     private String orderNo;
-
-    @JsonProperty("order_sales")
-    private String orderSales;
 }
