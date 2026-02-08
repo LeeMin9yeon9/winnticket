@@ -65,6 +65,16 @@ public class ChannelService {
 
     // 채널코드로 아이디찾기
     public UUID selectChannelIdByCode(String channelCode) {
-        return mapper.selectChannelIdByCode(channelCode);
+        if(channelCode != null && !channelCode.isBlank()){
+            UUID id = mapper.selectChannelIdByCode(channelCode);
+
+            if(id == null){
+                throw new IllegalArgumentException("존재하지 않는 채널코드입니다.");
+            }
+
+            return id;
+        }
+
+        return mapper.selectDefaultChannelId();
     }
 }

@@ -1,7 +1,7 @@
 package kr.co.winnticket.common.controller;
 
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.common.service.FileService;
+import kr.co.winnticket.common.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/common/files")
 public class FileController {
-    private final FileService fileService;
+    //private final FileService fileService;
+    private final FileStorageService fileService;
+
 
     // 이미지 업로드
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
