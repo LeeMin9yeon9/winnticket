@@ -3,9 +3,6 @@ server:
   port: 8080
 
 spring:
-  profiles:
-    active: dev
-
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://172.31.35.207:5432/winnticket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul

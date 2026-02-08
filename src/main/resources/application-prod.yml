@@ -2,11 +2,7 @@ server:
   port: 8080
   forward-headers-strategy: framework
 
-
 spring:
-  profiles:
-    active: prod
-
   datasource:
     #driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://winnticket-prod-db.c5ykoswqgy2y.ap-northeast-2.rds.amazonaws.com:5432/winnticket_prod
