@@ -1,4 +1,4 @@
-package kr.co.winnticket.status;
+package kr.co.winnticket.common.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
