@@ -86,3 +86,9 @@ spavis:
 playstory:
   base-url: "http://out.dev.pscms.co.kr"
   chn-id: "hyundaiplanandtour"
+
+# 파트너 연동 (스마트인피니(서울랜드))
+smartinfini:
+  base-url: "https://nsi.smartinfini.com/cinterface"
+  token: "BZIG91YGLkcts0U2Uau5Kg=="
+  channel-id : "36"
