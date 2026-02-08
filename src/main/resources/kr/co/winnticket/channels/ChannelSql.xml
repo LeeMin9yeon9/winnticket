@@ -144,6 +144,14 @@
           AND VISIBLE = true
     </select>
 
+    <!-- 기본채널찾기 -->
+    <select id="selectDefaultChannelId" resultType="java.util.UUID">
+        SELECT id
+        FROM channels
+        WHERE is_default = true
+        LIMIT 1;
+    </select>
+
     <!--채널코드로 기본정보-->
     <select id="selectChannelByCode"
             parameterType="string"
