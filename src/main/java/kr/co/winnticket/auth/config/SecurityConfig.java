@@ -64,9 +64,9 @@ public class SecurityConfig {
                                 "/api/plusn/test/**",
                                 "/api/coreworks/test/**",
                                 "/api/woongjin/test/**",
-                                "/api/woongjin/test/**",
                                 "/api/spavis/test/**",
-                                "/api/playstory/test/**"
+                                "/api/playstory/test/**",
+                                "/api/smartInfini/test/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
