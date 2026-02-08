@@ -49,4 +49,7 @@ public interface ChannelMapper {
     // 채널id로 code찾기
     Boolean selectUseCardById(@Param("id") UUID id);
 
+    // default 채널 찾기
+    UUID selectDefaultChannelId();
+
 }

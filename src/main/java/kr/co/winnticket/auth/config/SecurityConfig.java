@@ -49,11 +49,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(form -> form.disable())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable())
+                )
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
 
-                     /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
+                        /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
                                 "/api/mair/**",
                                 "/api/payletter/**",
@@ -68,7 +71,7 @@ public class SecurityConfig {
                                 "/api/woongjin/test/**",
                                 "/api/spavis/test/**",
                                 "/api/playstory/test/**"
-                ).permitAll()
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
                                 "/api/product/shop/**",
@@ -146,6 +149,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("https://winnticket.store"));
+        config.setAllowedMethods(List.of("*"));
+        config.setAllowedHeaders(List.of("*"));
 
         config.setAllowCredentials(true);
 
@@ -163,6 +169,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
+        source.registerCorsConfiguration("/api/**", config);
         source.registerCorsConfiguration("/**", config);
 
         return source;
@@ -173,3 +180,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
