@@ -1,27 +1,40 @@
 package kr.co.winnticket.popup.service;
 
 
-
-import  kr.co.winnticket.common.dto.ApiResponse;
-import  kr.co.winnticket.popup.dto.*;
-import  kr.co.winnticket.popup.entity.*;
-import  kr.co.winnticket.popup.enums.PopupShowCondition;
-import  kr.co.winnticket.popup.repository.*;
 import jakarta.persistence.EntityNotFoundException;
+import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
+import kr.co.winnticket.common.dto.ApiResponse;
+import kr.co.winnticket.popup.dto.PopupCreateDto;
+import kr.co.winnticket.popup.dto.PopupDto;
+import kr.co.winnticket.popup.dto.PopupFilter;
+import kr.co.winnticket.popup.dto.PopupUpdateDto;
+import kr.co.winnticket.popup.entity.Popup;
+import kr.co.winnticket.popup.entity.PopupChannel;
+import kr.co.winnticket.popup.entity.PopupPage;
+import kr.co.winnticket.popup.entity.PopupUserPreference;
+import kr.co.winnticket.popup.enums.PopupShowCondition;
+import kr.co.winnticket.popup.repository.PopupChannelRepository;
+import kr.co.winnticket.popup.repository.PopupPageRepository;
+import kr.co.winnticket.popup.repository.PopupRepository;
+import kr.co.winnticket.popup.repository.PopupUserPreferenceRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PopupService {
 
+    private final ChannelMapper channelMapper;
     private final PopupRepository popupRepository;
     private final PopupChannelRepository popupChannelRepository;
     private final PopupPageRepository popupPageRepository;
@@ -68,7 +81,7 @@ public class PopupService {
             for (String channelId : dto.getChannelIds()) {
                 PopupChannel ch = new PopupChannel();
                 ch.setPopup(popup);
-                ch.setChannelId(channelId);
+                ch.setChannelId(UUID.fromString(channelId));
                 popupChannelRepository.save(ch);
             }
         }
@@ -111,7 +124,7 @@ public class PopupService {
             for (String channelId : dto.getChannelIds()) {
                 PopupChannel ch = new PopupChannel();
                 ch.setPopup(popup);
-                ch.setChannelId(channelId);
+                ch.setChannelId(UUID.fromString(channelId));
                 popupChannelRepository.save(ch);
             }
         }
@@ -140,11 +153,19 @@ public class PopupService {
 
     // ===== 쇼핑몰용: 노출 대상 팝업 조회 =====
     public ApiResponse<List<PopupDto>> getShopPopups(
-            String channelId,
+            String channelCode,
             String pagePath,
             String userId,
             String sessionId
     ) {
+        // 1️⃣ channelCode → UUID 변환
+        UUID channelId = channelMapper.selectChannelIdByCode(channelCode);
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("채널이 존재하지 않습니다.");
+        }
+
+        // 2️⃣ UUID로 팝업 조회
         List<Popup> popups = popupRepository.findActivePopupsByChannelAndPage(
                 channelId,
                 pagePath,
@@ -153,14 +174,15 @@ public class PopupService {
 
         List<Popup> filtered = popups.stream()
                 .filter(p -> shouldShowPopup(p, userId, sessionId))
-                .collect(Collectors.toList());
+                .toList();
 
         List<PopupDto> dtos = filtered.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
 
         return ApiResponse.success(dtos);
     }
+
 
     /**
      * 팝업 표시 여부 판단
@@ -292,7 +314,7 @@ public class PopupService {
 
         dto.setChannelIds(
                 popup.getChannels().stream()
-                        .map(PopupChannel::getChannelId)
+                        .map(pc -> pc.getChannelId().toString())
                         .collect(Collectors.toList())
         );
 
