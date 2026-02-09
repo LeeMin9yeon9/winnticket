@@ -2,18 +2,15 @@ package kr.co.winnticket.common.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import io.swagger.v3.oas.annotations.info.Info;
-
-import java.util.List;
 
 @Configuration
 @OpenAPIDefinition(
@@ -43,7 +40,7 @@ public class SwaggerConfig {
 
         switch (activeProfile) {
             case "dev":
-                serverUrl = "https://api.winnticket.store";
+               // serverUrl = "https://api.winnticket.store";
                 description = "DEV Server";
                 break;
             default:
@@ -56,10 +53,10 @@ public class SwaggerConfig {
                 .info(new io.swagger.v3.oas.models.info.Info()
                         .title("WinnTicket API Docs")
                         .description("윈앤티켓 백엔드 API 명세서")
-                        .version("v1.0"))
-                .servers(List.of(
-                        new Server().url(serverUrl).description(description)
-                ));
+                        .version("v1.0"));
+                // .servers(List.of(
+                //         new Server().url(serverUrl).description(description)
+                // ));
     }
 
     /* ================= GROUP API SETTING ================= */

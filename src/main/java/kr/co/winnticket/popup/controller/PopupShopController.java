@@ -1,16 +1,16 @@
 package kr.co.winnticket.popup.controller;
 
 
-
+import jakarta.servlet.http.HttpServletRequest;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.popup.dto.PopupDto;
 import kr.co.winnticket.popup.service.PopupService;
-import java.util.List;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/shop/popups")
@@ -24,7 +24,7 @@ public class PopupShopController {
      */
     @GetMapping
     public ApiResponse<List<PopupDto>> getPopups(
-            @RequestParam(required = false) String channelId,
+            @RequestParam(required = false) String channelCode,
             @RequestParam(required = false) String pagePath,
             @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest request
@@ -32,7 +32,7 @@ public class PopupShopController {
         String userId = userDetails != null ? userDetails.getUsername() : null;
         String sessionId = request.getSession().getId();
 
-        return popupService.getShopPopups(channelId, pagePath, userId, sessionId);
+        return popupService.getShopPopups(channelCode, pagePath, userId, sessionId);
     }
 
     /**

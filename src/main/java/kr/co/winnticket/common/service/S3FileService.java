@@ -1,12 +1,14 @@
 package kr.co.winnticket.common.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.InputStream;
 import java.nio.file.Paths;
@@ -19,7 +21,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Profile("prod")
 public class S3FileService implements FileStorageService {
-    private final AmazonS3 amazonS3;
+
+    private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -53,11 +56,17 @@ public class S3FileService implements FileStorageService {
 
             try (InputStream inputStream = file.getInputStream()) {
 
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(file.getSize());
-                metadata.setContentType("image/" + extension);
+                PutObjectRequest request = PutObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .contentType("image/" + extension)
+                        .contentLength(file.getSize())
+                        .build();
 
-                amazonS3.putObject(bucket, key, inputStream, metadata);
+                s3Client.putObject(
+                        request,
+                        RequestBody.fromInputStream(inputStream, file.getSize())
+                );
 
                 urls.add(cdnUrl + "/" + key);
 
@@ -83,7 +92,13 @@ public class S3FileService implements FileStorageService {
 
             String key = extractKeyFromUrl(url);
 
-            amazonS3.deleteObject(bucket, key);
+            DeleteObjectRequest request = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+
+            s3Client.deleteObject(request);
+
             deletedKeys.add(key);
         }
 
