@@ -99,3 +99,8 @@ smartinfini:
   token: "BZIG91YGLkcts0U2Uau5Kg=="
   hannel-id : "36"
 
+# 뱅크다 연동
+bankda:
+  url: "https://a.bankda.com/dtsvc/bank_tr.php"
+  token: "d4545a3900b2f4b8ce3df4b28db4f8c7"
+
