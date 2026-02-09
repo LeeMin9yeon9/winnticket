@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Profile("dev")
+@Profile("!prod")
 public class FileService implements FileStorageService  {
 
     @Value("${file.upload-dir}")

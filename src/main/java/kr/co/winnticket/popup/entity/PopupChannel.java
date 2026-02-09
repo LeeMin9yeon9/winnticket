@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @Entity
@@ -16,7 +18,7 @@ public class PopupChannel {
 
     // 예: 몰 아이디, 도메인 아이디, 채널 코드 등
     @Column(nullable = false, length = 50)
-    private String channelId;
+    private UUID channelId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "popup_id", nullable = false)

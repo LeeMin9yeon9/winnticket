@@ -10,17 +10,23 @@ server:
         secure: true
 
 spring:
-  #profiles:
-   # active: local
+  profiles:
+    active: local
 
   servlet:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
 
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: winnticket-prod-uploads
+
 mybatis:
-  mapper-locations:
-    classpath:/kr/co/winnticket/**/*.xml
+  mapper-locations: classpath*:kr/co/winnticket/**/*.xml
   type-aliases-package: kr.co.winnticket
   configuration:
     map-underscore-to-camel-case: true

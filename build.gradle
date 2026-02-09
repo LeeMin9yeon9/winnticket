@@ -73,8 +73,13 @@ dependencies {
     // Payletter 결제 API 호출용 HTTP 클라이언트(WebClient 기반)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    // AWS S3
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+
+    // AWS SDK v2 BOM
+    implementation platform("software.amazon.awssdk:bom:2.25.20")
+
+    // S3
+    implementation "software.amazon.awssdk:s3"
+
 
 }
 
