@@ -51,7 +51,7 @@ public class SecurityConfig {
 
         http
                 .securityMatcher("/**")
-                .cors(cors -> {})
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .headers(headers -> headers
@@ -76,7 +76,10 @@ public class SecurityConfig {
                                 "/api/playstory/test/**",
                                 "/api/smartInfini/test/**",
                                 "/api/bankda/test/**",
-                                "/api/bankda/**"
+                                "/api/bankda/**",
+                                "/api/swagger-ui/**",
+                                "/api/v3/api-docs/**",
+                                "/api/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
@@ -90,7 +93,8 @@ public class SecurityConfig {
                                 "/api/orders/shop/**",
                                 "/api/common/status",
                                 "/api/shopCart/**",
-                                "/api/channels/**"
+                                "/api/channels/**",
+                                "/api/menu/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST,
@@ -140,8 +144,7 @@ public class SecurityConfig {
                         .hasAuthority("ROLE001")
 
                         /* ---------- 나머지는 인증 필요 ---------- */
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .httpBasic(httpBasic -> httpBasic.disable());
 
         // JWT 필터 등록
@@ -155,7 +158,10 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("https://*.winnticket.store"));
+        config.setAllowedOriginPatterns(List.of(
+                "https://www.winnticket.store",
+                "https://winnticket.store",
+                "https://13.209.91.167"));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

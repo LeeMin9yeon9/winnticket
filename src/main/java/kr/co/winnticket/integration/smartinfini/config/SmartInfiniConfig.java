@@ -1,7 +1,5 @@
 package kr.co.winnticket.integration.smartinfini.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.smartinfini.props.SmartInfiniProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -27,10 +25,11 @@ public class SmartInfiniConfig {
                 .build();
     }
 
-    @Bean
-    public ObjectMapper smartInfiniObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return om;
-    }
+//    @Bean
+//    public ObjectMapper smartInfiniObjectMapper() {
+//        ObjectMapper om = new ObjectMapper();
+//        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        om.findAndRegisterModules();
+//        return om;
+//    }
 }

@@ -20,14 +20,18 @@ spring:
 
 logging:
   level:
-    kr.co.winnticket: INFO
+    kr.co.winnticket: debug
+    org.springframework: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
 
 springdoc:
   api-docs:
     enabled: true
+    path: /api/v3/api-docs
   swagger-ui:
     enabled: true
-    path: /swagger-ui.html
+    path: /api/swagger-ui.html
 
 jwt:
   secret: ${JWT_SECRET}

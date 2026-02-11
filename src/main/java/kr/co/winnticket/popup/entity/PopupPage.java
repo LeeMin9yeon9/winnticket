@@ -19,7 +19,7 @@ public class PopupPage {
      * 페이지 path 패턴
      * 예: /, /product/*, /event/*
      */
-    @Column(nullable = false, length = 200)
+    @Column(name = "page_path" , nullable = false, length = 200)
     private String pathPattern;
 
     @ManyToOne(fetch = FetchType.LAZY)
