@@ -20,15 +20,12 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity: 18000000 #1800000 #30분
-  refresh-token-validity: 1209600000 #7일
 
 springdoc:
   api-docs:
     enabled: true
   swagger-ui:
     enabled: true
-    url: https://api.winnticket.co.kr
 
 file:
   upload-dir: /home/ubuntu/winnticket_upload
