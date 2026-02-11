@@ -24,8 +24,8 @@ public class FileService implements FileStorageService  {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-//    @Value("${server.url}")
-//    private String serverUrl;
+    @Value("${server.url}")
+    private String serverUrl;
 
     // 업로드 처리
     public List<String> uploadFiles(MultipartFile[] files) {
@@ -49,8 +49,7 @@ public class FileService implements FileStorageService  {
                 throw new RuntimeException("파일 저장에 실패했습니다.");
             }
 
-            urls.add("/uploads/" + savedName);
-
+            urls.add(serverUrl + "/uploads/" + savedName);
         }
 
         return urls;
