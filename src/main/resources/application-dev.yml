@@ -1,6 +1,7 @@
 server:
   #forward-headers-strategy: framework
   port: 8080
+  url: http://13.209.91.167
 
 spring:
   datasource:
