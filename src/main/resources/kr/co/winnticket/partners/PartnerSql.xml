@@ -5,38 +5,54 @@
 <mapper namespace="kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper">
 
     <!-- 파트너 목록 / 검색 -->
-    <select id="selectPartnerList" resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
-        SELECT
-        p.ID,
-        p.CODE,
-        p.NAME,
-        p.TYPE,
-        p.STATUS,
-        p.MANAGER_NAME AS managerName,
-        p.CONTRACT_START_DATE AS contractStartDate,
-        p.CONTRACT_END_DATE AS contractEndDate,
-        p.COMMISSION_RATE AS commissionRate,
-        p.VISIBLE
-        FROM PARTNERS p
-        WHERE 1 = 1
+    <select id="selectPartnerList"
+            resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
 
+        SELECT
+        ID,
+        CODE,
+        NAME,
+        STATUS,
+        CREATED_AT,
+        UPDATED_AT
+        FROM PARTNERS
+        WHERE 1=1
+
+        <!-- 키워드 검색 -->
         <if test="keyword != null and keyword != ''">
             AND (
-            UPPER(p.NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-            OR UPPER(p.CODE) LIKE '%' || UPPER(#{keyword}) || '%'
-            OR UPPER(p.MANAGER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            NAME ILIKE '%' || #{keyword} || '%'
+            OR CODE ILIKE '%' || #{keyword} || '%'
             )
         </if>
 
-        <if test="AllType != null">
-            AND p.TYPE = #{AllType}
+        <!-- 상태 필터 -->
+        <choose>
+            <!-- 상태를 명시적으로 선택한 경우 -->
+            <when test="scStatus != null">
+                AND STATUS = #{AllStatus}
+            </when>
+
+            <!-- 기본값: ACTIVE, INACTIVE만 -->
+            <otherwise>
+                AND STATUS IN ('ACTIVE', 'INACTIVE')
+            </otherwise>
+        </choose>
+
+        <!-- 타입 필터 -->
+        <if test="scType != null">
+            AND TYPE = #{AllType}
         </if>
 
-        <if test="AllStatus != null">
-            AND p.STATUS = #{AllStatus}
-        </if>
+        <!-- 정렬 우선순위 -->
+        ORDER BY
+        CASE STATUS
+        WHEN 'ACTIVE' THEN 1
+        WHEN 'INACTIVE' THEN 2
+        WHEN 'DELETED' THEN 3
+        END,
+        CREATED_AT DESC
 
-        ORDER BY p.CREATED_AT DESC
     </select>
 
 

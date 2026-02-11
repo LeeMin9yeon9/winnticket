@@ -28,6 +28,7 @@ public class ShopCartService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CART_SESSION_KEY = "SHOP_CART";
 
+
     // ㅈㅏㅇㅂㅏㄱㅜㄴㅣ ㅇㅣㅁㅣㅈㅣ ㄱㅡㄹㅆㅣ ㅇㅗㅐㅇㅣㄹㅐ
     private List<String> parseImageUrls(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {

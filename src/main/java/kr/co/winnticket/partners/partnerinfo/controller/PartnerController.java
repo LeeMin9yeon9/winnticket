@@ -32,26 +32,15 @@ public class PartnerController {
 
             @RequestParam(required = false) String keyword,
 
-            @Parameter(description = "상태 (ACTIVE, INACTIVE, PENDING, SUSPENDED)")
-            @RequestParam(required = false, name = "AllStatus") String scStatus,
+            @Parameter(description = "상태 (ACTIVE, INACTIVE, DELETED)")
+            @RequestParam(required = false, name = "AllStatus") PartnerStatus scStatus,
 
             @Parameter(description = "타입 (VENUE, PROMOTER, AGENCY, ARTIST, CORPORATE)")
-            @RequestParam(required = false, name = "AllType") String scType
+            @RequestParam(required = false, name = "AllType") PartnerType scType
     ) {
 
-        PartnerStatus status = null;
-        PartnerType type = null;
-
-        if (scStatus != null && !scStatus.isBlank()) {
-            status = PartnerStatus.valueOf(scStatus);
-        }
-
-        if (scType != null && !scType.isBlank()) {
-            type = PartnerType.valueOf(scType);
-        }
-
         List<PartnerListGetResDto> list =
-                service.selectPartnerList(keyword, status, type);
+                service.selectPartnerList(keyword, scStatus, scType);
 
         return ResponseEntity.ok(ApiResponse.success(list));
     }
