@@ -114,7 +114,7 @@
     </update>
 
     <!--채널 삭제-->
-    <update id="softDeleteChannel" parameterType="java.util.UUID">
+    <update id="deleteChannel" parameterType="java.util.UUID">
         UPDATE channels
         SET status = 'DELETED',
             updated_at = NOW()
