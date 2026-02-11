@@ -79,6 +79,10 @@
         And b.VISIBLE = true
         AND c.product_id IS NULL
         Order By
+            CASE
+            WHEN b.SALES_STATUS = 'ON_SALE' THEN 1
+            WHEN b.SALES_STATUS = 'READY' THEN 2
+            END,
             b.CREATED_AT desc
         ]]>
     </select>
@@ -130,6 +134,10 @@
         And a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
         Order By
+        CASE
+        WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
+        WHEN a.SALES_STATUS = 'READY' THEN 2
+        END,
         a.CREATED_AT Desc
     </select>
 
@@ -190,6 +198,10 @@
         And a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
         Order By
+        CASE
+        WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
+        WHEN a.SALES_STATUS = 'READY' THEN 2
+        END,
         a.CREATED_AT Desc
     </select>
 
