@@ -27,8 +27,8 @@ public class S3FileService implements FileStorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    @Value("${cdn.url}")
-    private String cdnUrl;
+//    @Value("${cdn.url}")
+//    private String cdnUrl;
 
     private static final List<String> ALLOWED_EXT =
             List.of("jpg", "jpeg", "png", "gif", "webp");
@@ -68,7 +68,8 @@ public class S3FileService implements FileStorageService {
                         RequestBody.fromInputStream(inputStream, file.getSize())
                 );
 
-                urls.add(cdnUrl + "/" + key);
+                urls.add("/" + key);
+
 
             } catch (Exception e) {
                 throw new RuntimeException("S3 업로드 실패: " + originalName, e);
@@ -86,7 +87,7 @@ public class S3FileService implements FileStorageService {
             return List.of();
         }
 
-        List<String> deletedKeys = new ArrayList<>();
+        List<String> deleted = new ArrayList<>();
 
         for (String url : imageUrls) {
 
@@ -99,10 +100,10 @@ public class S3FileService implements FileStorageService {
 
             s3Client.deleteObject(request);
 
-            deletedKeys.add(key);
+            deleted.add(url);
         }
 
-        return deletedKeys;
+        return deleted;
     }
 
 
@@ -137,6 +138,13 @@ public class S3FileService implements FileStorageService {
     }
 
     private String extractKeyFromUrl(String url) {
-        return url.substring(url.indexOf("uploads/"));
+
+        if (url.startsWith("/")) {
+            return url.substring(1); // "/uploads/xxx" → "uploads/xxx"
+        }
+
+        return url; // 혹시라도 이미 key 형태면 그대로
     }
+
+
 }
