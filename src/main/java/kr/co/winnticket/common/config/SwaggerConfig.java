@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+import java.util.List;
+
 @Configuration
 @OpenAPIDefinition(
         info = @Info(title = "WinnTicket API Docs", version = "v1"),
@@ -53,10 +55,20 @@ public class SwaggerConfig {
                 .info(new io.swagger.v3.oas.models.info.Info()
                         .title("WinnTicket API Docs")
                         .description("윈앤티켓 백엔드 API 명세서")
-                        .version("v1.0"));
-                // .servers(List.of(
-                //         new Server().url(serverUrl).description(description)
-                // ));
+                        .version("v1.0"))
+                .servers(List.of(
+                        new io.swagger.v3.oas.models.servers.Server()
+                                .url("/")   // 🔥 핵심
+                                .description("Current Server")
+                ));
+
+//                .info(new io.swagger.v3.oas.models.info.Info()
+//                        .title("WinnTicket API Docs")
+//                        .description("윈앤티켓 백엔드 API 명세서")
+//                        .version("v1.0"));
+//                // .servers(List.of(
+//                //         new Server().url(serverUrl).description(description)
+//                // ));
     }
 
     /* ================= GROUP API SETTING ================= */
