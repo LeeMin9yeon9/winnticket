@@ -17,7 +17,6 @@
             visible
         FROM menu_categories
         WHERE visible = true
-          AND is_deleted = false
         ORDER BY level ASC, display_order ASC
     </select>
     <!--SHOP ADMIN 메뉴-->
@@ -30,11 +29,12 @@
             level,
             parent_id     AS parentId,
             display_order AS displayOrder,
-            visible,
-            is_deleted
+            visible
         FROM menu_categories
-        WHERE is_deleted = false
-        ORDER BY level ASC, display_order ASC
+        ORDER BY
+            visible DESC,
+            level ASC,
+            display_order ASC
     </select>
 
     <!-- =============================
