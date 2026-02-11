@@ -29,7 +29,7 @@
         <!-- 상태 필터 -->
         <choose>
             <!-- 상태를 명시적으로 선택한 경우 -->
-            <when test="scStatus != null">
+            <when test="AllStatus != null">
                 AND STATUS = #{AllStatus}
             </when>
 
@@ -40,7 +40,7 @@
         </choose>
 
         <!-- 타입 필터 -->
-        <if test="scType != null">
+        <if test="AllType != null">
             AND TYPE = #{AllType}
         </if>
 

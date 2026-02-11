@@ -159,8 +159,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of(
-                "https://www.winnticket.store",
-                "https://winnticket.store",
+                "https://*.winnticket.store",
                 "https://13.209.91.167"));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
