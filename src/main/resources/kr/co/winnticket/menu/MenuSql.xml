@@ -17,25 +17,12 @@
             visible
         FROM menu_categories
         WHERE visible = true
-          AND is_deleted = false
-        ORDER BY level ASC, display_order ASC
+        ORDER BY
+            visible DESC,
+            level ASC,
+            display_order ASC
     </select>
-    <!--SHOP ADMIN 메뉴-->
-    <select id="selectAdminShopMenus"
-            resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
-        SELECT
-            id,
-            name,
-            code,
-            level,
-            parent_id     AS parentId,
-            display_order AS displayOrder,
-            visible,
-            is_deleted
-        FROM menu_categories
-        WHERE is_deleted = false
-        ORDER BY level ASC, display_order ASC
-    </select>
+
     <!--SHOP ADMIN 메뉴-->
     <select id="selectAdminShopMenus"
             resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
