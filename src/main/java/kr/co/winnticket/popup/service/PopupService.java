@@ -162,7 +162,7 @@ public class PopupService {
         UUID channelId = channelMapper.selectChannelIdByCode(channelCode);
 
         if (channelId == null) {
-            throw new IllegalArgumentException("채널이 존재하지 않습니다.");
+            channelId = channelMapper.selectChannelIdByCode("DEFAULT");
         }
 
         // 2️⃣ UUID로 팝업 조회
@@ -186,6 +186,7 @@ public class PopupService {
 
     /**
      * 팝업 표시 여부 판단
+     *
      */
     private boolean shouldShowPopup(Popup popup, String userId, String sessionId) {
         PopupUserPreference pref = popupUserPreferenceRepository

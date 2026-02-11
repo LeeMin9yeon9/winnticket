@@ -14,6 +14,7 @@
         domain
         FROM channels
         WHERE 1 = 1
+        AND status = 'ACTIVE'
 
         <if test="code != null and code != ''">
             AND code ILIKE CONCAT('%', #{code}, '%')
@@ -87,6 +88,7 @@
             updated_at AS updatedAt
         FROM channels
         WHERE id = #{id}
+          AND status != 'DELETED'
 
     </select>
 
@@ -112,17 +114,19 @@
     </update>
 
     <!--채널 삭제-->
-    <delete id="deleteChannel" parameterType="java.util.UUID">
-        DELETE FROM channels
-        WHERE ID = #{id}
-    </delete>
+    <update id="softDeleteChannel" parameterType="java.util.UUID">
+        UPDATE channels
+        SET status = 'DELETED',
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
 
     <!--채널 코드 중복 체크-->
     <select id="existsCode" resultType="int">
         SELECT COUNT(*)
         FROM channels
         WHERE CODE = #{code}
-        AND VISIBLE = TRUE
+        AND status != 'DELETED'
         <if test="id != null">
             AND ID != #{id}   <!-- 수정일 때만 본인 제외 -->
         </if>
@@ -142,6 +146,7 @@
         FROM channels
         WHERE code = #{channelCode}
           AND VISIBLE = true
+          AND status != 'DELETED'
     </select>
 
     <!-- 기본채널찾기 -->
@@ -149,6 +154,7 @@
         SELECT id
         FROM channels
         WHERE is_default = true
+          AND status = 'ACTIVE'
         LIMIT 1;
     </select>
 
@@ -174,6 +180,7 @@
             updated_at AS updatedAt
         FROM channels
         WHERE code = #{code}
+        AND status != 'DELETED'
 
     </select>
 
@@ -182,5 +189,6 @@
         SELECT use_card
         FROM channels
         WHERE id = #{id}
+          AND status = 'ACTIVE'
     </select>
 </mapper>

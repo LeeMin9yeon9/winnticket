@@ -50,7 +50,7 @@ public class ChannelService {
         return mapper.selectChannelByCode(code);
     }
 
-    // 채널 삭제
+    // 채널 삭제 ( DB에는 있음)
     public void deleteChannel(UUID id){
         mapper.deleteChannel(id);
     }
