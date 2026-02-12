@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.banner.mapper.BannerStatsMapper">
+
+    <!--배너 클릭 수 +1 증가-->
+    <insert id="increaseClickCount">
+        INSERT INTO banner_stats_daily (banner_id, stats_date, click_count)
+        VALUES (#{bannerId}, CURRENT_DATE, 1)
+            ON CONFLICT (banner_id, stats_date)
+    DO UPDATE
+                       SET click_count = banner_stats_daily.click_count + 1
+    </insert>
+
+    <!--배너 총 클릭 수-->
+    <select id="getTotalClickCount" resultType="long">
+        SELECT COALESCE(SUM(click_count), 0)
+        FROM banner_stats_daily
+        WHERE banner_id = #{bannerId}
+    </select>
+
+</mapper>
