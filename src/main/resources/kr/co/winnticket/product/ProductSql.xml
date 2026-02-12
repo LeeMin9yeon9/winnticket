@@ -433,7 +433,7 @@
         (
             #{id},
             #{model.name},
-            #{model.code},
+            #{model.code}::option_code,
             #{model.priceType}::option_price_type,
             #{model.required}
         )
@@ -448,8 +448,8 @@
             <if test="model.name != null and model.name != ''">
                 NAME = #{model.name},
             </if>
-            <if test="model.code != null and model.code != ''">
-                CODE = #{model.code},
+            <if test="model.code != null">
+                CODE = #{model.code}::option_code,
             </if>
             <if test="model.required != null">
                 REQUIRED = #{model.required},

@@ -2,6 +2,7 @@ package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
+import kr.co.winnticket.common.enums.OptionCode;
 import kr.co.winnticket.common.enums.OptionPriceType;
 import lombok.Data;
 import lombok.ToString;
@@ -18,7 +19,7 @@ public class ProductOptionPatchReqDto {
     private String name;
 
     @Schema(description = "옵션코드")
-    private String code;
+    private OptionCode code;
 
     @Schema(description = "필수여부")
     private boolean required;
