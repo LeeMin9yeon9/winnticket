@@ -1,17 +1,20 @@
 package kr.co.winnticket.banner.dto;
 
 
-
-import kr.co.winnticket.banner.enums.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import kr.co.winnticket.banner.enums.BannerClickAction;
+import kr.co.winnticket.banner.enums.BannerPosition;
+import kr.co.winnticket.banner.enums.BannerType;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 public class BannerUpdateDto {
 
+    private String id;
     private String name;
     private String description;
     private BannerType type;
