@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.banner.mapper.BannerMapper">
+
+    <resultMap id="bannerMap" type="kr.co.winnticket.banner.dto.BannerDto">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="type" column="type"/>
+        <result property="position" column="position"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="imageUrlMobile" column="image_url_mobile"/>
+        <result property="htmlContent" column="html_content"/>
+        <result property="videoUrl" column="video_url"/>
+        <result property="clickAction" column="click_action"/>
+        <result property="linkUrl" column="link_url"/>
+        <result property="linkTarget" column="link_target"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="visible" column="visible"/>
+        <result property="displayOrder" column="display_order"/>
+        <result property="width" column="width"/>
+        <result property="height" column="height"/>
+        <result property="mobileWidth" column="mobile_width"/>
+        <result property="mobileHeight" column="mobile_height"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertBanner">
+        INSERT INTO banners (
+            id,
+            name,
+            description,
+            type,
+            position,
+            image_url,
+            image_url_mobile,
+            html_content,
+            video_url,
+            click_action,
+            link_url,
+            link_target,
+            start_date,
+            end_date,
+            visible,
+            display_order,
+            width,
+            height,
+            mobile_width,
+            mobile_height,
+            created_at,
+            updated_at
+        )
+        VALUES (
+                   gen_random_uuid()::text,
+                   #{name},
+                   #{description},
+                   #{type},
+                   #{position},
+                   #{imageUrl},
+                   #{imageUrlMobile},
+                   #{htmlContent},
+                   #{videoUrl},
+                   #{clickAction},
+                   #{linkUrl},
+                   #{linkTarget},
+                   #{startDate},
+                   #{endDate},
+                   COALESCE(#{visible}, true),
+                   #{displayOrder},
+                   #{width},
+                   #{height},
+                   #{mobileWidth},
+                   #{mobileHeight},
+                   NOW(),
+                   NOW()
+               )
+    </insert>
+
+    <update id="updateBanner">
+        UPDATE banners
+        SET
+            name = #{name},
+            description = #{description},
+            type = #{type},
+            position = #{position},
+            image_url = #{imageUrl},
+            image_url_mobile = #{imageUrlMobile},
+            html_content = #{htmlContent},
+            video_url = #{videoUrl},
+            click_action = #{clickAction},
+            link_url = #{linkUrl},
+            link_target = #{linkTarget},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            visible = COALESCE(#{visible}, visible),
+            display_order = #{displayOrder},
+            width = #{width},
+            height = #{height},
+            mobile_width = #{mobileWidth},
+            mobile_height = #{mobileHeight},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateVisible">
+        UPDATE banners
+        SET visible = #{visible},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 소프트 삭제: visible=false -->
+    <update id="softDelete">
+        UPDATE banners
+        SET visible = false,
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectBannerById" resultMap="bannerMap">
+        SELECT *
+        FROM banners
+        WHERE id = #{id}
+    </select>
+
+    <!-- SHOP: 위치별 조회 (노출 조건 포함) -->
+    <select id="selectByPosition" resultMap="bannerMap">
+        SELECT *
+        FROM banners
+        WHERE position = #{position}
+          AND visible = true
+          AND (start_date IS NULL OR start_date <![CDATA[ <= ]]> NOW())
+          AND (end_date IS NULL OR end_date <![CDATA[ >= ]]> NOW())
+        ORDER BY display_order ASC, created_at DESC
+    </select>
+
+   <!--배너 검색 및 조회-->
+    <select id="selectAdminList" resultMap="bannerMap">
+        SELECT *
+        FROM banners
+        <where>
+
+            <if test="keyword != null and keyword != ''">
+                AND (
+                name ILIKE CONCAT('%', #{keyword}, '%')
+                OR description ILIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+
+            <if test="position != null">
+                AND position = #{position}
+            </if>
+
+            <if test="visible != null">
+                AND visible = #{visible}
+            </if>
+
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+
+</mapper>

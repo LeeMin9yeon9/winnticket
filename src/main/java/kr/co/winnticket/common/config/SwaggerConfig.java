@@ -58,7 +58,7 @@ public class SwaggerConfig {
                         .version("v1.0"))
                 .servers(List.of(
                         new io.swagger.v3.oas.models.servers.Server()
-                                .url("/")   // 🔥 핵심
+                                .url("/")
                                 .description("Current Server")
                 ));
 
