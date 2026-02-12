@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import kr.co.winnticket.common.enums.ProductType;
+import kr.co.winnticket.common.enums.SalesStatus;
 import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import lombok.Data;
 import lombok.ToString;
@@ -26,6 +27,9 @@ public class ProductShopDetailGetResDto {
 
     @Schema(description = "상품타입")
     private ProductType type;
+
+    @Schema(description = "상품상태")
+    private SalesStatus salesStatus;
 
     @Schema(description = "상품이미지")
     private List<String> imageUrl;
