@@ -2,6 +2,7 @@ package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import kr.co.winnticket.common.enums.OptionCode;
 import kr.co.winnticket.common.enums.OptionPriceType;
 import lombok.Data;
 import lombok.ToString;
@@ -22,7 +23,7 @@ public class ProductOptionGetResDto {
     private String name;
 
     @Schema(description = "옵션코드")
-    private String code;
+    private OptionCode code;
     
     @Schema(description = "옵션별가격타입")
     private OptionPriceType priceType;

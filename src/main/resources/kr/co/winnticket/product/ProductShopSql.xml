@@ -27,7 +27,6 @@
             Where 1 = 1
             And x.SECTION_ID = a.ID
             And y.VISIBLE = true
-            And y.SALES_STATUS In ('READY', 'ON_SALE')
             AND z.product_id IS NULL
         )
         ORDER BY
@@ -75,7 +74,6 @@
         AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
         Where 1 = 1
         And a.SECTION_ID = #{sectionId}
-        And b.SALES_STATUS IN ('READY', 'ON_SALE')
         And b.VISIBLE = true
         AND c.product_id IS NULL
         Order By
@@ -130,7 +128,6 @@
             AND UPPER(a.NAME) LIKE '%' || UPPER(#{name}) || '%'
             ]]>
         </if>
-        And a.SALES_STATUS IN ('READY', 'ON_SALE')
         And a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
         Order By
@@ -194,7 +191,6 @@
             Or b.PARENT_ID = (Select ID From MENU_CATEGORIES Where 1 = 1 And CODE = #{mainCategory}))
             ]]>
         </if>
-        And a.SALES_STATUS IN ('READY', 'ON_SALE')
         And a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
         Order By
@@ -239,6 +235,7 @@
                     - COALESCE(a.DISCOUNT_PRICE)
                 ) / a.PRICE::float * 100)
             ) AS DISCOUNT_RATE,  -- 할인율
+            a.SALES_STATUS,  -- 판매상태
             a.SHIPPING_INFO,  -- 배송정보
             a.WARRANTY_INFO,  -- 보증정보
             a.RETURN_INFO,  -- 반품/교환정보

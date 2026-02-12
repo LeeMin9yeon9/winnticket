@@ -32,7 +32,7 @@ public class BankdaClient {
     public List<BankdaTransaction> getTransactions(BankdaRequest req) {
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         headers.set("Authorization", "Bearer " + token);
 
