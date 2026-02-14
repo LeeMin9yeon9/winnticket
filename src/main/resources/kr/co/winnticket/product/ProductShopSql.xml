@@ -38,50 +38,43 @@
     -->
     <select id="selectSectionProduct" resultType="kr.co.winnticket.product.shop.dto.ProductSectionProductGetResDto">
         <![CDATA[
-        Select
-            b.CODE,  -- 상품코드
-            b.NAME,  -- 상품명
-            b.PRICE,  -- 정가
-            b.IMAGE_URL->>0 As IMAGE,  -- 대표사진
+        SELECT
+            b.CODE,
+            b.NAME,
+            COALESCE(pcp.base_price, b.PRICE) AS PRICE,
+            b.IMAGE_URL->>0 AS IMAGE,
+            COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
-            WHEN cpd.discount_rate IS NOT NULL
-            THEN
-            b.PRICE * (100 - cpd.discount_rate) / 100
-            ELSE
-            b.DISCOUNT_PRICE
-        END AS DISCOUNT_PRICE,
-            COALESCE(cpd.discount_rate,
-            FLOOR(
-            (b.PRICE
-                    - COALESCE(b.DISCOUNT_PRICE)
-                ) / b.PRICE::float * 100)
-            ) AS DISCOUNT_RATE,  -- 할인율
-            b.SALES_STATUS,  -- 판매상태
-            b.USAGE_PERIOD  -- 사용기한
-        From
-            PRODUCT_SECTION a
-        Join
-            PRODUCTS b
-        On a.PRODUCT_ID = b.ID
+            WHEN COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) IS NOT NULL
+            THEN FLOOR(
+            (
+            COALESCE(pcp.base_price, b.PRICE)
+            - COALESCE(pcp.discount_price, b.DISCOUNT_PRICE)
+            )
+            / COALESCE(pcp.base_price, b.PRICE)::float * 100
+            )
+            ELSE 0
+            END AS DISCOUNT_RATE,
+            b.SALES_STATUS,
+            b.USAGE_PERIOD
+        FROM PRODUCT_SECTION a
+        JOIN PRODUCTS b
+        ON a.PRODUCT_ID = b.ID
+        LEFT JOIN product_channel_prices pcp
+        ON pcp.product_id = b.id
+        AND pcp.channel_id = #{channelId}
         LEFT JOIN channel_products c
         ON c.product_id = b.id
         AND c.channel_id = #{channelId}
-        LEFT JOIN product_channel_discounts cpd
-        ON cpd.product_id = b.id
-        AND cpd.channel_id = #{channelId}
-        AND cpd.is_active = true
-        AND cpd.start_date <= NOW()
-        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
-        Where 1 = 1
-        And a.SECTION_ID = #{sectionId}
-        And b.VISIBLE = true
+        WHERE a.SECTION_ID = #{sectionId}
+        AND b.VISIBLE = true
         AND c.product_id IS NULL
-        Order By
+        ORDER BY
             CASE
             WHEN b.SALES_STATUS = 'ON_SALE' THEN 1
             WHEN b.SALES_STATUS = 'READY' THEN 2
             END,
-            b.CREATED_AT desc
+            b.CREATED_AT DESC;
         ]]>
     </select>
 
@@ -89,116 +82,107 @@
     - 상품 목록 검색
     -->
     <select id="selectProductListSearch" resultType="kr.co.winnticket.product.shop.dto.ProductShopListGetResDto">
-        Select
-        a.CODE,  -- 상품코드
-        a.NAME,  -- 상품명
-        a.PRICE,  -- 정가
-        a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
-        CASE
-        WHEN cpd.discount_rate IS NOT NULL
-        THEN
-        a.PRICE * (100 - cpd.discount_rate) / 100
-        ELSE
-        a.DISCOUNT_PRICE
-        END AS DISCOUNT_PRICE,
-        COALESCE(cpd.discount_rate,
-        FLOOR(
-        (a.PRICE
-        - COALESCE(a.DISCOUNT_PRICE)
-        ) / a.PRICE::float * 100)
-        ) AS DISCOUNT_RATE,  -- 할인율
-        a.SALES_STATUS,  -- 판매상태
-        a.USAGE_PERIOD  -- 사용기한
-        FROM
-        PRODUCTS a
+        SELECT
+            a.CODE,
+            a.NAME,
+            COALESCE(pcp.base_price, a.PRICE) AS PRICE,
+            a.IMAGE_URL->>0 AS IMAGE,
+            COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
+            CASE
+            WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+            THEN FLOOR(
+            (
+            COALESCE(pcp.base_price, a.PRICE)
+            - COALESCE(pcp.discount_price, a.DISCOUNT_PRICE)
+            )
+            / COALESCE(pcp.base_price, a.PRICE)::float * 100
+            )
+            ELSE 0
+            END AS DISCOUNT_RATE,
+            a.SALES_STATUS,
+            a.USAGE_PERIOD
+        FROM PRODUCTS a
+        LEFT JOIN product_channel_prices pcp
+        ON pcp.product_id = a.id
+        AND pcp.channel_id = #{channelId}
         LEFT JOIN CHANNEL_PRODUCTS cp
         ON cp.PRODUCT_ID = a.ID
         AND cp.CHANNEL_ID = #{channelId}
-        LEFT JOIN product_channel_discounts cpd
-        ON cpd.product_id = a.id
-        AND cpd.channel_id = #{channelId}
-        AND cpd.is_active = true
-        <![CDATA[
-        AND cpd.start_date <= NOW()
-        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
-        ]]>
-        Where 1 = 1
+        WHERE 1 = 1
         <if test="name != null and name != ''">
             <![CDATA[
             AND UPPER(a.NAME) LIKE '%' || UPPER(#{name}) || '%'
             ]]>
         </if>
-        And a.VISIBLE = true
+        AND a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
-        Order By
+        ORDER BY
         CASE
         WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
         WHEN a.SALES_STATUS = 'READY' THEN 2
         END,
-        a.CREATED_AT Desc
+        a.CREATED_AT DESC
     </select>
 
     <!--
     - 상품 목록 Select
     -->
     <select id="selectProductList" resultType="kr.co.winnticket.product.shop.dto.ProductShopListGetResDto">
-        Select
-            a.CODE,  -- 상품코드
-            a.NAME,  -- 상품명
-            a.PRICE,  -- 정가
-            a.IMAGE_URL->>0 As IMAGE,  -- 대표사진
+        SELECT
+            a.CODE,
+            a.NAME,
+            COALESCE(pcp.base_price, a.PRICE) AS PRICE,
+            a.IMAGE_URL->>0 AS IMAGE,
+            COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
-            WHEN cpd.discount_rate IS NOT NULL
-            THEN
-                a.PRICE * (100 - cpd.discount_rate) / 100
-            ELSE
-                a.DISCOUNT_PRICE
-            END AS DISCOUNT_PRICE,
-        COALESCE(cpd.discount_rate,
-        FLOOR(
-        (a.PRICE
-        - COALESCE(a.DISCOUNT_PRICE)
-        ) / a.PRICE::float * 100)
-        ) AS DISCOUNT_RATE,  -- 할인율
-            a.SALES_STATUS,  -- 판매상태
-            a.USAGE_PERIOD  -- 사용기한
-        FROM
-            PRODUCTS a
-        Join MENU_CATEGORIES b
-        On a.CATEGORY_ID = b.ID
+            WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+            THEN FLOOR(
+            (
+            COALESCE(pcp.base_price, a.PRICE)
+            - COALESCE(pcp.discount_price, a.DISCOUNT_PRICE)
+            )
+            / COALESCE(pcp.base_price, a.PRICE)::float * 100
+            )
+            ELSE 0
+            END AS DISCOUNT_RATE,
+            a.SALES_STATUS,
+            a.USAGE_PERIOD
+        FROM PRODUCTS a
+        JOIN MENU_CATEGORIES b
+        ON a.CATEGORY_ID = b.ID
+        LEFT JOIN product_channel_prices pcp
+        ON pcp.product_id = a.id
+        AND pcp.channel_id = #{channelId}
         LEFT JOIN CHANNEL_PRODUCTS cp
         ON cp.PRODUCT_ID = a.ID
         AND cp.CHANNEL_ID = #{channelId}
-        LEFT JOIN product_channel_discounts cpd
-        ON cpd.product_id = a.id
-        AND cpd.channel_id = #{channelId}
-        AND cpd.is_active = true
-        <![CDATA[
-        AND cpd.start_date <= NOW()
-        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
-        ]]>
-        Where 1 = 1
+        WHERE 1 = 1
         <if test="subCategory != null and subCategory != ''">
             <![CDATA[
             AND b.CODE = #{subCategory}
             ]]>
         </if>
-
         <if test="(subCategory == null or subCategory == '')
-                and (mainCategory != null and mainCategory != '')">
+        and (mainCategory != null and mainCategory != '')">
             <![CDATA[
-            AND (b.CODE = #{mainCategory}
-            Or b.PARENT_ID = (Select ID From MENU_CATEGORIES Where 1 = 1 And CODE = #{mainCategory}))
+            AND (
+                b.CODE = #{mainCategory}
+                OR b.PARENT_ID = (
+                    SELECT ID
+                    FROM MENU_CATEGORIES
+                    WHERE CODE = #{mainCategory}
+                )
+            )
             ]]>
         </if>
-        And a.VISIBLE = true
+        AND a.VISIBLE = true
         AND cp.PRODUCT_ID IS NULL
-        Order By
+        ORDER BY
         CASE
         WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
         WHEN a.SALES_STATUS = 'READY' THEN 2
         END,
-        a.CREATED_AT Desc
+        a.CREATED_AT DESC
     </select>
 
     <!--
@@ -206,51 +190,42 @@
     -->
     <select id="selectProductDetail" resultType="kr.co.winnticket.product.shop.dto.ProductShopDetailGetResDto">
         <![CDATA[
-        Select
-            a.id,  -- 상품id
-            a.CODE,  -- 상품코드
-            a.TYPE,  -- 타입
-            a.IMAGE_URL,  -- 대표사진
-            a.NAME,  -- 상품명
+        SELECT
+            a.id,
+            a.CODE,
+            a.TYPE,
+            a.IMAGE_URL,
+            a.NAME,
             (
-                Select
-                    x.Name
-                From
-                    MENU_CATEGORIES x
-                Where 1 = 1
-                  And x.ID = a.CATEGORY_ID
-            ) CATEGORY_NAME,  -- 카테고리명
-            a.DESCRIPTION,  -- 상품설
-            a.PRICE,  -- 정가
+                SELECT x.NAME
+                FROM MENU_CATEGORIES x
+                WHERE x.ID = a.CATEGORY_ID
+            ) AS CATEGORY_NAME,
+            a.DESCRIPTION,
+            COALESCE(pcp.base_price, a.PRICE) AS PRICE,
+            COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
-                WHEN cpd.discount_rate IS NOT NULL
-                    THEN
-                    a.PRICE * (100 - cpd.discount_rate) / 100
-                ELSE
-                    a.DISCOUNT_PRICE
-                END AS DISCOUNT_PRICE,
-            COALESCE(cpd.discount_rate,
-            FLOOR(
-            (a.PRICE
-                    - COALESCE(a.DISCOUNT_PRICE)
-                ) / a.PRICE::float * 100)
-            ) AS DISCOUNT_RATE,  -- 할인율
-            a.SALES_STATUS,  -- 판매상태
-            a.SHIPPING_INFO,  -- 배송정보
-            a.WARRANTY_INFO,  -- 보증정보
-            a.RETURN_INFO,  -- 반품/교환정보
-            a.DETAIL_CONTENT,  -- 상품상세설명
-            a.USAGE_PERIOD  -- 사용기한
-        FROM
-            PRODUCTS a
-        LEFT JOIN product_channel_discounts cpd
-        ON cpd.product_id = a.id
-        AND cpd.channel_id = #{channelId}
-        AND cpd.is_active = true
-        AND cpd.start_date <= NOW()
-        AND (cpd.end_date IS NULL OR cpd.end_date >= NOW())
-        Where 1 = 1
-        And a.CODE = #{code}
+                WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+                    THEN FLOOR(
+                        (
+                            COALESCE(pcp.base_price, a.PRICE)
+                                - COALESCE(pcp.discount_price, a.DISCOUNT_PRICE)
+                            )
+                            / COALESCE(pcp.base_price, a.PRICE)::float * 100
+                         )
+                ELSE 0
+                END AS DISCOUNT_RATE,
+            a.SALES_STATUS,
+            a.SHIPPING_INFO,
+            a.WARRANTY_INFO,
+            a.RETURN_INFO,
+            a.DETAIL_CONTENT,
+            a.USAGE_PERIOD
+        FROM PRODUCTS a
+        LEFT JOIN product_channel_prices pcp
+        ON pcp.product_id = a.id
+        AND pcp.channel_id = #{channelId}
+        WHERE a.CODE = #{code}
         ]]>
     </select>
 
@@ -276,5 +251,37 @@
         ORDER BY
             sd.option_value_id,
             sd.price_date
+    </select>
+
+    <!--
+     - 상품 옵션 목록 Select
+     -->
+    <select id="selectShopOptions" resultType="kr.co.winnticket.product.shop.dto.ProductShopOptionGetResDto">
+        Select
+            a.ID,  -- 옵션_ID
+            a.NAME,  -- 옵션명
+            a.CODE,  -- 옵션코드
+            a.PRICE_TYPE,  -- 옵션별가격타입
+            a.REQUIRED  -- 필수여부
+        FROM
+            PRODUCT_OPTIONS a
+        Where 1 = 1
+          And a.PRODUCT_ID = #{productId}
+    </select>
+
+    <!-- 옵션별 가격 Select -->
+    <select id="selectShopOptionValues"
+            resultType="kr.co.winnticket.product.shop.dto.ProductShopOptionValueGetResDto">
+        SELECT
+            v.ID,
+            v.CODE,
+            v.VALUE,
+            v.STOCK,
+            COALESCE(pcov.price, v.ADDITIONAL_PRICE) AS ADDITIONAL_PRICE
+        FROM PRODUCT_OPTION_VALUES v
+        LEFT JOIN product_channel_option_prices pcov
+        ON pcov.option_value_id = v.ID
+        AND pcov.channel_id = #{channelId}
+        WHERE v.OPTION_ID = #{optionId}
     </select>
 </mapper>

@@ -68,7 +68,7 @@ public class ProductShopDetailGetResDto {
     private String usagePeriod;
 
     @Schema(description = " 옵션")
-    private List<ProductOptionGetResDto> options = new ArrayList<>();
+    private List<ProductShopOptionGetResDto> options = new ArrayList<>();
 
     @Schema(description = "날짜별가격")
     private List<ProductDatePriceGetResDto> datePrices = new ArrayList<>();

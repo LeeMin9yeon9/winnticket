@@ -16,7 +16,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductShopService {
     private final ProductShopMapper mapper;
-    private final ProductMapper AdminMapper;
 
     // 상품 목록 검색
     public List<ProductShopListGetResDto> selectProductListSearch(String name, UUID channelId) {
@@ -54,10 +53,21 @@ public class ProductShopService {
     // 상품 상세 조회
     public ProductShopDetailGetResDto selectProductDetail(String code, UUID channelId) {
         ProductShopDetailGetResDto model = mapper.selectProductDetail(code, channelId);
-        List<ProductOptionGetResDto> options = AdminMapper.selectOptions(model.getId());
 
-        for (ProductOptionGetResDto option : options) {
-            List<ProductOptionValueGetResDto> values = AdminMapper.selectOptionValues(option.getId());
+        if (model == null) {
+            return null;
+        }
+
+        UUID productId = model.getId();
+
+        List<ProductShopOptionGetResDto> options =
+                mapper.selectShopOptions(productId);
+
+        for (ProductShopOptionGetResDto option : options) {
+
+            List<ProductShopOptionValueGetResDto> values =
+                    mapper.selectShopOptionValues(channelId, option.getId());
+
             option.setValues(values);
         }
 
