@@ -899,4 +899,143 @@
         FROM products
         WHERE category_id = #{categoryId}
     </select>
+
+    <!--
+    - 상품 채널별가격 목록 Select
+    -->
+    <select id="selectProductChannelPriceList" resultType="kr.co.winnticket.product.admin.dto.ProductChannelPriceListResDto">
+        SELECT
+            b.id,
+            a.logo_url,
+            a.id AS channel_id,
+            a.name AS channel_name,
+            a.company_name,
+            a.code AS channel_code,
+            COALESCE(b.base_price, c.price) AS base_price,
+            COALESCE(b.discount_price, c.discount_price) AS discount_price,
+            (cp.product_id IS NULL) AS enabled
+        From
+            products c
+        JOIN channels a ON 1 = 1
+        LEFT JOIN product_channel_prices b
+        ON a.id = b.channel_id
+        AND b.product_id = c.id
+        LEFT JOIN channel_products cp
+        ON cp.channel_id = a.id
+        AND cp.product_id = c.id
+        WHERE c.id = #{productId}
+        ORDER BY
+            CASE WHEN a.is_default = true THEN 1 ELSE 2 END,
+            a.created_at DESC
+    </select>
+
+    <!--
+    - 상품 채널별가격 상세 Select
+    -->
+    <select id="selectProductChannelPriceDetail" resultType="kr.co.winnticket.product.admin.dto.ProductChannelPriceDetailResDto">
+        SELECT
+            a.logo_url,  -- 채널로고url
+            a.id channel_id,  -- 채널_ID
+            a.company_name  -- 운영회사명
+        From
+            CHANNELS a
+        JOIN products b
+        ON b.id = #{productId}
+        Where 1 = 1
+        And a.id = #{channelId}
+    </select>
+
+    <!--
+    - 채널별 옵션값 가격 목록 Select
+    -->
+    <select id="selectChannelOptionValues" resultType="kr.co.winnticket.product.admin.dto.ProductChannelOptionValuePriceGetResDto">
+        SELECT
+            a.id optionvalue_Id,  -- 옵션값_ID
+            a.value optionvalue_name,  -- 옵션값명
+            COALESCE(c.price, a.additional_price) additional_price  -- 추가금액
+        From
+            product_option_values a
+        JOIN product_options b
+        ON a.option_id = b.id
+        LEFT JOIN product_channel_option_prices c
+        On a.id = c.option_value_id
+        And c.channel_id = #{channelId}
+        And c.product_id = #{productId}
+        Where 1 = 1
+        And b.id = #{optionId}
+    </select>
+
+    <!--
+    - 채널별 상품 가격 삭제
+    -->
+    <delete id="deleteChannelPrice">
+        DELETE FROM product_channel_prices
+        WHERE product_id = #{productId}
+          AND channel_id = #{channelId}
+    </delete>
+
+    <!--
+    - 채널별 옵션 가격 삭제
+    -->
+    <delete id="deleteChannelOptionPrices">
+        DELETE FROM product_channel_option_prices
+        WHERE product_id = #{productId}
+          AND channel_id = #{channelId}
+    </delete>
+
+    <!--
+    - 채널별 상품 가격 등록
+    -->
+    <insert id="insertChannelPrice">
+        INSERT INTO product_channel_prices (
+            product_id,
+            channel_id,
+            base_price,
+            discount_price
+        )
+        VALUES (
+           #{productId},
+           #{channelId},
+           #{model.basePrice},
+           #{model.discountPrice}
+       )
+    </insert>
+
+    <!--
+    - 채널별 옵션 가격 등록
+    -->
+    <insert id="insertChannelOptionPrice">
+        INSERT INTO product_channel_option_prices (
+            product_id,
+            channel_id,
+            option_id,
+            option_value_id,
+            price
+        )
+        VALUES (
+           #{productId},
+           #{channelId},
+           #{model.optionId},
+           #{model.optionValueId},
+           #{model.additionalPrice}
+       )
+    </insert>
+
+    <delete id="deleteChannelProductExclude">
+        DELETE FROM channel_products
+        WHERE product_id = #{productId}
+        AND channel_id = #{channelId}
+    </delete>
+
+    <insert id="insertChannelProductExclude">
+        INSERT INTO channel_products (
+            product_id,
+            channel_id
+        )
+        VALUES (
+           #{productId},
+           #{channelId}
+       )
+        ON CONFLICT (product_id, channel_id) DO NOTHING
+    </insert>
 </mapper>

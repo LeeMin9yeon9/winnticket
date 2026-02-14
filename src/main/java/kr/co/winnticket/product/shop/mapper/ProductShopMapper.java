@@ -39,4 +39,10 @@ public interface ProductShopMapper {
     );
 
     List<ProductDatePriceGetResDto> selectStayDatePrices(String code);
+
+    // 상품옵션 조회
+    List<ProductShopOptionGetResDto> selectShopOptions(UUID productId);
+
+    // 상품옵션값 조회
+    List<ProductShopOptionValueGetResDto> selectShopOptionValues(UUID channelId, UUID optionId);
 }
