@@ -1,5 +1,6 @@
 package kr.co.winnticket.product.admin.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -339,6 +340,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 목록 조회
+    @Hidden
     @GetMapping("/{id}/channelDiscounts")
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 채널별 할인 목록 조회", description = "전달받은 id의 상품의 채널별 할인 목록을 조회합니다.")
@@ -354,6 +356,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 상세조회
+    @Hidden
     @GetMapping("/{id}/channelDiscounts/{discountId}")
     @Tag(name = "상품_관리자", description = "상품 관리")
     @Operation(summary = "상품 채널별 할인 상세 조회", description = "전달받은 id의 상품의 채널별 할인을 상세조회합니다.")
@@ -367,6 +370,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 등록
+    @Hidden
     @PostMapping("/{id}/channelDiscounts")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
@@ -383,6 +387,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 수정
+    @Hidden
     @PatchMapping("/{id}/channelDiscounts/{discountId}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
@@ -400,6 +405,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 삭제
+    @Hidden
     @DeleteMapping("/{id}/channelDiscounts/{discountId}")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
@@ -416,6 +422,7 @@ public class ProductController {
     }
 
     // 상품 채널별 할인 활성화여부 수정
+    @Hidden
     @PatchMapping("/{id}/channelDiscounts/{discountId}/isActive")
     @ResponseBody
     @Tag(name = "상품_관리자", description = "상품 관리")
@@ -429,6 +436,65 @@ public class ProductController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("수정 성공", discountId.toString())
+        );
+    }
+
+    // 상품 채널별 가격 목록 조회
+    @GetMapping("/{id}/channelPrices")
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 가격 목록 조회", description = "전달받은 id의 상품의 채널별 가격 목록을 조회합니다.")
+    public ResponseEntity<ApiResponse<List<ProductChannelPriceListResDto>>> getProductChannelPriceList (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId
+    ) throws Exception {
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", service.selectProductChannelPriceList(auId))
+        );
+    }
+
+    // 상품 채널별 가격 상세 조회
+    @GetMapping("/{id}/channelPrices/{channelId}")
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 가격 상세 조회", description = "전달받은 id의 상품의 채널별 가격을 상세 조회합니다.")
+    public ResponseEntity<ApiResponse<ProductChannelPriceDetailResDto>> getProductChannelPriceDetail (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널 ID") @PathVariable("channelId") UUID channelId
+    ) throws Exception {
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", service.getProductChannelPriceDetail(auId, channelId))
+        );
+    }
+
+    // 상품 채널별 가격 저장
+    @PostMapping("/{id}/channelPrices/{channelId}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 가격 저장", description = "상품 채널별 가격을 저장합니다.")
+    public ResponseEntity<ApiResponse<ProductChannelPriceSaveReqDto>> saveChannelPrice (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널 ID") @PathVariable("channelId") UUID channelId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "채널별가격 정보") @RequestBody @Valid ProductChannelPriceSaveReqDto model
+    ) throws Exception {
+        service.saveChannelPrice(auId, channelId, model);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("등록 성공", model)
+        );
+    }
+
+    // 상품 채널별 활성화여부 수정
+    @PatchMapping("/{id}/channelDiscounts/{channelId}/enable")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 채널별 활성화여부 수정", description = "상품 채널별 활성화여부를 수정합니다.")
+    public ResponseEntity<ApiResponse<String>> patchProductChannelEnable (
+            @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "채널 ID") @PathVariable("channelId") UUID channelId,
+            @Parameter(description = "활성화여부") @RequestParam(value = "enable") boolean abEnable
+    ) throws Exception {
+        service.updateProductChannelEnable(auId, channelId, abEnable);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("수정 성공", channelId.toString())
         );
     }
 }

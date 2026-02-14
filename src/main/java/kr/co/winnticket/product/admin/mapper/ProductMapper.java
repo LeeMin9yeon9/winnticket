@@ -221,4 +221,60 @@ public interface ProductMapper {
 
     // 해당 카테코리 상품 확인
     int countByCategoryId(@Param("categoryId") UUID categoryId);
+
+    // 상품 채널별 가격 목록 조회
+    List<ProductChannelPriceListResDto> selectProductChannelPriceList(
+            @Param("productId") UUID auId
+    );
+
+    // 상품 채널별 가격 상세 조회
+    ProductChannelPriceDetailResDto selectProductChannelPriceDetail(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId
+    );
+
+    // 채널별 옵션값 가격 목록
+    List<ProductChannelOptionValuePriceGetResDto> selectChannelOptionValues(
+            @Param("productId") UUID id,
+            @Param("channelId") UUID channelId,
+            @Param("optionId") UUID optionId
+    );
+
+    // 채널별 옵션값 가격 삭제
+    void deleteChannelOptionPrices(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId
+    );
+
+    // 채널별 상품 가격 삭제
+    void deleteChannelPrice(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId
+    );
+
+    // 채널별 상품가격 등록
+    void insertChannelPrice(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId,
+            @Param("model") ProductChannelPriceSaveReqDto model
+    );
+
+    // 채널별 옵션값 가격 등록
+    void insertChannelOptionPrice(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId,
+            @Param("model") ProductChannelOptionPriceSaveReqDto model
+    );
+
+    // 채널별 상품테이블 삭제
+    void deleteChannelProductExclude(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId
+    );
+
+    // 채널별 상품테이블 추가
+    void insertChannelProductExclude(
+            @Param("productId") UUID auId,
+            @Param("channelId") UUID channelId
+    );
 }

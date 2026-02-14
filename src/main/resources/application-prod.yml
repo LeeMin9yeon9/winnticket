@@ -116,3 +116,40 @@ playstory:
 bankda:
   url: "https://a.bankda.com/dtsvc/bank_tr.php"
   token: "d4545a3900b2f4b8ce3df4b28db4f8c7"
+
+
+# 파트너 연동 (아쿠아플라넷)
+aquaplanet:
+  base-url: "https://exgate.hanhwaresort.co.kr:443/iGate/SIF/json.jdo" # 운영
+
+  # 공통 fixed 값들(문서의 Setting Value)
+  tmsg-ver-dv-cd: "01"
+  envr-info-dv-cd: "R"          # D:개발 / R:운영
+  lang-cd: "KO"
+  stn-msg-encp-cd: "0"
+  stn-msg-comp-cd: "0"
+  std-tmsg-prgr-no: "00"
+  frs-rqst-sys-cd: "SIF"
+  trsc-sync-dv-cd: "S"
+  rqst-rsps-dv-cd: "S"
+
+  stn-msg-tr-tp-cd: "O"         # 온라인
+  system-type: "HABIS"
+  mask-auth: "0"
+
+  wrkr-no: "I711019"
+  recv-svc-cd-contract: "HBSSAMCNT0114"
+  intf-id-contract: "SIF00HBSSAMCNT0114"
+
+  recv-svc-cd-issue: "HBSSAMCPN0306"
+  intf-id-issue: "SIF00HBSSAMCPN0306"
+
+  recv-svc-cd-cancel: "HBSSAMCPN1003"
+  intf-id-cancel: "SIF00HBSSAMCPN1003"
+
+  recv-svc-cd-use-history: "HBSSAMCPN1100"
+  intf-id-use-history: "SIF00HBSSAMCPN1100"
+
+  recv-svc-cd-use-daily-history: "HBSSAMCPN1103"
+  intf-id-use-daily-history: "SIF00HBSSAMCPN1103"
+

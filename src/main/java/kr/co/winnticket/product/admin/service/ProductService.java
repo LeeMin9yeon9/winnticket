@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -265,5 +266,67 @@ public class ProductService {
     // 상품 채널별 할인 활성화여부 수정
     public void updateProductChannelDiscountIsActive(UUID auId, UUID discountId, boolean abIsActive) {
         mapper.updateProductChannelDiscountIsActive(discountId, abIsActive);
+    }
+
+    // 상품 채널별 가격 목록 조회
+    public List<ProductChannelPriceListResDto> selectProductChannelPriceList(UUID auId) {
+        List<ProductChannelPriceListResDto> lModel = mapper.selectProductChannelPriceList(auId);
+
+        return lModel;
+    }
+
+    // 상품 채널별 가격 상세 조회
+    public ProductChannelPriceDetailResDto getProductChannelPriceDetail(UUID auId, UUID channelId) {
+        ProductChannelPriceDetailResDto model = mapper.selectProductChannelPriceDetail(auId, channelId);
+        List<ProductOptionGetResDto> options = mapper.selectOptions(auId);
+        List<ProductChannelOptionPriceGetResDto> optionList = new ArrayList<>();
+
+        for (ProductOptionGetResDto option : options) {
+            ProductChannelOptionPriceGetResDto optionDto = new ProductChannelOptionPriceGetResDto();
+            optionDto.setOptionId(option.getId());
+            optionDto.setOptionName(option.getName());
+            optionDto.setOptionCode(option.getCode());
+
+            List<ProductChannelOptionValuePriceGetResDto> values = mapper.selectChannelOptionValues(auId, channelId, option.getId());
+            optionDto.setOptionsValues(values);
+            optionList.add(optionDto);
+        }
+
+        model.setOptions(optionList);
+
+        return model;
+    }
+
+    // 채널별 가격 저장
+    @Transactional
+    public void saveChannelPrice(UUID auId, UUID channelId, ProductChannelPriceSaveReqDto model) {
+        // 기존 옵션 가격 삭제
+        mapper.deleteChannelOptionPrices(auId, channelId);
+
+        // 기존 상품 가격 삭제
+        mapper.deleteChannelPrice(auId, channelId);
+
+        // 상품 가격 등록
+        mapper.insertChannelPrice(auId, channelId, model);
+
+        // 옵션 가격 등록
+        if (model.getOptions() != null && !model.getOptions().isEmpty()) {
+            for (ProductChannelOptionPriceSaveReqDto option : model.getOptions()) {
+                mapper.insertChannelOptionPrice(auId, channelId, option);
+            }
+        }
+    }
+
+    // 상품 채널별 활성화여부 수정
+
+    @Transactional
+    public void updateProductChannelEnable(UUID auId, UUID channelId, boolean abEnable) {
+        if (abEnable) {
+            // true → 제외 테이블에서 삭제
+            mapper.deleteChannelProductExclude(auId, channelId);
+        } else {
+            // false → 제외 테이블에 추가
+            mapper.insertChannelProductExclude(auId, channelId);
+        }
     }
 }

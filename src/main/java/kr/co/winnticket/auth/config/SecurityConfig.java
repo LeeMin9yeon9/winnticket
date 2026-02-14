@@ -77,6 +77,7 @@ public class SecurityConfig {
                                 "/api/smartInfini/test/**",
                                 "/api/bankda/test/**",
                                 "/api/bankda/**",
+                                "/api/aquaplanet/test/**",
                                 "/api/swagger-ui/**",
                                 "/api/v3/api-docs/**",
                                 "/api/swagger-ui.html"
