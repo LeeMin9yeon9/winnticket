@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+
 import java.util.List;
 
 @Configuration
@@ -41,13 +42,20 @@ public class SwaggerConfig {
         String description;
 
         switch (activeProfile) {
-            case "dev":
-               // serverUrl = "https://api.winnticket.store";
-                description = "DEV Server";
+
+            case "prod":
+                serverUrl = "https://api.winnticket.store/api";
+                description = "Production Server";
                 break;
+
+            case "dev":
+                serverUrl = "http://13.209.91.167";
+                description = "Dev Server";
+                break;
+
             default:
                 serverUrl = "http://localhost:" + port;
-                description = "LOCAL Server";
+                description = "Local Server";
                 break;
         }
 
@@ -58,20 +66,11 @@ public class SwaggerConfig {
                         .version("v1.0"))
                 .servers(List.of(
                         new io.swagger.v3.oas.models.servers.Server()
-                                .url("/")
-                                .description("Current Server")
+                                .url(serverUrl)
+                                .description(description)
                 ));
-
-//                .info(new io.swagger.v3.oas.models.info.Info()
-//                        .title("WinnTicket API Docs")
-//                        .description("윈앤티켓 백엔드 API 명세서")
-//                        .version("v1.0"));
-//                // .servers(List.of(
-//                //         new Server().url(serverUrl).description(description)
-//                // ));
     }
 
-    /* ================= GROUP API SETTING ================= */
 
     @Bean
     public GroupedOpenApi commonApi() {
