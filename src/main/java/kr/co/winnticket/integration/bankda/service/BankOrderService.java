@@ -48,8 +48,6 @@ public class BankOrderService {
      */
     public BankOrderDetailResponse getOrderDetail(String orderId) {
         // 요청 형식 오류
-        try {
-            System.out.println("🔥 Service start");
         if (orderId == null || orderId.isBlank()) {
             throw new BankdaException(400, "요청 format 오류");
         }
@@ -63,14 +61,9 @@ public class BankOrderService {
         }
 
         BankOrderDetailResponse response = new BankOrderDetailResponse();
-        response.setOrder(List.of(order));
+        response.setOrder(order);
 
         return response;
-        } catch (Exception e) {
-            System.out.println("🚨 예외 발생!");
-            e.printStackTrace();   // 🔥 이거 반드시
-            throw e;
-        }
     }
 
     public ResponseEntity<BankConfirmResponse> confirm(
