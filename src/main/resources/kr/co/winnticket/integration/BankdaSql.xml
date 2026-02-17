@@ -28,8 +28,8 @@
             o.order_number AS order_id,
             o.customer_name AS buyer_name,
             o.customer_name AS billing_name,
-            '' AS bank_account_no,
-            '' AS bank_code_name,
+            '123456789' AS bank_account_no,
+            '은행' AS bank_code_name,
             o.final_price AS order_price_amount,
             to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
             oi.product_name
@@ -68,8 +68,8 @@
             o.order_number AS order_id,
             o.customer_name AS buyer_name,
             o.customer_name AS billing_name,
-            '' AS bank_account_no,
-            '' AS bank_code_name,
+            '123456789' AS bank_account_no,
+            '은행' AS bank_code_name,
             o.final_price AS order_price_amount,
             to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
             oi.product_name
