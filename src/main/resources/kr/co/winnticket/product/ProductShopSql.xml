@@ -261,7 +261,7 @@
             a.ID,  -- 옵션_ID
             a.NAME,  -- 옵션명
             a.CODE,  -- 옵션코드
-            a.PRICE_TYPE,  -- 옵션별가격타입
+            a.PRICE_TYPE AS priceType,  -- 옵션별가격타입
             a.REQUIRED  -- 필수여부
         FROM
             PRODUCT_OPTIONS a

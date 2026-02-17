@@ -72,7 +72,7 @@ woongjin:
 
 # 파트너 연동 (엠에어)
 mair:
-  mode: prod # dev | prod
+  mode: dev # dev | prod
   mkno: "HDGH"     # 채널 구분 코드
   mkid: "HDGH1"    # 채널 아이디
   connectTimeoutMs: 2000
