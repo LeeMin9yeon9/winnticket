@@ -5,7 +5,7 @@
 
 
         <!-- 주문 조회-->
-    <select id="selectOrderItemInfos" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
+    <select id="selectOrderItemInfo" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
         SELECT
             oi.id AS orderItemId,
             oi.product_id AS productId,

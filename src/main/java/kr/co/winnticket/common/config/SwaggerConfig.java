@@ -44,7 +44,7 @@ public class SwaggerConfig {
         switch (activeProfile) {
 
             case "prod":
-                serverUrl = "https://api.winnticket.store/api";
+                serverUrl = "https://api.winnticket.store";
                 description = "Production Server";
                 break;
 
