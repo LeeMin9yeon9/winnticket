@@ -61,7 +61,7 @@ public class BankOrderService {
         }
 
         BankOrderDetailResponse response = new BankOrderDetailResponse();
-        response.setOrder(order);
+        response.setOrder(List.of(order));
 
         return response;
     }
