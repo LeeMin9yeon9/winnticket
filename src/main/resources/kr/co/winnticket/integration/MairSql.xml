@@ -3,6 +3,20 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.integration.mair.mapper.MairOrderMapper">
 
+    <select id="selectOrderInfo"
+            parameterType="string"
+            resultType="kr.co.winnticket.integration.mair.dto.MairOrderInfoDto">
+
+        SELECT
+            id AS orderId,
+            order_number AS orderNumber,
+            payment_status AS paymentStatus,
+            customer_name AS customerName,
+            customer_phone AS customerPhone
+        FROM orders
+        WHERE order_number = #{orderNumber}
+
+    </select>
 
         <!-- 주문 조회-->
     <select id="selectOrderItemInfo" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">

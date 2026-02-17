@@ -67,7 +67,7 @@ public class MairService {
                         itcd,
                         dto.getOrderNumber(),   // TRNO
                         dto.getCustomerName(),  // ODNM
-                        dto.getCustomerPhone()  // ODHP
+                        normalizeHp(dto.getCustomerPhone()) // ODHP
                 );
 
                 if (res == null || !res.isOk()) {
