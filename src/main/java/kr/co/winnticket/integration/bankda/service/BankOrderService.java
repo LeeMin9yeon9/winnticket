@@ -1,146 +1,144 @@
 package kr.co.winnticket.integration.bankda.service;
 
 import jakarta.transaction.Transactional;
-import kr.co.winnticket.integration.bankda.dto.BankConfirmRequest;
-import kr.co.winnticket.integration.bankda.dto.BankConfirmResponse;
-import kr.co.winnticket.integration.bankda.dto.BankOrderDetailResponse;
-import kr.co.winnticket.integration.bankda.dto.BankOrderResponse;
+import kr.co.winnticket.common.enums.OrderStatus;
+import kr.co.winnticket.common.enums.PaymentStatus;
+import kr.co.winnticket.integration.bankda.dto.*;
+import kr.co.winnticket.integration.bankda.exception.BankdaException;
+import kr.co.winnticket.integration.bankda.mapper.BankOrderMapper;
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class BankOrderService {
 
-    public BankOrderResponse getUnpaidOrders() {
+    private final BankOrderMapper bankOrderMapper;
+    private final OrderService orderService;
+
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * 미입금 주문 조회
+     */
+    public BankOrderResponse selectBankdaOrders() {
+        List<BankOrderResponse.Order> orders =
+                bankOrderMapper.selectBankdaOrders();
 
         BankOrderResponse res = new BankOrderResponse();
-
-        BankOrderResponse.Order order = new BankOrderResponse.Order();
-
-        order.setOrder_id("20260209221233-01");
-        order.setBuyer_name("이민경");
-        order.setBilling_name("이민경");
-        order.setBank_account_no("3333020387090");
-        order.setBank_code_name("카카오뱅크");
-        order.setOrder_price_amount(1900);
-
-        String now = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-        order.setOrder_date(now);
-
-        BankOrderResponse.Item item1 = new BankOrderResponse.Item();
-        item1.setProduct_name("커피 200개");
-
-        BankOrderResponse.Item item2 = new BankOrderResponse.Item();
-        item2.setProduct_name("마스크 100개");
-
-        order.setItems(List.of(item1, item2));
-
-        res.setOrders(List.of(order));
+        res.setOrders(orders);
 
         return res;
     }
 
+    /**
+     * 주문 상세 조회
+     */
     public BankOrderDetailResponse getOrderDetail(String orderId) {
-
-        // 👉 여기서 DB 조회한다고 보면 됨.
-
-        if (!orderId.equals("20260209224312-01")) {
-            throw new RuntimeException("존재하지 않는 주문번호"); // → 415로 바꿔줄 예정
+        // 요청 형식 오류
+        if (orderId == null || orderId.isBlank()) {
+            throw new BankdaException(400, "요청 format 오류");
         }
 
-        BankOrderDetailResponse res = new BankOrderDetailResponse();
-        BankOrderDetailResponse.Order order = new BankOrderDetailResponse.Order();
+        BankOrderDetailResponse.Order order =
+                bankOrderMapper.selectBankOrderDetail(orderId);
 
-        order.setOrder_id(orderId);
-        order.setBuyer_name("홍길동");
-        order.setBilling_name("홍길동");
-        order.setBank_account_no("53000101123456");
-        order.setBank_code_name("농협");
-        order.setOrder_price_amount(19000);
-        order.setOrder_date("2026-02-09 22:43:12");
+        // 존재하지 않는 주문번호
+        if (order == null) {
+            throw new BankdaException(415, "존재하지 않는 주문번호");
+        }
 
-        BankOrderDetailResponse.Item item1 = new BankOrderDetailResponse.Item();
-        item1.setProduct_name("커피 200개");
+        BankOrderDetailResponse response = new BankOrderDetailResponse();
+        response.setOrder(order);
 
-        BankOrderDetailResponse.Item item2 = new BankOrderDetailResponse.Item();
-        item2.setProduct_name("마스크 100개");
-
-        order.setItems(List.of(item1, item2));
-        res.setOrder(order);
-
-        return res;
+        return response;
     }
 
-    @Transactional
-    public BankConfirmResponse confirmOrders(BankConfirmRequest req) {
+    public ResponseEntity<BankConfirmResponse> confirm(
+            BankConfirmRequest request
+    ) {
+        // 400 format 오류
+        if (request == null || request.getRequests() == null || request.getRequests().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new BankConfirmResponse(
+                            400,
+                            "요청 format 오류",
+                            null
+                    ));
+        }
 
         List<BankConfirmResponse.OrderResult> results = new ArrayList<>();
+        boolean hasInvalidOrderId = false;
 
-        for (BankConfirmRequest.ConfirmItem item : req.getRequests()) {
+        for (BankConfirmRequest.Request req : request.getRequests()) {
 
-            String orderId = item.getOrder_id();
+            String orderNumber = req.getOrderId();
 
-            // 여기서 DB 조회
-            String status = findOrderStatus(orderId);
-
-            if (status == null) {
-                results.add(BankConfirmResponse.OrderResult.builder()
-                        .order_id(orderId)
-                        .description("요청된 주문번호가 없는 경우")
-                        .build());
-
+            if (orderNumber == null) {
+                results.add(new BankConfirmResponse.OrderResult(
+                        null,
+                        "요청 format 오류"
+                ));
+                hasInvalidOrderId = true;
                 continue;
             }
 
-            if (!status.equals("WAIT_DEPOSIT")) {
+            UUID orderId = bankOrderMapper.findOrderIdByOrderNumber(orderNumber);
 
-                results.add(BankConfirmResponse.OrderResult.builder()
-                        .order_id(orderId)
-                        .description("요청된 주문번호가 입금대기 상태가 아닌 경우")
-                        .build());
-
+            // 존재하지 않는 주문
+            if (orderId == null) {
+                results.add(new BankConfirmResponse.OrderResult(
+                        orderNumber,
+                        "존재하지 않는 주문"
+                ));
+                hasInvalidOrderId = true;
                 continue;
             }
 
-            // 상태 변경 (입금완료)
-            updateOrderStatus(orderId, "PAID");
+            OrderAdminDetailGetResDto order = orderService.selectOrderAdminDetail(orderId);
 
-            results.add(BankConfirmResponse.OrderResult.builder()
-                    .order_id(orderId)
-                    .description("성공")
-                    .build());
+            // 입금대기 상태가 아닌 경우
+            if (order.getPaymentStatus() != PaymentStatus.READY
+                    || order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+
+                results.add(new BankConfirmResponse.OrderResult(
+                        orderNumber,
+                        "요청된 주문번호가 입금대기 상태가 아님"
+                ));
+                continue;
+            }
+
+            // 정상 처리 (관리자 로직 재사용)
+            orderService.completePayment(orderId);
+
+            results.add(new BankConfirmResponse.OrderResult(
+                    orderNumber,
+                    "성공"
+            ));
         }
 
-        return BankConfirmResponse.builder()
-                .return_code(200)
-                .description("정상")
-                .orders(results)
-                .build();
+        int returnCode = hasInvalidOrderId ? 415 : 200;
+        String desc = hasInvalidOrderId ? "order_id 오류" : "정상";
+
+        return ResponseEntity.ok(
+                new BankConfirmResponse(
+                        returnCode,
+                        desc,
+                        results
+                )
+        );
     }
 
-    private String findOrderStatus(String orderId) {
-
-        // TODO DB 조회
-
-        if (orderId.equals("20260209224312-01"))
-            return "WAIT_DEPOSIT";
-
-        if (orderId.equals("20260209224312-02"))
-            return "PAID";
-
-        return null;
-    }
-
-    private void updateOrderStatus(String orderId, String status) {
-
-        // TODO DB update
-    }
 }
