@@ -29,9 +29,9 @@ public class BankOrderController {
      */
     @PostMapping("/orders/detail")
     public BankOrderDetailResponse getOrderDetail(
-            @RequestBody BankOrderDetailRequest req
+            @RequestParam("order_id") String orderId
     ) {
-        return bankOrderService.getOrderDetail(req.getOrderId());
+        return bankOrderService.getOrderDetail(orderId);
     }
 
     /**
