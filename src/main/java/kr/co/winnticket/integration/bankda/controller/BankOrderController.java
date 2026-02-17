@@ -27,11 +27,14 @@ public class BankOrderController {
     /**
      * 주문 상세 조회
      */
-    @PostMapping("/orders/detail")
+    @PostMapping("/order/detail")
     public BankOrderDetailResponse getOrderDetail(
-            @RequestParam("order_id") String orderId
+            @RequestBody BankOrderDetailRequest req
     ) {
-        return bankOrderService.getOrderDetail(orderId);
+        System.out.println("REQ = " + req);
+        BankOrderDetailResponse res = bankOrderService.getOrderDetail(req.getOrderId());
+        System.out.println("🔥 response = " + res);
+        return res;
     }
 
     /**
