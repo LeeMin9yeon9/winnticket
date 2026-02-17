@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.integration.bankda.mapper.BankOrderMapper">
+
+    <!--
+     - 미입금 주문 조회
+     -->
+    <resultMap id="BankOrderMap" type="kr.co.winnticket.integration.bankda.dto.BankOrderResponse$Order">
+        <id property="orderId" column="order_id"/>
+        <result property="buyerName" column="buyer_name"/>
+        <result property="billingName" column="billing_name"/>
+        <result property="bankAccountNo" column="bank_account_no"/>
+        <result property="bankCodeName" column="bank_code_name"/>
+        <result property="orderPriceAmount" column="order_price_amount"/>
+        <result property="orderDate" column="order_date"/>
+        <!-- 상품 리스트 -->
+        <collection property="items"
+                    ofType="kr.co.winnticket.integration.bankda.dto.BankOrderResponse$Item">
+            <result property="productName" column="product_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectBankdaOrders" resultMap="BankOrderMap">
+        SELECT
+            o.order_number AS order_id,
+            o.customer_name AS buyer_name,
+            o.customer_name AS billing_name,
+            '' AS bank_account_no,
+            '' AS bank_code_name,
+            o.final_price AS order_price_amount,
+            to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
+            oi.product_name
+        FROM orders o
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+
+        WHERE o.payment_method = 'VIRTUAL_ACCOUNT'
+          AND o.payment_status = 'READY'
+          AND o.status = 'PENDING_PAYMENT'
+          AND o.canceled_at IS NULL
+        ORDER BY o.ordered_at ASC, o.order_number ASC;
+    </select>
+
+    <!--
+     - 주문 상세 조회
+     -->
+    <resultMap id="bankOrderDetailMap" type="kr.co.winnticket.integration.bankda.dto.BankOrderDetailResponse$Order">
+        <id property="orderId" column="order_id"/>
+        <result property="buyerName" column="buyer_name"/>
+        <result property="billingName" column="billing_name"/>
+        <result property="bankAccountNo" column="bank_account_no"/>
+        <result property="bankCodeName" column="bank_code_name"/>
+        <result property="orderPriceAmount" column="order_price_amount"/>
+        <result property="orderDate" column="order_date"/>
+        <collection property="items"
+                    ofType="kr.co.winnticket.integration.bankda.dto.BankOrderDetailResponse$Item">
+            <result property="productName" column="product_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectBankOrderDetail"
+            resultMap="bankOrderDetailMap"
+            parameterType="string">
+        SELECT
+            o.order_number AS order_id,
+            o.customer_name AS buyer_name,
+            o.customer_name AS billing_name,
+            '' AS bank_account_no,
+            '' AS bank_code_name,
+            o.final_price AS order_price_amount,
+            to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
+            oi.product_name
+        FROM orders o
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+        WHERE o.order_number = #{orderId}
+          AND o.payment_method = 'VIRTUAL_ACCOUNT'
+          AND o.payment_status = 'READY'
+          AND o.status = 'PENDING_PAYMENT'
+          AND o.canceled_at IS NULL
+    </select>
+
+    <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
+        SELECT id
+        FROM orders
+        WHERE order_number = #{orderNumber}
+    </select>
+
+    <select id="selectOrderStatus"
+            parameterType="string"
+            resultType="string">
+        SELECT payment_status
+        FROM orders
+        WHERE order_number = #{orderId}
+    </select>
+
+    <update id="updateOrderToPaid"
+            parameterType="string">
+        UPDATE orders
+        SET payment_status = 'PAID',
+            status = 'COMPLETED',
+            paid_at = NOW()
+        WHERE order_number = #{orderId}
+    </update>
+</mapper>

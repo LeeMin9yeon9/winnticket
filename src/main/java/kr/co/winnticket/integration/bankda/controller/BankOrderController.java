@@ -4,7 +4,10 @@ import kr.co.winnticket.integration.bankda.service.BankOrderService;
 import kr.co.winnticket.integration.bankda.dto.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,21 +21,26 @@ public class BankOrderController {
      */
     @GetMapping("/orders")
     public BankOrderResponse getUnpaidOrders() {
-        return bankOrderService.getUnpaidOrders();
+        return bankOrderService.selectBankdaOrders();
     }
 
+    /**
+     * 주문 상세 조회
+     */
     @PostMapping("/orders/detail")
     public BankOrderDetailResponse getOrderDetail(
             @RequestBody BankOrderDetailRequest req
     ) {
-        return bankOrderService.getOrderDetail(req.getOrder_id());
+        return bankOrderService.getOrderDetail(req.getOrderId());
     }
 
+    /**
+     * 주문 입금완료 처리
+     */
     @PostMapping("/orders/confirm")
-    public BankConfirmResponse confirmOrders(
-            @RequestBody BankConfirmRequest req
+    public ResponseEntity<BankConfirmResponse> confirm(
+            @RequestBody BankConfirmRequest request
     ) {
-        return bankOrderService.confirmOrders(req);
+        return bankOrderService.confirm(request);
     }
-
 }
