@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class BankOrderDetailResponse {
 
-    private List<Order> order;
+    private Order order;
 
     @Data
     public static class Order {
