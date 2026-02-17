@@ -17,12 +17,6 @@ spring:
       max-file-size: 30MB
       max-request-size: 30MB
 
-cloud:
-  aws:
-    region:
-      static: ap-northeast-2
-    s3:
-      bucket: winnticket-prod-uploads
 
 mybatis:
   mapper-locations: classpath*:kr/co/winnticket/**/*.xml
@@ -32,7 +26,7 @@ mybatis:
   type-handlers-package: kr.co.winnticket.common.typehandler
 
 jwt:
-  access-token-validity: 18000000 #1800000 #30분
+  access-token-validity: 900000  #15분
   refresh-token-validity: 1209600000 #7일
 
 logging:
