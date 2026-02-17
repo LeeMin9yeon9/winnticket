@@ -1,21 +1,34 @@
 package kr.co.winnticket.integration.bankda.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data
-@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BankConfirmResponse {
 
-    private int return_code;
+    @JsonProperty("return_code")
+    private int returnCode;
+
     private String description;
+
     private List<OrderResult> orders;
 
     @Data
-    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class OrderResult {
-        private String order_id;
+
+        @JsonProperty("order_id")
+        private String orderId;
+
         private String description;
     }
 }
+
