@@ -3,6 +3,7 @@
                 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.channels.channel.mapper.ChannelMapper">
 
+    <!--채널 목록 조회-->
     <select id="selectPartnerList" resultType="kr.co.winnticket.channels.channel.dto.ChannelListGetResDto">
         SELECT
         id,
@@ -11,7 +12,8 @@
         name,
         company_name AS companyName,
         visible,
-        domain
+        domain,
+        use_card AS useCard
         FROM channels
         WHERE 1 = 1
         AND status = 'ACTIVE'
@@ -31,6 +33,7 @@
         ORDER BY created_at DESC
     </select>
 
+    <!--채널 생성-->
     <insert id="createChannel" parameterType="kr.co.winnticket.channels.channel.dto.ChannelCreateReqDto">
         INSERT INTO channels(
             id,
@@ -158,7 +161,7 @@
         LIMIT 1;
     </select>
 
-    <!--채널코드로 기본정보-->
+    <!--주문용 채널코드로 기본정보-->
     <select id="selectChannelByCode"
             parameterType="string"
             resultType="kr.co.winnticket.channels.channel.dto.ChannelInfoResGetDto">
@@ -176,6 +179,7 @@
             domain,
             description,
             visible,
+            use_card AS useCard,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
