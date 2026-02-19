@@ -60,7 +60,7 @@
                 ON b.order_id = a.id
             JOIN products c
                 ON c.id = b.product_id
-            JOIN partners d
+            LEFT JOIN partners d
                 ON d.id = c.partner_id
             GROUP BY
                 a.id
@@ -214,7 +214,7 @@
           ON c.id = b.order_id
         JOIN products d
           ON d.id = b.product_id
-        JOIN partners e
+        LEFT JOIN partners e
           ON e.id = d.partner_id
         LEFT JOIN order_item_options f
                ON f.order_item_id = b.id
