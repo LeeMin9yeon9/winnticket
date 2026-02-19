@@ -18,13 +18,16 @@ public class PayletterHashUtil {
         }
     }
 
-    public static String makePayhash(String clientId, String tid, Integer amount, String apiKey) {
-        if (clientId == null || tid == null || amount == null || apiKey == null) {
+    public static String makePayhash(String userId, String tid,Integer amount, String apiKey) {
+        if (userId == null || tid == null || amount == null || apiKey == null) {
+
             throw new IllegalArgumentException("payhash param missing");
         }
-        String raw = clientId + tid + amount + apiKey;
+        String raw = userId + amount + tid + apiKey;
+
         return sha256(raw);
     }
+
 
     private static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);

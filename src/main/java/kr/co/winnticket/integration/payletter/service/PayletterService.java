@@ -182,7 +182,7 @@ public class PayletterService {
                 throw new IllegalStateException("paymentApiKey 설정 없음");
             }
 
-            String expected = PayletterHashUtil.sha256(userId + amount + tid + apiKey);
+            String expected = PayletterHashUtil.makePayhash(userId, tid, amount, apiKey);
 
             log.info("[PAYLETTER] callback payhash check expected={}, actual={}", expected, payhash);
 
@@ -204,7 +204,8 @@ public class PayletterService {
             log.info("[PAYLETTER] callback success. orderId={}, tid={}, cid={}", orderId, tid, cid);
 
         } catch (Exception e) {
-            log.error("[PAYLETTER] callback 처리 실패 payload={}",e.getMessage(), payloadJson, e);
+            log.error("[PAYLETTER] callback 처리 실패 payload={}", payloadJson, e);
+
 
             // orderId가 파싱되면 FAILED로 기록
             try {
@@ -340,8 +341,7 @@ public class PayletterService {
         }
 
 
-        PayletterTransactionListResDto res = payletterClient.getTransactionList(
-                properties.getClientId(),
+        PayletterTransactionListResDto res = payletterClient.getTransactionList(properties.getClientId(),
                 date,
                 dateType,
                 pgCode,

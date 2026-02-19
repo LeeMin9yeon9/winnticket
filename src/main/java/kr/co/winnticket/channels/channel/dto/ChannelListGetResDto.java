@@ -39,5 +39,8 @@ public class ChannelListGetResDto {
     @Schema(description = "카드결제 사용 여부",example = "false")
     private Boolean useCard;
 
+    @Schema(description = "포인트 사용 여부" ,example = "false")
+    private Boolean usePoint;
+
 
 }

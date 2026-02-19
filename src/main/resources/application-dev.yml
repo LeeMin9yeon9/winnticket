@@ -50,9 +50,9 @@ payletter:
   search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=
   service-name: 페이레터
 
-  return-url: https://api.winnticket.store/api/payletter/return
-  callback-url: https://api.winnticket.store/api/payletter/callback
-  cancel-url: https://api.winnticket.store/api/payletter/cancel
+  return-url: https://13.209.91.167/api/payletter/return
+  callback-url:  https://13.209.91.167/api/payletter/callback
+  cancel-url: https://13.209.91.167/api/payletter/cancel
 
 # 파트너 연동 (플러스앤)
 plusn:
