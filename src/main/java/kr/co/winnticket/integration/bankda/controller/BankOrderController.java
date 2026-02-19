@@ -19,7 +19,7 @@ public class BankOrderController {
     /**
      * 미입금 주문 조회
      */
-    @GetMapping(value ="/orders", produces = "application/json")
+    @PostMapping(value ="/orders", produces = "application/json")
     public BankOrderResponse getUnpaidOrders() {
         return bankOrderService.selectBankdaOrders();
     }
