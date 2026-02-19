@@ -19,7 +19,7 @@ public class BankOrderController {
     /**
      * 미입금 주문 조회
      */
-    @GetMapping("/orders")
+    @GetMapping(value ="/orders", produces = "application/json")
     public BankOrderResponse getUnpaidOrders() {
         return bankOrderService.selectBankdaOrders();
     }
@@ -27,7 +27,7 @@ public class BankOrderController {
     /**
      * 주문 상세 조회
      */
-    @PostMapping("/orders/detail")
+    @PostMapping(value = "/orders/detail", produces = "application/json", consumes = "application/json")
     public BankOrderDetailResponse getOrderDetail(
             @RequestBody BankOrderDetailRequest req
     ) {
@@ -37,7 +37,7 @@ public class BankOrderController {
     /**
      * 주문 입금완료 처리
      */
-    @PostMapping("/orders/confirm")
+    @PostMapping(value = "/orders/confirm", produces = "application/json", consumes = "application/json")
     public ResponseEntity<BankConfirmResponse> confirm(
             @RequestBody BankConfirmRequest request
     ) {
