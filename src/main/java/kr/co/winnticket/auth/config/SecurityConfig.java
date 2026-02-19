@@ -80,7 +80,10 @@ public class SecurityConfig {
                                 "/api/aquaplanet/test/**",
                                 "/api/swagger-ui/**",
                                 "/api/v3/api-docs/**",
-                                "/api/swagger-ui.html"
+                                "/api/swagger-ui.html",
+                                "/api/payletter/callback",
+                                "/api/payletter/return",
+                                "/api/payletter/cancel"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
