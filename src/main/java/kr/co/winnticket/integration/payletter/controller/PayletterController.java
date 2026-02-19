@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
+import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.*;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class PayletterController {
 
     private final PayletterService service;
+    private final PayletterProperties properties;
 
     // (테스트용) 결제요청 API
     @PostMapping("/request/{orderId}")
@@ -37,24 +40,12 @@ public class PayletterController {
         return service.paymentRequest(orderId, orderNumber, amount, customerName, customerEmail, customerPhone,pgCode);
     }
 
-    // Payletter 콜백 (성공시에만 옴)
-
-//    @PostMapping("/callback")
-//    @Operation(summary = "Payletter callback_url", description = "결제 성공 시 Payletter가 호출")
-//    public PayletterCallbackResDto callback(@RequestBody Map<String, Object> payload) {
-//        try {
-//            service.handleCallback(payload);
-//            return new PayletterCallbackResDto(0, "OK");
-//        } catch (Exception e) {
-//            log.error("[PAYLETTER] callback error", e);
-//            return new PayletterCallbackResDto(1, e.getMessage());
-//        }
-//    }
 // Payletter 콜백 (성공시에만 옴)
     @PostMapping("/callback")
-    @Operation(summary = "Payletter callback_url", description = "결제 성공 시 Payletter가 호출")
+    @Operation(summary = "Payletter callback_url 결제 성공 시 payletter가 호출", description = "결제 성공 시 Payletter가 호출")
     public PayletterCallbackResDto callback(@RequestBody PayletterCallbackReqDto req) {
         try {
+            log.info("[PAYLETTER] callback payload={}", req.getPayload());
             service.handleCallback(req.getPayload());
             return new PayletterCallbackResDto(0, "OK");
         } catch (Exception e) {
@@ -66,13 +57,26 @@ public class PayletterController {
 
 
     @GetMapping("/return")
-    public String payReturn() {
-        return "RETURN_OK";
+    public String payReturn(@RequestParam(required = false) String custom_parameter) {
+
+        log.info("[PAYLETTER] cancel custom_parameter={}", custom_parameter);
+
+        // 개발 테스트용
+        return "redirect:https://13.209.91.167/payment/result?orderId=" + custom_parameter;
+        // 운영
+      //  return "redirect:https://www.winnticket.store/payment/result?orderId=" + custom_parameter;
+
     }
 
     @GetMapping("/cancel")
-    public String payCancel() {
-        return "CANCEL_OK";
+    public String payCancel(@RequestParam(required = false) String custom_parameter) {
+
+        log.info("Payletter cancel orderId={}", custom_parameter);
+
+        return "redirect:https://13.209.91.167/payment//cancel?orderId=" + custom_parameter;
+        // 운영
+      //  return "redirect:https://www.winnticket.store/payment/cancel?orderId=" + custom_parameter;
+
     }
 
     @PostMapping("/cancel/{orderId}")
@@ -108,6 +112,15 @@ public class PayletterController {
     @Operation(summary = "Payletter 거래상태조회", description = "Payletter 거래상태 조회(payments/status)")
     public PayletterPaymentStatusResDto paymentStatus(@PathVariable String orderNumber) {
         return service.getPaymentStatus(orderNumber);
+    }
+
+    @GetMapping("/test/hash")
+    @Operation(summary = "Payletter 테스트 hash 생성", description = "Payletter hash 테스트용")
+    public String testHash(@RequestParam String userId, @RequestParam String tid, @RequestParam Integer amount) {
+        String apiKey = properties.getPaymentApiKey();
+
+        return PayletterHashUtil.makePayhash(userId, tid, amount, apiKey);
+
     }
 
 
