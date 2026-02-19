@@ -14,7 +14,8 @@
         company_name AS companyName,
         visible,
         domain,
-        COALESCE(use_card, false) AS useCard
+        COALESCE(use_card, false) AS useCard,
+        COALESCE(use_point, false) AS usePoint
         FROM channels
         WHERE 1 = 1
         AND status = 'ACTIVE'
@@ -49,6 +50,7 @@
             domain,
             description,
             use_card,
+            use_point,
             visible,
             created_at,
             updated_at
@@ -66,6 +68,7 @@
             #{domain},
             #{description},
             COALESCE(#{useCard}, FALSE),
+            COALESCE(#{usePoint}, FALSE),
             COALESCE(#{visible},TRUE),
             NOW(),
             NOW()
@@ -87,7 +90,8 @@
             domain,
             description,
             visible,
-            use_card AS useCard,
+            COALESCE(use_card, false) AS useCard,
+            COALESCE(use_point, false) AS usePoint,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
@@ -112,6 +116,7 @@
             <if test="model.phone != null">PHONE = #{model.phone},</if>
             <if test="model.domain != null">DOMAIN = #{model.domain},</if>
             <if test="model.useCard != null">USE_CARD = #{model.useCard},</if>
+            <if test="model.usePoint != null">USE_POINT = #{model.usePoint},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
@@ -180,7 +185,9 @@
             domain,
             description,
             visible,
-            use_card AS useCard,
+            COALESCE(use_card, false) AS useCard,
+            COALESCE(use_point, false) AS usePoint,
+
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
