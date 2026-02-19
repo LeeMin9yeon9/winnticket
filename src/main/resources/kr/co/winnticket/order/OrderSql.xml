@@ -11,19 +11,19 @@
                 When a.STATUS = 'PENDING_PAYMENT' Then 1 Else 0
             End) UNPAID_CNT,  -- 입금전 수
             Sum(Case
-                When a.STATUS = 'PENDING_PAYMENT' Then a.TOTAL_PRICE Else 0
+                When a.STATUS = 'PENDING_PAYMENT' Then a.FINAL_PRICE Else 0
             End) UNPAID_TOTAL_PRICE,  -- 입금전 총액
             Sum(Case
                 When a.STATUS = 'COMPLETED' Then 1 Else 0
             End) COMPLETED_CNT,  -- 주문처리완료 수
             Sum(Case
-                   When a.STATUS = 'COMPLETED' Then a.TOTAL_PRICE Else 0
+                   When a.STATUS = 'COMPLETED' Then a.FINAL_PRICE Else 0
                 End) COMPLETED_TOTAL_PRICE,  -- 주문처리완료 총액
             Sum(Case
                 When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then 1 Else 0
             End) CANCELED_CNT,  -- 취소/환불 수
             Sum(Case
-               When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then a.TOTAL_PRICE Else 0
+               When a.STATUS In ('CANCEL_REQUESTED', 'CANCELED', 'REFUNDED') Then a.FINAL_PRICE Else 0
             End) CANCELED_TOTAL_PRICE  -- 취소/환불 총액
         from
             orders a
