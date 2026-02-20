@@ -101,9 +101,14 @@ public class OrderService {
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
             // 티켓 발행
+           // for (OrderProductListGetResDto item : items) { for (int i = 0; i < item.getQuantity(); i++) { mapper.insertOrderTicket(auId, item.getId(), generateTicketNumber(auId, item.getId())); }
             for (OrderProductListGetResDto item : items) {
                 for (int i = 0; i < item.getQuantity(); i++) {
-                    mapper.insertOrderTicket(auId, item.getId(), generateTicketNumber(auId, item.getId()));
+
+                    mapper.insertOrderTicket(
+                            item.getId(),   // orderItemId
+                            generateTicketNumber(auId, item.getId())
+                    );
                 }
             }
 

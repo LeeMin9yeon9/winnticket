@@ -44,8 +44,10 @@ public class ProductListGetResDto {
     @Schema(description = "판매상태")
     private SalesStatus salesStatus;
 
-    @Schema(description = "재고")
-    private int stock;
+
+    @Schema(description = "선사입형 여부")
+    private Boolean prePurchased;
+
 
     @Schema(description = "활성화여부")
     private boolean visible;

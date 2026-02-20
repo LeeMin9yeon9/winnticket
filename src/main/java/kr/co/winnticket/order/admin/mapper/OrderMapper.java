@@ -55,7 +55,7 @@ public interface OrderMapper {
 
     // 티켓 발행
     void insertOrderTicket(
-            @Param("id") UUID orderId,
+            //@Param("id") UUID orderId,
             @Param("orderItemId") UUID orderItemId,
             @Param("ticketNumber") String ticketNumber
     );
@@ -91,5 +91,16 @@ public interface OrderMapper {
 
     // 사용된 티켓 확인
     int countUsedTickets(UUID orderId);
+
+    // orderItemId로 optionValueId 조회
+    UUID findProductOptionValueIdByOrderItem(UUID orderItemId);
+
+
+    // 주문아이템에 쿠폰 연결
+    void insertOrderItemCoupon(
+            @Param("orderItemId") UUID orderItemId,
+            @Param("couponId") UUID couponId
+    );
+
 
 }

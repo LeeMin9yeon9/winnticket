@@ -48,9 +48,6 @@ public class ProductPostReqDto {
     @Schema(description = "판매상태", example = "READY")
     private SalesStatus salesStatus;
 
-    @Schema(description = "재고수량", example = "100")
-    private int stock;
-
     @Schema(description = "판매시작일", example = "2025-01-01")
     private LocalDate salesStartDate;
 
@@ -65,6 +62,9 @@ public class ProductPostReqDto {
 
     @Schema(description = "티켓타입", example = "01")
     private String ticketType;
+
+    @Schema(description = "선사입형 여부")
+    private Boolean prePurchased;
 
     @Schema(description = "표시순서", example = "1")
     private String displayOrder;

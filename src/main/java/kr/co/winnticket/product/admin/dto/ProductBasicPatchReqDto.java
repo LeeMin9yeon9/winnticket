@@ -54,6 +54,9 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "티켓타입")
     private String ticketType;
 
+    @Schema(description = "선사입형 여부")
+    private Boolean prePurchased;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
