@@ -80,14 +80,16 @@ public interface OrderMapper {
     void updateOrderCompleted(UUID orderId);
 
 
+    // 페이레터 주문정보 조회
     Map<String, Object> selectOrderPaymentInfo(UUID orderId);
 
-    // 취소 성공
+    // 페이레터 취소 성공
     int updatePayletterCancelSuccess(
             @Param("orderId") UUID orderId,
             @Param("payloadJson") String payloadJson
     );
 
-    int countUsedTickets(UUID orderId); // 테이블명 맞춰서
+    // 사용된 티켓 확인
+    int countUsedTickets(UUID orderId);
 
 }
