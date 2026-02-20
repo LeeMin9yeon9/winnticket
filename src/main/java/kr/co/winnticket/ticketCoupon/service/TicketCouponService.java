@@ -1,6 +1,5 @@
 package kr.co.winnticket.ticketCoupon.service;
 
-import kr.co.winnticket.common.enums.TicketIssueType;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import kr.co.winnticket.ticketCoupon.dto.TicketCouponCreateReqDto;
@@ -24,7 +23,7 @@ import java.util.UUID;
 public class TicketCouponService {
 
     private final TicketCouponMapper mapper;
-    private final ProductMapper optionValueMapper;
+    private final ProductMapper productMapper;
     private final OrderMapper orderMapper;
 
 
@@ -32,11 +31,16 @@ public class TicketCouponService {
      @Transactional
      public void createCoupons(TicketCouponCreateReqDto dto){
 
-         TicketIssueType type = optionValueMapper.selectTicketIssueType(dto.getProductOptionValueId());
+         Boolean prePurchased = productMapper.selectPrePurchasedByProductId(dto.getProductId());
 
-         if(type != TicketIssueType.PREPURCHASE){
-             throw new RuntimeException(
-                     "선사입형 상품만 쿠폰 생성 가능");
+
+         if(prePurchased == null){
+             throw new RuntimeException("상품이 존재하지 않습니다.");
+         }
+
+
+         if(!prePurchased){
+             throw new RuntimeException("선사입형 상품만 쿠폰 생성 가능");
          }
 
          UUID groupId = mapper.findGroupByOptionValueId(dto.getProductOptionValueId());
@@ -187,28 +191,39 @@ public class TicketCouponService {
         mapper.deleteGroup(groupId);
     }
 
-    // 사용가능한 쿠폰 1개 조회 후 판매처리
+    // 쿠폰 주문 발급
     @Transactional
-    public String issueCoupon(UUID orderItemId){
+    public String issueCoupon(UUID orderItemId) {
 
-        //  orderItem 조회
-        UUID optionValueId = orderMapper.findOptionValueIdByOrderItem(orderItemId);
+        // 옵션값 ID
+        UUID optionValueId =
+                orderMapper.findProductOptionValueIdByOrderItem(orderItemId);
 
-        // 2. groupId 조회
-        UUID groupId = mapper.findGroupByOptionValueId(optionValueId);
+        // 그룹 조회
+        UUID groupId =
+                mapper.findGroupByOptionValueId(optionValueId);
 
-        // 3. 쿠폰 발급
-        TicketCouponListResDto coupon = mapper.findActiveCoupon(groupId);
+        // 쿠폰 조회
+        TicketCouponListResDto coupon =
+                mapper.findActiveCoupon(groupId);
 
-        if(coupon == null){
-            throw new RuntimeException("재고 부족");
+        if (coupon == null) {
+            throw new RuntimeException("쿠폰 재고 없음");
         }
 
+        // SOLD 처리
         mapper.markCouponSold(coupon.getId());
 
+        // 주문 쿠폰 연결
         orderMapper.insertOrderItemCoupon(
                 orderItemId,
                 coupon.getId()
+        );
+
+        // 티켓 생성
+        orderMapper.insertOrderTicket(
+                orderItemId,
+                coupon.getCouponNumber()
         );
 
         return coupon.getCouponNumber();

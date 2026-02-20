@@ -31,7 +31,7 @@
                 #{productId},
                 #{productOptionId},
                 #{productOptionValueId},
-                #{groupName},
+                CONCAT('COUPON-', TO_CHAR(now(),'YYYYMMDD'), '-', #{productOptionValueId}),
                 #{validFrom},
                 #{validUntil},
                 now(),
@@ -39,31 +39,31 @@
             )
     </insert>
 
-    <!-- 쿠폰 생성 -->
-    <insert id="insertCoupon">
-        INSERT INTO ticket_coupons
-        (
-            id,
-            group_id,
-            coupon_number,
-            status,
-            valid_from,
-            valid_until,
-            created_at,
-            updated_at
-        )
-        VALUES
+        <!-- 쿠폰 생성 -->
+        <insert id="insertCoupon">
+            INSERT INTO ticket_coupons
             (
-                gen_random_uuid(),
-                #{groupId},
-                #{couponNumber},
-                'ACTIVE',
-                #{validFrom},
-                #{validUntil},
-                now(),
-                now()
+                id,
+                group_id,
+                coupon_number,
+                status,
+                valid_from,
+                valid_until,
+                created_at,
+                updated_at
             )
-    </insert>
+            VALUES
+                (
+                    gen_random_uuid(),
+                    #{groupId},
+                    #{couponNumber},
+                    'ACTIVE',
+                    #{validFrom},
+                    #{validUntil},
+                    now(),
+                    now()
+                )
+        </insert>
 
     <!-- 그룹 목록 조회(+ ACTIVE/USED 카운트) -->
     <select id="selectGroups" resultType="kr.co.winnticket.ticketCoupon.dto.TicketCouponGroupResDto">
@@ -210,9 +210,10 @@
         FROM ticket_coupons
         WHERE group_id = #{groupId}
           AND status = 'ACTIVE'
-        ORDER BY created_at
+
+        ORDER BY valid_until ASC, RANDOM()
             LIMIT 1
-    FOR UPDATE
+        FOR UPDATE
     </select>
 
     <!-- 쿠폰 판매처리 -->

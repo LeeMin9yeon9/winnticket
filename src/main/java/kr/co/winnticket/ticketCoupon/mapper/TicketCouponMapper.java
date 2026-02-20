@@ -34,10 +34,10 @@ public interface TicketCouponMapper {
             @Param("validUntil") LocalDate validUntil
     );
 
-    // 그룹 목록 조회(+카운트 포함)
+    // 그룹 목록 조회
     List<TicketCouponGroupResDto> selectGroups();
 
-    // 그룹 단건 조회(+카운트 포함)
+    // 그룹 단건 조회
     TicketCouponGroupResDto selectGroup(@Param("groupId") UUID groupId);
 
     // 그룹별 쿠폰 목록 조회

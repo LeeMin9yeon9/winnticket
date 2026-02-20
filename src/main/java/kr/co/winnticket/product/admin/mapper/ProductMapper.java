@@ -1,6 +1,5 @@
 package kr.co.winnticket.product.admin.mapper;
 
-import kr.co.winnticket.common.enums.TicketIssueType;
 import kr.co.winnticket.product.admin.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -279,8 +278,7 @@ public interface ProductMapper {
             @Param("channelId") UUID channelId
     );
 
-    // 티켓쿠폰 발급 방식 조회
-    TicketIssueType selectTicketIssueType(
-            @Param("productOptionValueId") UUID productOptionValueId
-    );
+
+    // 상품 기준 선사입형 여부 조회
+    Boolean selectPrePurchasedByProductId(UUID productId);
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -40,4 +41,8 @@ public class TicketCouponGroupResDto {
 
     @Schema(description = "사용된 쿠폰 수")
     private Integer usedCount;
+
+    @Schema(description = "쿠폰 목록")
+    private List<TicketCouponListResDto> coupons;
+
 }
