@@ -224,6 +224,23 @@ public class ProductController {
         );
     }
 
+    // 상품 옵션값 수정
+    @PatchMapping("/optionValue/{id}")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 옵션값 수정", description = "전달받은 id의 옵션값을 수정합니다.")
+    public ResponseEntity<ApiResponse<ProductOptionValuePatchReqDto>> patchProductOptionValue (
+            @Parameter(description = "옵션값_ID") @PathVariable("id") UUID auId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 옵션값 정보") @RequestBody @Valid ProductOptionValuePatchReqDto model
+    ) throws Exception {
+        service.updateProductOptionValue(auId, model);
+        model.setOptionValueId(auId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("수정 성공",model)
+        );
+    }
+
     // 상품 기간 등록
     @PostMapping("/period")
     @ResponseBody
