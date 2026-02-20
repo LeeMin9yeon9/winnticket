@@ -18,7 +18,7 @@
             a.PRICE,  -- 정가
             a.DISCOUNT_PRICE,  -- 판매가
             a.SALES_STATUS,  -- 판매상태
-            a.STOCK,  -- 재고
+            a.PRE_PURCHASED, -- 선사입티켓여부
             a.VISIBLE  -- 활성화여부
         FROM
             PRODUCTS a
@@ -62,7 +62,7 @@
             a.PARTNER_ID,  -- 파트너_ID
             a.PRICE,  -- 정가
             a.DISCOUNT_PRICE,  -- 판매가
-            a.STOCK,  -- 재고
+            a.PRE_PURCHASED,    -- 선사입티켓여부
             a.SALES_STATUS,  -- 판매상태
             a.DESCRIPTION,  -- 설명
             a.SHIPPING_INFO,  -- 배송정보
@@ -245,7 +245,7 @@
             PRICE,
             DISCOUNT_PRICE,
             SALES_STATUS,
-            STOCK,
+            PRE_PURCHASED,
             SALES_START_DATE,
             SALES_END_DATE,
             REGION_CODE,
@@ -265,7 +265,7 @@
             #{price},
             #{discountPrice},
             #{salesStatus}::sales_status,
-            #{stock},
+            #{prePurchased},
             #{salesStartDate},
             #{salesEndDate},
             #{regionCode},
@@ -300,9 +300,6 @@
             <if test="model.discountPrice != null">
                 DISCOUNT_PRICE = #{model.discountPrice},
             </if>
-            <if test="model.stock != null">
-                STOCK = #{model.stock},
-            </if>
             <if test="model.salesStatus != null">
                 SALES_STATUS = #{model.salesStatus}::sales_status,
             </if>
@@ -317,6 +314,9 @@
             </if>
             <if test="model.ticketType != null and model.ticketType != ''">
                 TICKET_TYPE = #{model.ticketType},
+            </if>
+            <if test="model.prePurchased != null">
+                PRE_PURCHASED = #{model.prePurchased},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
@@ -1039,11 +1039,14 @@
         ON CONFLICT (product_id, channel_id) DO NOTHING
     </insert>
 
-    <!--티켓쿠폰 발급 방식 조회-->
-    <select id="selectTicketIssueType" resultType="kr.co.winnticket.common.enums.TicketIssueType">
-        SELECT ticket_issue_type
-        FROM product_option_values
-        WHERE id = #{productOptionValueId}
+    <!-- 상품ID 기준으로 선사입 쿠폰 여부 조회 -->
+    <select id="selectPrePurchasedByProductId" resultType="boolean">
+
+        SELECT pre_purchased
+
+        FROM products
+
+        WHERE id = #{productId}
 
     </select>
 </mapper>

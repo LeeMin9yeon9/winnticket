@@ -46,11 +46,11 @@ public class ProductDetailGetResDto {
     @Schema(description = "판매가")
     private int discountPrice;
 
-    @Schema(description = "재고")
-    private int stock;
-
     @Schema(description = "판매상태")
     private SalesStatus salesStatus;
+
+    @Schema(description = "선사입형 여부")
+    private Boolean prePurchased;
 
     @Schema(description = "상품설명")
     private String description;

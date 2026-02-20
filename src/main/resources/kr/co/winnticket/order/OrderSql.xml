@@ -418,4 +418,35 @@
         WHERE oi.order_id = #{orderId}::uuid
       AND t.ticket_used = true
     </select>
+
+    <!-- 주문아이템 기준 옵션값ID 조회 -->
+    <select id="findProductOptionValueIdByOrderItem"
+            parameterType="java.util.UUID"
+            resultType="java.util.UUID">
+
+        SELECT pov.id
+        FROM order_item_options oio
+                 JOIN product_option_values pov
+                      ON pov.value = oio.option_value
+        WHERE oio.order_item_id = #{orderItemId}
+            LIMIT 1
+
+    </select>
+
+    <!--주문아이템 쿠폰 연결-->
+    <insert id="insertOrderItemCoupon"
+            parameterType="map">
+
+        INSERT INTO order_item_coupons
+        (
+            order_item_id,
+            coupon_id
+        )
+        VALUES
+            (
+                #{orderItemId},
+                #{couponId}
+            )
+
+    </insert>
 </mapper>
