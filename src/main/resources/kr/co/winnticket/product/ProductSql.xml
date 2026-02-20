@@ -1038,4 +1038,12 @@
        )
         ON CONFLICT (product_id, channel_id) DO NOTHING
     </insert>
+
+    <!--티켓쿠폰 발급 방식 조회-->
+    <select id="selectTicketIssueType" resultType="kr.co.winnticket.common.enums.TicketIssueType">
+        SELECT ticket_issue_type
+        FROM product_option_values
+        WHERE id = #{productOptionValueId}
+
+    </select>
 </mapper>

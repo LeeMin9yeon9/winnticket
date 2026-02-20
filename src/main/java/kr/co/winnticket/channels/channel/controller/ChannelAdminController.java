@@ -35,7 +35,14 @@ public class ChannelAdminController {
     ){
 
         List<ChannelListGetResDto> list = service.getChannelList(code,name,companyName);
-        return ResponseEntity.ok(ApiResponse.success(list));
+        if(list.isEmpty()){
+            return ResponseEntity.ok(
+                    ApiResponse.success("조회된 채널이 없습니다.", list)
+            );
+        }
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", list)
+        );
     }
 
     @PostMapping
@@ -54,7 +61,12 @@ public class ChannelAdminController {
             @PathVariable UUID id
     ){
         ChannelInfoResGetDto info = service.selectChannel(id);
-        return ResponseEntity.ok(ApiResponse.success(info));
+        if(info == null){
+            throw new IllegalArgumentException("채널이 존재하지 않습니다.");
+        }
+        return ResponseEntity.ok(
+                ApiResponse.success("조회 성공", info)
+        );
     }
 
     @PatchMapping("/{id}/info")
@@ -78,10 +90,11 @@ public class ChannelAdminController {
         return ResponseEntity.ok(ApiResponse.success("채널이 삭제되었습니다.",null));
     }
 
-    @PatchMapping("visible/{id}/{visible}")
+    @PatchMapping("/visible/{id}/{visible}")
+    @Operation(summary = "채널 활성/비활성 변경", description = "채널의 노출 상태를 변경합니다.")
     public ResponseEntity<ApiResponse<Void>> visibleChannel(
             @PathVariable UUID id,
-            @RequestParam Boolean visible
+            @PathVariable Boolean visible
     ) throws NotFoundException {
         service.visibleChannel(id, visible);
         return ResponseEntity.ok(ApiResponse.success("채널 활성/비활성되었습니다.", null));

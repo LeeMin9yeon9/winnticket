@@ -189,4 +189,13 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi ticketCouponApi() {
+        return GroupedOpenApi.builder()
+                .group("선사입 티켓쿠폰")
+                .packagesToScan("kr.co.winnticket.ticketCoupon")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
 }
