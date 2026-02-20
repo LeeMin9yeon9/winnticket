@@ -111,6 +111,12 @@ public interface ProductMapper {
     // 상품별 옵션 삭제
     void deleteProductOption(UUID auId);
 
+    // 옵션값 수정
+    void updateProductOptionValue(
+            @Param("id") UUID auId,
+            @Param("model") ProductOptionValuePatchReqDto model
+    );
+
     // 섹션 목록 조회
     List<SectionListGetResDto> selectSectionList();
 

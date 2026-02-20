@@ -26,4 +26,7 @@ public class ProductOptionValueGetResDto {
     
     @Schema(description = "옵션별가격")
     private int additionalPrice;
+
+    @Schema(description = "원가")
+    private int basePrice;
 }
