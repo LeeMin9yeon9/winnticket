@@ -80,9 +80,7 @@ dependencies {
     // S3
     implementation "software.amazon.awssdk:s3"
 
-    // Json
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
 
 
 }
