@@ -127,7 +127,7 @@
     </select>
 
     <!--
-     - 상품 옵션별 가격 Select
+     - 상품 옵션값 Select
      -->
     <select id="selectOptionValues" resultType="kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto">
         Select
@@ -135,7 +135,8 @@
             a.CODE,  -- 코드
             a.VALUE,  -- 옵션별가격명
             a.STOCK,  -- 옵션별가격재고
-            a.ADDITIONAL_PRICE  -- 추가가격
+            a.ADDITIONAL_PRICE,  -- 추가가격
+            a.BASE_PRICE  -- 원가
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -151,7 +152,8 @@
             a.CODE,  -- 코드
             a.VALUE,  -- 옵션별가격명
             a.STOCK,  -- 옵션별가격재고
-            a.ADDITIONAL_PRICE  -- 추가가격
+            a.ADDITIONAL_PRICE,  -- 추가가격
+            a.BASE_PRICE  -- 원가
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -464,7 +466,7 @@
     </update>
 
     <!--
-    - 상품 옵션별 가격 등록
+    - 상품 옵션값 등록
     -->
     <insert id="insertOptionValue">
         Insert Into PRODUCT_OPTION_VALUES
@@ -473,7 +475,8 @@
             VALUE,
             CODE,
             STOCK,
-            ADDITIONAL_PRICE
+            ADDITIONAL_PRICE,
+            BASE_PRICE
         )
         Values
         (
@@ -481,9 +484,37 @@
             #{model.value},
             #{model.code},
             #{model.stock},
-            #{model.additionalPrice}
+            #{model.additionalPrice},
+            #{model.basePrice}
         )
     </insert>
+
+    <!--
+    - 상품별 옵션값 수정
+    -->
+    <update id="updateProductOptionValue">
+        Update PRODUCT_OPTION_VALUES
+        <set>
+            <if test="model.value != null and model.value != ''">
+                VALUE = #{model.value},
+            </if>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
+            <if test="model.stock != null">
+                STOCK = #{model.stock},
+            </if>
+            <if test="model.additionalPrice != null">
+                ADDITIONAL_PRICE = #{model.additionalPrice},
+            </if>
+            <if test="model.basePrice != null">
+                BASE_PRICE = #{model.basePrice},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        </set>
+        Where 1 = 1
+        And ID = #{id}
+    </update>
 
     <!--
     - 상품 옵션별 가격 삭제

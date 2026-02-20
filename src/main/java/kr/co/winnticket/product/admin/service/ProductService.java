@@ -130,6 +130,11 @@ public class ProductService {
         mapper.deleteProductOption(auId);
     }
 
+    // 옵션값 수정
+    public void updateProductOptionValue(UUID auId, ProductOptionValuePatchReqDto model) {
+        mapper.updateProductOptionValue(auId, model);
+    }
+
     // 상품 기간등록
     public void insertProductPeriod(ProductPeriodPostReqDto model) {
         int groupNo = mapper.selectNextGroupNo(model.getOptionValueId());
@@ -240,7 +245,7 @@ public class ProductService {
             throw new IllegalArgumentException("상품 없음");
         }
 
-        int originalPrice = product.getPrice(); // ⬅️ 여기서 정가 확정
+        int originalPrice = product.getPrice();
 
         mapper.insertProductChannelDiscount(
                 auId,
@@ -318,7 +323,6 @@ public class ProductService {
     }
 
     // 상품 채널별 활성화여부 수정
-
     @Transactional
     public void updateProductChannelEnable(UUID auId, UUID channelId, boolean abEnable) {
         if (abEnable) {

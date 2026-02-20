@@ -27,10 +27,10 @@ public class ProductOptionPatchReqDto {
     @Schema(description = "옵션별가격타입")
     private OptionPriceType priceType;
 
-    @Schema(description = "옵션별가격등록")
+    @Schema(description = "옵션값등록")
     private List<ProductOptionValuePostReqDto> valuesInsert = new ArrayList<>();
 
-    @Schema(description = "옵션별가격삭제")
+    @Schema(description = "옵션값삭제")
     private List<UUID> deleteValueIds;
 
     @Hidden
