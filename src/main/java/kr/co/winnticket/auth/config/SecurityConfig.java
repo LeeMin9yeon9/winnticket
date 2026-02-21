@@ -83,7 +83,8 @@ public class SecurityConfig {
                                 "/api/swagger-ui.html",
                                 "/api/payletter/callback",
                                 "/api/payletter/return",
-                                "/api/payletter/cancel"
+                                "/api/payletter/cancel",
+                                "/api/ticketCoupon/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,

@@ -45,4 +45,6 @@ public interface ProductShopMapper {
 
     // 상품옵션값 조회
     List<ProductShopOptionValueGetResDto> selectShopOptionValues(UUID channelId, UUID optionId);
+
+
 }

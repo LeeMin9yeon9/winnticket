@@ -147,6 +147,7 @@
             ORDER_ITEM_ID,
             OPTION_NAME,
             OPTION_VALUE,
+            OPTION_VALUE_ID,
             ADDITIONAL_PRICE
         )
         Values
@@ -154,6 +155,7 @@
             #{orderItemId},
             #{optionName},
             #{optionValueName},
+            #{optionValueId},
             #{additionalPrice}
         )
     </insert>
@@ -228,6 +230,23 @@
         WHERE id = #{orderId}::uuid
     </update>
 
+    <!--주문 시 주문티켓정보 DB저장 -->
+    <insert id="insertOrderTicket">
+
+        INSERT INTO order_tickets
+        (
+            order_item_id,
+            ticket_number,
+            ticket_used
+        )
+        VALUES
+            (
+                #{orderItemId},
+                #{ticketNumber},
+                false
+            )
+
+    </insert>
 
 
 

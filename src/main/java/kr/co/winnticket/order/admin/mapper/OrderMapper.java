@@ -92,15 +92,30 @@ public interface OrderMapper {
     // 사용된 티켓 확인
     int countUsedTickets(UUID orderId);
 
-    // orderItemId로 optionValueId 조회
-    UUID findProductOptionValueIdByOrderItem(UUID orderItemId);
+    // orderItemId로 productOptionValueId 조회
+   // UUID findProductOptionValueIdByOrderItem(@Param("orderItemId") UUID orderItemId);
 
 
     // 주문아이템에 쿠폰 연결
     void insertOrderItemCoupon(
+            @Param("orderId") UUID orderId,
             @Param("orderItemId") UUID orderItemId,
-            @Param("couponId") UUID couponId
+            @Param("productId") UUID productId,
+            @Param("productOptionValueId") UUID productOptionValueId,
+            @Param("couponId") UUID couponId,
+            @Param("couponNumber") String couponNumber
     );
 
+    // 주문상품 옵션값 조회
+    UUID findOptionValueIdByOrderItem(
+            @Param("orderItemId") UUID orderItemId
+    );
+
+
+    //orderId조회
+    UUID findOrderIdByOrderItemId(UUID orderItemId);
+
+    //productId 조회
+    UUID findProductIdByOrderItemId(UUID orderItemId);
 
 }

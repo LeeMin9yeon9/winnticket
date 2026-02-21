@@ -420,18 +420,18 @@
     </select>
 
     <!-- 주문아이템 기준 옵션값ID 조회 -->
-    <select id="findProductOptionValueIdByOrderItem"
-            parameterType="java.util.UUID"
-            resultType="java.util.UUID">
+<!--    <select id="findProductOptionValueIdByOrderItem"-->
+<!--            parameterType="java.util.UUID"-->
+<!--            resultType="java.util.UUID">-->
 
-        SELECT pov.id
-        FROM order_item_options oio
-                 JOIN product_option_values pov
-                      ON pov.value = oio.option_value
-        WHERE oio.order_item_id = #{orderItemId}
-            LIMIT 1
+<!--        SELECT pov.id-->
+<!--        FROM order_item_options oio-->
+<!--                 JOIN product_option_values pov-->
+<!--                      ON pov.value = oio.option_value-->
+<!--        WHERE oio.order_item_id = #{orderItemId}-->
+<!--            LIMIT 1-->
 
-    </select>
+<!--    </select>-->
 
     <!--주문아이템 쿠폰 연결-->
     <insert id="insertOrderItemCoupon"
@@ -439,14 +439,52 @@
 
         INSERT INTO order_item_coupons
         (
+            id,
+            order_id,
             order_item_id,
-            coupon_id
+            product_id,
+            product_option_value_id,
+            ticket_coupon_id,
+            coupon_number,
+            created_at
         )
         VALUES
             (
+                gen_random_uuid(),
+                #{orderId},
                 #{orderItemId},
-                #{couponId}
+                #{productId},
+                #{productOptionValueId},
+                #{couponId},
+                #{couponNumber},
+                NOW()
             )
 
     </insert>
+
+    <!--주문아이템 옵션값 조회-->
+    <select id="findOptionValueIdByOrderItem"
+            resultType="java.util.UUID">
+
+        SELECT option_value_id
+        FROM order_item_options
+        WHERE order_item_id = #{orderItemId}
+            LIMIT 1
+
+    </select>
+
+    <!-- 주문ID 조회(테스트용)-->
+    <select id="findOrderIdByOrderItemId" resultType="java.util.UUID">
+        SELECT order_id
+        FROM order_items
+        WHERE id = #{orderItemId}
+    </select>
+
+    <!--상품ID 조회(테스트용)-->
+    <select id="findProductIdByOrderItemId" resultType="java.util.UUID">
+    SELECT product_id
+    FROM order_items
+    WHERE id = #{orderItemId}
+    </select>
+
 </mapper>
