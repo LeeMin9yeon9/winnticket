@@ -84,5 +84,10 @@ public interface TicketCouponMapper {
     // 판매티켓 미사용 시 복구
     void restoreCoupon(@Param("couponId")UUID couponId);
 
+    // 그룹별 티켓 날짜 일괄 변경
+    void updateGroupDate(@Param("groupId") UUID groupId,
+                         @Param("validFrom") LocalDate validFrom,
+                         @Param("validUntil") LocalDate validUntil);
+
 
 }
