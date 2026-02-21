@@ -73,16 +73,16 @@ public interface TicketCouponMapper {
     UUID findCouponIdByCouponNumber(@Param("couponNumber") String couponNumber);
 
     // 사용 가능한 쿠폰 1개 조회
-    TicketCouponListResDto findActiveCoupon(UUID groupId);
+    TicketCouponListResDto findActiveCoupon(@Param("groupId") UUID groupId);
 
     // 쿠폰 판매처리
-    void markCouponSold(UUID couponId);
+    void markCouponSold(@Param("couponId") UUID couponId);
 
     // 판매 상태 획인(복구용)
-    String findCouponStatus(UUID couponId);
+    String findCouponStatus(@Param("couponId") UUID couponId);
 
     // 판매티켓 미사용 시 복구
-    void restoreCoupon(UUID couponId);
+    void restoreCoupon(@Param("couponId")UUID couponId);
 
 
 }

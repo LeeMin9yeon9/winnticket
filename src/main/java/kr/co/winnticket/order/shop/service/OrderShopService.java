@@ -31,7 +31,7 @@ public class OrderShopService {
     private final ChannelMapper channelMapper;
     private final PayletterService paymentService;
 
-
+    // 주문조회
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
 
@@ -43,6 +43,7 @@ public class OrderShopService {
         return model;
     }
 
+    // 주문생성
     @Transactional
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
         try {
@@ -104,6 +105,7 @@ public class OrderShopService {
                         orderItemId,
                         option.getName(),
                         optionValue.getValue(),
+                        optionValue.getId(),
                         optionValue.getAdditionalPrice()
                     );
                 }
