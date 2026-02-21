@@ -210,10 +210,12 @@
         FROM ticket_coupons
         WHERE group_id = #{groupId}
           AND status = 'ACTIVE'
+          AND valid_from <![CDATA[ <= ]]> NOW()
+          AND valid_until <![CDATA[ >= ]]> NOW()
 
         ORDER BY valid_until ASC, RANDOM()
             LIMIT 1
-        FOR UPDATE
+    FOR UPDATE
     </select>
 
     <!-- 쿠폰 판매처리 -->

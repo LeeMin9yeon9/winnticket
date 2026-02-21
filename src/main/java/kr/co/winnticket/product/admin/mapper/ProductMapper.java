@@ -286,5 +286,9 @@ public interface ProductMapper {
 
 
     // 상품 기준 선사입형 여부 조회
-    Boolean selectPrePurchasedByProductId(UUID productId);
+    Boolean selectPrePurchasedByProductId(
+            @Param("productId") UUID productId);
+
+    // 입금 완료 시 옵션값 재고 차감
+    void decreaseStock(@Param("optionValueId") UUID optionValueId);
 }

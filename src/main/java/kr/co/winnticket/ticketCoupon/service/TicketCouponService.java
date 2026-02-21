@@ -195,13 +195,16 @@ public class TicketCouponService {
     @Transactional
     public String issueCoupon(UUID orderItemId) {
 
-        // 옵션값 ID
-        UUID optionValueId =
-                orderMapper.findProductOptionValueIdByOrderItem(orderItemId);
+        UUID orderId = orderMapper.findOrderIdByOrderItemId(orderItemId);
+
+        // 상품ID 조회 추가
+        UUID productId = orderMapper.findProductIdByOrderItemId(orderItemId);
+
+        // 옵션값 조회
+        UUID optionValueId = orderMapper.findOptionValueIdByOrderItem(orderItemId);
 
         // 그룹 조회
-        UUID groupId =
-                mapper.findGroupByOptionValueId(optionValueId);
+        UUID groupId = mapper.findGroupByOptionValueId(optionValueId);
 
         // 쿠폰 조회
         TicketCouponListResDto coupon =
@@ -214,10 +217,16 @@ public class TicketCouponService {
         // SOLD 처리
         mapper.markCouponSold(coupon.getId());
 
+        productMapper.decreaseStock(optionValueId);
+
         // 주문 쿠폰 연결
         orderMapper.insertOrderItemCoupon(
+                orderId,
                 orderItemId,
-                coupon.getId()
+                productId,
+                optionValueId,
+                coupon.getId(),
+                coupon.getCouponNumber()
         );
 
         // 티켓 생성

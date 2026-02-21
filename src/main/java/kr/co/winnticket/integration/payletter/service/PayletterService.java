@@ -5,8 +5,12 @@ import kr.co.winnticket.common.util.ClientIpProvider;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.*;
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
+import kr.co.winnticket.product.admin.mapper.ProductMapper;
+import kr.co.winnticket.ticketCoupon.dto.TicketCouponListResDto;
+import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,8 @@ public class PayletterService {
     private final OrderMapper orderAdminMapper;
     private final ObjectMapper objectMapper;
     private final ClientIpProvider clientIpProvider;
+    private final TicketCouponMapper ticketCouponMapper;
+    private final ProductMapper productMapper;
 
 
 
@@ -202,6 +208,64 @@ public class PayletterService {
             }
 
             log.info("[PAYLETTER] callback success. orderId={}, tid={}, cid={}", orderId, tid, cid);
+
+            // 쿠폰 자동발급
+            List<OrderProductListGetResDto> items = orderAdminMapper.selectOrderProductList(orderId);
+
+            for (OrderProductListGetResDto item : items) {
+
+                UUID orderItemId = item.getId();
+                UUID productId = item.getProductId();
+
+                Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
+
+                if (Boolean.TRUE.equals(prePurchased)) {
+
+                    // 옵션값 조회
+                    UUID optionValueId = orderAdminMapper.findOptionValueIdByOrderItem(orderItemId);
+                    if(optionValueId == null ){
+                        throw new IllegalStateException("옵션값 없음 orderItemId" + orderItemId);
+                    }
+                    // 쿠폰 그룹 조회
+                    UUID groupId = ticketCouponMapper.findGroupByOptionValueId(optionValueId);
+                    if (groupId == null) {
+                        throw new IllegalStateException("쿠폰 그룹 없음 optionValueId=" + optionValueId);
+                    }
+                    // 쿠폰 가져오기
+                    TicketCouponListResDto coupon = ticketCouponMapper.findActiveCoupon(groupId);
+
+                    if (coupon == null) {
+                        throw new IllegalStateException("쿠폰 재고 부족 optionValueId=" + optionValueId);
+                    }
+
+                    // 쿠폰 상태 SOLD 처리
+                    ticketCouponMapper.markCouponSold(coupon.getId());
+
+                    // 주문과 쿠폰 연결
+                    orderAdminMapper.insertOrderItemCoupon(
+                            orderId,
+                            orderItemId,
+                            productId,
+                            optionValueId,
+                            coupon.getId(),
+                            coupon.getCouponNumber()
+                    );
+
+                    // 티켓 생성
+                    orderAdminMapper.insertOrderTicket(
+                            orderItemId,
+                            coupon.getCouponNumber()
+                    );
+
+                    log.info("[PAYLETTER] coupon issued orderItemId={}, couponNumber={}",
+                            orderItemId, coupon.getCouponNumber());
+                }
+
+            }//else{
+               // 여기에 자동발급 또는 API 코드넣으렴렴혊
+           // }
+
+
 
         } catch (Exception e) {
             log.error("[PAYLETTER] callback 처리 실패 payload={}", payloadJson, e);

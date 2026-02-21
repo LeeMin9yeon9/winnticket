@@ -41,8 +41,9 @@ public interface OrderShopMapper {
     // 주문 상품별 옵션 insert
     void insertOrderItemOption(
             @Param("orderItemId") UUID orderItemId,
-            @Param("optionName") String name,
-            @Param("optionValueName") String value,
+            @Param("optionName") String optionName,
+            @Param("optionValueName") String optionValueName,
+            @Param("optionValueId") UUID optionValueId,
             @Param("additionalPrice") int additionalPrice
     );
 
@@ -82,6 +83,12 @@ public interface OrderShopMapper {
             @Param("orderId") UUID orderId,
             @Param("payloadJson") String payloadJson,
             @Param("failReason") String failReason
+    );
+
+    // 티켓주문 정보 저장
+    void insertOrderTicket(
+            @Param("orderItemId") UUID orderItemId,
+            @Param("ticketNumber") String ticketNumber
     );
 
 }

@@ -13,9 +13,11 @@ import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.mapper.OrderStatusSmsMapper;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
+import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import kr.co.winnticket.sms.service.BizMsgService;
 import kr.co.winnticket.sms.service.SmsTemplateFinder;
 import kr.co.winnticket.sms.service.TemplateRenderService;
+import kr.co.winnticket.ticketCoupon.service.TicketCouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,8 @@ public class OrderService {
     private final BizMsgService bizMsgService;
     private final PayletterService payletterService;
     private final ObjectMapper objectMapper;
+    private final TicketCouponService ticketCouponService;
+    private final ProductMapper productMapper;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -103,12 +107,26 @@ public class OrderService {
             // 티켓 발행
            // for (OrderProductListGetResDto item : items) { for (int i = 0; i < item.getQuantity(); i++) { mapper.insertOrderTicket(auId, item.getId(), generateTicketNumber(auId, item.getId())); }
             for (OrderProductListGetResDto item : items) {
-                for (int i = 0; i < item.getQuantity(); i++) {
 
-                    mapper.insertOrderTicket(
-                            item.getId(),   // orderItemId
-                            generateTicketNumber(auId, item.getId())
-                    );
+                UUID productId = item.getProductId();
+                Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
+
+                for (int i = 0; i < item.getQuantity(); i++) {
+                    // 선사입쿠폰
+                    if(Boolean.TRUE.equals(prePurchased)){
+                        String couponNumber = ticketCouponService.issueCoupon(item.getId());
+
+                        mapper.insertOrderTicket(
+                                item.getId(),
+                                couponNumber
+                        );
+
+                    }else {
+                        mapper.insertOrderTicket(
+                                item.getId(),   // orderItemId
+                                generateTicketNumber(auId, item.getId())
+                        );
+                    }
                 }
             }
 

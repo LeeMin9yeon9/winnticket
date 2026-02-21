@@ -1070,14 +1070,21 @@
         ON CONFLICT (product_id, channel_id) DO NOTHING
     </insert>
 
-    <!-- 상품ID 기준으로 선사입 쿠폰 여부 조회 -->
+    <!-- 상품ID 기준으로 선사입 쿠폰 여부 확인 -->
     <select id="selectPrePurchasedByProductId" resultType="boolean">
-
         SELECT pre_purchased
-
         FROM products
-
         WHERE id = #{productId}
-
     </select>
+
+    <!-- 옵션값 재고 차감 -->
+    <update id="decreaseStock">
+
+        UPDATE product_option_values
+        SET stock = stock - 1,
+            updated_at = NOW()
+        WHERE id = #{optionValueId}
+          AND stock > 0
+
+    </update>
 </mapper>
