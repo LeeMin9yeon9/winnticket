@@ -165,7 +165,7 @@ public class ProductController {
     
     // 상품옵션 상세조회
     @GetMapping("/option/{id}")
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "옵션", description = "옵션 관리")
     @Operation(summary = "상품 옵션 상세 조회", description = "상품 옵션을 조회합니다.")
     public ResponseEntity<ApiResponse<ProductOptionGetResDto>> getProductOptionDetail (
             @Parameter(description = "옵션_ID") @PathVariable("id") UUID auId
@@ -178,7 +178,7 @@ public class ProductController {
     // 상품 옵션 등록
     @PostMapping("/{id}/option")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "옵션", description = "옵션 관리")
     @Operation(summary = "상품 옵션 등록", description = "전달받은 id의 상품 옵션을 등록합니다.")
     public ResponseEntity<ApiResponse<ProductOptionPostReqDto>> postProductOption (
             @Parameter(description = "상품_ID") @PathVariable("id") UUID auId,
@@ -194,7 +194,7 @@ public class ProductController {
     // 상품 옵션 수정
     @PatchMapping("/option/{id}")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "옵션", description = "옵션 관리")
     @Operation(summary = "상품 옵션 수정", description = "전달받은 id의 옵션을 수정합니다.")
     public ResponseEntity<ApiResponse<ProductOptionPatchReqDto>> patchProductOption (
             @Parameter(description = "옵션_ID") @PathVariable("id") UUID auId,
@@ -211,7 +211,7 @@ public class ProductController {
     // 상품 옵션 삭제
     @DeleteMapping("/option/{id}")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "옵션", description = "옵션 관리")
     @Operation(summary = "상품 옵션 삭제", description = "전달받은 id의 옵션을 삭제합니다.")
     public ResponseEntity<ApiResponse<String>>  deleteProductOption (
             @Parameter(description = "옵션_ID") @PathVariable("id") UUID auId
@@ -227,7 +227,7 @@ public class ProductController {
     // 상품 옵션값 수정
     @PatchMapping("/optionValue/{id}")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "옵션", description = "옵션 관리")
     @Operation(summary = "상품 옵션값 수정", description = "전달받은 id의 옵션값을 수정합니다.")
     public ResponseEntity<ApiResponse<ProductOptionValuePatchReqDto>> patchProductOptionValue (
             @Parameter(description = "옵션값_ID") @PathVariable("id") UUID auId,
@@ -244,7 +244,7 @@ public class ProductController {
     // 상품 기간 등록
     @PostMapping("/period")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "기간", description = "기간 관리")
     @Operation(summary = "상품 기간 등록", description = "전달받은 id의 상품 기간을 등록합니다.")
     public ResponseEntity<ApiResponse<ProductPeriodPostReqDto>> postProductPeriod (
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "상품 기간 정보") @RequestBody @Valid ProductPeriodPostReqDto model
@@ -259,7 +259,7 @@ public class ProductController {
     // 상품 기간 삭제
     @DeleteMapping("/period/{id}/{groupNo}")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "기간", description = "기간 관리")
     @Operation(summary = "상품 기간 삭제", description = "전달받은 id의 상품 기간을 삭제합니다.")
     public ResponseEntity<ApiResponse<String>> deleteProductPeriod (
             @Parameter(description = "옵션값_ID") @PathVariable("id") UUID auId,
@@ -458,7 +458,7 @@ public class ProductController {
 
     // 상품 채널별 가격 목록 조회
     @GetMapping("/{id}/channelPrices")
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "채널별가격", description = "채널별가격 관리")
     @Operation(summary = "상품 채널별 가격 목록 조회", description = "전달받은 id의 상품의 채널별 가격 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<List<ProductChannelPriceListResDto>>> getProductChannelPriceList (
             @Parameter(description = "상품 ID") @PathVariable("id") UUID auId
@@ -470,7 +470,7 @@ public class ProductController {
 
     // 상품 채널별 가격 상세 조회
     @GetMapping("/{id}/channelPrices/{channelId}")
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "채널별가격", description = "채널별가격 관리")
     @Operation(summary = "상품 채널별 가격 상세 조회", description = "전달받은 id의 상품의 채널별 가격을 상세 조회합니다.")
     public ResponseEntity<ApiResponse<ProductChannelPriceDetailResDto>> getProductChannelPriceDetail (
             @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
@@ -484,7 +484,7 @@ public class ProductController {
     // 상품 채널별 가격 저장
     @PostMapping("/{id}/channelPrices/{channelId}")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "채널별가격", description = "채널별가격 관리")
     @Operation(summary = "상품 채널별 가격 저장", description = "상품 채널별 가격을 저장합니다.")
     public ResponseEntity<ApiResponse<ProductChannelPriceSaveReqDto>> saveChannelPrice (
             @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
@@ -501,7 +501,7 @@ public class ProductController {
     // 상품 채널별 활성화여부 수정
     @PatchMapping("/{id}/channelDiscounts/{channelId}/enable")
     @ResponseBody
-    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Tag(name = "채널별가격", description = "채널별가격 관리")
     @Operation(summary = "상품 채널별 활성화여부 수정", description = "상품 채널별 활성화여부를 수정합니다.")
     public ResponseEntity<ApiResponse<String>> patchProductChannelEnable (
             @Parameter(description = "상품 ID") @PathVariable("id") UUID auId,
