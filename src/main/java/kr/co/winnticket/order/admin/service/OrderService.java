@@ -95,8 +95,10 @@ public class OrderService {
             }
 
             if (order.getPaymentStatus() == PaymentStatus.PAID) {
-                throw new IllegalStateException("이미 결제 완료된 주문입니다.");
+                log.info("이미 결제 완료 → completePayment skip. orderId={}", auId);
+                return;
             }
+
 
             // 결제 상태 / 결제일시 업데이트
             mapper.updatePaymentComplete(auId, LocalDateTime.now());
@@ -114,12 +116,7 @@ public class OrderService {
                 for (int i = 0; i < item.getQuantity(); i++) {
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
-                        String couponNumber = ticketCouponService.issueCoupon(item.getId());
-
-                        mapper.insertOrderTicket(
-                                item.getId(),
-                                couponNumber
-                        );
+                        ticketCouponService.issueCoupon(item.getId());
 
                     }else {
                         mapper.insertOrderTicket(

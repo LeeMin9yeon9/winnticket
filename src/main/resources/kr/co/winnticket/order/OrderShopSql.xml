@@ -210,7 +210,7 @@
             pg_callback_received_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
-      <![CDATA[
+    <![CDATA[
           AND payment_status <> 'PAID'::payment_status
         ]]>
     </update>
@@ -220,13 +220,15 @@
         UPDATE orders
         SET
             payment_status = 'FAILED'::payment_status,
+
             payment_fail_reason = #{failReason},
 
             pg_callback_payload = CAST(#{payloadJson} AS jsonb),
-            payment_fail_reason = #{reason},
+
             pg_callback_received_at = CURRENT_TIMESTAMP,
 
             updated_at = CURRENT_TIMESTAMP
+
         WHERE id = #{orderId}::uuid
     </update>
 

@@ -241,6 +241,18 @@
         WHERE id = #{couponId}
     </update>
 
+    <!--해당그룹 티켓 날짜 일괄변경-->
+    <update id="updateGroupDate">
+
+        UPDATE ticket_coupon_groups
+        SET
+            valid_from = #{validFrom},
+            valid_until = #{validUntil},
+            updated_at = now()
+        WHERE id = #{groupId}
+
+    </update>
+
 
 
 

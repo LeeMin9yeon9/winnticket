@@ -252,4 +252,15 @@ public class TicketCouponService {
             mapper.restoreCoupon(couponId);
         }
     }
+
+    // 쿠폰 그룹 날짜 일괄 변경
+    @Transactional
+    public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil){
+        mapper.updateGroupDate(
+                groupId,
+                validFrom,
+                validUntil
+        );
+
+    }
 }

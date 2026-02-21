@@ -266,9 +266,10 @@
         UPDATE orders
         SET
             payment_status = 'PAID',
-            paid_at = #{paidAt}
+            paid_at = #{paidAt},
+            updated_at = NOW()
         WHERE id = #{id}
-        AND payment_status = 'READY'
+          AND payment_status != 'PAID'
     </update>
 
     <!--
