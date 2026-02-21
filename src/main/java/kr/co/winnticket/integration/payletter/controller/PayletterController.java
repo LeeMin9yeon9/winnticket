@@ -6,12 +6,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
-import kr.co.winnticket.integration.payletter.dto.*;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Log4j2
@@ -23,6 +28,7 @@ public class PayletterController {
 
     private final PayletterService service;
     private final PayletterProperties properties;
+    private final OrderService orderService;
 
     // (테스트용) 결제요청 API
     @PostMapping("/request/{orderId}")
@@ -43,16 +49,37 @@ public class PayletterController {
 // Payletter 콜백 (성공시에만 옴)
     @PostMapping("/callback")
     @Operation(summary = "Payletter callback_url 결제 성공 시 payletter가 호출", description = "결제 성공 시 Payletter가 호출")
-    public PayletterCallbackResDto callback(@RequestBody PayletterCallbackReqDto req) {
-        try {
-            log.info("[PAYLETTER] callback payload={}", req.getPayload());
-            service.handleCallback(req.getPayload());
-            return new PayletterCallbackResDto(0, "OK");
-        } catch (Exception e) {
-            log.error("[PAYLETTER] callback error", e);
-            return new PayletterCallbackResDto(1, e.getMessage());
+    public String callback(@RequestBody Map<String, Object> payload){
+
+        boolean success = service.handleCallback(payload);
+
+        if(success){
+
+            UUID orderId =
+                    UUID.fromString(payload.get("custom_parameter").toString());
+
+            orderService.completePayment(orderId);
+
         }
+
+        return "OK";
     }
+//    public PayletterCallbackResDto callback(@RequestBody PayletterCallbackReqDto req) {
+//        try {
+//            log.info("[PAYLETTER] callback payload={}", req.getPayload());
+//            service.handleCallback(req.getPayload());
+//
+//            UUID orderId =
+//                    UUID.fromString(String.valueOf(req.getPayload().get("custom_parameter")));
+//
+//            orderService.completePayment(orderId);
+//
+//            return new PayletterCallbackResDto(0, "OK");
+//        } catch (Exception e) {
+//            log.error("[PAYLETTER] callback error", e);
+//            return new PayletterCallbackResDto(1, e.getMessage());
+//        }
+//    }
 
 
 

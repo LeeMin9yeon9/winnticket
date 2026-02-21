@@ -126,6 +126,24 @@ public class TicketCouponController {
         );
     }
 
+    @PutMapping("/group/date")
+    @Operation(summary = "쿠폰 그룹 날짜 변경", description = "해당 그룹 전체 쿠폰 날짜 일괄 변경")
+
+    public ResponseEntity<ApiResponse<Void>> updateGroupDate(
+            @Parameter(description="그룹ID") @RequestParam UUID groupId,
+            @Parameter(description="사용 시작일") @RequestParam LocalDate validFrom,
+            @Parameter(description="사용 종료일") @RequestParam LocalDate validUntil
+    ){
+        service.updateGroupDate(
+                groupId,
+                validFrom,
+                validUntil
+        );
+
+        return ResponseEntity.ok(ApiResponse.<Void>success("변경 완료", null)
+        );
+    }
+
 
 }
 
