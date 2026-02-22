@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.integration.spavis.mapper.SpavisMapper">
     <!-- 조회 -->
-    <select id="selectCouponNo" resultMap="PlusNCancelMap">
+    <select id="selectCouponNo" resultType="java.lang.String">
         SELECT
             ot.ticket_number AS COUPON_NO
         FROM orders o
