@@ -51,7 +51,7 @@
     </select>
 
     <!-- 조회 -->
-    <select id="selectSmartinfinisearchByOrderNo" resultType="kr.co.integration.smartinfini.dto.SIOrderSearchRequest">
+    <select id="selectSmartinfinisearchByOrderNo" resultType="kr.co.winnticket.integration.smartinfini.dto.SIOrderSearchRequest">
         SELECT
             o.order_number AS ORDER_NO
         FROM orders o
@@ -85,7 +85,7 @@
     </select>
 
     <!-- 문자 재전송 -->
-    <select id="selectSmartinfiniMmsResend" resultType="kr.co.integration.smartinfini.dto.SIMmsResendRequest">
+    <select id="selectSmartinfiniMmsResend" resultType="kr.co.winnticket.integration.smartinfini.dto.SIMmsResendRequest">
         SELECT
             'O' As TYPE,
             o.order_number AS ORDER_NO,
