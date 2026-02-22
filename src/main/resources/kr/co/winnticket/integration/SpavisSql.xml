@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.spavis.mapper.SpavisMapper">
+    <!-- 조회 -->
+    <select id="selectCouponNo" resultMap="PlusNCancelMap">
+        SELECT
+            ot.ticket_number AS COUPON_NO
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_t ot
+          ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+          And oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
+    </select>
+</mapper>

@@ -15,6 +15,6 @@ public class WJCancelRequest {
     @Data
     public static class CancelProduct {
         // 채널 상품 주문번호
-        private String product_channel_order_number;
+        private String product_channel_order_number; // 티켓번호
     }
 }

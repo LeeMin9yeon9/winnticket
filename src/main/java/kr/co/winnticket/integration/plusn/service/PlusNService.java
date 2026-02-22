@@ -3,63 +3,68 @@ package kr.co.winnticket.integration.plusn.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.plusn.client.PlusNClient;
 import kr.co.winnticket.integration.plusn.dto.*;
+import kr.co.winnticket.integration.plusn.mapper.PlusNMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PlusNService {
 
     private final PlusNClient client;
+    private final PlusNMapper mapper;
 
     @Value("${plusn.order-company}")
     private String orderCompany;
 
-    // 주문 테스트
-    public PlusNOrderResponse testOrder() {
-
-        PlusNOrderRequest req = new PlusNOrderRequest();
-        req.setOrder_id("TEST_" + System.currentTimeMillis());
-        req.setUser_name("이민걍");
-        req.setUser_hp("01094618018");
-        req.setUser_email("test@test.com");
-        req.setOrder_date(LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
-
-        PlusNOrderRequest.ClassDiv div = new PlusNOrderRequest.ClassDiv();
-        div.setGubun("A");
-        div.setGoods_code("96334");
-        div.setCnt("1");
-        div.setSelected_date("");
-
-        req.setClass_div(List.of(div));
-
+    // 주문
+    public PlusNOrderResponse order(UUID orderId) {
+        PlusNOrderRequest req = mapper.selectPlusNOrderBase(orderId);
         return client.order(req);
     }
 
-    // 취소 테스트
-    public PlusNCancelResponse testCancel(String orderId, String orderSales) {
-        PlusNCancelRequest req = new PlusNCancelRequest();
-        req.setOrder_id(orderId);
-        req.setOrder_sales(orderSales);
-        req.setResult_date(LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+    // 취소
+    public PlusNBatchCancelResponse cancel(UUID orderId) {
+        List<PlusNCancelRequest> tickets = mapper.selectPlusNCancel(orderId);
+        List<PlusNCancelResponse> results = new ArrayList<>();
 
-        return client.cancel(req);
-    }
+        PlusNBatchCancelResponse response = new PlusNBatchCancelResponse();
+        response.setOrderId(orderId.toString());
 
-    // 티켓 조회 테스트
-    public PlusNInquiryResponse testInquiry(String orderId, String orderSales) {
-        PlusNInquiryRequest req = new PlusNInquiryRequest();
-        req.setOrder_id(orderId);
-        req.setOrder_sales(orderSales);
+        if (tickets == null || tickets.isEmpty()) {
+            response.setResults(results);
+            return response;
+        }
 
-        return client.inquiry(req);
+        // 전부 0005인지 조회로 확인
+        for (PlusNCancelRequest req : tickets) {
+            PlusNInquiryRequest reqInquiry = new PlusNInquiryRequest();
+            reqInquiry.setOrder_id(req.getOrder_id());
+            reqInquiry.setOrder_sales(req.getOrder_sales());
+            PlusNInquiryResponse inquiryRes = client.inquiry(reqInquiry);
+
+            if (!"0005".equals(inquiryRes.getReturn_div())) {
+                // 하나라도 0005 아니면 취소 진행 안 함
+                response.setResults(results); // 빈 리스트 반환
+                return response;
+            }
+        }
+
+        // 전부 0005면 취소 진행
+        for (PlusNCancelRequest req : tickets) {
+            PlusNCancelResponse cancelRes = client.cancel(req);
+            results.add(cancelRes);
+        }
+
+        response.setResults(results);
+        return response;
     }
 
     // 날짜별 사용조회 테스트

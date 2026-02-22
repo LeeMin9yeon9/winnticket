@@ -5,6 +5,8 @@ import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/coreworks/test")
 @RequiredArgsConstructor
@@ -14,18 +16,18 @@ public class CoreWorksTestController {
 
     // Swagger / curl 테스트용
     @GetMapping("/order")
-    public CWOrderResponse testOrder() {
-        return service.testOrder();
+    public CWOrderResponse testOrder(@RequestParam UUID orderId) {
+        return service.testOrder(orderId);
     }
 
     @PostMapping("/search")
-    public CWSearchResponse search(@RequestBody CWSearchRequest req) {
-        return service.testSearch(req);
+    public CWSearchResponse search(@RequestParam UUID orderId) {
+        return service.testSearch(orderId);
     }
 
     @PostMapping("/cancel")
-    public CWCancelResponse cancel(@RequestBody CWCancelRequest req) {
-        return service.testCancel(req);
+    public CWCancelResponse cancel(@RequestParam UUID orderId) {
+        return service.testCancel(orderId);
     }
 
     @GetMapping("/useSearch")
@@ -36,8 +38,7 @@ public class CoreWorksTestController {
     }
 
     @PostMapping("/mmsResend")
-    public CWMmsResendResponse mmsResend(@RequestBody CWMmsResendRequest req) {
-        // Swagger에서 orderSeq/hp만 넣어도 되게
-        return service.testMmsResend(req.getOrderSeq(), req.getHp());
+    public CWMmsResendResponse mmsResend(@RequestParam UUID orderId) {
+        return service.testMmsResend(orderId);
     }
 }

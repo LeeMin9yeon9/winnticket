@@ -154,7 +154,6 @@ public class OrderShopService {
             resDto.setPgMobileUrl(payRes.getMobileUrl());
             return resDto;
         }
-        resDto.setPaymentStatus("READY");
         return resDto;
 
 

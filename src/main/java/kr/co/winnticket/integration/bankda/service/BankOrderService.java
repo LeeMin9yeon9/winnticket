@@ -120,7 +120,7 @@ public class BankOrderService {
                 continue;
             }
 
-            // 정상 처리 (관리자 로직 재사용)
+            // 정상 처리
             orderService.completePayment(orderId);
 
             results.add(new BankConfirmResponse.OrderResult(

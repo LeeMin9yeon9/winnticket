@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.woongjin.mapper.WoongjinMapper">
+    <!-- 주문 -->
+    <resultMap id="WJOrderMap" type="kr.co.winnticket.integration.woongjin.dto.WJOrderRequest">
+        <id property="channel_order_number" column="CHANNEL_ORDER_NUMBER"/>
+        <result property="user_name" column="USER_NAME"/>
+        <result property="user_phone" column="USER_PHONE"/>
+        <result property="user_email" column="USER_EMAIL"/>
+        <collection property="options" ofType="kr.co.winnticket.integration.woongjin.dto.WJOrderRequest$Option">
+            <result property="product_channel_order_number" column="PRODUCT_CHANNEL_ORDER_NUMBER"/>
+            <result property="option_id" column="OPTION_ID"/>
+        </collection>
+    </resultMap>
+    <select id="selectWJOrder" resultMap="WJOrderMap">
+        SELECT
+            o.order_number        AS CHANNEL_ORDER_NUMBER,
+            o.customer_name       AS USER_NAME,
+            o.customer_phone      AS USER_PHONE,
+            o.customer_email      AS USER_EMAIL,
+            ot.ticket_number      AS PRODUCT_CHANNEL_ORDER_NUMBER,
+            pov.code              AS OPTION_ID
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_item_options oio
+              ON oi.id = oio.order_item_id
+         JOIN product_option_values pov
+              ON pov.id = oio.option_value_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+          AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
+    </select>
+
+    <!-- 취소 -->
+    <resultMap id="WJCancelMap" type="kr.co.winnticket.integration.woongjin.dto.WJCancelRequest">
+        <id property="channel_order_number" column="CHANNEL_ORDER_NUMBER"/>
+        <collection property="products" ofType="kr.co.winnticket.integration.woongjin.dto.WJCancelRequest$CancelProduct">
+            <result property="product_channel_order_number" column="PRODUCT_CHANNEL_ORDER_NUMBER"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectWJCancel" resultMap="WJCancelMap">
+        SELECT
+            o.order_number    AS CHANNEL_ORDER_NUMBER,
+            ot.ticket_number  AS PRODUCT_CHANNEL_ORDER_NUMBER
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+          AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
+    </select>
+
+    <!-- 재전송 -->
+    <select id="selectWJResend" resultType="kr.co.winnticket.integration.woongjin.dto.WJResendRequest">
+        SELECT
+            ''           AS reservation_id,
+            o.order_number AS channel_order_number
+        FROM orders o
+        WHERE o.id = #{orderId}
+          AND o.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
+    </select>
+</mapper>
