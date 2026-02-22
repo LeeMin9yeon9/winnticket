@@ -44,11 +44,10 @@
     </select>
 
     <!-- 조회 -->
-    <select id="selectPlusNSearch" resultMap="PlusNCancelMap">
+    <select id="selectPlusNSearch" resultType="kr.co.winnticket.integration.plusn.dto.PlusNInquiryRequest">
         SELECT
             o.order_number AS ORDER_ID,
-            ot.partner_order_code AS ORDER_SALES,
-            TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS RESULT_DATE
+            ot.partner_order_code AS ORDER_SALES
         FROM orders o
                  JOIN order_items oi
                       ON o.id = oi.order_id
@@ -59,7 +58,7 @@
     </select>
 
     <!-- 취소 -->
-    <select id="selectPlusNCancel" resultMap="PlusNCancelMap">
+    <select id="selectPlusNCancel" resultType="kr.co.winnticket.integration.plusn.dto.PlusNCancelRequest">
         SELECT
             o.order_number AS ORDER_ID,
             ot.partner_order_code AS ORDER_SALES,
@@ -72,6 +71,4 @@
         WHERE o.id = #{orderId}
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
-
-
 </mapper>
