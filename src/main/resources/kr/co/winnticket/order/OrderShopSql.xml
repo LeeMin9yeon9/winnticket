@@ -135,7 +135,7 @@
             #{quantity},
             #{unitPrice},
             #{totalPrice},
-            #{partner_id}
+            #{partnerId}
         )
         RETURNING id
     </select>
