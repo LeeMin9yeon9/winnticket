@@ -43,7 +43,12 @@ public class TicketCouponService {
              throw new RuntimeException("선사입형 상품만 쿠폰 생성 가능");
          }
 
-         UUID groupId = mapper.findGroupByOptionValueId(dto.getProductOptionValueId());
+         UUID groupId = mapper.findGroupByOptionValueAndDate(
+                 dto.getProductOptionValueId(),
+                 dto.getValidFrom(),
+                 dto.getValidUntil()
+         );
+
 
          if(groupId == null){
              groupId = UUID.randomUUID();
@@ -203,12 +208,8 @@ public class TicketCouponService {
         // 옵션값 조회
         UUID optionValueId = orderMapper.findOptionValueIdByOrderItem(orderItemId);
 
-        // 그룹 조회
-        UUID groupId = mapper.findGroupByOptionValueId(optionValueId);
-
-        // 쿠폰 조회
-        TicketCouponListResDto coupon =
-                mapper.findActiveCoupon(groupId);
+        // 유효기간 빠른 순 쿠폰 조회
+        TicketCouponListResDto coupon = mapper.findActiveCouponByOptionValueId(optionValueId);
 
         if (coupon == null) {
             throw new RuntimeException("쿠폰 재고 없음");
@@ -217,6 +218,7 @@ public class TicketCouponService {
         // SOLD 처리
         mapper.markCouponSold(coupon.getId());
 
+        // 재고 차감
         productMapper.decreaseStock(optionValueId);
 
         // 주문 쿠폰 연결

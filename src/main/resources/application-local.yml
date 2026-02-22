@@ -46,9 +46,9 @@ payletter:
   search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=
   service-name: 페이레터
 
-  return-url: https://api.winnticket.store/api/payletter/return
-  callback-url: https://api.winnticket.store/api/payletter/callback
-  cancel-url: https://api.winnticket.store/api/payletter/cancel
+  return-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/return
+  callback-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/callback
+  cancel-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/cancel
 
 # 파트너 연동 (플러스앤)
 plusn:
