@@ -35,8 +35,8 @@ public interface OrderShopMapper {
             @Param("productName") String productName,
             @Param("quantity") int quantity,
             @Param("unitPrice") int unitPrice,
-            @Param("totalPrice") int totalPrice
-    );
+            @Param("totalPrice") int totalPrice,
+            @Param("partnerId") UUID partnerId);
 
     // 주문 상품별 옵션 insert
     void insertOrderItemOption(

@@ -124,7 +124,8 @@
             PRODUCT_NAME,
             QUANTITY,
             UNIT_PRICE,
-            TOTAL_PRICE
+            TOTAL_PRICE,
+            PARTNER_ID
         )
         Values
         (
@@ -133,7 +134,8 @@
             #{productName},
             #{quantity},
             #{unitPrice},
-            #{totalPrice}
+            #{totalPrice},
+            #{partner_id}
         )
         RETURNING id
     </select>
