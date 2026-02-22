@@ -23,7 +23,7 @@
         SELECT
             oi.id AS orderItemId,
             oi.product_id AS productId,
-            pov.code AS productCode,   -- ⭐ 엠에어 ITCD
+            pov.code AS productCode,   -- 엠에어 ITCD
             oi.quantity AS quantity
         FROM order_items oi
                  JOIN product_option_values pov ON pov.id = oi.product_option_value_id

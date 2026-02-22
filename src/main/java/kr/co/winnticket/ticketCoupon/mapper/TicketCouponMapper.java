@@ -13,9 +13,6 @@ import java.util.UUID;
 @Mapper
 public interface TicketCouponMapper {
 
-    // 옵션값 기준 그룹 존재 여부 확인
-    UUID findGroupByOptionValueId(@Param("productOptionValueId") UUID productOptionValueId);
-
     // 그룹 생성
     void insertGroup(
             @Param("groupId") UUID groupId,
@@ -72,8 +69,6 @@ public interface TicketCouponMapper {
     //  쿠폰번호 중복 체크용
     UUID findCouponIdByCouponNumber(@Param("couponNumber") String couponNumber);
 
-    // 사용 가능한 쿠폰 1개 조회
-    TicketCouponListResDto findActiveCoupon(@Param("groupId") UUID groupId);
 
     // 쿠폰 판매처리
     void markCouponSold(@Param("couponId") UUID couponId);
@@ -89,5 +84,14 @@ public interface TicketCouponMapper {
                          @Param("validFrom") LocalDate validFrom,
                          @Param("validUntil") LocalDate validUntil);
 
+    // 유효기간 다르면 다른 그룹 생성
+    UUID findGroupByOptionValueAndDate(
+            @Param("productOptionValueId") UUID productOptionValueId,
+            @Param("validFrom") LocalDate validFrom,
+            @Param("validUntil") LocalDate validUntil
+    );
+
+    // 유효기간 빠른 쿠폰 먼저 사용
+    TicketCouponListResDto findActiveCouponByOptionValueId(UUID optionValueId);
 
 }
