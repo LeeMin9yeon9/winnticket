@@ -1,12 +1,11 @@
 package kr.co.winnticket.integration.plusn.controller;
 
-import kr.co.winnticket.integration.plusn.dto.PlusNCancelResponse;
-import kr.co.winnticket.integration.plusn.dto.PlusNInquiryResponse;
-import kr.co.winnticket.integration.plusn.dto.PlusNOrderResponse;
-import kr.co.winnticket.integration.plusn.dto.PlusNUsedDateResponse;
+import kr.co.winnticket.integration.plusn.dto.*;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/plusn/test")
@@ -15,29 +14,19 @@ public class PlusNTestController {
 
     private final PlusNService service;
 
-    // 1) 주문
+    // 주문
     @GetMapping("/order")
-    public PlusNOrderResponse order() {
-        return service.testOrder();
+    public PlusNOrderResponse order(@RequestParam UUID orderId) {
+        return service.order(orderId);
     }
 
-    // 2) 티켓조회
-    @GetMapping("/inquiry")
-    public PlusNInquiryResponse inquiry(
-            @RequestParam String orderId,
-            @RequestParam String orderSales) {
-        return service.testInquiry(orderId, orderSales);
-    }
-
-    // 3) 취소
+    // 취소
     @PostMapping("/cancel")
-    public PlusNCancelResponse cancel(
-            @RequestParam String orderId,
-            @RequestParam String orderSales) {
-        return service.testCancel(orderId, orderSales);
+    public PlusNBatchCancelResponse cancel(@RequestParam UUID orderId) {
+        return service.cancel(orderId);
     }
 
-    // 4) 날짜별 사용조회
+    // 날짜별 사용조회
     @GetMapping("/useddate")
     public PlusNUsedDateResponse usedDate(
             @RequestParam String date) {

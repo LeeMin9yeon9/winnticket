@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniMapper">
+
+    <!-- 주문 -->
+    <resultMap id="SIOrderMap" type="kr.co.winnticket.integration.smartinfini.dto.SIOrderRequest">
+        <id property="orderNo" column="ORDER_NO"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="userHp" column="USER_HP"/>
+        <result property="userEmail" column="USER_EMAIL"/>
+        <result property="orderDate" column="ORDER_DATE"/>
+        <result property="payMethod" column="PAY_METHOD"/>
+        <result property="dealId" column="DEAL_ID"/>
+        <collection property="classDiv" ofType="kr.co.winnticket.integration.smartinfini.dto.SIOrderRequest$ClassDiv">
+            <result property="ticketCode" column="TICKET_CODE"/>
+            <result property="goodsCode" column="GOODS_CODE"/>
+            <result property="rstartDate" column="RSTART_DATE"/>
+            <result property="rendDate" column="REND_DATE"/>
+            <result property="barcode" column="BARCODE"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectSmartinfiniOrder" resultMap="SIOrderMap">
+        SELECT
+            o.order_number AS ORDER_NO,
+            o.customer_name AS USER_NAME,
+            o.customer_phone AS USER_HP,
+            o.customer_email AS USER_EMAIL,
+            to_char(o.created_at, 'YYYYMMDDHH24MISS') AS ORDER_DATE,
+            o.payment_method AS PAY_METHOD,
+            '' AS DEAL_ID,
+            ot.ticket_number AS TICKET_CODE,
+            pov.code AS GOODS_CODE,
+            '' AS RSTART_DATE,
+            '' AS REND_DATE,
+            '' AS BARCODE
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_item_options oio
+              ON oi.id = oio.order_item_id
+         JOIN product_option_values pov
+              ON pov.id = oio.option_value_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
+    </select>
+
+    <!-- 조회 -->
+    <select id="selectSmartinfinisearchByOrderNo" resultMap="SIOrderMap">
+        SELECT
+            o.order_number AS ORDER_NO
+        FROM orders o
+        JOIN order_items oi
+        ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
+    </select>
+
+    <!-- 취소 -->
+
+    <resultMap id="SICancelListMap" type="kr.co.winnticket.integration.smartinfini.dto.SICancelListRequest">
+        <result property="orderNo" column="ORDER_NO"/>
+        <collection property="cancelList" ofType="kr.co.winnticket.integration.smartinfini.dto.SICancelListRequest$CancelItem">
+            <result property="orderSales" column="ORDER_SALES"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectSmartinfiniCancelList" resultMap="SICancelListMap">
+        SELECT
+            o.order_number AS ORDER_NO,
+            ot.partner_order_code AS ORDER_SALES
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
+        AND ot.partner_ticket_no IS NOT NULL
+    </select>
+
+    <!-- 문자 재전송 -->
+    <select id="selectSmartinfiniMmsResend" resultMap="SIOrderMap">
+        SELECT
+            'O' As TYPE,
+            o.order_number AS ORDER_NO,
+            o.customer_phone AS USER_HP
+        FROM orders o
+        JOIN order_items oi
+        ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
+    </select>
+</mapper>

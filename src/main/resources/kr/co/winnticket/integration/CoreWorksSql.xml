@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.integration.coreworks.mapper.CoreWorksMapper">
+
+    <!-- 주문 -->
+    <resultMap id="CWOrderMap" type="kr.co.winnticket.integration.coreworks.dto.CWOrderRequest">
+        <id property="orderSeq" column="ORDER_SEQ"/>
+        <result property="buyDate" column="BUY_DATE"/>
+        <result property="name" column="NAME"/>
+        <result property="hp" column="HP"/>
+        <collection property="itemList"
+                    ofType="kr.co.winnticket.integration.coreworks.dto.CWOrderRequest$Item">
+            <result property="pin" column="PIN"/>
+            <result property="itemCode" column="ITEM_CODE"/>
+            <result property="itemName" column="ITEM_NAME"/>
+            <result property="reserveDay" column="RESERVE_DAY"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectCoreworksOrder" resultMap="CWOrderMap">
+        SELECT
+            o.order_number AS ORDER_SEQ,
+            to_char(o.created_at, 'YYYYMMDDHH24MISS') AS BUY_DATE,
+            o.customer_name AS NAME,
+            o.customer_phone AS HP,
+            ot.ticket_number AS PIN,
+            pov.code AS ITEM_CODE,
+            p.name AS ITEM_NAME,
+            '' AS RESERVE_DAY
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_item_options oio
+              ON oi.id = oio.order_item_id
+         JOIN product_option_values pov
+              ON pov.id = oio.option_value_id
+         JOIN products p
+              ON p.id = oi.product_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = '1d5228eb-6d03-4e12-b370-b2ceb19a77cc'
+    </select>
+
+    <!-- 티켓 조회 -->
+    <resultMap id="CWSearchMap"
+               type="kr.co.winnticket.integration.coreworks.dto.CWSearchRequest">
+        <id property="orderSeq" column="ORDER_SEQ"/>
+        <collection property="pinList"
+                    ofType="kr.co.winnticket.integration.coreworks.dto.CWSearchRequest$Pin">
+            <result property="pin" column="PIN"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectCoreworksSearch" resultMap="CWSearchMap">
+        SELECT
+            o.order_number AS ORDER_SEQ,
+            ot.ticket_number AS PIN
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+      And oi.partner_id = '1d5228eb-6d03-4e12-b370-b2ceb19a77cc'
+    </select>
+
+    <!-- 티켓 취소 -->
+    <resultMap id="CWCancelMap"
+               type="kr.co.winnticket.integration.coreworks.dto.CWCancelRequest">
+        <id property="orderSeq" column="ORDER_SEQ"/>
+        <collection property="pinList" ofType="kr.co.winnticket.integration.coreworks.dto.CWCancelRequest$Pin">
+            <result property="pin" column="PIN"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectCoreworksCancel" resultMap="CWCancelMap">
+        SELECT
+        o.order_number AS ORDER_SEQ,
+        ot.ticket_number AS PIN
+        FROM orders o
+        JOIN order_items oi
+        ON o.id = oi.order_id
+        JOIN order_tickets ot
+        ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = '1d5228eb-6d03-4e12-b370-b2ceb19a77cc'
+    </select>
+
+    <!-- 문자 재발송 -->
+    <resultMap id="CWMmsResendMap" type="kr.co.winnticket.integration.coreworks.dto.CWMmsResendRequest">
+        <id property="orderSeq" column="ORDER_SEQ"/>
+        <result property="hp" column="HP"/>
+    </resultMap>
+
+    <select id="selectCoreworksMmsResend" resultMap="CWMmsResendMap">
+        SELECT
+            o.order_number AS ORDER_SEQ,
+            o.customer_phone AS HP
+        FROM orders o
+        JOIN order_items oi
+        ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = '1d5228eb-6d03-4e12-b370-b2ceb19a77cc'
+    </select>
+</mapper>
