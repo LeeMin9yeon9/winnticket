@@ -87,7 +87,8 @@ public class OrderShopService {
                     product.getName(),
                     item.getQuantity(),
                     item.getUnitPrice(),
-                    item.getTotalPrice()
+                    item.getTotalPrice(),
+                    product.getPartnerId()
             );
 
             // 각 옵션 가격 추출해서 가격을 구한 후 검증을 추가해야함(api 구현하면서 추가할것)
