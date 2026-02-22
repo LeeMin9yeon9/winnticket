@@ -283,8 +283,14 @@
     <update id="reorderAfterDelete">
         UPDATE menu_categories
         SET display_order = display_order - 1
-        WHERE parent_id IS NOT DISTINCT FROM #{parentId}
-            AND display_order > #{deletedOrder}
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order > #{deletedOrder}
     </update>
 
 </mapper>
