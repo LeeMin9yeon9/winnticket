@@ -6,6 +6,8 @@ import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/playstory/test")
 @RequiredArgsConstructor
@@ -14,17 +16,17 @@ public class PlaystoryTestController {
     private final PlaystoryService service;
 
     @PostMapping("/order")
-    public PlaystoryOrderResponse order(@RequestBody PlaystoryOrderRequest req) {
-        return service.order(req);
+    public PlaystoryOrderResponse order(@RequestParam UUID orderId) {
+        return service.order(orderId);
     }
 
     @PostMapping("/check")
-    public PlaystoryCheckResponse check(@RequestBody PlaystoryCheckRequest req) {
-        return service.check(req);
+    public PlaystoryCheckResponse check(@RequestParam UUID orderId) {
+        return service.check(orderId);
     }
 
     @PostMapping("/cancel")
-    public PlaystoryCheckCancelResponse cancel(@RequestBody PlaystoryCheckCancelRequest req) {
-        return service.cancel(req);
+    public PlaystoryCheckCancelResponse cancel(@RequestParam UUID orderId) {
+        return service.cancel(orderId);
     }
 }

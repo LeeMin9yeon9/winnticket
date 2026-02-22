@@ -5,6 +5,8 @@ import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/woongjin/test")
 @RequiredArgsConstructor
@@ -23,8 +25,8 @@ public class WoongjinTestController {
 
     // 상품주문
     @PostMapping("/order")
-    public WJOrderResponse order(@RequestBody WJOrderRequest req) {
-        return service.order(req);
+    public WJOrderResponse order(@RequestParam UUID orderId) {
+        return service.order(orderId);
     }
 
     // 주문조회
@@ -37,13 +39,13 @@ public class WoongjinTestController {
 
     // 주문취소
     @PostMapping("/order/cancel")
-    public WJCancelResponse cancel(@RequestBody WJCancelRequest req) {
-        return service.cancel(req);
+    public WJCancelResponse cancel(@RequestParam UUID orderId) {
+        return service.cancel(orderId);
     }
 
     // 핀번호 재전송
     @PostMapping("/order/resend-pin")
-    public WJResendResponse resendPin(@RequestBody WJResendRequest req) {
-        return service.resendPin(req);
+    public WJResendResponse resendPin(@RequestParam UUID orderId) {
+        return service.resendPin(orderId);
     }
 }

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.plusn.mapper.PlusNMapper">
+
+    <!--주문-->
+    <resultMap id="PlusNOrderMap" type="kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest">
+        <result property="order_id" column="ORDER_ID"/>
+        <result property="user_name" column="USER_NAME"/>
+        <result property="user_hp" column="USER_HP"/>
+        <result property="user_email" column="USER_EMAIL"/>
+        <result property="order_date" column="ORDER_DATE"/>
+        <collection property="class_div" ofType="kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest$ClassDiv">
+            <result property="gubun" column="GUBUN"/>
+            <result property="goods_code" column="GOODS_CODE"/>
+            <result property="cnt" column="CNT"/>
+            <result property="selected_date" column="SELECTED_DATE"/>
+        </collection>
+    </resultMap>
+    <select id="selectPlusNOrder" resultMap="PlusNOrderMap">
+        SELECT
+            o.order_number AS ORDER_ID,
+            o.customer_name AS USER_NAME,
+            o.customer_phone AS USER_HP,
+            o.customer_email AS USER_EMAIL,
+            TO_CHAR(o.paid_at, 'YYYYMMDDHH24MISS') AS ORDER_DATE,
+            CASE
+                WHEN oio.option_value LIKE '%소인%' THEN 'B'
+                ELSE 'A'
+            END AS GUBUN,
+            pov.code AS GOODS_CODE,
+            '1' AS CNT,
+            '' AS SELECTED_DATE
+        FROM orders o
+         JOIN order_items oi
+         ON o.id = oi.order_id
+         JOIN order_item_options oio
+         ON oi.id = oio.order_item_id
+         JOIN product_option_values pov
+         ON pov.id = oio.option_value_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
+    </select>
+
+    <!-- 조회 -->
+    <select id="selectPlusNSearch" resultMap="PlusNCancelMap">
+        SELECT
+            o.order_number AS ORDER_ID,
+            ot.partner_order_code AS ORDER_SALES,
+            TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS RESULT_DATE
+        FROM orders o
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+                 JOIN order_tickets ot
+                      ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+          And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
+    </select>
+
+    <!-- 취소 -->
+    <select id="selectPlusNCancel" resultMap="PlusNCancelMap">
+        SELECT
+            o.order_number AS ORDER_ID,
+            ot.partner_order_code AS ORDER_SALES,
+            TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS RESULT_DATE
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_tickets ot
+              ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
+    </select>
+
+
+</mapper>

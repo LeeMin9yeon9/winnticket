@@ -19,7 +19,7 @@ public class WJOrderRequest {
 
     @Data
     public static class Option {
-        private String product_channel_order_number;   // 채널 상품 주문번호(티켓번호 활용 -> 웅진은 핀번호를 생성해줌 이 핀번호가 진짜 티켓번호)
-        private Integer option_id;    // 옵션 pk
+        private String product_channel_order_number;   // 채널 티켓번호
+        private Integer option_id;    // 옵션 code
     }
 }

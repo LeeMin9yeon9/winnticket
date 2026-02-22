@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.winnticket.integration.playstory.mapper.BankOrderMapper">
+
+    <!-- 주문정보 조회 -->
+    <resultMap id="PlaystoryOrderMap" type="kr.co.winnticket.integration.playstory.dto.PlaystoryOrderRequest">
+        <id property="shopOrderNo" column="SHOP_ORDER_NO"/>
+        <result property="ordPhone" column="ORD_PHONE"/>
+        <result property="ordName" column="ORD_NAME"/>
+        <result property="ordEmail" column="ORD_EMAIL"/>
+        <result property="recPhone" column="REC_PHONE"/>
+        <result property="recName" column="REC_NAME"/>
+        <result property="recEmail" column="REC_EMAIL"/>
+
+        <collection property="optList" ofType="kr.co.winnticket.integration.playstory.dto.PlaystoryOrderRequest$OptOrd">
+        <result property="optCd" column="OPT_CD"/>
+        <result property="optAmount" column="OPT_AMOUNT"/>
+        <result property="prodCd" column="PROD_CD"/>
+        <result property="optPrice" column="OPT_PRICE"/>
+        <result property="cpnNo" column="CPN_NO"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectPlaystoryOrder" resultMap="PlaystoryOrderMap">
+        SELECT
+            o.id,
+            o.customer_phone       AS ORD_PHONE,
+            o.customer_name        AS ORD_NAME,
+            o.customer_email       AS ORD_EMAIL,
+            o.customer_phone       AS REC_PHONE,
+            o.customer_name        AS REC_NAME,
+            o.customer_email       AS REC_EMAIL,
+            o.order_number         AS SHOP_ORDER_NO,
+            'A1'         AS OPT_CD,
+            1  AS OPT_AMOUNT,
+            pov.code As PROD_CD,
+            oio.additional_price               AS OPT_PRICE,
+            ot.ticket_number           AS CPN_NO
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+         JOIN order_item_options oio
+              ON oi.id = oio.order_item_id
+         Join product_option_values pov
+              On pov.id = oio.option_value_id
+         Join order_tickets ot
+              On oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
+    </select>
+
+    <!-- 사용조회 -->
+    <resultMap id="PlaystoryCheckMap" type="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckRequest">
+        <collection property="optList"
+                    ofType="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckRequest$OptChk">
+            <result property="cpnNo" column="CPN_NO"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectPlaystoryCheck" resultMap="PlaystoryCheckMap">
+        SELECT
+            ot.ticket_number AS CPN_NO
+        FROM order_tickets ot
+         JOIN order_items oi
+              ON oi.id = ot.order_item_id
+         JOIN orders o
+              ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
+    </select>
+
+    <!-- 주문취소 -->
+    <resultMap id="PlaystoryCancelMap"
+               type="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckCancelRequest">
+        <collection property="optList"
+                    ofType="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckCancelRequest$OptCanc">
+            <result property="cpnNo" column="CPN_NO"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectPlaystoryCancel"
+            resultMap="PlaystoryCancelMap">
+
+        SELECT
+        ot.ticket_number AS CPN_NO
+        FROM order_tickets ot
+        JOIN order_items oi
+        ON oi.id = ot.order_item_id
+        JOIN orders o
+        ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+        And oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
+    </select>
+
+</mapper>

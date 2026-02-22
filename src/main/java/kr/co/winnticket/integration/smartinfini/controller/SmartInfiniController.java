@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,10 +37,8 @@ public class SmartInfiniController {
      * 주문 테스트
      */
     @PostMapping("/order")
-    public SIOrderResponse order(
-            @RequestBody SIOrderRequest request
-    ){
-        return service.order(request);
+    public SIOrderResponse order(@RequestParam UUID orderId){
+        return service.order(orderId);
     }
 
     /**
@@ -57,9 +56,9 @@ public class SmartInfiniController {
      */
     @PostMapping("/search/order")
     public SIOrderSearchResponse searchByOrderNo(
-            @RequestBody SIOrderSearchRequest request
+            @RequestParam UUID orderId
     ){
-        return service.searchByOrderNo(request);
+        return service.searchByOrderNo(orderId);
     }
 
     /**
@@ -77,9 +76,9 @@ public class SmartInfiniController {
      */
     @PostMapping("/cancel/multi")
     public SICancelListResponse cancelMulti(
-            @RequestBody SICancelListRequest request
+            @RequestParam UUID orderId
     ){
-        return service.cancelMulti(request);
+        return service.cancelMulti(orderId);
     }
 
     /**
@@ -97,8 +96,8 @@ public class SmartInfiniController {
      */
     @PostMapping("/mms/resend")
     public SIMmsResendResponse resend(
-            @RequestBody SIMmsResendRequest request
+            @RequestParam UUID orderId
     ){
-        return service.mmsResend(request);
+        return service.mmsResend(orderId);
     }
 }
