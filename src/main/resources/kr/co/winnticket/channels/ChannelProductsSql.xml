@@ -12,7 +12,7 @@
         p.code AS productCode,
         p.name AS productName,
 
-        p.image_url AS logoUrl,
+        COALESCE(p.image_url ->> 0, '') AS logoUrl,
 
         (cp.id IS NOT NULL) AS exclude
 
