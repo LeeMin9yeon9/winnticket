@@ -4,8 +4,12 @@ import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
 import kr.co.winnticket.common.enums.PaymentMethod;
+import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
+import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
@@ -13,14 +17,26 @@ import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
+import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
+import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResponse;
+import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
+import kr.co.winnticket.sms.service.BizMsgService;
+import kr.co.winnticket.sms.service.SmsTemplateFinder;
+import kr.co.winnticket.sms.service.TemplateRenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,7 +46,11 @@ public class OrderShopService {
     private final ShopCartService shopCartService;
     private final ChannelMapper channelMapper;
     private final PayletterService paymentService;
-
+    private final OrderMapper orderMapper;
+    private final SmsTemplateFinder smsTemplateFinder;
+    private final TemplateRenderService templateRenderService;
+    private final BizMsgService bizMsgService;
+    private final BankAccountService bankAccountService;
     // 주문조회
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
@@ -130,6 +150,26 @@ public class OrderShopService {
         // 무통장(일반/베네피아 가능)
         if(paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT){
             resDto.setPaymentStatus("READY");
+            OrderAdminDetailGetResDto orderDetail =
+                    orderMapper.selectOrderAdminDetail(orderId);
+
+            List<OrderProductListGetResDto> items =
+                    orderMapper.selectOrderProductList(orderId);
+
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                sendOrderReceiptSms(orderDetail, items);
+                                log.info("무통장 주문접수 문자 발송 완료 - orderId={}", orderId);
+                            } catch (Exception e) {
+                                log.error("무통장 주문접수 문자 발송 실패 - orderId={}", orderId, e);
+                            }
+                        }
+                    }
+            );
+
             return resDto;
         }
 
@@ -162,5 +202,118 @@ public class OrderShopService {
             log.error("결재완료 중 오류 발생", e);
             throw e; // 다시 던짐 (중요)
         }
+    }
+
+    // 주문접수 문자 생성
+    private void sendOrderReceiptSms(OrderAdminDetailGetResDto order,
+                                     List<OrderProductListGetResDto> items) {
+
+        if (order == null || items == null || items.isEmpty()) return;
+
+        ProductSmsTemplateDto template;
+
+        // 상품이 1개면 상품 템플릿
+        if (items.size() == 1) {
+            template = smsTemplateFinder.findTemplate(
+                    items.get(0).getProductId(),
+                    SmsTemplateCode.ORDER_RECEIVED
+            );
+        } else {
+            // 여러 상품이면 기본 템플릿
+            template = smsTemplateFinder.findDefaultTemplate(
+                    SmsTemplateCode.ORDER_RECEIVED
+            );
+        }
+
+        if (template == null || template.getContent() == null) {
+            log.warn("주문접수 템플릿 없음 - orderId={}", order.getId());
+            return;
+        }
+
+        // 2. 변수 구성
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("주문자명", order.getCustomerName());
+        vars.put("주문번호", order.getOrderNumber());
+        vars.put("상품목록", buildProductLines(items));
+        vars.put("총결제금액", String.valueOf(order.getTotalPrice()));
+        vars.put("입금계좌목록", buildAccountLines());
+
+        // 3. 템플릿 치환
+        String message = templateRenderService.render(template.getContent(), vars);
+
+        // 4. CMID 생성
+        String cmid = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 20);
+
+        // 5. 문자 발송
+        bizMsgService.sendSms(
+                cmid,
+                order.getCustomerPhone(),
+                order.getCustomerName(),
+                "025118691",   // 발신번호
+                "윈앤티켓",
+                message
+        );
+    }
+
+    // 상품 + 옵션 + 수량
+    private String buildProductLines(List<OrderProductListGetResDto> items) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (OrderProductListGetResDto item : items) {
+
+            String productName = item.getProductName();
+            String optionText = buildOptionText(item);
+
+            sb.append(productName);
+
+            if (!optionText.isBlank()) {
+                sb.append(" / ").append(optionText);
+            }
+
+            sb.append(" / ").append(item.getQuantity());
+            sb.append("\n");
+        }
+
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1); // 마지막 줄바꿈 제거
+        }
+
+        return sb.toString();
+    }
+
+    // 옵션 텍스트
+    private String buildOptionText(OrderProductListGetResDto item) {
+        if (item.getOptionName() != null) {
+            return item.getOptionName();
+        }
+
+        return "";
+    }
+
+    // 계좌번호 목록
+    private String buildAccountLines() {
+
+        List<BankAccountResponse> accounts =
+                bankAccountService.getVisibleBankAccounts();
+
+        if (accounts == null || accounts.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+
+        for (BankAccountResponse acc : accounts) {
+            sb.append(acc.getBankName())
+                    .append(" : ")
+                    .append(acc.getAccountNumber())
+                    .append("\n");
+        }
+
+        sb.setLength(sb.length() - 1);
+
+        return sb.toString();
     }
 }
