@@ -7,32 +7,33 @@
     <!--채널 목록 조회-->
     <select id="selectPartnerList" resultType="kr.co.winnticket.channels.channel.dto.ChannelListGetResDto">
         SELECT
-        id,
-        code,
-        logo_url AS logoUrl,
-        name,
-        company_name AS companyName,
-        visible,
-        domain,
-        COALESCE(use_card, false) AS useCard,
-        COALESCE(use_point, false) AS usePoint
-        FROM channels
-        WHERE 1 = 1
-        AND status = 'ACTIVE'
+        c.id,
+        c.code,
+        c.logo_url AS logoUrl,
+        c.name,
+        c.company_name AS companyName,
+        c.visible,
+        c.domain,
+        COALESCE(c.use_card, false) AS useCard,
+        COALESCE(c.use_point, false) AS usePoint
+
+        FROM channels c
+
+        WHERE c.status = 'ACTIVE'
 
         <if test="code != null and code != ''">
-            AND code ILIKE CONCAT('%', #{code}, '%')
+            AND c.code ILIKE CONCAT('%', #{code}, '%')
         </if>
 
         <if test="name != null and name != ''">
-            AND name ILIKE CONCAT('%', #{name}, '%')
+            AND c.name ILIKE CONCAT('%', #{name}, '%')
         </if>
 
         <if test="companyName != null and companyName != ''">
-            AND company_name ILIKE CONCAT('%', #{companyName}, '%')
+            AND c.company_name ILIKE CONCAT('%', #{companyName}, '%')
         </if>
 
-        ORDER BY created_at DESC
+        ORDER BY c.created_at DESC
     </select>
 
     <!--채널 생성-->

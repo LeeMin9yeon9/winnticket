@@ -28,12 +28,12 @@ public class PayletterProperties {
     @Schema(description = "서비스명" , example = "페이레터")
     private String serviceName;
 
-    @Schema(description = "결제 완료 후 리턴 URL (사용자 브라우저 이동)", example = "https://winnticket.store/payletter/return")
+    @Schema(description = "결제 완료 후 리턴 URL (사용자 브라우저 이동)", example = "https://winnticket.co.kr/payletter/return")
     private String returnUrl;
 
-    @Schema(description = "결제 결과 콜백 URL (서버 to 서버 통지)", example = "https://api.winnticket.store/payletter/callback")
+    @Schema(description = "결제 결과 콜백 URL (서버 to 서버 통지)", example = "https://api.winnticket.co.kr/payletter/callback")
     private String callbackUrl;
 
-    @Schema(description = "결제 취소 URL", example = "https://winnticket.store/payletter/cancel")
+    @Schema(description = "결제 취소 URL", example = "https://winnticket.co.kr/payletter/cancel")
     private String cancelUrl;
 }
