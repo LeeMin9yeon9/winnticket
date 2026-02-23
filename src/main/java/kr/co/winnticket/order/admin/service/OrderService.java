@@ -168,7 +168,7 @@ public class OrderService {
             vars.put("주문수량", String.valueOf(first.getQuantity()));
             vars.put("주문금액", String.valueOf(order.getTotalPrice())); // 포맷 필요하면 format
             vars.put("입금계좌", "국민은행\t123-456-789012\t(주)티켓박스");     // 없으면 공통값/설정값 사용
-            vars.put("티켓링크", "https://winnticket.store/ticket/" + order.getOrderNumber());         // 아래 함수 예시
+            vars.put("티켓링크", "https://winnticket.co.kr/ticket/" + order.getOrderNumber());         // 아래 함수 예시
             vars.put("고객센터", "1588-1234");
 
             // 3. 템플릿 치환
