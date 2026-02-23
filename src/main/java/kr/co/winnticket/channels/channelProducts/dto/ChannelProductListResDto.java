@@ -3,7 +3,6 @@ package kr.co.winnticket.channels.channelProducts.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,7 +19,7 @@ public class ChannelProductListResDto {
     private String productName;
 
     @Schema(description = "상품이미지")
-    private List<String> logoUrl;
+    private String logoUrl;
 
     @Schema(description = "상품 제외 상태 (true=제외된것)")
     private Boolean exclude;
