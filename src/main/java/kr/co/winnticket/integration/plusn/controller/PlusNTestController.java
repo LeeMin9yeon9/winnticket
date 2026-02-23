@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.plusn.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.winnticket.integration.plusn.dto.*;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class PlusNTestController {
     }
 
     // 날짜별 사용조회
+    @Hidden
     @GetMapping("/useddate")
     public PlusNUsedDateResponse usedDate(
             @RequestParam String date) {
