@@ -18,7 +18,7 @@
             <result property="selected_date" column="SELECTED_DATE"/>
         </collection>
     </resultMap>
-    <select id="selectPlusNOrder" resultMap="PlusNOrderMap">
+    <select id="selectPlusNOrderBase" resultMap="PlusNOrderMap">
         SELECT
             o.order_number AS ORDER_ID,
             o.customer_name AS USER_NAME,

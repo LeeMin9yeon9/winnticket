@@ -10,7 +10,7 @@
         FROM orders o
          JOIN order_items oi
               ON o.id = oi.order_id
-         JOIN order_t ot
+         JOIN order_tickets ot
           ON oi.id = ot.order_item_id
         WHERE o.id = #{orderId}
           And oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'

@@ -1,9 +1,10 @@
 package kr.co.winnticket.integration.smartinfini.dto;
 
-import lombok.Data;
+import kr.co.winnticket.integration.plusn.dto.PlusNBaseResponse;
 import lombok.Getter;
 import lombok.Setter;
 
-@Data
-public class SIMmsResendResponse extends SIBaseResponse {
+@Getter
+@Setter
+public class SIMmsResendResponse  extends PlusNBaseResponse {
 }

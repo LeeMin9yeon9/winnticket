@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.smartinfini.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.winnticket.integration.smartinfini.dto.*;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class SmartInfiniController {
     /**
      * 조회 (단건)
      */
+    @Hidden
     @PostMapping("/search")
     public SISearchResponse search(
             @RequestBody SISearchRequest request
@@ -64,6 +66,7 @@ public class SmartInfiniController {
     /**
      * 취소 단건
      */
+    @Hidden
     @PostMapping("/cancel/single")
     public SICancelResponse cancelSingle(
             @RequestBody SICancelRequest request
@@ -84,6 +87,7 @@ public class SmartInfiniController {
     /**
      * 상품 조회
      */
+    @Hidden
     @PostMapping("/product")
     public List<SIProductResponse> product(
             @RequestBody SIProductRequest request

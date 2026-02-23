@@ -70,9 +70,9 @@ payletter:
   search-api-key: ${PAYLETTER_SEARCH_API_KEY}
   service-name: 페이레터
 
-  return-url: https://api.winnticket.store/api/payletter/return
-  callback-url: https://api.winnticket.store/api/payletter/callback
-  cancel-url: https://api.winnticket.store/api/payletter/cancel
+  return-url: https://api.winnticket.co.kr/api/payletter/return
+  callback-url: https://api.winnticket.co.kr/api/payletter/callback
+  cancel-url: https://api.winnticket.co.kr/api/payletter/cancel
 
 
 # 파트너 연동 (플러스앤 운영)
@@ -115,7 +115,7 @@ playstory:
 # 뱅크다 연동
 bankda:
   url: "https://a.bankda.com/dtsvc/bank_tr.php"
-  token: "d4545a3900b2f4b8ce3df4b28db4f8c7"
+  token: "369fe06f41dbe5efc7b69a28da47bb2f"
 
 
 # 파트너 연동 (아쿠아플라넷)
