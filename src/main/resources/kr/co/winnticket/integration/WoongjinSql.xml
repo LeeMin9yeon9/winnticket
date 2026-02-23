@@ -57,12 +57,16 @@
     </select>
 
     <!-- 재전송 -->
-    <select id="selectWJResend" resultType="kr.co.winnticket.integration.woongjin.dto.WJResendRequest">
+    <resultMap id="WJResendMap" type="kr.co.winnticket.integration.woongjin.dto.WJResendRequest">
+        <id property="channel_order_number" column="CHANNEL_ORDER_NUMBER"/>
+    </resultMap>
+    <select id="selectWJResend" resultMap="WJResendMap">
         SELECT
-            ''           AS reservation_id,
-            o.order_number AS channel_order_number
+            o.order_number AS CHANNEL_ORDER_NUMBER
         FROM orders o
+        JOIN order_items oi
+        ON o.id = oi.order_id
         WHERE o.id = #{orderId}
-          AND o.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
+          AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
     </select>
 </mapper>

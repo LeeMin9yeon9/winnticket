@@ -18,6 +18,7 @@ public class WoongjinClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + props.getApiToken());
+        headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(MediaType.parseMediaTypes("application/json"));
 
         HttpEntity<?> entity =
