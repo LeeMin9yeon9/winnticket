@@ -28,4 +28,8 @@ public class SmsTemplateFinder {
                         mapper.selectDefaultTemplate(code)
                 );
     }
+
+    public ProductSmsTemplateDto findDefaultTemplate(SmsTemplateCode code) {
+        return mapper.selectDefaultTemplate(code);
+    }
 }

@@ -43,22 +43,13 @@
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
 
-    <!-- 조회 -->
-    <select id="selectPlusNSearch" resultType="kr.co.winnticket.integration.plusn.dto.PlusNInquiryRequest">
-        SELECT
-            o.order_number AS ORDER_ID,
-            ot.partner_order_code AS ORDER_SALES
-        FROM orders o
-                 JOIN order_items oi
-                      ON o.id = oi.order_id
-                 JOIN order_tickets ot
-                      ON oi.id = ot.order_item_id
-        WHERE o.id = #{orderId}
-          And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
-    </select>
-
     <!-- 취소 -->
-    <select id="selectPlusNCancel" resultType="kr.co.winnticket.integration.plusn.dto.PlusNCancelRequest">
+    <resultMap id="PlusNCancelMap" type="kr.co.winnticket.integration.plusn.dto.PlusNCancelRequest">
+        <result property="order_id" column="ORDER_ID"/>
+        <result property="order_sales" column="ORDER_SALES"/>
+        <result property="result_date" column="RESULT_DATE"/>
+    </resultMap>
+    <select id="selectPlusNCancel" resultMap="PlusNCancelMap">
         SELECT
             o.order_number AS ORDER_ID,
             ot.partner_order_code AS ORDER_SALES,

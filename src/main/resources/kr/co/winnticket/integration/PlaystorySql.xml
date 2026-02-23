@@ -54,6 +54,7 @@
 
     <!-- 사용조회 -->
     <resultMap id="PlaystoryCheckMap" type="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckRequest">
+        <id property="orderId" column="ORDER_ID"/>
         <collection property="optList"
                     ofType="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckRequest$OptChk">
             <result property="cpnNo" column="CPN_NO"/>
@@ -62,6 +63,7 @@
 
     <select id="selectPlaystoryCheck" resultMap="PlaystoryCheckMap">
         SELECT
+            o.order_number AS ORDER_ID,
             ot.ticket_number AS CPN_NO
         FROM order_tickets ot
          JOIN order_items oi
@@ -75,17 +77,17 @@
     <!-- 주문취소 -->
     <resultMap id="PlaystoryCancelMap"
                type="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckCancelRequest">
+        <id property="orderId" column="ORDER_ID"/>
         <collection property="optList"
                     ofType="kr.co.winnticket.integration.playstory.dto.PlaystoryCheckCancelRequest$OptCanc">
             <result property="cpnNo" column="CPN_NO"/>
         </collection>
     </resultMap>
 
-    <select id="selectPlaystoryCancel"
-            resultMap="PlaystoryCancelMap">
-
+    <select id="selectPlaystoryCancel" resultMap="PlaystoryCancelMap">
         SELECT
-        ot.ticket_number AS CPN_NO
+            o.order_number AS ORDER_ID,
+            ot.ticket_number AS CPN_NO
         FROM order_tickets ot
         JOIN order_items oi
         ON oi.id = ot.order_item_id
@@ -94,5 +96,4 @@
         WHERE o.id = #{orderId}
         And oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
     </select>
-
 </mapper>
