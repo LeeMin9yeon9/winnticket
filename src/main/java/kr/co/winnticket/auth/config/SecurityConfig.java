@@ -165,7 +165,7 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(List.of(
                 "https://*.winnticket.co.kr",
-                "https://13.209.91.167"));
+                "https://*.winnticket.store"));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
