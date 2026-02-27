@@ -7,9 +7,9 @@ import kr.co.winnticket.integration.benepia.sso.service.BenepiaEntryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Log4j2
 @Tag(name = "베네피아", description = "베네피아 -> 윈앤티켓 웹연동(ECB)1")
@@ -27,9 +27,27 @@ public class BenepiaController {
             @RequestParam(value = "encParam", required = false) String encParam,
             HttpSession session
     ) {
-
         entryService.handle(encParam,session);
 
         return "redirect:/shop?channel=BENE";
     }
+
+    @GetMapping("/session")
+    @ResponseBody
+    @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
+    public Map<String, Object> getSession(HttpSession session){
+
+        log.info("[BENEPIA] SESSION CHECK");
+
+        String channelCode = (String) session.getAttribute("CHANNEL_CODE");
+
+        if(channelCode == null){
+            return Map.of("channelCode", "DEFAULT"
+            );
+        }
+
+        return Map.of("channelCode", channelCode
+        );
+    }
+
 }
