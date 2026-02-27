@@ -49,7 +49,7 @@ public class SwaggerConfig {
                 break;
 
             case "dev":
-                serverUrl = "http://api.winnticket.store";
+                serverUrl = "https://api.winnticket.store";
                 description = "Dev Server";
                 break;
 
