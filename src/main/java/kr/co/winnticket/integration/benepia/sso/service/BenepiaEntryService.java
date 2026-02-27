@@ -39,9 +39,11 @@ public class BenepiaEntryService {
             // redirect 대비 세션 저장
             session.setAttribute("BENEP_DECRYPTED", dto);
             session.setAttribute("BENEP_TKN_KEY", dto.getTknKey());
+            session.setAttribute("CHANNEL_CODE", "BENE");
+
             log.info("[BENEPIA][ENTRY][SERVICE] SESSION SET DONE");
-            log.info("[BENEPIA][ENTRY][SERVICE] SESSION.BENEP_TKN_KEY={}",
-                    session.getAttribute("BENEP_TKN_KEY"));
+            log.info("[BENEPIA][ENTRY][SERVICE] SESSION.BENEP_TKN_KEY={}", session.getAttribute("BENEP_TKN_KEY"));
+            log.info("[BENEPIA][ENTRY][SERVICE] SESSION.CHANNEL_CODE={}", session.getAttribute("CHANNEL_CODE"));
 
             return dto;
         }catch (Exception e){
