@@ -130,12 +130,14 @@ public class OrderService {
             for (OrderProductListGetResDto item : items) {
                 UUID productId = item.getProductId();
                 Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
-
+                log.info("[선사입이야?] = {}", prePurchased);
                 for (int i = 0; i < item.getQuantity(); i++) {
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
+                        log.info("[응 선사입]");
                         ticketCouponService.issueCoupon(item.getId());
                     }else {
+                        log.info("[아니 선사입아냐]");
                         mapper.insertOrderTicket(
                                 item.getId(),   // orderItemId
                                 generateTicketNumber(auId, item.getId())
