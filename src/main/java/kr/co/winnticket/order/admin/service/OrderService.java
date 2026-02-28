@@ -151,6 +151,7 @@ public class OrderService {
 
             PartnerSplitResult split = splitByPartner(items);
 
+            log.info("과연!", split);
             if (split.isHasWoongin()) {
                 log.info("[웅진 상품이래요!]");
                 woongjinService.order(auId);
@@ -221,6 +222,8 @@ public class OrderService {
 
         for (OrderProductListGetResDto item : items) {
             UUID partnerId = item.getPartnerId();
+
+            log.error("여기 타기는하니.. ", partnerId);
 
             // 파트너별 상품이 있는지 체크
             if ("bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)) { // 웅진컴퍼스
@@ -302,30 +305,29 @@ public class OrderService {
 
             sendSms(order, message);
             return;
-        }
+        } else if(templateCode == SmsTemplateCode.TICKET_ISSUED) {
+            // 발권완료 상품별 반복
+            for (OrderProductListGetResDto item : items) {
 
-        // 발권완료 상품별 반복
-        for (OrderProductListGetResDto item : items) {
+                UUID productId = item.getProductId();
 
-            UUID productId = item.getProductId();
+                ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, templateCode);
 
-            ProductSmsTemplateDto template =
-                    smsTemplateFinder.findTemplate(productId, templateCode);
+                if (template == null || template.getContent() == null) continue;
 
-            if (template == null || template.getContent() == null) continue;
+                Map<String, String> vars = new HashMap<>();
+                vars.put("주문자명", order.getCustomerName());
+                vars.put("상품명", item.getProductName());
+                vars.put("주문번호", order.getOrderNumber());
+                vars.put("옵션값명",
+                        item.getOptionName() == null ? "" : item.getOptionName());
+                vars.put("수량", String.valueOf(item.getQuantity()));
 
-            Map<String, String> vars = new HashMap<>();
-            vars.put("주문자명", order.getCustomerName());
-            vars.put("상품명", item.getProductName());
-            vars.put("주문번호", order.getOrderNumber());
-            vars.put("옵션값명",
-                    item.getOptionName() == null ? "" : item.getOptionName());
-            vars.put("수량", String.valueOf(item.getQuantity()));
+                String message = templateRenderService.render(template.getContent(), vars);
 
-            String message =
-                    templateRenderService.render(template.getContent(), vars);
-
-            sendSms(order, message);
+                log.error("발권문자 왜 아노아", message);
+                sendSms(order, message);
+            }
         }
     }
 
