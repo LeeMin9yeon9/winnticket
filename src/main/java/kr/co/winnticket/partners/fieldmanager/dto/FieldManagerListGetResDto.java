@@ -15,8 +15,11 @@ import java.util.UUID;
 public class FieldManagerListGetResDto {
 
     @Hidden
-    @Schema(description = "현장관리자 ID")
+    @Schema(description = "ID")
     private UUID id;
+
+    @Schema(description = "현장관리자 ID")
+    private String userName;
 
     @NotBlank
     @Schema(description = "현장관리자 이름")

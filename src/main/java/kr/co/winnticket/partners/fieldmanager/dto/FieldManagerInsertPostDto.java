@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Schema(title = "[파트너 관리 > 현장관리자 생성 요청 DTO] FieldManagerInsertPostDto")
@@ -32,7 +33,7 @@ public class FieldManagerInsertPostDto {
     @Hidden
     @NotBlank
     @Schema(example = "파트너 아이디")
-    private String partnerId;
+    private UUID partnerId;
 
     @Schema(description = "활성 여부", example = "true")
     private Boolean active = true;
