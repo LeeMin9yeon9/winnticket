@@ -116,11 +116,15 @@ public class OrderService {
             }
 
             // 결제 상태 / 결제일시 업데이트
+            log.info("[결제일시 업데이트 시작!]");
             mapper.updatePaymentComplete(auId, LocalDateTime.now());
+            log.info("[결제일시 업데이트 종료!]");
             // 주문 상품 목록 조회
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
-            sendOrderSmsByStatus(order, items, SmsTemplateCode.TICKET_ISSUED);
+            log.info("[입금완료 문자 발송 시작!]");
+            sendOrderSmsByStatus(order, items, SmsTemplateCode.PAYMENT_CONFIRMED);
+            log.info("[입금완료 문자 발송 종료!]");
 
             // 티켓 발행
             for (OrderProductListGetResDto item : items) {
@@ -141,32 +145,46 @@ public class OrderService {
             }
 
             // 주문 상태 변경
+            log.info("[주문상태 변경 시작!]");
             mapper.updateOrderStatus(auId);
+            log.info("[주문상태 변경 종료!]");
 
             PartnerSplitResult split = splitByPartner(items);
 
             if (split.isHasWoongin()) {
+                log.info("[웅진 상품이래요!]");
                 woongjinService.order(auId);
+                log.info("[웅진 결과!]", woongjinService.order(auId));
             }
 
             if (split.isHasPlaystory()) {
+                log.info("[플레이스토리 상품이래요!]");
                 playstoryService.order(auId);
+                log.info("[플레이스토리 결과!]", playstoryService.order(auId));
             }
 
             if (split.isHasMair()) {
+                log.info("[엠에어 상품이래요!]");
                 mairService.issueTickets(order.getOrderNumber());
+                log.info("[엠에어 결과!]", mairService.issueTickets(order.getOrderNumber()));
             }
 
             if (split.isHasCoreworks()) {
+                log.info("[코어웍스 상품이래요!]");
                 coreWorksService.order(auId);
+                log.info("[코어웍스 결과!]", coreWorksService.order(auId));
             }
 
             if (split.isHasSmartInfini()) {
+                log.info("[스마트인피니 상품이래요!]");
                 smartInfiniService.order(auId);
+                log.info("[스마트인피니 결과!]", smartInfiniService.order(auId));
             }
 
             if (split.isHasPlusN()) {
+                log.info("[플러스앤 상품이래요!]");
                 plusNService.order(auId);
+                log.info("[플러스앤 결과!]", plusNService.order(auId));
             }
 
             /*
@@ -177,8 +195,11 @@ public class OrderService {
              */
 
             if (split.isHasSpavis() || split.isHasNormalProduct()) {
+                log.info("[자체 상품이래요!]");
                 List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
+                log.info("[발권 문자 발송 시작]");
                 sendOrderSmsByStatus(order, normalItems, SmsTemplateCode.TICKET_ISSUED);
+                log.info("[발권 문자 발송 종료]");
             }
         } catch (Exception e) {
             log.error("주문 생성 중 오류 발생", e);
