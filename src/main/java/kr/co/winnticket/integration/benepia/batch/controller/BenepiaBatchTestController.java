@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/benepia-batch")
+@RequestMapping("/api/benepia-batch")
 public class BenepiaBatchTestController {
 
     private final BenepiaBatchUploadService service;

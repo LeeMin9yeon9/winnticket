@@ -99,7 +99,6 @@ public class MairService {
 
                 log.info("[MAIR] 쿠폰 발송 요청 itcd={}, orderNumber={}", itcd, orderNumber);
 
-
                 MairCouponResDto res = mairCouponClient.issue(
                         itcd,
                         orderNumber,

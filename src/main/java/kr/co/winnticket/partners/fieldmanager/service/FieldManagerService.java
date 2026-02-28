@@ -20,49 +20,75 @@ public class FieldManagerService {
     }
 
     // 현장관리자 상세조회
-    public FieldManagerResDto getDetail(UUID id) {
-        return mapper.getDetail(id);
+    public FieldManagerResDto getDetail(UUID partnerId,UUID id) {
+        return mapper.getDetail(id,partnerId);
     }
 
     // 현장관리자 추가
-    public FieldManagerResDto create(FieldManagerInsertPostDto model){
+    public FieldManagerResDto create(UUID partnerId,FieldManagerInsertPostDto dto){
+
+        if (mapper.existsByAccountId(dto.getUserName())) {
+            throw new IllegalArgumentException("이미 존재하는 ID입니다.");
+        }
+
         UUID id = UUID.randomUUID();
+        dto.setPartnerId((partnerId));
 
-        mapper.insert(id,model);
+        mapper.insert(id,dto);
 
-        return mapper.getDetail(id);
+        return mapper.getDetail(id, dto.getPartnerId());
     }
 
     // 현장관리자 수정
-    public FieldManagerResDto update(UUID id, UpdateFieldManagerDto model){
-        mapper.update(id,model);
+    public FieldManagerResDto update(UUID partnerId, UUID id, UpdateFieldManagerDto model){
 
-        return mapper.getDetail(id);
+        if (mapper.existsByAccountIdExcludeId(model.getUserName(),id)) {
+            throw new IllegalArgumentException("이미 존재하는 ID입니다.");
+        }
+
+        mapper.update(partnerId,id,model);
+
+        return mapper.getDetail(id,partnerId);
     }
 
     // 현장관리자 본인 변경
-    public void changePassword(UUID id , ChangePasswordDto model){
+    public void changePassword(UUID partnerId, UUID id , ChangePasswordDto model){
         if(model.getNewPassword() == null || model.getNewPassword().isBlank()){
             throw new IllegalArgumentException("새 비밀번호가 필요합니다.");
         }
-        String currentPw = mapper.getPassword(id);
+
+        FieldManagerResDto manager = mapper.getDetail(id, partnerId);
+
+        if(manager == null){
+            throw new IllegalArgumentException("존재하지 않는 관리자입니다.");
+        }
+
+        String currentPw = mapper.getPassword(partnerId,id);
 
         if(!currentPw.trim().equals(model.getCurrentPassword().trim())){
             throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
         }
-        mapper.updatePassword(id,model.getNewPassword().trim());
+        mapper.updatePassword(partnerId,id,model.getNewPassword().trim());
     }
 
 
     // 현장관리자 PW 초기화
-    public void resetPassword(UUID id, ResetPasswordDto model){
-        mapper.updatePassword(id,model.getNewPassword());
+    public void resetPassword(UUID partnerId,UUID id, ResetPasswordDto model){
+        mapper.resetPassword(partnerId,id,model.getNewPassword());
     }
 
     // 현장관리자 삭제
-    public void delete(UUID id){
-        mapper.delete(id.toString());
+    public void delete(UUID partnerId, UUID id){
+
+        FieldManagerResDto manager = mapper.getDetail(id, partnerId);
+
+        if(manager == null){
+            throw new IllegalArgumentException("존재하지 않는 관리자입니다.");
+        }
+
+        mapper.delete(partnerId,id);
     }
+
 
 
 }

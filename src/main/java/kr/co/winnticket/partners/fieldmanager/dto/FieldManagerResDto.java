@@ -43,7 +43,7 @@ public class FieldManagerResDto {
 
     @Hidden
     @Schema(description = "파트너ID")
-    private String partnerId;
+    private UUID partnerId;
 
     @Schema(description = "파트너명")
     private String partnerName;
