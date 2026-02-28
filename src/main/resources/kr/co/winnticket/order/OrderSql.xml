@@ -171,6 +171,7 @@
                 And y.id = a.product_id
             ) category_name, -- 카테고리명
             d.name partner_name,  -- 파트너명
+            d.id partner_id,  -- 파트너id
             STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
             a.quantity,
             a.unit_price,

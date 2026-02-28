@@ -91,5 +91,4 @@
           AND ot.ticket_canceled = false
           AND ot.ticket_used = false
     </select>
-
 </mapper>

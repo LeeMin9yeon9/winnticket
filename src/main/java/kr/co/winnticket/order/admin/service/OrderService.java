@@ -3,15 +3,21 @@ package kr.co.winnticket.order.admin.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.integration.aquaplanet.service.AquaplanetService;
+import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
+import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.integration.playstory.service.PlaystoryService;
+import kr.co.winnticket.integration.plusn.service.PlusNService;
+import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
+import kr.co.winnticket.integration.spavis.service.SpavisService;
+import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
-import kr.co.winnticket.order.admin.mapper.OrderStatusSmsMapper;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import kr.co.winnticket.sms.service.BizMsgService;
@@ -43,6 +49,16 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final TicketCouponService ticketCouponService;
     private final ProductMapper productMapper;
+
+    // 파트너 연동
+    private final WoongjinService woongjinService;
+    private final PlaystoryService playstoryService;
+    private final MairService mairService;
+    private final CoreWorksService coreWorksService;
+    private final SmartInfiniService smartInfiniService;
+    private final PlusNService plusNService;
+    private final AquaplanetService aquaplanetService;
+    private final SpavisService spavisService;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -99,17 +115,15 @@ public class OrderService {
                 return;
             }
 
-
             // 결제 상태 / 결제일시 업데이트
             mapper.updatePaymentComplete(auId, LocalDateTime.now());
-
             // 주문 상품 목록 조회
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
-            // 티켓 발행
-           // for (OrderProductListGetResDto item : items) { for (int i = 0; i < item.getQuantity(); i++) { mapper.insertOrderTicket(auId, item.getId(), generateTicketNumber(auId, item.getId())); }
-            for (OrderProductListGetResDto item : items) {
+            sendOrderSmsByStatus(order, items, SmsTemplateCode.TICKET_ISSUED);
 
+            // 티켓 발행
+            for (OrderProductListGetResDto item : items) {
                 UUID productId = item.getProductId();
                 Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
 
@@ -117,7 +131,6 @@ public class OrderService {
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
                         ticketCouponService.issueCoupon(item.getId());
-
                     }else {
                         mapper.insertOrderTicket(
                                 item.getId(),   // orderItemId
@@ -130,61 +143,187 @@ public class OrderService {
             // 주문 상태 변경
             mapper.updateOrderStatus(auId);
 
-            // 문자 발송 (결제완료)
-            sendOrderSmsByStatus(order, items, OrderStatus.COMPLETED);
+            PartnerSplitResult split = splitByPartner(items);
+
+            if (split.isHasWoongin()) {
+                woongjinService.order(auId);
+            }
+
+            if (split.isHasPlaystory()) {
+                playstoryService.order(auId);
+            }
+
+            if (split.isHasMair()) {
+                mairService.issueTickets(order.getOrderNumber());
+            }
+
+            if (split.isHasCoreworks()) {
+                coreWorksService.order(auId);
+            }
+
+            if (split.isHasSmartInfini()) {
+                smartInfiniService.order(auId);
+            }
+
+            if (split.isHasPlusN()) {
+                plusNService.order(auId);
+            }
+
+            /*
+            if (split.isHasAquaplanet()) {
+                aquaplanetService.couponIssue(auId);
+                continue;
+            }
+             */
+
+            if (split.isHasSpavis() || split.isHasNormalProduct()) {
+                List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
+                sendOrderSmsByStatus(order, normalItems, SmsTemplateCode.TICKET_ISSUED);
+            }
         } catch (Exception e) {
             log.error("주문 생성 중 오류 발생", e);
             throw e; // 다시 던짐 (중요)
         }
     }
 
+    // 상품 분기 처리
+    private PartnerSplitResult splitByPartner(List<OrderProductListGetResDto> items) {
+        boolean hasWoongin = false;
+        boolean hasPlaystory = false;
+        boolean hasMair = false;
+        boolean hasCoreworks = false;
+        boolean hasSmartInfini = false;
+        boolean hasPlusN = false;
+        boolean hasAquaplanet = false;
+        boolean hasSpavis = false;
+        boolean hasNormalProduct = false;
+
+        for (OrderProductListGetResDto item : items) {
+            UUID partnerId = item.getPartnerId();
+
+            // 파트너별 상품이 있는지 체크
+            if ("bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)) { // 웅진컴퍼스
+                hasWoongin = true;
+            } else if("e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)) { // 플레이스토리
+                hasPlaystory = true;
+            } else if("15f283a9-fd6c-47ba-862d-0af9697a3e1b".equals(partnerId)) {// 엠에어
+                hasMair = true;
+            } else if("1d5228eb-6d03-4e12-b370-b2ceb19a77cc".equals(partnerId)) { // 코어웍스
+                hasCoreworks = true;
+            } else if("eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)) { // 스마트인피니
+                hasSmartInfini = true;
+            } else if("85f50a52-7096-470e-95f5-a8e9c1cd6589".equals(partnerId)) { // 플러스앤
+                hasPlusN = true;
+            } else if("d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId)) { // 아쿠아플래닛
+                hasAquaplanet = true;
+            } else if("0f46cad1-6fb4-4514-938f-d309850f0668".equals(partnerId)) { // 스파비스
+                hasSpavis = true;
+            } else { // 일반상품
+                hasNormalProduct = true;
+            }
+        }
+
+        return new PartnerSplitResult(
+                hasWoongin,
+                hasPlaystory,
+                hasMair,
+                hasCoreworks,
+                hasSmartInfini,
+                hasPlusN,
+                hasAquaplanet,
+                hasSpavis,
+                hasNormalProduct
+        );
+    }
+
+    // 발권 문자 발송 대상 뽑기 (자체 문자 발송하는 경우만 추출)
+    private List<OrderProductListGetResDto> extractNormalProducts(List<OrderProductListGetResDto> items
+    ) {
+        return items.stream()
+                .filter(item -> {
+                    String partnerId = String.valueOf(item.getPartnerId());
+
+                    return partnerId == null
+                            || (!"bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)
+                            && !"e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)
+                            && !"15f283a9-fd6c-47ba-862d-0af9697a3e1b".equals(partnerId)
+                            && !"1d5228eb-6d03-4e12-b370-b2ceb19a77cc".equals(partnerId)
+                            && !"eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)
+                            && !"85f50a52-7096-470e-95f5-a8e9c1cd6589".equals(partnerId)
+                            && !"d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId));
+                })
+                .toList();
+    }
+
     // 문자 발송
-    private void sendOrderSmsByStatus(OrderAdminDetailGetResDto order,
-                                      List<OrderProductListGetResDto> items,
-                                      OrderStatus status) {
+    private void sendOrderSmsByStatus(
+            OrderAdminDetailGetResDto order,
+            List<OrderProductListGetResDto> items,
+            SmsTemplateCode templateCode
+    ) {
 
-        List<SmsTemplateCode> codes =
-                OrderStatusSmsMapper.map(status);
+        if (items == null || items.isEmpty()) return;
 
-        if (codes.isEmpty()) return;
+        // 입금완료는 주문당 1번만 발송
+        if (templateCode == SmsTemplateCode.PAYMENT_CONFIRMED) {
 
-        // 대표상품 1개 기준
-        OrderProductListGetResDto first = items.get(0);
-        UUID productId = first.getProductId();
+            UUID productId = items.get(0).getProductId();
 
-        for (SmsTemplateCode code : codes) {
+            ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, templateCode);
 
-            // 1. 템플릿 조회
+            if (template == null || template.getContent() == null) return;
+
+            String message =
+                    templateRenderService.render(template.getContent(), Map.of(
+                            "주문자명", order.getCustomerName(),
+                            "주문번호", order.getOrderNumber()
+                    ));
+
+            sendSms(order, message);
+            return;
+        }
+
+        // 발권완료 상품별 반복
+        for (OrderProductListGetResDto item : items) {
+
+            UUID productId = item.getProductId();
+
             ProductSmsTemplateDto template =
-                    smsTemplateFinder.findTemplate(productId, code);
+                    smsTemplateFinder.findTemplate(productId, templateCode);
 
             if (template == null || template.getContent() == null) continue;
 
-            // 2. 변수 구성
-            Map<String,String> vars = new HashMap<>();
+            Map<String, String> vars = new HashMap<>();
             vars.put("주문자명", order.getCustomerName());
-            vars.put("상품명", first.getProductName());
-            vars.put("티켓번호", order.getOrderNumber());
-            vars.put("옵션값명", first.getOptionName());
+            vars.put("상품명", item.getProductName());
+            vars.put("주문번호", order.getOrderNumber());
+            vars.put("옵션값명",
+                    item.getOptionName() == null ? "" : item.getOptionName());
+            vars.put("수량", String.valueOf(item.getQuantity()));
 
-            // 3. 템플릿 치환
             String message =
                     templateRenderService.render(template.getContent(), vars);
 
-            // 4. CMID 생성 (중복 방지)
-            String cmid =
-                    UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-
-            // 5. 비즈뿌리오 INSERT
-            bizMsgService.sendSms(
-                    cmid,
-                    order.getCustomerPhone(),
-                    order.getCustomerName(),
-                    "025118691",      // 발신번호 (비즈뿌리오 등록번호)
-                    "윈앤티켓",        // 발신자명
-                    message
-            );
+            sendSms(order, message);
         }
+    }
+
+    // 문자 발송 공통부
+    private void sendSms(OrderAdminDetailGetResDto order, String message) {
+
+        String cmid = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 20);
+
+        bizMsgService.sendSms(
+                cmid,
+                order.getCustomerPhone(),
+                order.getCustomerName(),
+                "025118691",
+                "윈앤티켓",
+                message
+        );
     }
 
     // 티켓번호 생성

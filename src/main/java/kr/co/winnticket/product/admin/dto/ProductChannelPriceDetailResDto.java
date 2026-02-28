@@ -22,6 +22,12 @@ public class ProductChannelPriceDetailResDto {
     @Schema(description = "운영회사명")
     private String companyName;
 
+    @Schema(description = "기본가")
+    private int basePrice;
+
+    @Schema(description = "할인가")
+    private int discountPrice;
+
     @Schema(description = "옵션별 가격")
     private List<ProductChannelOptionPriceGetResDto> options = new ArrayList<>();
 }

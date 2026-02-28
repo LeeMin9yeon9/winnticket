@@ -21,25 +21,8 @@ public interface MairOrderMapper {
             @Param("orderId") UUID orderId
     );
 
-    // 티켓 저장
-    int insertOrderTicket(
-            @Param("orderItemId") String orderItemId,
-            @Param("ticketNumber") String ticketNumber);
-
-    // 티켓 저장(ticketNo 나중에 지우기 )
-//    int insertOrderTicket(
-//            @Param("orderItemId") String orderItemId,
-//            @Param("ticketNumber") String ticketNumber,
-//            String ticketNo);
-
     // 티켓 중복 발송 방지
     int countOrderTickets(@Param("orderItemId") UUID orderItemId);
-
-    // 티켓번호 목록 조회
-    List<String> selectTicketNumbers(@Param("orderItemId") UUID orderItemId);
-
-    // 취소 가능한 티켓 조회
-    int countCancelableTickets(@Param("orderItemId") UUID orderItemId);
 
     // 티켓 취소 처리
     int updateTicketsCanceled(UUID orderItemId);

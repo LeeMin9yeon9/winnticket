@@ -24,6 +24,9 @@ public class OrderProductListGetResDto {
     @Schema(description = "카테고리명")
     private String categoryName;
 
+    @Schema(description = "파트너ID")
+    private UUID partnerId;
+
     @Schema(description = "파트너명")
     private String partnerName;
 

@@ -15,7 +15,7 @@ public class PlaystoryCheckResponse {
     public static class OptChkResult {
 
         @JsonProperty("result_code")
-        private Integer resultCode;
+        private String resultCode;
 
         @JsonProperty("CPN_NO")
         private String cpnNo;

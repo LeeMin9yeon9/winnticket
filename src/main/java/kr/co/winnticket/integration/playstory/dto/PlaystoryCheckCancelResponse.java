@@ -12,7 +12,7 @@ public class PlaystoryCheckCancelResponse {
     @Data
     public static class OptCancResult {
         @JsonProperty("result_code")
-        private Integer resultCode;
+        private String resultCode;
 
         @JsonProperty("result_message")
         private String resultMessage;

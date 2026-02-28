@@ -14,7 +14,7 @@ public class PlaystoryOrderResponse {
     public static class OptOrdResult {
 
         @JsonProperty("result_code")
-        private Integer resultCode;
+        private String resultCode;
 
         @JsonProperty("CPN_NO")
         private String cpnNo;
@@ -35,7 +35,7 @@ public class PlaystoryOrderResponse {
         private String optionPriceId;
 
         @JsonProperty("option_price")
-        private Integer optionPrice;
+        private String optionPrice;
 
         @JsonProperty("OPT_IDX")
         private String optIdx;

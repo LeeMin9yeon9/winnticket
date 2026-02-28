@@ -23,12 +23,12 @@ public class APContractProductRequest {
     public static class SearchItem {
 
         @JsonProperty("CORP_CD")
-        private String corpCd;
+        private String corpCd; // 법인코드
 
         @JsonProperty("CONT_NO")
-        private String contNo;
+        private String contNo; // 계약번호
 
         @JsonProperty("STDR_DATE")
-        private String stdrDate;
+        private String stdrDate; // 기준일자
     }
 }
