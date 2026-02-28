@@ -151,41 +151,41 @@ public class OrderService {
 
             PartnerSplitResult split = splitByPartner(items);
 
-            log.info("과연!", split);
+            log.info("split = {}", split);
             if (split.isHasWoongin()) {
                 log.info("[웅진 상품이래요!]");
                 woongjinService.order(auId);
-                log.info("[웅진 결과!]", woongjinService.order(auId));
+                log.info("[웅진 결과!] = {}", woongjinService.order(auId));
             }
 
             if (split.isHasPlaystory()) {
                 log.info("[플레이스토리 상품이래요!]");
                 playstoryService.order(auId);
-                log.info("[플레이스토리 결과!]", playstoryService.order(auId));
+                log.info("[플레이스토리 결과!] = {}", playstoryService.order(auId));
             }
 
             if (split.isHasMair()) {
                 log.info("[엠에어 상품이래요!]");
                 mairService.issueTickets(order.getOrderNumber());
-                log.info("[엠에어 결과!]", mairService.issueTickets(order.getOrderNumber()));
+                log.info("[엠에어 결과!] = {}", mairService.issueTickets(order.getOrderNumber()));
             }
 
             if (split.isHasCoreworks()) {
                 log.info("[코어웍스 상품이래요!]");
                 coreWorksService.order(auId);
-                log.info("[코어웍스 결과!]", coreWorksService.order(auId));
+                log.info("[코어웍스 결과!] = {}", coreWorksService.order(auId));
             }
 
             if (split.isHasSmartInfini()) {
                 log.info("[스마트인피니 상품이래요!]");
                 smartInfiniService.order(auId);
-                log.info("[스마트인피니 결과!]", smartInfiniService.order(auId));
+                log.info("[스마트인피니 결과!] = {}", smartInfiniService.order(auId));
             }
 
             if (split.isHasPlusN()) {
                 log.info("[플러스앤 상품이래요!]");
                 plusNService.order(auId);
-                log.info("[플러스앤 결과!]", plusNService.order(auId));
+                log.info("[플러스앤 결과!] = {}", plusNService.order(auId));
             }
 
             /*
@@ -221,9 +221,9 @@ public class OrderService {
         boolean hasNormalProduct = false;
 
         for (OrderProductListGetResDto item : items) {
-            UUID partnerId = item.getPartnerId();
+            String partnerId = String.valueOf(item.getPartnerId());
 
-            log.error("여기 타기는하니.. ", partnerId);
+            log.error("partnerId = {}", partnerId);
 
             // 파트너별 상품이 있는지 체크
             if ("bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)) { // 웅진컴퍼스
