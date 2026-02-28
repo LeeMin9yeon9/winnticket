@@ -32,6 +32,6 @@ public class PlusNTestController {
     @GetMapping("/useddate")
     public PlusNUsedDateResponse usedDate(
             @RequestParam String date) {
-        return service.testUsedDate(date);
+        return service.usedDate(date);
     }
 }

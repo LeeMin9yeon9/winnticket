@@ -3,6 +3,7 @@ package kr.co.winnticket.integration.smartinfini.service;
 import kr.co.winnticket.integration.smartinfini.client.SmartInfiniClient;
 import kr.co.winnticket.integration.smartinfini.dto.*;
 import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniMapper;
+import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniResponseMapper;
 import kr.co.winnticket.integration.smartinfini.props.SmartInfiniProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,62 +20,165 @@ public class SmartInfiniService {
     private final SmartInfiniClient client;
     private final SmartInfiniMapper mapper;
     private final SmartInfiniProperties props;
+    private final SmartInfiniResponseMapper responseMapper;
 
-    private static final DateTimeFormatter ORDER_DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter CANCEL_DTF =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    // =========================
     // 주문
+    // =========================
     public SIOrderResponse order(UUID orderId) {
+
         SIOrderRequest req = mapper.selectSmartinfiniOrder(orderId);
         req.setChannelCode(props.getChannelId());
-        return client.order(req);
+
+        SIOrderResponse res = client.order(req);
+
+        var result =
+                responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 주문 실패: " + result.getMessage()
+            );
+        }
+
+        return res;
     }
 
-    // 조회(단건 필요없을듯)
+    // =========================
+    // 조회(단건)
+    // =========================
     public SISearchResponse search(SISearchRequest req) {
+
         SISearchResponse res = client.search(req);
+
+        var result =
+                responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 조회 실패: " + result.getMessage()
+            );
+        }
+
         return res;
     }
 
+    // =========================
     // 조회(다건)
+    // =========================
     public SIOrderSearchResponse searchByOrderNo(UUID orderId) {
-        SIOrderSearchRequest req = mapper.selectSmartinfinisearchByOrderNo(orderId);
-        return client.searchByOrderNo(req);
-    }
 
-    // 취소(단건 필요없을듯)
-    public SICancelResponse cancelSingle(SICancelRequest req) {
-        SICancelResponse res = client.cancel(req);
+        SIOrderSearchRequest req =
+                mapper.selectSmartinfinisearchByOrderNo(orderId);
+
+        SIOrderSearchResponse res =
+                client.searchByOrderNo(req);
+
+        var result =
+                responseMapper.mapSearch(res);
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 주문조회 실패: " + result.getMessage()
+            );
+        }
+
         return res;
     }
 
+    // =========================
+    // 취소(단건)
+    // =========================
+    public SICancelResponse cancelSingle(SICancelRequest req) {
+
+        SICancelResponse res = client.cancel(req);
+
+        var result =
+                responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 단건취소 실패: " + result.getMessage()
+            );
+        }
+
+        return res;
+    }
+
+    // =========================
     // 취소(다건)
+    // =========================
     public SICancelListResponse cancelMulti(UUID orderId) {
-        SICancelListRequest cancelReq = mapper.selectSmartinfiniCancelList(orderId);
+
+        SICancelListRequest cancelReq =
+                mapper.selectSmartinfiniCancelList(orderId);
+
         cancelReq.setResultDate(
                 LocalDateTime.now()
                         .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         );
-        return client.cancelList(cancelReq);
+
+        SICancelListResponse res =
+                client.cancelList(cancelReq);
+
+        var result =
+                responseMapper.mapCancelList(res);
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 다건취소 실패: " + result.getMessage()
+            );
+        }
+
+        return res;
     }
 
-    // 상품조회(상품 참고용)
+    // =========================
+    // 상품조회
+    // =========================
     public List<SIProductResponse> product(SIProductRequest req) {
         return client.product(req);
     }
 
+    // =========================
     // 문자 재전송
+    // =========================
     public SIMmsResendResponse mmsResend(UUID orderId) {
-        SIMmsResendRequest req = mapper.selectSmartinfiniMmsResend(orderId);
-        return client.mmsResend(req);
+
+        SIMmsResendRequest req =
+                mapper.selectSmartinfiniMmsResend(orderId);
+
+        SIMmsResendResponse res =
+                client.mmsResend(req);
+
+        var result =
+                responseMapper.map(res.getReturn_div(), res.getReturn_msg());
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException(
+                    "SmartInfini 문자 재전송 실패: " + result.getMessage()
+            );
+        }
+
+        return res;
     }
 
     // =========================
-    // 내부 사용처리(콜백 수신) - 실제 우리 로직 연결
+    // 내부 사용 콜백 처리
     // =========================
     public SIUseCallbackResponse onUseCallback(SIUseCallbackRequest req) {
-        // 여기서 우리 DB 업데이트/검증/중복처리 등 수행
-        // 지금은 "성공"만 반환(완성 뼈대)
-        String orderNo = req.getOrderNo() != null ? req.getOrderNo() : "";
+
+        // TODO:
+        // 1. 중복 사용 체크
+        // 2. 주문 상태 업데이트
+        // 3. 사용 로그 기록
+
+        String orderNo =
+                req.getOrderNo() != null ? req.getOrderNo() : "";
+
         return SIUseCallbackResponse.ok(orderNo);
     }
 }

@@ -43,17 +43,6 @@ public class SmartInfiniController {
     }
 
     /**
-     * 조회 (단건)
-     */
-    @Hidden
-    @PostMapping("/search")
-    public SISearchResponse search(
-            @RequestBody SISearchRequest request
-    ){
-        return service.search(request);
-    }
-
-    /**
      * 조회(다건)
      */
     @PostMapping("/search/order")
@@ -64,17 +53,6 @@ public class SmartInfiniController {
     }
 
     /**
-     * 취소 단건
-     */
-    @Hidden
-    @PostMapping("/cancel/single")
-    public SICancelResponse cancelSingle(
-            @RequestBody SICancelRequest request
-    ){
-        return service.cancelSingle(request);
-    }
-
-    /**
      * 취소 다건
      */
     @PostMapping("/cancel/multi")
@@ -82,17 +60,6 @@ public class SmartInfiniController {
             @RequestParam UUID orderId
     ){
         return service.cancelMulti(orderId);
-    }
-
-    /**
-     * 상품 조회
-     */
-    @Hidden
-    @PostMapping("/product")
-    public List<SIProductResponse> product(
-            @RequestBody SIProductRequest request
-    ){
-        return service.product(request);
     }
 
     /**

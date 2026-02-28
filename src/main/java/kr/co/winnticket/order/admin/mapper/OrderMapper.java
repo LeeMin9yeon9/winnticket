@@ -48,11 +48,6 @@ public interface OrderMapper {
             @Param("id") UUID orderId
     );
 
-    // 주문 상품 목록 조회 (티켓 발행용)
-    List<OrderProductListGetResDto> selectOrderItemsForTicket(
-            @Param("id") UUID orderId
-    );
-
     // 티켓 발행
     void insertOrderTicket(
             //@Param("id") UUID orderId,

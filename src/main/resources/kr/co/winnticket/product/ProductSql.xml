@@ -967,13 +967,18 @@
         SELECT
             a.logo_url,  -- 채널로고url
             a.id channel_id,  -- 채널_ID
-            a.company_name  -- 운영회사명
+            a.company_name,  -- 운영회사명
+            COALESCE(b.base_price, c.price) AS base_price,
+            COALESCE(b.discount_price, c.discount_price) AS discount_price
         From
-            CHANNELS a
-        JOIN products b
-        ON b.id = #{productId}
+            products c
+        JOIN channels a ON 1 = 1
+        LEFT JOIN product_channel_prices b
+        ON a.id = b.channel_id
+        AND b.product_id = c.id
         Where 1 = 1
         And a.id = #{channelId}
+        And c.id = #{productId}
     </select>
 
     <!--

@@ -17,28 +17,28 @@ public class CoreWorksTestController {
     // Swagger / curl 테스트용
     @GetMapping("/order")
     public CWOrderResponse testOrder(@RequestParam UUID orderId) {
-        return service.testOrder(orderId);
+        return service.order(orderId);
     }
 
     @PostMapping("/search")
     public CWSearchResponse search(@RequestParam UUID orderId) {
-        return service.testSearch(orderId);
+        return service.search(orderId);
     }
 
     @PostMapping("/cancel")
     public CWCancelResponse cancel(@RequestParam UUID orderId) {
-        return service.testCancel(orderId);
+        return service.cancel(orderId);
     }
 
     @GetMapping("/useSearch")
     public CWUseSearchResponse useSearch(
             @RequestParam String start,
             @RequestParam String end) {
-        return service.testUseSearch(start, end);
+        return service.useSearch(start, end);
     }
 
     @PostMapping("/mmsResend")
     public CWMmsResendResponse mmsResend(@RequestParam UUID orderId) {
-        return service.testMmsResend(orderId);
+        return service.mmsResend(orderId);
     }
 }
