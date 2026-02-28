@@ -33,43 +33,44 @@ public class FieldManagerController {
     @GetMapping("/{partnerId}/fieldManager/{id}")
     @Operation(summary = "현장관리자 상세조회")
     public ResponseEntity<ApiResponse<FieldManagerResDto>> getManagerDetail(
+            @PathVariable UUID partnerId,
             @PathVariable UUID id
     ){
         return ResponseEntity.ok(
-                ApiResponse.success(service.getDetail(id))
+                ApiResponse.success(service.getDetail(partnerId,id))
         );
     }
 
     @PostMapping("/{partnerId}/fieldManager")
     @Operation(summary = "현장관리자 추가")
     public ResponseEntity<ApiResponse<FieldManagerResDto>> createManager(
-            @PathVariable String partnerId,
-            @RequestBody FieldManagerInsertPostDto model
+            @PathVariable UUID partnerId,
+            @RequestBody FieldManagerInsertPostDto dto
     ){
-        model.setPartnerId(partnerId);
-        return ResponseEntity.ok(
-                ApiResponse.success("현장관리자가 생성되었습니다.", service.create(model))
+        return ResponseEntity.ok(ApiResponse.success("현장관리자가 생성되었습니다.", service.create(partnerId,dto))
         );
     }
 
     @PatchMapping("/{partnerId}/fieldManager/{id}")
     @Operation(summary = "현장관리자 수정")
     public ResponseEntity<ApiResponse<FieldManagerResDto>> updateManager(
+            @PathVariable UUID partnerId,
             @PathVariable UUID id,
             @RequestBody UpdateFieldManagerDto model
     ){
         return ResponseEntity.ok(
-                ApiResponse.success("현장관리자가 수정되었습니다.", service.update(id, model))
+                ApiResponse.success("현장관리자가 수정되었습니다.", service.update(partnerId,id, model))
         );
     }
 
     @PutMapping("/{partnerId}/fieldManager/{id}/password")
     @Operation(summary = "현장관리자 비밀번호 수정")
     public ResponseEntity<ApiResponse<Void>> changePassword(
+            @PathVariable UUID partnerId,
             @PathVariable UUID id,
             @RequestBody ChangePasswordDto model
     ){
-        service.changePassword(id, model);
+        service.changePassword(partnerId,id, model);
         return ResponseEntity.ok(
                 ApiResponse.success("비밀번호가 변경되었습니다.", null)
         );
@@ -78,10 +79,11 @@ public class FieldManagerController {
     @PutMapping("/{partnerId}/fieldManager/{id}/resetPassword")
     @Operation(summary = "관리자 비밀번호 초기화")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable UUID partnerId,
             @PathVariable UUID id,
             @RequestBody ResetPasswordDto model
     ){
-        service.resetPassword(id, model);
+        service.resetPassword(partnerId,id, model);
         return ResponseEntity.ok(
                 ApiResponse.success("비밀번호가 초기화되었습니다.", null)
         );
@@ -90,9 +92,10 @@ public class FieldManagerController {
     @DeleteMapping("/{partnerId}/fieldManager/{id}")
     @Operation(summary = "현장관리자 삭제")
     public ResponseEntity<ApiResponse<Void>> deleteManager(
+            @PathVariable UUID partnerId,
             @PathVariable UUID id
     ){
-        service.delete(id);
+        service.delete(partnerId,id);
         return ResponseEntity.ok(
                 ApiResponse.success("현장관리자가 삭제되었습니다.", null)
         );

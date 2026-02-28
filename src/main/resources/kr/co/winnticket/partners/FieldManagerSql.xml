@@ -27,10 +27,10 @@
     </resultMap>
 
     <!-- 파트너별 현장관리자 목록 -->
-    <select id="getListByPartner"
-            resultType="kr.co.winnticket.partners.fieldmanager.dto.FieldManagerListGetResDto">
+    <select id="getListByPartner" resultType="kr.co.winnticket.partners.fieldmanager.dto.FieldManagerListGetResDto">
         SELECT
             fm.id,
+            fm.account_id AS userName,
             fm.name,
             fm.email,
             fm.phone,
@@ -59,6 +59,7 @@
         FROM field_managers fm
                  LEFT JOIN partners p ON fm.partner_id = p.id
         WHERE fm.id = #{id}::uuid
+        AND fm.partner_id = #{partnerId}::uuid
     </select>
 
     <!-- 생성 -->
@@ -77,14 +78,14 @@
         updated_at
         ) VALUES (
         #{id},
-        #{model.userName},
-        #{model.password},
+        #{dto.userName},
+        #{dto.password},
         'ROLE002',                <!-- 현장관리자는 고정 -->
-        #{model.name},
-        #{model.email},
-        #{model.phone},
-        #{model.partnerId}::uuid,
-        COALESCE(#{model.active}, TRUE),
+        #{dto.name},
+        #{dto.email},
+        #{dto.phone},
+        #{dto.partnerId}::uuid,
+        COALESCE(#{dto.active}, TRUE),
         NOW(),
         NOW()
         )
@@ -103,20 +104,26 @@
             updated_at = NOW(),
         </set>
         WHERE id = #{id}::uuid
+        AND partner_id = #{partnerId}::uuid
         AND role_id = 'ROLE002'   <!-- ROLE002만 수정 -->
     </update>
 
     <!--  비밀번호 변경-->
     <select id="getPassword" resultType="string">
-        SELECT password FROM field_managers WHERE id = #{id}::uuid
+        SELECT password
+        FROM field_managers
+        WHERE id = #{id}::uuid
+        AND partner_id = #{partnerId}::uuid
     </select>
 
+    <!--현장관리자 비밀번호 변경-->
     <update id="updatePassword">
         UPDATE field_managers
         SET password = #{newPassword},
             password_updated_at = NOW(),
             updated_at = NOW()
         WHERE id = #{id}::uuid
+        AND partner_id = #{partnerId}::uuid
     </update>
 
     <!--관리자 비밀번호 초기화-->
@@ -126,13 +133,35 @@
             password_updated_at = NOW(),
             updated_at = NOW()
         WHERE id = #{id}::uuid
+        AND partner_id = #{partnerId}::uuid
     </update>
 
     <delete id="delete">
         DELETE FROM field_managers
         WHERE id = #{id}::uuid
+          AND partner_id = #{partnerId}::uuid
           AND role_id = 'ROLE002'
     </delete>
+
+    <!--현장관리자 ID 중복 체크-->
+    <select id="existsByAccountId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM field_managers
+            WHERE account_id = #{accountId}
+        )
+    </select>
+
+    <!--수정 시 본인 제외 중복 체크 -->
+    <select id="existsByAccountIdExcludeId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM field_managers
+            WHERE account_id = #{accountId}
+              AND id != #{id}
+        )
+    </select>
+
 
 
 

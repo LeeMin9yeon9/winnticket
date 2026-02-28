@@ -2,11 +2,15 @@ package kr.co.winnticket.partners.fieldmanager.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(title = "[파트너 관리 >  현장관리자 수정 DTO ] UpdateFieldManagerDto")
 public class UpdateFieldManagerDto {
     @NotBlank
