@@ -45,16 +45,17 @@
             b.IMAGE_URL->>0 AS IMAGE,
             COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
-            WHEN COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) IS NOT NULL
+            WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+            AND COALESCE(pcp.base_price, a.PRICE) > 0
             THEN FLOOR(
             (
-            COALESCE(pcp.base_price, b.PRICE)
-            - COALESCE(pcp.discount_price, b.DISCOUNT_PRICE)
+            COALESCE(pcp.base_price, a.PRICE)
+            - COALESCE(pcp.discount_price, a.DISCOUNT_PRICE)
             )
-            / COALESCE(pcp.base_price, b.PRICE)::float * 100
+            / COALESCE(pcp.base_price, a.PRICE)::float * 100
             )
             ELSE 0
-            END AS DISCOUNT_RATE,
+        END AS DISCOUNT_RATE,
             b.SALES_STATUS,
             b.USAGE_PERIOD
         FROM PRODUCT_SECTION a
@@ -90,6 +91,7 @@
             COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
             WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+            AND COALESCE(pcp.base_price, a.PRICE) > 0
             THEN FLOOR(
             (
             COALESCE(pcp.base_price, a.PRICE)
@@ -136,6 +138,7 @@
             COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
             WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+            AND COALESCE(pcp.base_price, a.PRICE) > 0
             THEN FLOOR(
             (
             COALESCE(pcp.base_price, a.PRICE)
@@ -206,6 +209,7 @@
             COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
             CASE
                 WHEN COALESCE(pcp.discount_price, a.DISCOUNT_PRICE) IS NOT NULL
+                    AND COALESCE(pcp.base_price, a.PRICE) > 0
                     THEN FLOOR(
                         (
                             COALESCE(pcp.base_price, a.PRICE)
