@@ -15,83 +15,54 @@ import org.springframework.stereotype.Service;
 public class AquaplanetService {
 
     private final AquaplanetClient client;
-    private final AquaplanetProperties props;
-    private final AquaplanetResponseMapper responseMapper;
 
-    // 상품조회
+    // 1) 계약사 상품조회
     public AquaplanetEnvelope<APContractProductResponse> contractProducts(APContractProductRequest req) {
-        AquaplanetEnvelope<APContractProductResponse> res =
-                client.call(props.getRecvSvcCdContract(),
-                        props.getIntfIdContract(),
-                        req,
-                        APContractProductResponse.class);
-
-        validate(responseMapper.map(res), "아쿠아플라넷 상품조회 실패");
-
-        return res;
+        return client.call(
+                "HBSSAMCNT0114",
+                "SIF00HBSSAMCNT0114",
+                req,
+                APContractProductResponse.class
+        );
     }
 
-    // 쿠폰발행
+    // 2) 쿠폰 발행
     public AquaplanetEnvelope<APCouponIssueResponse> couponIssue(APCouponIssueRequest req) {
-        AquaplanetEnvelope<APCouponIssueResponse> res =
-                client.call(props.getRecvSvcCdIssue(),
-                        props.getIntfIdIssue(),
-                        req,
-                        APCouponIssueResponse.class);
-
-        validate(responseMapper.map(res), "아쿠아플라넷 쿠폰발행 실패");
-
-        return res;
+        return client.call(
+                "HBSSAMCPN0306",
+                "SIF00HBSSAMCPN0306",
+                req,
+                APCouponIssueResponse.class
+        );
     }
 
-    // 쿠폰취소
+    // 3) 쿠폰 발행취소
     public AquaplanetEnvelope<APCouponCancelResponse> couponCancel(APCouponCancelRequest req) {
-        AquaplanetEnvelope<APCouponCancelResponse> res =
-                client.call(props.getRecvSvcCdCancel(),
-                        props.getIntfIdCancel(),
-                        req,
-                        APCouponCancelResponse.class);
-
-        validate(responseMapper.map(res), "아쿠아플라넷 쿠폰취소 실패");
-
-        return res;
+        return client.call(
+                "HBSSAMCPN1003",
+                "SIF00HBSSAMCPN1003",
+                req,
+                APCouponCancelResponse.class
+        );
     }
 
-    // 회수이력 단건조회
+    // 4) 대매점 회수이력 건별 조회
     public AquaplanetEnvelope<APCouponUseHistoryResponse> couponUseHistory(APCouponUseHistoryRequest req) {
-        AquaplanetEnvelope<APCouponUseHistoryResponse> res =
-                client.call(props.getRecvSvcCdUseHistory(),
-                        props.getIntfIdUseHistory(),
-                        req,
-                        APCouponUseHistoryResponse.class);
-
-        validate(responseMapper.map(res), "아쿠아플라넷 사용이력 조회 실패");
-
-        return res;
+        return client.call(
+                "HBSSAMCPN1100",
+                "SIF00HBSSAMCPN1100",
+                req,
+                APCouponUseHistoryResponse.class
+        );
     }
 
-    // 회수이력 날짜별조회
+    // 5) 대매점 영업일자별 회수이력 조회
     public AquaplanetEnvelope<APCouponUseDailyHistoryResponse> couponUseDailyHistory(APCouponUseDailyHistoryRequest req) {
-        AquaplanetEnvelope<APCouponUseDailyHistoryResponse> res =
-                client.call(props.getRecvSvcCdUseDailyHistory(),
-                        props.getIntfIdUseDailyHistory(),
-                        req,
-                        APCouponUseDailyHistoryResponse.class);
-
-        validate(responseMapper.map(res), "아쿠아플라넷 사용이력 일자조회 실패");
-
-        return res;
-    }
-
-    private void validate(IntegrationResult result, String defaultMessage) {
-        if (!result.isSuccess()) {
-            throw new RuntimeException(
-                    defaultMessage
-                            + " - code: "
-                            + result.getCode()
-                            + ", message: "
-                            + result.getMessage()
-            );
-        }
+        return client.call(
+                "HBSSAMCPN1103",
+                "SIF00HBSSAMCPN1103",
+                req,
+                APCouponUseDailyHistoryResponse.class
+        );
     }
 }

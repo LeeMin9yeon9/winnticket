@@ -26,7 +26,7 @@ public class APCouponIssueRequest {
         private Integer seq;
 
         @JsonProperty("ISSUE_DATE")
-        private String issueDate; // YYYYMMDD
+        private String issueDate; // yyyyMMdd
 
         @JsonProperty("GOODS_NO")
         private String goodsNo;
@@ -35,21 +35,21 @@ public class APCouponIssueRequest {
         private Integer issueQty;
 
         @JsonProperty("UNITY_ISSUE_YN")
-        private String unityIssueYn; // 문서: N 단장발권 / Y 유통발권
+        private String unityIssueYn; // N(단장발권), Y(유통발권)
 
         @JsonProperty("RCVER_NM")
         private String rcverNm;
 
         @JsonProperty("RCVER_TEL_NATION_NO")
-        private String rcverTelNationNo;
+        private String nationNo;
 
         @JsonProperty("RCVER_TEL_AREA_NO")
-        private String rcverTelAreaNo;
+        private String areaNo;
 
         @JsonProperty("RCVER_TEL_EXCHGE_NO")
-        private String rcverTelExchgeNo;
+        private String exchNo;
 
         @JsonProperty("RCVER_TEL_NO")
-        private String rcverTelNo;
+        private String telNo;
     }
 }
