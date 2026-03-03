@@ -1,13 +1,17 @@
 package kr.co.winnticket.integration.aquaplanet.dto.coupon;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class APCouponUseDailyHistoryRequest {
 
     @JsonProperty("ds_input")
@@ -15,6 +19,8 @@ public class APCouponUseDailyHistoryRequest {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Input {
         @JsonProperty("CORP_CD")
         private String corpCd;
@@ -23,6 +29,6 @@ public class APCouponUseDailyHistoryRequest {
         private String contNo;
 
         @JsonProperty("BSN_DATE")
-        private String bsnDate; // 영업일자 YYYYMMDD
+        private String bsnDate; // yyyyMMdd
     }
 }

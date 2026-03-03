@@ -1,17 +1,25 @@
 package kr.co.winnticket.integration.aquaplanet.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.aquaplanet.dto.common.*;
 import kr.co.winnticket.integration.aquaplanet.props.AquaplanetProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class AquaplanetClient {
 
     private final RestTemplate aquaplanetRestTemplate;
@@ -31,7 +39,7 @@ public class AquaplanetClient {
                 .data(dataReq)
                 .build();
 
-        String reqJson;
+        final String reqJson;
         try {
             reqJson = aquaplanetObjectMapper.writeValueAsString(reqEnv);
         } catch (Exception e) {
@@ -40,8 +48,7 @@ public class AquaplanetClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(java.util.List.of(MediaType.APPLICATION_JSON));
-
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<>(reqJson, headers);
 
         ResponseEntity<String> resp;
@@ -57,27 +64,30 @@ public class AquaplanetClient {
         }
 
         String raw = resp.getBody();
-        log.info("[AquaPlanet] url={} status={} raw={}", props.getBaseUrl(), resp.getStatusCode(), raw);
+        log.info("[AquaPlanet] url={} status={} req={} raw={}", props.getBaseUrl(), resp.getStatusCode(), reqJson, raw);
+
+        if (!resp.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("AquaPlanet HTTP 비정상: " + resp.getStatusCode());
+        }
 
         try {
-            // 응답은 Envelope 형태로 온다고 문서 예시가 있으니 Envelope로 파싱
-            // Data만 타입 맞추기 위해 중간에 tree로 처리
-            var root = aquaplanetObjectMapper.readTree(raw);
+            JsonNode root = aquaplanetObjectMapper.readTree(raw);
 
-            var systemHeaderNode = root.get("SystemHeader");
-            var trxHeaderNode = root.get("TransactionHeader");
-            var msgHeaderNode = root.get("MessageHeader");
-            var dataNode = root.get("Data");
+            AquaplanetSystemHeader sh = nodeTo(root, "SystemHeader", AquaplanetSystemHeader.class);
+            AquaplanetTransactionHeader th = nodeTo(root, "TransactionHeader", AquaplanetTransactionHeader.class);
+            AquaplanetMessageHeader mh = nodeTo(root, "MessageHeader", AquaplanetMessageHeader.class);
 
-            AquaplanetSystemHeader sh = aquaplanetObjectMapper.treeToValue(systemHeaderNode, AquaplanetSystemHeader.class);
-            AquaplanetTransactionHeader th = aquaplanetObjectMapper.treeToValue(trxHeaderNode, AquaplanetTransactionHeader.class);
-            AquaplanetMessageHeader mh = (msgHeaderNode == null || msgHeaderNode.isNull())
-                    ? AquaplanetMessageHeader.builder().build()
-                    : aquaplanetObjectMapper.treeToValue(msgHeaderNode, AquaplanetMessageHeader.class);
+            // ✅ 문서 기준 정상 = MSG_PRCS_RSLT_CD == "0"
+            if (mh != null && mh.getMsgPrcsRsltCd() != null && !"0".equals(mh.getMsgPrcsRsltCd())) {
+                String msg = extractMsg(mh);
+                throw new RuntimeException("AquaPlanet 실패: " + mh.getMsgPrcsRsltCd() + " / " + msg);
+            }
 
-            TRes data = (dataNode == null || dataNode.isNull())
-                    ? null
-                    : aquaplanetObjectMapper.treeToValue(dataNode, dataResClass);
+            TRes data = null;
+            JsonNode dataNode = root.get("Data");
+            if (dataNode != null && !dataNode.isNull()) {
+                data = aquaplanetObjectMapper.treeToValue(dataNode, dataResClass);
+            }
 
             return AquaplanetEnvelope.<TRes>builder()
                     .systemHeader(sh)
@@ -89,6 +99,18 @@ public class AquaplanetClient {
         } catch (Exception e) {
             throw new RuntimeException("AquaPlanet 응답 파싱 실패", e);
         }
+    }
+
+    private String extractMsg(AquaplanetMessageHeader mh) {
+        if (mh.getMsgDataSub() == null || mh.getMsgDataSub().isEmpty()) return "";
+        AquaplanetMessageHeader.MessageItem first = mh.getMsgDataSub().get(0);
+        return first == null ? "" : (first.getMsgCd() + " / " + first.getMsgCtns());
+    }
+
+    private <T> T nodeTo(JsonNode root, String key, Class<T> clazz) throws Exception {
+        JsonNode n = root.get(key);
+        if (n == null || n.isNull()) return null;
+        return aquaplanetObjectMapper.treeToValue(n, clazz);
     }
 
     private AquaplanetSystemHeader buildSystemHeader(String recvSvcCd, String intfId) {

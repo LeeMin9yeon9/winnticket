@@ -12,23 +12,21 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class APContractProductRequest {
-
     @JsonProperty("ds_search")
-    private List<SearchItem> dsSearch;
+    private List<Search> dsSearch;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SearchItem {
-
+    public static class Search {
         @JsonProperty("CORP_CD")
-        private String corpCd; // 법인코드
+        private String corpCd;
 
         @JsonProperty("CONT_NO")
-        private String contNo; // 계약번호
+        private String contNo;
 
         @JsonProperty("STDR_DATE")
-        private String stdrDate; // 기준일자
+        private String stdrDate; // yyyyMMdd
     }
 }
