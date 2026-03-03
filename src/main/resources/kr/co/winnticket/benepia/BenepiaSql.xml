@@ -18,7 +18,7 @@
     <select id="selectTicketProductsForBenepia" resultType="map">
         <![CDATA[
         SELECT
-            'z819' AS "coopCoCd",
+            'z819' AS "custCoCd",
             p.code AS "prdId",
             p.name AS "prdNm",
             p.price AS "orgnPrc",
