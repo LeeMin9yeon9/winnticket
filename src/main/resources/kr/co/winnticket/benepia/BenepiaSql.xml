@@ -3,43 +3,53 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.integration.benepia.batch.mapper.BenepiaBatchMapper">
-    <!--
-    - 베네피아 배치 상품id 조회
-    -->
+
+    <!-- 베네피아 배치 상품id 조회 -->
     <select id="selectBenepiaIds" resultType="map">
         SELECT
-            'z381' AS "coopCoCd",
+            'z819' AS "coopCoCd",
             p.code AS "prdId"
         FROM products p
         WHERE p.visible = true
-        AND p.sales_status = 'ON_SALE';
+          AND p.sales_status = 'ON_SALE'
     </select>
 
-    <!--
-    - 베네피아 배치 상품정보 조회
-    -->
+    <!-- 베네피아 배치 상품정보 조회 (티켓=여행상품 prdType=10, prdGb=03) -->
     <select id="selectTicketProductsForBenepia" resultType="map">
         SELECT
-        'z381'                                 AS "coopCoCd",       -- 제휴사코드
-        p.code                                AS "prdId",
-        p.name                                AS "prdNm",
-        p.price                               AS "orgnPrc",
-        COALESCE(p.discount_price, p.price)  AS "salePrc",
-        p.image_url                           AS "prdImgUrl",
-        'L'                                   AS "prdDtlUrlTyp",
-        CONCAT('https://winnticket.store/benepia/', p.code) AS "prdDtlUrl",
-        'L'                                   AS "prdMobDtlUrlTyp",
-        CONCAT('https://winnticket.store/benepia/', p.code) AS "prdMobDtlUrl",
-        '10'                                  AS "prdType",        -- 여행 고정
-        COALESCE(p.detail_content, p.description) AS "prdDesc",
-        p.created_at                          AS "regDate",
-        p.updated_at                          AS "updDate",
-        '03'                                  AS "prdGb",          -- 티켓 고정
-        'KR'                                  AS "nationalCd",     -- 국가 고정
-        p.region_code                         AS "regionCd",
-        p.ticket_type                         AS "ticketType"
+            'z819' AS "coopCoCd",
+            p.code AS "prdId",
+            p.name AS "prdNm",
+            p.price AS "orgnPrc",
+            COALESCE(p.discount_price, p.price) AS "salePrc",
+            p.image_url AS "prdImgUrl",
+            'L' AS "prdDtlUrlTyp",
+            CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdDtlUrl",
+            'L' AS "prdMobDtlUrlTyp",
+            CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdMobDtlUrl",
+
+            '10' AS "prdType",        -- 여행상품
+            COALESCE(p.detail_content, p.description, '') AS "prdDesc",
+
+            -- ✅ 문서 요구 포맷: yyyymmddhh24miss
+            to_char(p.created_at, 'YYYYMMDDHH24MISS') AS "regDate",
+            to_char(p.updated_at, 'YYYYMMDDHH24MISS') AS "updDate",
+
+            '03' AS "prdGb",          -- 티켓
+            'KR' AS "nationalCd",
+            COALESCE(p.region_code, '39') AS "regionCd",   -- 없으면 임시 기본값(원하면 제거)
+            COALESCE(p.ticket_type, '99') AS "ticketType"  -- 없으면 기타(99)
         FROM products p
         WHERE p.visible = true
-        AND p.sales_status = 'ON_SALE';
+          AND p.sales_status = 'ON_SALE'
     </select>
+
+    <!-- 배치 로그 저장 -->
+    <insert id="insertBenepiaBatchLog">
+        INSERT INTO benepia_batch_log
+            (batch_date, step, status, file_name, message)
+        VALUES
+            (#{batchDate}, #{step}, #{status}, #{fileName}, #{message})
+    </insert>
+
 </mapper>
