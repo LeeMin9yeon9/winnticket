@@ -9,10 +9,10 @@ import java.util.List;
 public class APCouponUseDailyHistoryResponse {
 
     @JsonProperty("ds_result")
-    private List<Item> dsResult;
+    private List<Row> dsResult;
 
     @Data
-    public static class Item {
+    public static class Row {
         @JsonProperty("CORP_CD")
         private String corpCd;
 
@@ -55,9 +55,14 @@ public class APCouponUseDailyHistoryResponse {
         @JsonProperty("VALI_PRID_END_DATE")
         private String valiPridEndDate;
 
-        // 문서에 추가된 사용상태(사용/취소) 필드
+        @JsonProperty("REPR_CPON_STAT_CD")
+        private String reprCponStatCd;
+
+        @JsonProperty("REPR_CPON_STAT_NM")
+        private String reprCponStatNm;
+
         @JsonProperty("CPON_USE_STAT_CD")
-        private String cponUseStatCd;
+        private String cponUseStatCd; // U(사용), C(사용취소)
 
         @JsonProperty("CPON_USE_STAT_NM")
         private String cponUseStatNm;

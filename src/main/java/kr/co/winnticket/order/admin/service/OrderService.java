@@ -129,6 +129,7 @@ public class OrderService {
             // 티켓 발행
             for (OrderProductListGetResDto item : items) {
                 UUID productId = item.getProductId();
+                log.info("productId = {}", productId);
                 Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
                 log.info("[선사입이야?] = {}", prePurchased);
                 for (int i = 0; i < item.getQuantity(); i++) {

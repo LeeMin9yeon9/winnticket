@@ -9,10 +9,10 @@ import java.util.List;
 public class APCouponUseHistoryResponse {
 
     @JsonProperty("ds_result")
-    private List<Item> dsResult;
+    private List<Row> dsResult;
 
     @Data
-    public static class Item {
+    public static class Row {
         @JsonProperty("CORP_CD")
         private String corpCd;
 
