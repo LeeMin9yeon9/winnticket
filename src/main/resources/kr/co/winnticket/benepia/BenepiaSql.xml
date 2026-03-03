@@ -16,6 +16,7 @@
 
     <!-- 베네피아 배치 상품정보 조회 (티켓=여행상품 prdType=10, prdGb=03) -->
     <select id="selectTicketProductsForBenepia" resultType="map">
+        <![CDATA[
         SELECT
             'z819' AS "coopCoCd",
             p.code AS "prdId",
@@ -27,21 +28,18 @@
             CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdDtlUrl",
             'L' AS "prdMobDtlUrlTyp",
             CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdMobDtlUrl",
-
             '10' AS "prdType",        -- 여행상품
             COALESCE(p.detail_content, p.description, '') AS "prdDesc",
-
-            -- ✅ 문서 요구 포맷: yyyymmddhh24miss
             to_char(p.created_at, 'YYYYMMDDHH24MISS') AS "regDate",
             to_char(p.updated_at, 'YYYYMMDDHH24MISS') AS "updDate",
-
             '03' AS "prdGb",          -- 티켓
             'KR' AS "nationalCd",
-            COALESCE(p.region_code, '39') AS "regionCd",   -- 없으면 임시 기본값(원하면 제거)
+            COALESCE(p.region_code, '39') AS "regionCd",
             COALESCE(p.ticket_type, '99') AS "ticketType"  -- 없으면 기타(99)
         FROM products p
         WHERE p.visible = true
           AND p.sales_status = 'ON_SALE'
+        ]]>
     </select>
 
     <!-- 배치 로그 저장 -->
@@ -51,5 +49,4 @@
         VALUES
             (#{batchDate}, #{step}, #{status}, #{fileName}, #{message})
     </insert>
-
 </mapper>
