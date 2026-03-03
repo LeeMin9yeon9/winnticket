@@ -29,13 +29,13 @@ public class BenepiaBatchService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${benepia.batch-base-url}")
-    private String baseUrl;
+    private String batchBaseUrl;
 
     @Value("${benepia.kcp-co-cd}")
     private String kcpCoCd;
 
-    @Value("${benepia.coop-co-cd}")
-    private String coopCoCd;
+    @Value("${benepia.cust-co-cd}")
+    private String custCoCd;
 
     @Value("${benepia-batch.max-file-bytes:20971520}")
     private long maxFileBytes;
@@ -104,7 +104,7 @@ public class BenepiaBatchService {
         List<Map<String, String>> items = new ArrayList<>();
         for (Map<String, Object> row : ids) {
             Map<String, String> m = new HashMap<>();
-            m.put("coopCoCd", coopCoCd);
+            m.put("custCoCd", custCoCd);
             m.put("prdId", String.valueOf(row.get("prdId")));
             items.add(m);
         }
@@ -127,7 +127,7 @@ public class BenepiaBatchService {
 
             // product (필수 필드 구성)
             Map<String, Object> product = new LinkedHashMap<>();
-            product.put("coopCoCd", coopCoCd);
+            product.put("custCoCd", custCoCd);
             product.put("prdId", row.get("prdId"));
             product.put("prdNm", row.get("prdNm"));
             product.put("orgnPrc", toInt(row.get("orgnPrc")));
@@ -270,7 +270,7 @@ public class BenepiaBatchService {
     }
 
     private BenepiaResponse uploadFile(File file, String typePath) {
-        String url = baseUrl + "/v1/partners/" + kcpCoCd + "/" + typePath;
+        String url = batchBaseUrl + "/v1/partners/" + kcpCoCd + "/" + typePath;
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new FileSystemResource(file));
@@ -309,7 +309,7 @@ public class BenepiaBatchService {
     }
 
     private BenepiaResponse done(String baseFileName) {
-        String url = baseUrl + "/v1/partners/" + kcpCoCd + "/products/done/" + coopCoCd;
+        String url = batchBaseUrl + "/v1/partners/" + kcpCoCd + "/products/done/" + custCoCd;
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("fileName", baseFileName);
