@@ -60,7 +60,6 @@ public class S3FileService implements FileStorageService {
                         .bucket(bucket)
                         .key(key)
                         .contentType("image/" + extension)
-                        .contentLength(file.getSize())
                         .build();
 
                 s3Client.putObject(

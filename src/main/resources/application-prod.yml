@@ -18,6 +18,12 @@ spring:
       port: 6379
 
 
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+      enabled: true
+
 logging:
   level:
     kr.co.winnticket: debug
@@ -54,12 +60,18 @@ cdn:
 # 채널 연동 (베네피아 운영)
 benepia:
   seed-key: ${BENEPIA_SEED_KEY}
-  cust-co-cd: z381
+  cust-co-cd: z819
   confirm-url: https://auth.benepia.co.kr/api/token/confirm
   token-create-url: https://auth.benepia.co.kr/api/token/request
   batch-base-url: https://collections.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: A8MCD
+
+  kcp:
+    site-cd: A8MCD
+    cert-path: /home/winnticket/cert/KCP_AUTH_A8MCD_CERT.pem
+    private-key-path: /home/winnticket/cert/KCP_AUTH_A8MCD_PRIKEY.pem
+    base-url: https://spl.kcp.co.kr
 
 
 # 신용카드 연동 (페이레터 운영)
