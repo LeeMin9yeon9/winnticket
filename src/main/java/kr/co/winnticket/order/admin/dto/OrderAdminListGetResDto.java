@@ -8,7 +8,6 @@ import kr.co.winnticket.common.enums.PaymentStatus;
 import lombok.Data;
 import lombok.ToString;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -28,6 +27,9 @@ public class OrderAdminListGetResDto {
 
     @Schema(description = "주문번호")
     private String orderNumber;
+
+    @Schema(description = "채널명")
+    private String channelName;
 
     @Schema(description = "파트너명")
     private String partnerName;

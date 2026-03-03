@@ -40,8 +40,9 @@
     <select id="selectOrderProductList" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
         Select
             a.id, -- 주문상품_ID
-            a.product_id, -- 상품ID
-            a.product_name, -- 상품명
+            a.product_id AS productId, -- 상품ID
+            ch.name AS channelName,   --채널명
+            a.product_name AS productName, -- 상품명
             (
                 Select
                     x.name
@@ -51,16 +52,18 @@
                      On x.id = y.category_id
                 where 1 = 1
                   And y.id = a.product_id
-            ) category_name, -- 카테고리명
-            d.name partner_name,  -- 파트너명
-            STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
+            ) AS categoryName, -- 카테고리명
+            d.name AS partnerName,  -- 파트너명
+            STRING_AGG(e.option_value, ' ' ORDER BY e.id) AS optionName,  -- 옵션명
             a.quantity,
-            a.unit_price,
-            a.total_price
+            a.unit_price AS unitPrice,
+            a.total_price AS totalPrice
         FROM
             order_items a
                 JOIN orders b
                      ON b.id = a.order_id
+                LEFT JOIN channels ch
+                     ON ch.id = b.channel_id
                 JOIN products c
                      ON c.id = a.product_id
                 JOIN partners d
@@ -71,7 +74,9 @@
           And a.order_id = #{id}
         GROUP BY
             a.id,
+            a.product_id,
             a.product_name,
+            ch.name,
             d.name,
             a.quantity,
             a.unit_price,

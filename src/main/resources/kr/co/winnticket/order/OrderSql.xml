@@ -43,6 +43,7 @@
                 a.all_ticket_used,  -- 모든티켓사용여부
                 a.ordered_at, -- 주문일시
                 a.order_number, -- 주문번호
+                e.name AS channelName,  -- 채널명
                 STRING_AGG(DISTINCT d.name, ', ') AS partner_name,
                 a.customer_name, -- 주문자
                 a.customer_phone, -- 주문자 연락처
@@ -62,8 +63,11 @@
                 ON c.id = b.product_id
             LEFT JOIN partners d
                 ON d.id = c.partner_id
+            LEFT JOIN channels e
+                ON e.id = a.channel_id
             GROUP BY
-                a.id
+                a.id,
+                e.name
         ) a
         Where 1 = 1
         <if test="srchWord != null and srchWord != ''">
