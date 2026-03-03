@@ -9,12 +9,16 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class APContractProductRequest {
     @JsonProperty("ds_search")
     private List<Search> dsSearch;
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Search {
         @JsonProperty("CORP_CD")
         private String corpCd;
