@@ -49,6 +49,9 @@ public class BenepiaBatchService {
     @Value("${benepia-batch.work-dir:/home/ubuntu/benepia}")
     private String workDir;
 
+    @Value("${benepia.api-key}")
+    private String apiKey;
+
     /** 외부에서 호출하는 진입점(컨트롤러/스케줄러 공용) */
     public void executeTicketBatch() throws Exception {
         String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
@@ -278,6 +281,8 @@ public class BenepiaBatchService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
+        headers.set("Authorization", "Bearer " + apiKey);
+
         HttpEntity<MultiValueMap<String, Object>> req = new HttpEntity<>(body, headers);
 
         try {
@@ -316,6 +321,7 @@ public class BenepiaBatchService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer " + apiKey);
 
         HttpEntity<MultiValueMap<String, String>> req = new HttpEntity<>(body, headers);
 
