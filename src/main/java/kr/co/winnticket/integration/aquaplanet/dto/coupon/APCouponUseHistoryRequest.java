@@ -23,7 +23,7 @@ public class APCouponUseHistoryRequest {
         private String contNo;
 
         @JsonProperty("ISSUE_DATE")
-        private String issueDate; // YYYYMMDD
+        private String issueDate; // yyyyMMdd
 
         @JsonProperty("REPR_CPON_SEQ")
         private String reprCponSeq;

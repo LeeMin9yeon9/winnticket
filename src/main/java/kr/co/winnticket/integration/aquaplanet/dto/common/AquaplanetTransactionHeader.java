@@ -9,10 +9,10 @@ import lombok.Data;
 public class AquaplanetTransactionHeader {
 
     @JsonProperty("STN_MSG_TR_TP_CD")
-    private String stnMsgTrTpCd; // fix "O"
+    private String stnMsgTrTpCd; // O
 
     @JsonProperty("SYSTEM_TYPE")
-    private String systemType; // fix "HABIS"
+    private String systemType; // HABIS
 
     @JsonProperty("SCREEN_SHORTEN_NO")
     private String screenShortenNo;
@@ -33,13 +33,13 @@ public class AquaplanetTransactionHeader {
     private String locCd;
 
     @JsonProperty("WRKR_NO")
-    private String wrkrNo; // 문서 example에 값 있음
+    private String wrkrNo; // I1711019
 
     @JsonProperty("PERS_INFO_MASK")
     private String persInfoMask;
 
     @JsonProperty("MASK_AUTH")
-    private String maskAuth; // fix "0"
+    private String maskAuth; // 0
 
     @JsonProperty("OSDE_TR_CD")
     private String osdeTrCd;

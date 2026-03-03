@@ -8,28 +8,28 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AquaplanetUtil {
 
-    private static final DateTimeFormatter D8 = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter YMD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter DT17 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
 
     public static String yyyymmddNow() {
-        return LocalDate.now().format(D8);
+        return LocalDateTime.now().format(YMD);
     }
 
     public static String dt17Now() {
         return LocalDateTime.now().format(DT17);
     }
 
-    // 문서: Random(5)
-    public static String randomDigits(int len) {
+    public static String randomDigits(int n) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < len; i++) sb.append(ThreadLocalRandom.current().nextInt(0, 10));
+        for (int i = 0; i < n; i++) sb.append(ThreadLocalRandom.current().nextInt(0, 10));
         return sb.toString();
     }
 
-    // 문서: Random(1) + unix time(13)
+    // Random(1) + unix time ms(13)
     public static String stdSeqNo() {
-        long ms = System.currentTimeMillis(); // 13
-        return randomDigits(1) + ms;
+        int r = ThreadLocalRandom.current().nextInt(0, 10);
+        long ms = System.currentTimeMillis();
+        return r + String.valueOf(ms);
     }
 
     public static String localIpOrEmpty() {

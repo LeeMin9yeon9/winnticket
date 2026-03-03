@@ -23,6 +23,6 @@ public class APCouponUseDailyHistoryRequest {
         private String contNo;
 
         @JsonProperty("BSN_DATE")
-        private String bsnDate; // 영업일자 YYYYMMDD
+        private String bsnDate; // yyyyMMdd
     }
 }

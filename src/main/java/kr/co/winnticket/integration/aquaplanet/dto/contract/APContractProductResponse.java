@@ -9,10 +9,10 @@ import java.util.List;
 public class APContractProductResponse {
 
     @JsonProperty("ds_resultContPakgList")
-    private List<Item> dsResultContPakgList;
+    private List<Row> dsResultContPakgList;
 
     @Data
-    public static class Item {
+    public static class Row {
         @JsonProperty("GOODS_NO")
         private String goodsNo;
 
