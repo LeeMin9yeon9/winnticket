@@ -36,4 +36,27 @@ public class BenepiaProperties {
 
     // Kcp코드
     private String KcpCoCd;
+
+    // KCP 설정
+    private Kcp kcp = new Kcp();
+    @Getter
+    @Setter
+    public static class Kcp {
+
+        // 사이트 코드
+        private String siteCd;
+
+        // cert.pem
+        private String certPath;
+
+        // privateKey.pem
+        private String privateKeyPath;
+
+        // privateKey password
+        private String privateKeyPassword;
+
+        // 서버 URL
+        private String baseUrl;
+
+    }
 }
