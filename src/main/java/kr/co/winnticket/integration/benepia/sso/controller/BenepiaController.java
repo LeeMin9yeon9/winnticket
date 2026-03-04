@@ -8,10 +8,7 @@ import kr.co.winnticket.integration.benepia.sso.service.BenepiaEntryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -75,4 +72,24 @@ public class BenepiaController {
         );
     }
 
+    @PostMapping("/channel-init")
+    @ResponseBody
+    @Operation(summary = "채널 초기화", description = "URL의 channel 파라미터를 세션에 저장")
+    public Map<String, Object> initChannel(
+            @RequestParam(required = false) String channel,
+            HttpSession session
+    ) {
+
+        if (channel == null || channel.isBlank()) {
+            channel = "DEFAULT";
+        }
+
+        session.setAttribute("CHANNEL_CODE", channel);
+
+        log.info("[BENEPIA] CHANNEL INIT = {}", channel);
+
+        return Map.of(
+                "channelCode", channel
+        );
+    }
 }
