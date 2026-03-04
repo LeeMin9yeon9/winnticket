@@ -86,6 +86,7 @@ public class SecurityConfig {
                                 "/api/payletter/cancel",
                                 "/api/ticketCoupon/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/shop/**",
                                 "/api/product/shop/**",

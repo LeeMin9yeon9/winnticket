@@ -24,7 +24,6 @@ spring:
       max-request-size: 30MB
       enabled: true
 
-
 logging:
   level:
     kr.co.winnticket: debug
