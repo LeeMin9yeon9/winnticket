@@ -29,10 +29,17 @@ public class BenepiaController {
             HttpSession session
     ) {
         log.info("BENEPIA CONTROLLER ENTRY");
+
+        if(encParam != null && !encParam.isBlank()){
+            entryService.handle(encParam, session);
+        }
+        
         entryService.handle(encParam, session);
         if(channel == null || channel.isBlank()){
             channel = "DEFAULT";
         }
+
+        session.setAttribute("CHANNEL_CODE", channel);
 
         return "redirect:/shop?channel=" + channel;
     }
