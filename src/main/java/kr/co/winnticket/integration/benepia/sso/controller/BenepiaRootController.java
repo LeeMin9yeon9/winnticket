@@ -23,6 +23,10 @@ public class BenepiaRootController {
             return "forward:/benepia";
         }
 
+        if (channel != null && !channel.isBlank()) {
+            return "redirect:/shop?channel=" + channel;
+        }
+
         return "redirect:/shop";
     }
 }
