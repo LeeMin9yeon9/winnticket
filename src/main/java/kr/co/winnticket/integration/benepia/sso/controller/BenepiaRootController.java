@@ -14,6 +14,7 @@ public class BenepiaRootController {
         String encParam = request.getParameter("encParam");
 
         if (encParam != null && !encParam.isBlank()) {
+
             return "forward:/benepia";
         }
 
