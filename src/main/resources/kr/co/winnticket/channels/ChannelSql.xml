@@ -204,4 +204,11 @@
         WHERE id = #{id}
           AND status = 'ACTIVE'
     </select>
+
+    <!--포인트 사용 여부-->
+    <select id="selectUsePointById" parameterType="java.util.UUID" resultType="boolean">
+        SELECT use_point
+        FROM channels
+        WHERE id = #{id}
+    </select>
 </mapper>

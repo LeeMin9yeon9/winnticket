@@ -9,7 +9,7 @@ import lombok.Data;
 @Schema(title = "[encParam 수신용] BenepiaSsoReqDto")
 public class BenepiaSsoReqDto {
 
-    @Schema(description = "고객사코드 = z381")
+    @Schema(description = "고객사코드 = z819")
     private String custCoCd;
 
     @Schema(description = "SSO 인증토큰 = test용 : 6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61")
