@@ -31,8 +31,11 @@ public class SecurityConfig {
     @Order(0)
     public SecurityFilterChain benepiaChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/benepia/**",
+                .securityMatcher(
+                        "/api/benepia/**",
                         "/api/benepia",
+                        "/benepia",
+                        "/benepia/**",
                         "/api/benepia-batch/**"   // 배치 URL 추가
                 )
                 .cors(Customizer.withDefaults())
