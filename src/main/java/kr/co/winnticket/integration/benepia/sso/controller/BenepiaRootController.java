@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 public class BenepiaRootController {
-
     @RequestMapping(value = "/", method = {RequestMethod.GET, RequestMethod.POST})
     public String root(HttpServletRequest request) {
 
         String encParam = request.getParameter("encParam");
+        String channel = request.getParameter("channel");
 
-        if (encParam != null && !encParam.isBlank()) {
+        if ((encParam != null && !encParam.isBlank()) || "BENE".equals(channel)) {
             return "forward:/benepia";
         }
 
