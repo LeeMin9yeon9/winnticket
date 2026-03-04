@@ -5,6 +5,7 @@ import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -51,6 +51,7 @@ public class OrderShopService {
     private final TemplateRenderService templateRenderService;
     private final BizMsgService bizMsgService;
     private final BankAccountService bankAccountService;
+    private final KcpService kcpService;
     // 주문조회
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
@@ -72,11 +73,22 @@ public class OrderShopService {
         Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
         Boolean cardAllowed = (useCard != null && useCard);
 
+        Boolean usePoint = channelMapper.selectUsePointById(reqDto.getChannelId());
+        Boolean pointAllowed = (usePoint != null && usePoint);
+
+
             // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
             PaymentMethod paymentMethod = reqDto.getPaymentMethod();
+            // 카드 미허용 채널이면 카드 -> 무통장
             if (!cardAllowed && paymentMethod == PaymentMethod.CARD) {
                 paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
             }
+
+            // 포인트 미허용 채널이면 차단
+            if(paymentMethod == PaymentMethod.POINT && !pointAllowed){
+                throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
+            }
+
 
             // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
@@ -172,12 +184,16 @@ public class OrderShopService {
 
             return resDto;
         }
+            // POINT
+            if(paymentMethod == PaymentMethod.POINT){
+                // 포인트 결제는 별도 API에서 처리
+                resDto.setPaymentStatus("READY");
+                return resDto;
+            }
 
+            //CARD
             if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
-//                String pgCode = String.valueOf(reqDto.getPaymentMethod());
-//                if (pgCode == null || pgCode.isBlank()) {
-//                    pgCode = "creditcard";
-//                }
+
                 String paymentMethodValue = paymentMethod.name();
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,
@@ -195,6 +211,7 @@ public class OrderShopService {
             resDto.setPgMobileUrl(payRes.getMobileUrl());
             return resDto;
         }
+
         return resDto;
 
 

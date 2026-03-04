@@ -25,11 +25,15 @@ public class BenepiaController {
     )
     public String entry(
             @RequestParam(value = "encParam", required = false) String encParam,
+            @RequestParam(value = "channel", required = false) String channel,
             HttpSession session
     ) {
-        entryService.handle(encParam,session);
+        entryService.handle(encParam, session);
+        if(channel == null || channel.isBlank()){
+            channel = "DEFAULT";
+        }
 
-        return "redirect:/shop?channel=BENE";
+        return "redirect:/shop?channel=" + channel;
     }
 
     @GetMapping("/session")
