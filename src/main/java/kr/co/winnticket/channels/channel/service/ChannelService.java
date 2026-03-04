@@ -77,4 +77,5 @@ public class ChannelService {
 
         return mapper.selectDefaultChannelId();
     }
+
 }

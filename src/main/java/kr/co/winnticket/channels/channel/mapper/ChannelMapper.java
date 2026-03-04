@@ -52,4 +52,7 @@ public interface ChannelMapper {
     // default 채널 찾기
     UUID selectDefaultChannelId();
 
+    // 포인트 사용여부 확인
+    Boolean selectUsePointById(@Param("id") UUID id);
+
 }

@@ -29,7 +29,7 @@ public class BenepiaController {
     ) {
         entryService.handle(encParam,session);
 
-        return "redirect:/shop?channel=BENE";
+        return "redirect:/shop?channelCode=BENE";
     }
 
     @GetMapping("/session")

@@ -257,6 +257,29 @@
 
     </insert>
 
+    <!--KCP 결제 승인처리 -->
+    <update id="updatePointPaymentApproved">
+        UPDATE orders
+        SET
+            payment_status = 'PAID',
+            pg_provider = 'KCP',
+            pg_tid = #{pgTid},
+            approval_no = #{approvalNo},
+            paid_at = NOW(),
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+    </update>
+
+    <!--KCP 포인트 결제실패-->
+    <update id="updatePaymentFailed">
+        UPDATE orders
+        SET
+            payment_status = 'FAILED',
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+    </update>
+
+
 
 
 </mapper>

@@ -7,6 +7,7 @@ import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaplanetService;
+import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
@@ -50,6 +51,7 @@ public class OrderService {
     private final TicketCouponService ticketCouponService;
     private final ProductMapper productMapper;
 
+
     // 파트너 연동
     private final WoongjinService woongjinService;
     private final PlaystoryService playstoryService;
@@ -59,6 +61,7 @@ public class OrderService {
     private final PlusNService plusNService;
     private final AquaplanetService aquaplanetService;
     private final SpavisService spavisService;
+    private final KcpService kcpService;
 
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -427,5 +430,8 @@ public class OrderService {
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
 
     }
+
+//    // 포인트 주문 취소
+//    @Transactional
 }
 

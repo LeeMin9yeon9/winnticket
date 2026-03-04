@@ -82,6 +82,12 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+    // KCP 암호화알고리즘
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
+
+    // KCP PKCS8, PEM 파싱
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.78'
+
 
 }
 
