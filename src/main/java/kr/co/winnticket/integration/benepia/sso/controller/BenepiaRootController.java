@@ -18,15 +18,18 @@ public class BenepiaRootController {
 
         log.info("ROOT HIT encParam={}, channel={}", encParam, channel);
 
+        // 베네피아 SSO
         if (encParam != null && !encParam.isBlank()) {
             log.info("BENEPIA SSO REQUEST → forward /benepia");
             return "forward:/benepia";
         }
 
+        // 채널 링크
         if (channel != null && !channel.isBlank()) {
             return "redirect:/shop?channel=" + channel;
         }
 
+        // 일반 접속
         return "redirect:/shop";
     }
 }
