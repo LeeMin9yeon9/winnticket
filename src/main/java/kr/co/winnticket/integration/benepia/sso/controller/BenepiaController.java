@@ -28,6 +28,7 @@ public class BenepiaController {
             @RequestParam(value = "channel", required = false) String channel,
             HttpSession session
     ) {
+        log.info("BENEPIA CONTROLLER ENTRY");
         entryService.handle(encParam, session);
         if(channel == null || channel.isBlank()){
             channel = "DEFAULT";
