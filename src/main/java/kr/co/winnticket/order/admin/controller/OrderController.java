@@ -112,13 +112,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료",orderId.toString()));
     }
 
-    @PostMapping("/{orderId}/cancel")
-    @Operation(summary = "관리자 포인트 주문 취소")
-    public ResponseEntity<ApiResponse<String>> cancelPointOrder(
-            @Parameter(description = "주문ID") @PathVariable UUID orderId
-    ) {
-        service.cancelPointOrder(orderId);
-        return ResponseEntity.ok(ApiResponse.success("포인트 주문 취소 완료"));
-    }
+//    @PostMapping("/{orderId}/cancel")
+//    @Operation(summary = "관리자 포인트 주문 취소")
+//    public ResponseEntity<ApiResponse<String>> cancelPointOrder(
+//            @Parameter(description = "주문ID") @PathVariable UUID orderId
+//    ) {
+//        service.cancelPointOrder(orderId);
+//        return ResponseEntity.ok(ApiResponse.success("포인트 주문 취소 완료"));
+//    }
 
 }
