@@ -332,7 +332,7 @@ public class PayletterService {
             payloadJson = null;
         }
 
-        orderAdminMapper.updatePayletterCancelSuccess(orderId, payloadJson);
+        orderAdminMapper.updateOrderCancelSuccess(orderId, payloadJson);
 
         log.info("[PAYLETTER] cancel success orderId={}, tid={}", orderId, tid);
         return res;

@@ -1,9 +1,11 @@
 package kr.co.winnticket.integration.benepia.kcp.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "[베네피아 KCP 포인트조회 응답 DTO]KcpPointResDto")
 public class KcpPointResDto {
 

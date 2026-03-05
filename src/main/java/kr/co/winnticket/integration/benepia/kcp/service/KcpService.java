@@ -1,11 +1,14 @@
 package kr.co.winnticket.integration.benepia.kcp.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.integration.benepia.kcp.dto.*;
 import kr.co.winnticket.integration.benepia.kcp.util.KcpCertUtil;
 import kr.co.winnticket.integration.benepia.kcp.util.KcpKeyUtil;
 import kr.co.winnticket.integration.benepia.kcp.util.KcpSignUtil;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,11 +19,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,8 @@ public class KcpService {
     private final BenepiaProperties properties;
     private final ObjectMapper objectMapper;
     private final OrderShopMapper orderShopMapper;
+    private final OrderMapper orderMapper;
+
 
     // KCP 포인트 조회
     public KcpPointResDto getPoint(KcpPointReqDto dto) {
@@ -49,8 +53,7 @@ public class KcpService {
             body.put("pt_txtype", "97000000");
             body.put("pt_idno", dto.getBenepiaId());
             body.put("pt_pwd", dto.getBenepiaPwd());
-            body.put("pt_memcorp_cd", properties.getCustCoCd());
-            //body.put("pt_memcorp_cd",dto.getMemcorpCd());
+            body.put("pt_memcorp_cd",dto.getMemcorpCd());
 
             String json = objectMapper.writeValueAsString(body);
 
@@ -92,7 +95,8 @@ public class KcpService {
     // KCP 포인트 결제
     public KcpPointPayResDto pointPay(KcpPointPayReqDto dto) {
         try {
-            String certInfo = Files.readString(Paths.get(properties.getKcp().getCertPath()));
+
+            String certInfo = KcpCertUtil.loadCert(properties.getKcp().getCertPath());
 
             String url = properties.getKcp().getBaseUrl() + "/gw/hub/v1/payment";
 
@@ -101,7 +105,7 @@ public class KcpService {
             body.put("kcp_cert_info", certInfo);                         // 서비스인증서
             body.put("pay_method", "POINT");                         // 결제수단
             body.put("ordr_idxx", dto.getOrderNo());                // 주문번호
-            body.put("amount", dto.getAmount());                     // 결제금액
+            body.put("amount",dto.getAmount());
 
             body.put("good_name",dto.getProductName());             // 상품명
             body.put("good_cd",dto.getProductCode());               // 상품코드
@@ -115,11 +119,13 @@ public class KcpService {
             body.put("pt_idno", dto.getBenepiaId());                // 베네피아ID
             body.put("pt_pwd", dto.getBenepiaPwd());                // 베네피아PW
 
-            body.put("pt_memcorp_cd", properties.getCustCoCd());    // 소속사코드 : z819
+            body.put("pt_memcorp_cd", dto.getMemcorpCd());    // 소속사코드 : z819
             body.put("pt_mny",String.valueOf(dto.getAmount()));     // 포인트결제금액 : amount 금액과 동일해야함
             body.put("pt_paycode", "04");                           // 결제코드:04
 
             String json = objectMapper.writeValueAsString(body);
+
+            log.info("[KCP POINTPAY REQ] {}", json);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -147,23 +153,40 @@ public class KcpService {
     @Transactional
     public KcpPointPayResDto pointPayAndUpdate(KcpPointPayReqDto dto) {
 
+        UUID orderId = orderMapper.findOrderIdByOrderNumber(dto.getOrderNo());
+
+        OrderAdminDetailGetResDto order = orderMapper.selectOrderAdminDetail(orderId);
+
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            log.info("KCP 이미 결제된 주문입니다.");
+            throw new IllegalStateException("이미 결제된 주문입니다.");
+        }
+
+        if (order.getPaymentStatus() != PaymentStatus.READY) {
+            log.info("KCP 결제 가능한 상태가 아닙니다.");
+            throw new IllegalStateException("결제 가능한 상태가 아닙니다.");
+        }
+
         KcpPointPayResDto res = pointPay(dto);  // 기존 KCP 호출
 
-        if (res == null || !"0000".equals(res.getRes_cd())) {
+        if (!"0000".equals(res.getRes_cd())) {
 
             orderShopMapper.updatePaymentFailed(dto.getOrderNo());
 
             throw new IllegalStateException(
-                    "포인트 결제 실패: " + (res != null ? res.getRes_msg() : "응답없음")
+                    "KCP 결제 실패 : " + res.getRes_msg()
             );
         }
+        log.info("KCP 결제 성공 orderNo={} tno={}", dto.getOrderNo(), res.getTno());
 
-        // 결제 성공 → 주문 상태 PAID 처리
-        orderShopMapper.updatePointPaymentApproved(
+        int updated = orderShopMapper.updatePointPaymentApproved(
                 dto.getOrderNo(),
                 res.getTno(),
-                res.getApp_no()
+                res.getPnt_app_no()
         );
+        if(updated != 1){
+            throw new IllegalStateException("주문 상태 업데이트 실패 orderNo=" + dto.getOrderNo());
+        }
 
         return res;
     }
@@ -176,7 +199,11 @@ public class KcpService {
             // 서비스 인증서 로딩
             String cert = KcpCertUtil.loadCert(properties.getKcp().getCertPath());
 
+            String password = properties.getKcp().getPrivateKeyPassword();
 
+            if (password == null || password.isBlank()) {
+                throw new IllegalStateException("KCP privateKeyPassword 설정 없음");
+            }
             // 개인키 로딩
             PrivateKey privateKey = KcpKeyUtil.loadPrivateKey(
                     properties.getKcp().getPrivateKeyPath(),
@@ -191,8 +218,7 @@ public class KcpService {
                     "STSC",
                     privateKey
             );
-            String url = properties.getKcp().getBaseUrl()
-                    + "/gw/mod/v1/cancel";
+            String url = properties.getKcp().getBaseUrl() + "/gw/mod/v1/cancel";
 
             Map<String, Object> body = new HashMap<>();
             body.put("site_cd", siteCd);                // 사이트코드
@@ -224,6 +250,7 @@ public class KcpService {
                             response.body(),
                             KcpModResDto.class
                     );
+            log.info("KCP cancel tno = {}", dto.getTno());
 
             if (!"0000".equals(res.getRes_cd())) {
                 throw new IllegalStateException(
@@ -234,6 +261,7 @@ public class KcpService {
             return res;
 
         } catch (Exception e) {
+            log.error("KCP cancel error", e);
             throw new RuntimeException("KCP 포인트 취소 실패", e);
         }
 

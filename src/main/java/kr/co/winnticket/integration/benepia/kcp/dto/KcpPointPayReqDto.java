@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.benepia.kcp.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "[베네피아 KCP 포인트결제 요청 DTO]KcpPointPayReqDto")
 public class KcpPointPayReqDto {
 
@@ -33,7 +35,7 @@ public class KcpPointPayReqDto {
     private String benepiaPwd;
 
     @NotNull
-    @Schema(description = "회원 소속사 코드", example = "z819")
+    @Schema(description = "회원 소속사 코드", example = "TEST 시 5555")
     private String memcorpCd;
 
     @NotNull

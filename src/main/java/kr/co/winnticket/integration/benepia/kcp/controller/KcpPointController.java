@@ -1,22 +1,24 @@
 package kr.co.winnticket.integration.benepia.kcp.controller;
 
-        import io.swagger.v3.oas.annotations.Operation;
-        import io.swagger.v3.oas.annotations.tags.Tag;
-        import jakarta.validation.Valid;
-        import kr.co.winnticket.common.dto.ApiResponse;
-        import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
-        import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
-        import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointReqDto;
-        import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointResDto;
-        import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
-        import lombok.RequiredArgsConstructor;
-        import lombok.extern.log4j.Log4j2;
-        import org.springframework.http.ResponseEntity;
-        import org.springframework.util.StringUtils;
-        import org.springframework.web.bind.annotation.PostMapping;
-        import org.springframework.web.bind.annotation.RequestBody;
-        import org.springframework.web.bind.annotation.RequestMapping;
-        import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import kr.co.winnticket.common.dto.ApiResponse;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointResDto;
+import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.order.admin.mapper.OrderMapper;
+import kr.co.winnticket.order.admin.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +28,8 @@ package kr.co.winnticket.integration.benepia.kcp.controller;
 public class KcpPointController {
 
     private final KcpService service;
+    private final OrderMapper orderMapper;
+    private final OrderService orderService;
 
     @PostMapping("/point")
     @Operation(summary = "베네피아 KCP 포인트 조회", description = "베네피아 계정으로 KCP 포인트를 조회합니다.")
