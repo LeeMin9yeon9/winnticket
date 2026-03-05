@@ -32,10 +32,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static kr.co.winnticket.common.enums.SmsTemplateCode.PAYMENT_CONFIRMED;
 
 
 @Slf4j
@@ -126,28 +125,42 @@ public class OrderService {
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
             log.info("[입금완료 문자 발송 시작!]");
-            sendOrderSmsByStatus(order, items, SmsTemplateCode.PAYMENT_CONFIRMED);
+            sendPaymentConfirmedSms(order, items);
             log.info("[입금완료 문자 발송 종료!]");
 
             // 티켓 발행
+            Map<UUID, List<String>> ticketMap = new HashMap<>();
+
             for (OrderProductListGetResDto item : items) {
                 UUID productId = item.getProductId();
+
                 log.info("productId = {}", productId);
+
                 Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
+
                 log.info("[선사입이야?] = {}", prePurchased);
+
+                List<String> ticketNumbers = new ArrayList<>();
                 for (int i = 0; i < item.getQuantity(); i++) {
+                    String ticketNumber;
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
                         log.info("[응 선사입]");
-                        ticketCouponService.issueCoupon(item.getId());
-                    }else {
+                        ticketNumber = ticketCouponService.issueCoupon(item.getId());
+                    } else {
                         log.info("[아니 선사입아냐]");
+                        ticketNumber = generateTicketNumber(auId, item.getId());
+
                         mapper.insertOrderTicket(
                                 item.getId(),   // orderItemId
-                                generateTicketNumber(auId, item.getId())
+                                ticketNumber
                         );
                     }
+
+                    ticketNumbers.add(ticketNumber);
                 }
+
+                ticketMap.put(item.getId(), ticketNumbers);
             }
 
             // 주문 상태 변경
@@ -205,7 +218,7 @@ public class OrderService {
                 log.info("[자체 상품이래요!]");
                 List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
                 log.info("[발권 문자 발송 시작]");
-                sendOrderSmsByStatus(order, normalItems, SmsTemplateCode.TICKET_ISSUED);
+                sendTicketIssuedSms(order, normalItems, ticketMap);
                 log.info("[발권 문자 발송 종료]");
             }
         } catch (Exception e) {
@@ -285,56 +298,77 @@ public class OrderService {
                 .toList();
     }
 
-    // 문자 발송
-    private void sendOrderSmsByStatus(
-            OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items,
-            SmsTemplateCode templateCode
-    ) {
-
+    // 입금완료 문자 발송
+    private void sendPaymentConfirmedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items) {
         if (items == null || items.isEmpty()) return;
 
         // 입금완료는 주문당 1번만 발송
-        if (templateCode == SmsTemplateCode.PAYMENT_CONFIRMED) {
+        UUID productId = items.get(0).getProductId();
 
-            UUID productId = items.get(0).getProductId();
+        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.PAYMENT_CONFIRMED);
 
-            ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, templateCode);
+        if (template == null || template.getContent() == null) return;
 
-            if (template == null || template.getContent() == null) return;
+        String message =
+                templateRenderService.render(template.getContent(), Map.of(
+                        "주문자명", order.getCustomerName(),
+                        "주문번호", order.getOrderNumber()
+                ));
+
+        sendSms(order, message);
+    }
+
+    // 발권완료 문자 발송
+    private void sendTicketIssuedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items, Map<UUID, List<String>> ticketMap) {
+        for (OrderProductListGetResDto item : items) {
+
+            UUID productId = item.getProductId();
+
+            ProductSmsTemplateDto template =
+                    smsTemplateFinder.findTemplate(
+                            productId,
+                            SmsTemplateCode.TICKET_ISSUED
+                    );
+
+            if (template == null || template.getContent() == null) {
+                continue;
+            }
+
+            Map<String, String> vars = new HashMap<>();
+
+            vars.put("주문자명", order.getCustomerName());
+            vars.put("상품명", item.getProductName());
+            List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
+            vars.put("티켓번호", String.join("\n", tickets));
+            vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
+            vars.put("수량", String.valueOf(item.getQuantity()));
 
             String message =
-                    templateRenderService.render(template.getContent(), Map.of(
-                            "주문자명", order.getCustomerName(),
-                            "주문번호", order.getOrderNumber()
-                    ));
+                    templateRenderService.render(
+                            template.getContent(),
+                            vars
+                    );
 
             sendSms(order, message);
-            return;
-        } else if(templateCode == SmsTemplateCode.TICKET_ISSUED) {
-            // 발권완료 상품별 반복
-            for (OrderProductListGetResDto item : items) {
-
-                UUID productId = item.getProductId();
-
-                ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, templateCode);
-
-                if (template == null || template.getContent() == null) continue;
-
-                Map<String, String> vars = new HashMap<>();
-                vars.put("주문자명", order.getCustomerName());
-                vars.put("상품명", item.getProductName());
-                vars.put("주문번호", order.getOrderNumber());
-                vars.put("옵션값명",
-                        item.getOptionName() == null ? "" : item.getOptionName());
-                vars.put("수량", String.valueOf(item.getQuantity()));
-
-                String message = templateRenderService.render(template.getContent(), vars);
-
-                log.error("발권문자 왜 아노아", message);
-                sendSms(order, message);
-            }
         }
+    }
+
+    // 주문취소 문자 발송
+    private void sendOrderCancelledSms(OrderAdminDetailGetResDto order) {
+        if (order == null) {
+            return;
+        }
+
+        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(null, SmsTemplateCode.ORDER_CANCELLED);
+
+        if (template == null || template.getContent() == null) return;
+
+        String message =
+                templateRenderService.render(template.getContent(), Map.of(
+                        "주문자명", order.getCustomerName()
+                ));
+
+        sendSms(order, message);
     }
 
     // 문자 발송 공통부
@@ -444,6 +478,7 @@ public class OrderService {
            throw new IllegalStateException("주문 취소 상태 변경 실패");
        }
 
+        sendOrderCancelledSms(order);
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
 
     }
