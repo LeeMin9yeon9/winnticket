@@ -34,8 +34,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static kr.co.winnticket.common.enums.SmsTemplateCode.PAYMENT_CONFIRMED;
-
 
 @Slf4j
 @Service
@@ -481,6 +479,24 @@ public class OrderService {
         sendOrderCancelledSms(order);
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
 
+    }
+
+    @Transactional
+    public void completePaymentByOrderNumber(String orderNumber) {
+
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalArgumentException("orderNumber empty");
+        }
+
+        //  orderNumber → orderId 조회
+        UUID orderId = mapper.findOrderIdByOrderNumber(orderNumber);
+
+        if (orderId == null) {
+            throw new IllegalStateException("주문 없음 orderNumber=" + orderNumber);
+        }
+
+        //  기존 결제 완료 로직 호출
+        completePayment(orderId);
     }
 
 }

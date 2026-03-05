@@ -218,7 +218,7 @@ public class OrderShopService {
             //CARD
             if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
 
-                String paymentMethodValue = paymentMethod.name();
+
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,
                         orderNumber,
@@ -226,7 +226,7 @@ public class OrderShopService {
                         reqDto.getCustomerName(),
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone(),
-                        paymentMethodValue
+                        paymentMethod.name()
                 );
             resDto.setPaymentStatus("REQUESTED");
             resDto.setPgProvider("PAYLETTER");
