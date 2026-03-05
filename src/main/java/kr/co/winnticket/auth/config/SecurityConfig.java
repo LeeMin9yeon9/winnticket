@@ -31,8 +31,11 @@ public class SecurityConfig {
     @Order(0)
     public SecurityFilterChain benepiaChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/benepia/**",
+                .securityMatcher(
+                        "/api/benepia/**",
                         "/api/benepia",
+                        "/benepia",
+                        "/benepia/**",
                         "/api/benepia-batch/**"   // 배치 URL 추가
                 )
                 .cors(Customizer.withDefaults())
@@ -165,6 +168,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of(
+                "https://*.benepia.co.kr",
+                "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
