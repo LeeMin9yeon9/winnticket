@@ -18,7 +18,7 @@ public class PayletterHashUtil {
         }
     }
 
-    public static String makePayhash(String userId, String tid,Integer amount, String apiKey) {
+    public static String makePayhash(String userId, Integer amount,String tid, String apiKey) {
         if (userId == null || tid == null || amount == null || apiKey == null) {
 
             throw new IllegalArgumentException("payhash param missing");

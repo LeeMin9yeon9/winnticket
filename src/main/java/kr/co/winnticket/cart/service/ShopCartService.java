@@ -14,12 +14,14 @@ import kr.co.winnticket.cart.dto.sessionDto.CartItemSessionDto;
 import kr.co.winnticket.cart.dto.sessionDto.CartOptionSessionDto;
 import kr.co.winnticket.cart.mapper.ShopCartMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ShopCartService {
@@ -168,7 +170,7 @@ public class ShopCartService {
 
             // 상품 조회
             ProductCartViewDto product = mapper.selectProduct(c.getProductId());
-            System.out.println("PRODUCT = " + product);
+            log.debug("PRODUCT = {}", product);
             if (product == null) {
                 iterator.remove();
                 continue;
@@ -183,9 +185,9 @@ public class ShopCartService {
                     .filter(Objects::nonNull)
                     .toList();
 
-            System.out.println("SESSION OPTIONS = " + sessionOptions);
+            log.debug("SESSION OPTIONS = {}", sessionOptions);
 
-            System.out.println("OPTION VALUE IDS = " + optionValueIds);
+            log.debug("OPTION VALUE IDS = {}", optionValueIds);
             // 옵션 조회 (비어있으면 조회 안 함)
             List<OptionValueViewDto> options =
                     optionValueIds.isEmpty()
@@ -193,7 +195,7 @@ public class ShopCartService {
                             : Optional.ofNullable(mapper.selectOptionValues(optionValueIds))
                             .orElse(Collections.emptyList());
 
-            System.out.println("OPTIONS FROM DB = " + options);
+            log.debug("OPTIONS FROM DB = {}", options);
 
             List<UUID> stayPeriodIds = null;
             Integer groupNo = null;
@@ -246,14 +248,20 @@ public class ShopCartService {
                 groupNo = prices.get(0).getGroupNo();
 
             } else {
-                // 일반 상품
+                // 일반 상품 옵션값 1개 = 가격
                 int optionPrice = options.stream()
                         .mapToInt(OptionValueViewDto::getAdditionalPrice)
-                        .sum();
+                        .findFirst()
+                        .orElse(0);
 
-                unitOriginPrice = product.getPrice() + optionPrice;
-                unitFinalPrice = product.getDiscountPrice() + optionPrice;
-                unitDiscount = unitOriginPrice - unitFinalPrice;
+                if (optionPrice <= 0) {
+                    throw new IllegalStateException("옵션 가격 오류");
+                }
+
+                // 옵션값 가격이 실제 판매가격
+                unitOriginPrice = optionPrice;
+                unitFinalPrice = optionPrice;
+                unitDiscount = 0;
             }
 
             int quantity = c.getQuantity();
