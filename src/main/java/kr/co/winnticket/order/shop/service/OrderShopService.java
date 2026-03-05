@@ -125,10 +125,12 @@ public class OrderShopService {
             }
 
             int totalPrice = unitPrice * item.getQuantity();
+            log.info("====가격 - totalPrice={}", totalPrice);
             orderTotalPrice += totalPrice;
 
             // 가격 위변조 체크
             if (item.getUnitPrice() != unitPrice) {
+                log.info("====프론트가격 - getUnitPrice={}, 계산가격 ={}", item.getUnitPrice(), unitPrice);
                 throw new IllegalArgumentException("가격이 변경되었습니다.");
             }
 
@@ -171,7 +173,8 @@ public class OrderShopService {
 
         // 최종결제금액 업데이트 총 금액 - 할인금액
         int finalPrice = orderTotalPrice - reqDto.getDiscountPrice();
-
+        log.info("====토탈가격 - orderTotalPrice={}", orderTotalPrice);
+        log.info("====최종가격 - finalPrice={}", finalPrice);
         mapper.updateOrderPrice(orderId, finalPrice);
 
         // 주문성공 시 장바구니 비우기
