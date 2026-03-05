@@ -4,7 +4,7 @@
 <mapper namespace="kr.co.winnticket.order.shop.mapper.PriceMapper">
     <!-- 숙박 날짜 가격 합계 -->
     <select id="selectStayPrice" resultType="int">
-        SELECT SUM(discount_price)
+        SELECT SUM(COALESCE(discount_price, price))
         FROM stay_date_prices
         WHERE option_value_id = #{optionValueId}
         AND price_date IN
