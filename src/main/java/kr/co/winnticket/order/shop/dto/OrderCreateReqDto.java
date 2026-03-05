@@ -74,6 +74,9 @@ public class OrderCreateReqDto {
         @Valid
         @Schema(description = "선택 옵션")
         private List<OrderItemOptionReqDto> options;
+
+        @Schema(description = "숙박형 선택 날짜 리스트(숙박형일 때만 사용). 체크인~체크아웃이면 프론트에서 날짜들로 풀어서 보내기")
+        private List<java.time.LocalDate> stayDates;
     }
 
     @Data
