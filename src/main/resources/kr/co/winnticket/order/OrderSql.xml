@@ -76,6 +76,7 @@
                 Upper(a.ORDER_NUMBER) LIKE '%' || Upper(#{srchWord}) || '%'
                 OR Upper(a.CUSTOMER_NAME) LIKE '%' || Upper(#{srchWord}) || '%'
                 OR Upper(a.PRODUCT_NAME) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.channelName) LIKE '%' || Upper(#{srchWord}) || '%'
              )
             ]]>
         </if>
