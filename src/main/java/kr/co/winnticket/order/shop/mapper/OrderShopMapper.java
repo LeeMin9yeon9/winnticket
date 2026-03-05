@@ -85,6 +85,7 @@ public interface OrderShopMapper {
             @Param("failReason") String failReason
     );
 
+
     // 티켓주문 정보 저장
     void insertOrderTicket(
             @Param("orderItemId") UUID orderItemId,

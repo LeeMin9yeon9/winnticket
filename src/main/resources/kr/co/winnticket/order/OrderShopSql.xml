@@ -222,6 +222,8 @@
         ]]>
     </update>
 
+
+
     <!--payletter 콜백 실패 처리-->
     <update id="updatePayletterCallbackFailed">
         UPDATE orders
