@@ -264,10 +264,11 @@
             payment_status = 'PAID',
             pg_provider = 'KCP',
             pg_tid = #{pgTid},
-            approval_no = #{approvalNo},
+            pg_approval_no = #{approvalNo},
             paid_at = NOW(),
             updated_at = NOW()
         WHERE order_number = #{orderNumber}
+        AND payment_status = 'READY'
     </update>
 
     <!--KCP 포인트 결제실패-->

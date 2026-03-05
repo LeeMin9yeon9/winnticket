@@ -7,10 +7,10 @@ import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaplanetService;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.mair.service.MairService;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
@@ -409,18 +409,35 @@ public class OrderService {
         // 2) 결제수단 분기
         PaymentMethod method = order.getPaymentMethod();
 
-        PayletterCancelResDto res = null;
+        Object cancelResult = null;
 
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             //cancelVirtualAccount(order);
         } else if (method == PaymentMethod.CARD) {
-           res =  payletterService.cancel(orderId);
-        } else {
+            cancelResult =  payletterService.cancel(orderId);
+        } else if (method == PaymentMethod.POINT) {
+
+            Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
+
+            log.info("payInfo = {}", payInfo);
+
+            if (payInfo == null || payInfo.get("pg_tid") == null) {
+                throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
+            }
+
+            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+            dto.setTno((String) payInfo.get("pg_tid"));
+            dto.setCancelReason("관리자 취소");
+
+            cancelResult = kcpService.cancelPoint(dto);
+        }
+
+        else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
 
-        String payloadJson = objectMapper.writeValueAsString(res);
-        int updated = mapper.updatePayletterCancelSuccess(orderId, payloadJson);
+        String payloadJson = objectMapper.writeValueAsString(cancelResult);
+        int updated = mapper.updateOrderCancelSuccess(orderId, payloadJson);
 
 
        if(updated != 1){
@@ -431,7 +448,5 @@ public class OrderService {
 
     }
 
-//    // 포인트 주문 취소
-//    @Transactional
 }
 

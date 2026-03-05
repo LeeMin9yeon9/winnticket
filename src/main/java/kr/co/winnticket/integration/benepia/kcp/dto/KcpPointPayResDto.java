@@ -1,9 +1,11 @@
 package kr.co.winnticket.integration.benepia.kcp.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "[베네피아 KCP 포인트결제 응답 DTO]KcpPointPayResDto")
 public class KcpPointPayResDto {
 
@@ -17,7 +19,7 @@ public class KcpPointPayResDto {
     private String tno;
 
     @Schema(description = "승인번호")
-    private String app_no;
+    private String pnt_app_no;
 
     @Schema(description = "결제금액")
     private String amount;

@@ -79,6 +79,7 @@ benepia-batch:
     cert-path: /home/winnticket/cert/KCP_AUTH_A8MCD_CERT.pem
     private-key-path: /home/winnticket/cert/KCP_AUTH_A8MCD_PRIKEY.pem
     base-url: https://spl.kcp.co.kr
+    privateKeyPassword: ${KCP_PRIVATE_KEY_PW}
 
 
 # 신용카드 연동 (페이레터 운영)

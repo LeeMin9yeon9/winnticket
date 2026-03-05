@@ -1,10 +1,12 @@
 package kr.co.winnticket.integration.benepia.kcp.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title="[KCP 포인트 취소 요청 DTO]KcpPointCancelReqDto")
 public class KcpPointCancelReqDto {
 

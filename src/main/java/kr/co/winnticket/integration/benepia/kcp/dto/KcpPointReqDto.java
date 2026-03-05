@@ -30,8 +30,8 @@ public class KcpPointReqDto {
     @Schema(description = "베네피아 비밀번호")
     private String benepiaPwd;
 
-    //@Schema(description = "베네피아 회원 소속사 코드")
-    //private String memcorpCd;
+    @Schema(description = "베네피아 회원 소속사 코드",example = "테스트 시 null")
+    private String memcorpCd;
 
 //    @Schema(description = "요청자IP")
 //    private String userIp;

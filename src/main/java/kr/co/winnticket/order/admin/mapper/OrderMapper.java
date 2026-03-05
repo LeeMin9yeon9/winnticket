@@ -79,7 +79,7 @@ public interface OrderMapper {
     Map<String, Object> selectOrderPaymentInfo(UUID orderId);
 
     // 페이레터 취소 성공
-    int updatePayletterCancelSuccess(
+    int updateOrderCancelSuccess(
             @Param("orderId") UUID orderId,
             @Param("payloadJson") String payloadJson
     );
@@ -112,5 +112,8 @@ public interface OrderMapper {
 
     //productId 조회
     UUID findProductIdByOrderItemId(UUID orderItemId);
+
+    // orderNumber로 orderId 조회
+    UUID findOrderIdByOrderNumber(@Param("orderNumber") String orderNumber);
 
 }

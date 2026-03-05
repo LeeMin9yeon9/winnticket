@@ -93,14 +93,16 @@ public interface OrderShopMapper {
 
     // KCP 포인트 즉시 승인 처리
     int updatePointPaymentApproved(
-            @Param("pgProvider") String pgProvider,
+            @Param("orderNumber") String orderNumber,
             @Param("pgTid") String pgTid,
             @Param("approvalNo") String approvalNo
     );
 
-    // KCP 포인트 결패 실패
+    // KCP 포인트 결제 실패
     int updatePaymentFailed(
             @Param("orderNumber") String orderNumber
     );
+
+
 
 }

@@ -386,8 +386,8 @@
         WHERE id = #{orderId}::uuid
     </select>
 
-    <!--payletter 취소 성공 처리-->
-    <update id="updatePayletterCancelSuccess">
+    <!--주문 취소 성공 처리-->
+    <update id="updateOrderCancelSuccess">
         UPDATE orders
         SET
             status = 'CANCELED'::order_status,
@@ -493,6 +493,13 @@
     SELECT product_id
     FROM order_items
     WHERE id = #{orderItemId}
+    </select>
+
+    <!-- 주문번호로 주문ID 조회 -->
+    <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
+        SELECT id
+        FROM orders
+        WHERE order_number = #{orderNumber}
     </select>
 
 </mapper>
