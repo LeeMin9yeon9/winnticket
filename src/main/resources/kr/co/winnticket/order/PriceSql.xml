@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.order.shop.mapper.PriceMapper">
+    <!-- 숙박 날짜 가격 합계 -->
+    <select id="selectStayPrice" resultType="int">
+        SELECT SUM(discount_price)
+        FROM stay_date_prices
+        WHERE option_value_id = #{optionValueId}
+        AND price_date IN
+        <foreach collection="dates"
+                 item="d"
+                 open="("
+                 separator=","
+                 close=")">
+            #{d}
+        </foreach>
+        AND is_available = true
+    </select>
+
+
+    <!-- 옵션 가격 -->
+    <select id="selectOptionPrice" resultType="int">
+        SELECT
+            COALESCE(pcov.price, pov.additional_price)
+        FROM product_option_values pov
+        LEFT JOIN product_channel_option_prices pcov
+        ON pcov.option_value_id = pov.id
+        AND pcov.product_id = #{productId}
+        AND pcov.channel_id = #{channelId}
+        WHERE pov.id IN
+        <foreach collection="optionValueIds"
+                 item="id"
+                 open="("
+                 separator=","
+                 close=")">
+            #{id}
+        </foreach>
+        AND pov.additional_price IS NOT NULL
+        LIMIT 1
+    </select>
+
+    <!-- 채널 상품 가격 -->
+    <select id="selectChannelProductPrice" resultType="int">
+        SELECT
+            discount_price
+        FROM product_channel_prices
+        WHERE product_id = #{productId}
+          AND channel_id = #{channelId}
+    </select>
+
+    <!-- 상품 기본 가격 -->
+    <select id="selectProductPrice" resultType="int">
+        SELECT
+            discount_price
+        FROM products
+        WHERE id = #{productId}
+    </select>
+</mapper>
