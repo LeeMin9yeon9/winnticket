@@ -23,23 +23,6 @@ public class PlusNResponseMapper {
         return IntegrationResult.success();
     }
 
-    // 날짜별 사용조회
-    public IntegrationResult mapUsedDate(PlusNUsedDateResponse res) {
-
-        if (res == null) {
-            return IntegrationResult.fail("NULL", "PlusN 사용조회 응답 없음");
-        }
-
-        if (!"0000".equals(res.getReturn_div())) {
-            return IntegrationResult.fail(
-                    res.getReturn_div(),
-                    res.getReturn_msg()
-            );
-        }
-
-        return IntegrationResult.success();
-    }
-
     // 취소 성공 여부
     public IntegrationResult mapCancel(PlusNCancelResponse res) {
 
