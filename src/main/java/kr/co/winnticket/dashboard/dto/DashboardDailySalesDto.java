@@ -11,7 +11,7 @@ public class DashboardDailySalesDto {
     @Schema(description="날짜")
     private LocalDate date;
 
-    @Schema(description="주문 수")
+    @Schema(description="주문 티켓 수")
     private int orderCount;
 
     @Schema(description="매출")

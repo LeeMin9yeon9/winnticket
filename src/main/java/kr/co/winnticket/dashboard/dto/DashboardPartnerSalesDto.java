@@ -13,7 +13,7 @@ public class DashboardPartnerSalesDto {
     @Schema(description="상품 수")
     private int productCount;
 
-    @Schema(description="주문 수")
+    @Schema(description="판매티켓 수")
     private int orderCount;
 
     @Schema(description="매출")
