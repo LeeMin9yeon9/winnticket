@@ -120,7 +120,7 @@ public class PlusNService {
         List<String> canceledTickets = new ArrayList<>();
 
         for (PlusNCancelRequest req : tickets) {
-
+            log.info("[PlusN] cancel try order_sales={}", req.getOrder_sales());
             PlusNCancelResponse cancelRes = client.cancel(req);
 
             if (!"0000".equals(cancelRes.getReturn_div())) {
