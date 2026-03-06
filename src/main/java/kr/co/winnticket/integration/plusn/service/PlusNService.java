@@ -164,11 +164,6 @@ public class PlusNService {
         PlusNUsedDateResponse res =
                 client.usedDate(req);
 
-        validate(
-                responseMapper.mapUsedDate(res),
-                "PlusN 사용조회 실패"
-        );
-
         return res;
     }
 
