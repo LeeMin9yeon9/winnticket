@@ -80,6 +80,14 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/**")
                 .build();
     }
+    @Bean
+    public GroupedOpenApi dashboardApi() {
+        return GroupedOpenApi.builder()
+                .group("대시보드")
+                .packagesToScan("kr.co.winnticket.dashboard")
+                .pathsToMatch("/api/**")
+                .build();
+    }
 
     @Bean
     public GroupedOpenApi communityApi() {
