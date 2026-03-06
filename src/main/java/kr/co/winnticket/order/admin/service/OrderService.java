@@ -240,8 +240,8 @@ public class OrderService {
         boolean hasNormalProduct = false;
 
         for (OrderProductListGetResDto item : items) {
-            String partnerId = String.valueOf(item.getPartnerId());
-
+            //String partnerId = String.valueOf(item.getPartnerId());
+            UUID partnerId = item.getPartnerId();
             log.error("partnerId = {}", partnerId);
 
             // 파트너별 상품이 있는지 체크
@@ -284,8 +284,8 @@ public class OrderService {
     ) {
         return items.stream()
                 .filter(item -> {
+                    //String partnerId = String.valueOf(item.getPartnerId());
                     String partnerId = String.valueOf(item.getPartnerId());
-
                     return partnerId == null
                             || (!"bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)
                             && !"e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)
@@ -401,7 +401,7 @@ public class OrderService {
     @Transactional
     public void useTicket(UUID orderId, UUID ticketId) {
         // 티켓 사용 처리
-        int updated = mapper.updateTicketUsed(ticketId);
+        int updated = mapper.updateTicketUsed(ticketId,orderId);
 
         if (updated == 0) {
             throw new IllegalStateException("이미 사용된 티켓이거나 존재하지 않습니다.");
@@ -435,6 +435,7 @@ public class OrderService {
             throw new IllegalStateException("결제 완료된 주문만 취소할 수 있습니다.");
         }
 
+
         // 사용된 티켓 확인
         int usedTicketCount = mapper.countUsedTickets(orderId);
         if (usedTicketCount > 0) {
@@ -447,7 +448,7 @@ public class OrderService {
 
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             //cancelVirtualAccount(order);
-        } else if (method == PaymentMethod.CARD) {
+        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
             cancelResult =  payletterService.cancel(orderId);
         } else if (method == PaymentMethod.POINT) {
 
@@ -459,11 +460,15 @@ public class OrderService {
                 throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
             }
 
+
             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
             dto.setTno((String) payInfo.get("pg_tid"));
             dto.setCancelReason("관리자 취소");
 
             cancelResult = kcpService.cancelPoint(dto);
+        }
+        else if(method == PaymentMethod.KAKAOPAY){
+
         }
 
         else {

@@ -86,12 +86,6 @@ public interface OrderShopMapper {
     );
 
 
-    // 티켓주문 정보 저장
-    void insertOrderTicket(
-            @Param("orderItemId") UUID orderItemId,
-            @Param("ticketNumber") String ticketNumber
-    );
-
     // KCP 포인트 즉시 승인 처리
     int updatePointPaymentApproved(
             @Param("orderNumber") String orderNumber,

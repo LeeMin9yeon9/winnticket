@@ -20,7 +20,7 @@ public class KcpPointReqDto {
 
     @NotNull
     @Schema(description = "결제금액")
-    private Integer amount;
+    private String amount;
 
     @NotNull
     @Schema(description = "베네피아 아이디")

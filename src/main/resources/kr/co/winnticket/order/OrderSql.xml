@@ -310,12 +310,17 @@
     - 티켓 사용 처리
     -->
     <update id="updateTicketUsed">
-        UPDATE order_tickets
+
+        UPDATE order_tickets t
         SET
             ticket_used = true,
             ticket_used_date = NOW()
-        WHERE id = #{ticketId}
-          AND ticket_used = false
+            FROM order_items i
+        WHERE t.order_item_id = i.id
+          AND t.id = #{ticketId}
+          AND i.order_id = #{orderId}
+          AND t.ticket_used = false
+
     </update>
 
     <!--

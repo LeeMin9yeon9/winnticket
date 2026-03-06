@@ -93,9 +93,9 @@ payletter:
   search-api-key: ${PAYLETTER_SEARCH_API_KEY}
   service-name: 페이레터
 
-  return-url: https://api.winnticket.co.kr/api/payletter/return
-  callback-url: https://api.winnticket.co.kr/api/payletter/callback
-  cancel-url: https://api.winnticket.co.kr/api/payletter/cancel
+  return-url: https://www.winnticket.co.kr/api/payletter/return
+  callback-url: https://www.winnticket.co.kr/api/payletter/callback
+  cancel-url: https://www.winnticket.co.kr/api/payletter/cancel
 
 
 # 파트너 연동 (플러스앤 운영)

@@ -87,7 +87,6 @@
             ID,
             CODE,
             NAME,
-            TYPE,
             STATUS,
             BUSINESS_NUMBER,
             ADDRESS,
@@ -107,7 +106,6 @@
                   gen_random_uuid(),
                   #{code},
                   #{name},
-                  #{type},
                   #{status},
                   #{businessNumber},
                   #{address},
@@ -132,7 +130,6 @@
         <set>
             <if test="model.code != null">CODE = #{model.code},</if>
             <if test="model.name != null">NAME = #{model.name},</if>
-            <if test="model.type != null">TYPE = #{model.type},</if>
             <if test="model.status != null">STATUS = #{model.status},</if>
             <if test="model.businessNumber != null">BUSINESS_NUMBER = #{model.businessNumber},</if>
             <if test="model.address != null">ADDRESS = #{model.address},</if>

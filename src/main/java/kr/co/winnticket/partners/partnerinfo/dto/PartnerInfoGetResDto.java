@@ -3,7 +3,6 @@ package kr.co.winnticket.partners.partnerinfo.dto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
-import kr.co.winnticket.common.enums.PartnerType;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -22,9 +21,6 @@ public class PartnerInfoGetResDto {
 
     @Schema(description = "파트너명")
     private String name;
-
-    @Schema(description = "파트너타입")
-    private PartnerType type;
 
     @Schema(description = "수수료율")
     private Integer commissionRate;
