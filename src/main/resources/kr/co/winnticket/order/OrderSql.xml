@@ -310,17 +310,12 @@
     - 티켓 사용 처리
     -->
     <update id="updateTicketUsed">
-
-        UPDATE order_tickets t
+        UPDATE order_tickets
         SET
             ticket_used = true,
             ticket_used_date = NOW()
-            FROM order_items i
-        WHERE t.order_item_id = i.id
-          AND t.id = #{ticketId}
-          AND i.order_id = #{orderId}
-          AND t.ticket_used = false
-
+        WHERE id = #{ticketId}
+          AND ticket_used = false
     </update>
 
     <!--
@@ -504,7 +499,7 @@
     <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
         SELECT id
         FROM orders
-        WHERE id = #{orderId}::uuid
+        WHERE order_number = #{orderNumber}
     </select>
 
 </mapper>

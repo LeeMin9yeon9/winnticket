@@ -66,7 +66,7 @@ public interface OrderMapper {
     );
 
     // 티켓 사용 처리
-    int updateTicketUsed(UUID ticketId, UUID orderId);
+    int updateTicketUsed(UUID ticketId);
 
     // 주문 내 미사용 티켓 수
     int countUnusedTickets(UUID orderId);

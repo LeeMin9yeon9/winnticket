@@ -20,6 +20,10 @@ public class PartnerListGetResDto {
     @Schema(description = "파트너명")
     private String name;
 
+    @Schema(description = "파트너 타입",
+            example = "CORPORATE",
+            allowableValues = {"VENUE","PROMOTER","AGENCY","ARTIST","CORPORATE"})
+    private String type;
 
     @Schema(description = "담당자명")
     private String managerName;

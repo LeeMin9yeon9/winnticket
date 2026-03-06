@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 @Schema(title = "[베네피아 KCP 포인트조회 요청 DTO]KcpPointReqDto")
 public class KcpPointReqDto {
 
-   // @NotNull
-   // @Schema(description = "주문번호")
-   // private String orderNo;
+    @NotNull
+    @Schema(description = "주문번호")
+    private String orderNo;
 
     @NotNull
     @Schema(description = "결제금액")
-    private String amount;
+    private Integer amount;
 
     @NotNull
     @Schema(description = "베네피아 아이디")

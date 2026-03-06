@@ -40,14 +40,13 @@ public class KcpService {
         try {
             String certInfo = KcpCertUtil.loadCert(properties.getKcp().getCertPath());
 
-
             String url = properties.getKcp().getBaseUrl() + "/gw/hub/v1/payment";
 
             Map<String, Object> body = new HashMap<>();
             body.put("site_cd", properties.getKcp().getSiteCd());
             body.put("kcp_cert_info", certInfo);
             body.put("pay_method", "POINT");
-           // body.put("ordr_idxx", dto.getOrderNo());
+            body.put("ordr_idxx", dto.getOrderNo());
             body.put("amount", dto.getAmount());
 
             body.put("pt_issue", "SCWB");

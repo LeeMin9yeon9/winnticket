@@ -1,12 +1,9 @@
 package kr.co.winnticket.integration.payletter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 @Log4j2
 @RestController
@@ -33,10 +29,9 @@ public class PayletterController {
 
         service.handleCallback(payload);
 
-        UUID orderId = UUID.fromString(String.valueOf(payload.get("custom_parameter")));
+        String orderNumber = String.valueOf(payload.get("custom_parameter"));
 
-        orderService.completePayment(orderId);
-        
+        orderService.completePaymentByOrderNumber(orderNumber);
 
 
         log.info("[PAYLETTER] callback payload={}", payload);
@@ -45,7 +40,7 @@ public class PayletterController {
     }
 
 
-    @PostMapping("/return")
+    @GetMapping("/return")
     @Operation(summary = "Payletter 결제 완료 후 redirect", description = "Payletter 결제 완료 후 페이지 이동")
     public void payReturn(
             @RequestParam(required = false) String custom_parameter, HttpServletResponse response
@@ -58,7 +53,7 @@ public class PayletterController {
         );
     }
 
-    @PostMapping("/cancel")
+    @GetMapping("/cancel")
     @Operation(summary = "Payletter 결제 취소 redirect", description = "Payletter 결제 취소 후 주문페이지 이동")
     public String payCancel(
             @RequestParam(required = false) String custom_parameter) {
@@ -79,30 +74,30 @@ public class PayletterController {
 //    }
 
 
-    @GetMapping("/transaction/list")
-    @Operation(summary = "Payletter 결제내역조회", description = "Payletter 거래내역 조회(transaction/list)")
-    public PayletterTransactionListResDto transactionList(
-            @Parameter(description = "조회 일자", example = "yyyyMMdd")
-            @RequestParam(required = false) String date,
-
-            @Parameter(description = "조회 기준", example = "transaction: 결제일기준 /settle:취소일기준")
-            @RequestParam(required = false) String dateType,
-
-            @Parameter(description = "결제수단 코드", example = "creditcard(테스트는kakaopay)")
-            @RequestParam(required = false) String paymentMethod,
-
-            @Parameter(description = "주문번호")
-            @RequestParam(required = false) String orderNumber
-    ) {
-        return service.getTransactionList(date, dateType, paymentMethod, orderNumber);
-    }
-
-    @GetMapping("/status/{orderNumber}")
-    @Operation(summary = "Payletter 거래상태조회", description = "Payletter 거래상태 조회(payments/status)")
-    public PayletterPaymentStatusResDto paymentStatus(@PathVariable String orderNumber) {
-        return service.getPaymentStatus(orderNumber);
-    }
-
+//    @GetMapping("/transaction/list")
+//    @Operation(summary = "Payletter 결제내역조회", description = "Payletter 거래내역 조회(transaction/list)")
+//    public PayletterTransactionListResDto transactionList(
+//            @Parameter(description = "조회 일자", example = "yyyyMMdd")
+//            @RequestParam(required = false) String date,
+//
+//            @Parameter(description = "조회 기준", example = "transaction: 결제일기준 /settle:취소일기준")
+//            @RequestParam(required = false) String dateType,
+//
+//            @Parameter(description = "결제수단 코드", example = "creditcard(테스트는kakaopay)")
+//            @RequestParam(required = false) String paymentMethod,
+//
+//            @Parameter(description = "주문번호")
+//            @RequestParam(required = false) String orderNumber
+//    ) {
+//        return service.getTransactionList(date, dateType, paymentMethod, orderNumber);
+//    }
+//
+//    @GetMapping("/status/{orderNumber}")
+//    @Operation(summary = "Payletter 거래상태조회", description = "Payletter 거래상태 조회(payments/status)")
+//    public PayletterPaymentStatusResDto paymentStatus(@PathVariable String orderNumber) {
+//        return service.getPaymentStatus(orderNumber);
+//    }
+//
 //    @GetMapping("/test/hash")
 //    @Operation(summary = "Payletter 테스트 hash 생성", description = "Payletter hash 테스트용")
 //    public String testHash(@RequestParam String userId, @RequestParam String tid, @RequestParam Integer amount) {
