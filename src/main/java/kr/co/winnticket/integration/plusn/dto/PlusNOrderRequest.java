@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class PlusNOrderRequest {
+    private Integer rowNo;
     private String order_id;
     private String user_name;
     private String user_hp;
