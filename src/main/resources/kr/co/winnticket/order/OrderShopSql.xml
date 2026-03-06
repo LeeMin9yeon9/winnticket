@@ -208,6 +208,8 @@
     <update id="updatePayletterCallbackSuccessIfNotPaid">
         UPDATE orders
         SET
+            payment_status = 'PAID'::payment_status,
+        paid_at = CURRENT_TIMESTAMP,
         pg_provider = 'PAYLETTER',
         pg_tid = #{tid},
             pg_approval_no = #{cid},
@@ -215,6 +217,9 @@
             pg_callback_received_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
+    <![CDATA[
+          AND payment_status <> 'PAID'::payment_status
+        ]]>
     </update>
 
 
