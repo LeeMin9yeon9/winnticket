@@ -6,11 +6,11 @@
     <!-- 조회 -->
     <select id="selectCouponNo" resultType="java.lang.String">
         SELECT
-            ot.ticket_number AS COUPON_NO
+            ot.coupon_number AS COUPON_NO
         FROM orders o
          JOIN order_items oi
               ON o.id = oi.order_id
-         JOIN order_tickets ot
+         JOIN order_item_coupons ot
           ON oi.id = ot.order_item_id
         WHERE o.id = #{orderId}
           And oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'

@@ -2,6 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.ticket.mapper.TicketMapper">
+    <!-- 쿠폰 사용처리 -->
     <update id="updateTicketUsed">
         UPDATE order_tickets
         SET
@@ -11,4 +12,19 @@
           AND partner_order_code = #{orderSales}
           AND ticket_used = false
     </update>
+
+    <!-- 스파비스 쿠폰조회 -->
+    <select id="findUnusedSpavisCoupons" resultType="java.util.UUID">
+        SELECT DISTINCT o.id
+        FROM orders o
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+                 JOIN order_item_coupons oic
+                      ON oi.id = oic.order_item_id
+                 JOIN ticket_coupons tc
+                      ON oic.ticket_coupon_id = tc.id
+        WHERE oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
+          AND tc.used_at IS NULL
+            LIMIT 100
+    </select>
 </mapper>
