@@ -63,7 +63,7 @@
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
 
-    <select id="updateOrderSales" resultType="java.util.UUID">
+    <select id="selectTicketIds" resultType="java.util.UUID">
         SELECT ot.id
         FROM order_tickets ot
                  JOIN order_items oi ON ot.order_item_id = oi.id
