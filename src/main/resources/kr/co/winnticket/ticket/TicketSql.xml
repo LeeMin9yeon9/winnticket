@@ -4,13 +4,15 @@
 <mapper namespace="kr.co.winnticket.ticket.mapper.TicketMapper">
     <!-- 플러스앤 쿠폰 사용처리 -->
     <update id="updateTicketUsed">
-        UPDATE order_tickets
+        UPDATE order_tickets ot
         SET
             ticket_used = true,
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
-        WHERE partner_id = #{partnerId}
-          AND partner_order_code = #{orderSales}
-          AND ticket_used = false
+            FROM order_items oi
+        WHERE ot.order_item_id = oi.id
+        WHERE oi.partner_id = #{partnerId}
+          AND ot.partner_order_code = #{orderSales}
+          AND ot.ticket_used = false
     </update>
 
     <!-- 스파비스 쿠폰조회 -->
@@ -30,12 +32,14 @@
 
     <!-- 스파비스 쿠폰 사용처리 -->
     <update id="updateSpavisTicketUsed">
-        UPDATE order_tickets
+        UPDATE order_tickets ot
         SET
             ticket_used = true,
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
-        WHERE partner_id = #{partnerId}
-          AND ticket_number = #{couponNo}
-          AND ticket_used = false
+            FROM order_items oi
+        WHERE ot.order_item_id = oi.id
+          AND oi.partner_id = #{partnerId}
+          AND ot.ticket_number = #{ticketNumber}
+          AND ot.ticket_used = false
     </update>
 </mapper>
