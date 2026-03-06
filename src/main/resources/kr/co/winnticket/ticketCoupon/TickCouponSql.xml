@@ -252,8 +252,8 @@
 
         WHERE tg.product_option_value_id = #{optionValueId}
         AND tc.status = 'ACTIVE'
-        AND tc.valid_from <![CDATA[ <= ]]> NOW()
-        AND tc.valid_until <![CDATA[ >= ]]> NOW()
+        AND tc.valid_from <![CDATA[ <= ]]> CURRENT_DATE
+        AND tc.valid_until <![CDATA[ >= ]]> CURRENT_DATE
 
         ORDER BY
         tg.valid_until ASC,
