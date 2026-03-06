@@ -18,4 +18,7 @@ public class DashboardPartnerSalesDto {
 
     @Schema(description="매출")
     private Long salesAmount;
+
+    @Schema(description = "순이익")
+    private long netProfit;
 }
