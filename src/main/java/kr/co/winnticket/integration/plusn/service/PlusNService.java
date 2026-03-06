@@ -120,21 +120,29 @@ public class PlusNService {
         List<String> canceledTickets = new ArrayList<>();
 
         for (PlusNCancelRequest req : tickets) {
+
             log.info("[PlusN] cancel try order_sales={}", req.getOrder_sales());
-            PlusNCancelResponse cancelRes = client.cancel(req);
 
-            if (!"0000".equals(cancelRes.getReturn_div())) {
+            try {
 
-                log.error("[PlusN] 취소 실패 order_sales={}, message={}",
-                        req.getOrder_sales(),
-                        cancelRes.getReturn_msg());
+                PlusNCancelResponse cancelRes = client.cancel(req);
 
-                return PlusNBatchCancelResponse.fail(
-                        "취소 실패: " + cancelRes.getReturn_msg()
-                );
+                log.info("[PlusN] cancel response code={}", cancelRes.getReturn_div());
+
+                if (!"0000".equals(cancelRes.getReturn_div())) {
+
+                    return PlusNBatchCancelResponse.fail(
+                            "취소 실패: " + cancelRes.getReturn_msg()
+                    );
+                }
+
+                canceledTickets.add(req.getOrder_sales());
+            } catch (Exception e) {
+
+                log.error("[PlusN] cancel exception order_sales={}", req.getOrder_sales(), e);
+                throw e;
             }
 
-            canceledTickets.add(req.getOrder_sales());
         }
 
         log.info("[PlusN] cancel success orderId={}, count={}",
