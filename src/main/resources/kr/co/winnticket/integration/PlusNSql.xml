@@ -64,15 +64,22 @@
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
 
-    <select id="selectTicketIds" resultType="java.util.UUID">
-        SELECT ot.id
+    <select id="selectTicketsForPlusN" resultType="kr.co.winnticket.integration.plusn.dto.PlusNTicket">
+        SELECT
+            ot.id AS ticket_id
         FROM order_tickets ot
-                 JOIN order_items oi ON ot.order_item_id = oi.id
+                 JOIN order_items oi
+                      ON ot.order_item_id = oi.id
+                 JOIN order_item_options oio
+                      ON oi.id = oio.order_item_id
+                 JOIN product_option_values pov
+                      ON pov.id = oio.option_value_id
         WHERE oi.order_id = #{orderId}
-        ORDER BY ot.created_at
+          AND oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
+        ORDER BY oi.id, pov.code, ot.id
     </select>
 
-    <update id="updatePlusNOrderResult">
+    <update id="updateTicketOrderSales">
         UPDATE order_tickets
         SET
             partner_order_code = #{orderSales}
