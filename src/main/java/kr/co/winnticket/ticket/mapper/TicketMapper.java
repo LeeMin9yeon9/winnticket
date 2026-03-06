@@ -17,4 +17,11 @@ public interface TicketMapper {
 
     // 스파비스 쿠폰조회
     List<UUID> findUnusedSpavisCoupons();
+
+    // 스파비스 쿠폰 사용처리
+    void updateSpavisTicketUsed(
+            @Param("partnerId") UUID partnerId,
+            @Param("couponNo") String couponNo,
+            @Param("resultDate") String resultDate
+    );
 }
