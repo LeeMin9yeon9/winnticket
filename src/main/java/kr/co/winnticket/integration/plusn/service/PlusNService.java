@@ -36,18 +36,29 @@ public class PlusNService {
                 "PlusN 주문 실패"
         );
 
-        List<UUID> ticketIds = mapper.selectTicketIds(orderId);
+        List<PlusNOrderResponse.Coupon> coupons = res.getCoupon();
 
-        int idx = 0;
+        if (coupons == null || coupons.isEmpty()) {
+            throw new IllegalStateException("PlusN coupon 응답 없음");
+        }
 
-        for (PlusNOrderResponse.Coupon c : res.getCoupon()) {
+        List<PlusNTicket> tickets = mapper.selectTicketsForPlusN(orderId);
 
-            mapper.updatePlusNOrderResult(
-                    ticketIds.get(idx),
-                    c.getOrder_sales()
+        if (tickets.size() != coupons.size()) {
+            throw new IllegalStateException(
+                    "PlusN coupon 수와 ticket 수 불일치"
             );
+        }
 
-            idx++;
+        for (int i = 0; i < tickets.size(); i++) {
+
+            PlusNTicket ticket = tickets.get(i);
+            PlusNOrderResponse.Coupon coupon = coupons.get(i);
+
+            mapper.updateTicketOrderSales(
+                    ticket.getTicketId(),
+                    coupon.getOrder_sales()
+            );
         }
 
         return res;

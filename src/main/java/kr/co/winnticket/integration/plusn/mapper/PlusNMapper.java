@@ -2,6 +2,7 @@ package kr.co.winnticket.integration.plusn.mapper;
 
 import kr.co.winnticket.integration.plusn.dto.PlusNCancelRequest;
 import kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest;
+import kr.co.winnticket.integration.plusn.dto.PlusNTicket;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -17,10 +18,10 @@ public interface PlusNMapper {
     List<PlusNCancelRequest> selectPlusNCancel(UUID orderId);
 
     // 주문 후 order_id로 티켓ID 찾기
-    List<UUID> selectTicketIds(UUID orderId);
+    List<PlusNTicket> selectTicketsForPlusN(UUID orderId);
 
     // 주문후 플러스앤 주문번호 저장
-    void updatePlusNOrderResult(
+    void updateTicketOrderSales(
             @Param("ticketId") UUID ticketId,
             @Param("orderSales") String orderSales
     );
