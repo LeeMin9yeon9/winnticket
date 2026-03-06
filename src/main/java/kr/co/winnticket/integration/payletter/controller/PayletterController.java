@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 @Log4j2
 @RestController
@@ -29,9 +30,10 @@ public class PayletterController {
 
         service.handleCallback(payload);
 
-        String orderNumber = String.valueOf(payload.get("custom_parameter"));
+        UUID orderId = UUID.fromString(String.valueOf(payload.get("custom_parameter")));
 
-        orderService.completePaymentByOrderNumber(orderNumber);
+        orderService.completePayment(orderId);
+        
 
 
         log.info("[PAYLETTER] callback payload={}", payload);
