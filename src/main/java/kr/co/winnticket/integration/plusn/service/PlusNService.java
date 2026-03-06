@@ -27,17 +27,28 @@ public class PlusNService {
     // 주문
     // =========================
     public PlusNOrderResponse order(UUID orderId) {
+        PlusNOrderRequest req = mapper.selectPlusNOrderBase(orderId);
 
-        PlusNOrderRequest req =
-                mapper.selectPlusNOrderBase(orderId);
-
-        PlusNOrderResponse res =
-                client.order(req);
+        PlusNOrderResponse res = client.order(req);
 
         validate(
                 responseMapper.mapOrder(res),
                 "PlusN 주문 실패"
         );
+
+        List<UUID> ticketIds = mapper.selectTicketIds(orderId);
+
+        int idx = 0;
+
+        for (PlusNOrderResponse.Coupon c : res.getCoupon()) {
+
+            mapper.updatePlusNOrderResult(
+                    ticketIds.get(idx),
+                    c.getOrder_sales()
+            );
+
+            idx++;
+        }
 
         return res;
     }

@@ -62,4 +62,19 @@
         WHERE o.id = #{orderId}
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
+
+    <select id="updateOrderSales" resultType="java.util.UUID">
+        SELECT ot.id
+        FROM order_tickets ot
+                 JOIN order_items oi ON ot.order_item_id = oi.id
+        WHERE oi.order_id = #{orderId}
+        ORDER BY ot.created_at
+    </select>
+
+    <update id="updatePlusNOrderResult">
+        UPDATE order_tickets
+        SET
+            partner_order_code = #{orderSales}
+        WHERE id = #{ticketId}
+    </update>
 </mapper>
