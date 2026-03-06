@@ -4,18 +4,39 @@
 
 <mapper namespace="kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper">
 
+    <resultMap id="partnerInfoMap"
+               type="kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto">
+
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type" javaType="kr.co.winnticket.common.enums.PartnerType"/>
+
+        <result property="commissionRate" column="commissionRate"/>
+        <result property="businessNumber" column="businessNumber"/>
+        <result property="address" column="address"/>
+        <result property="managerName" column="managerName"/>
+        <result property="managerEmail" column="managerEmail"/>
+        <result property="managerPhone" column="managerPhone"/>
+        <result property="logoUrl" column="logoUrl"/>
+        <result property="contractStartDate" column="contractStartDate"/>
+        <result property="contractEndDate" column="contractEndDate"/>
+
+    </resultMap>
+
     <!-- 파트너 목록 / 검색 -->
     <select id="selectPartnerList"
             resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
 
         SELECT
-        ID,
-        CODE,
-        NAME,
-        STATUS,
-        CREATED_AT,
-        UPDATED_AT
-        FROM PARTNERS
+        p.ID AS id,
+        p.CODE AS code,
+        p.NAME AS name,
+        p.TYPE AS type,
+        p.STATUS AS status,
+        p.CREATED_AT AS createdAt,
+        p.UPDATED_AT AS updatedAt
+        FROM PARTNERS p
         WHERE 1=1
 
         <!-- 키워드 검색 -->
@@ -62,13 +83,13 @@
             resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto">
 
         SELECT
-            p.ID,
-            p.CODE,
-            p.NAME,
-            p.TYPE,
+            p.ID AS id,
+            p.CODE AS code,
+            p.NAME AS name,
+            p.TYPE AS type,
             p.COMMISSION_RATE AS commissionRate,
             p.BUSINESS_NUMBER AS businessNumber,
-            p.ADDRESS,
+            p.ADDRESS AS address,
             p.MANAGER_NAME AS managerName,
             p.MANAGER_EMAIL AS managerEmail,
             p.MANAGER_PHONE AS managerPhone,
