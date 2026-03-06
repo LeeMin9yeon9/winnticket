@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -37,23 +36,27 @@ public class PlusNService {
         );
 
         List<PlusNOrderResponse.Coupon> coupons = res.getCoupon();
-
-        if (coupons == null || coupons.isEmpty()) {
-            throw new IllegalStateException("PlusN coupon 응답 없음");
-        }
-
         List<PlusNTicket> tickets = mapper.selectTicketsForPlusN(orderId);
 
-        if (tickets.size() != coupons.size()) {
-            throw new IllegalStateException(
-                    "PlusN coupon 수와 ticket 수 불일치"
-            );
-        }
+        Map<String, Queue<PlusNOrderResponse.Coupon>> couponMap =
+                coupons.stream()
+                        .collect(Collectors.groupingBy(
+                                PlusNOrderResponse.Coupon::getGoods_code,
+                                Collectors.toCollection(LinkedList::new)
+                        ));
 
-        for (int i = 0; i < tickets.size(); i++) {
+        for (PlusNTicket ticket : tickets) {
 
-            PlusNTicket ticket = tickets.get(i);
-            PlusNOrderResponse.Coupon coupon = coupons.get(i);
+            Queue<PlusNOrderResponse.Coupon> queue =
+                    couponMap.get(ticket.getGoodsCode());
+
+            if (queue == null || queue.isEmpty()) {
+                throw new IllegalStateException(
+                        "PlusN coupon 매칭 실패 goods_code=" + ticket.getGoodsCode()
+                );
+            }
+
+            PlusNOrderResponse.Coupon coupon = queue.poll();
 
             mapper.updateTicketOrderSales(
                     ticket.getTicketId(),
@@ -64,9 +67,6 @@ public class PlusNService {
         return res;
     }
 
-    // =========================
-    // 전체 취소 (하나라도 실패 시 전체 실패)
-    // =========================
     @Transactional
     public PlusNBatchCancelResponse cancel(UUID orderId) {
 
@@ -76,11 +76,12 @@ public class PlusNService {
                 mapper.selectPlusNCancel(orderId);
 
         if (tickets == null || tickets.isEmpty()) {
-            log.warn("[PlusN] 취소 대상 없음 orderId={}", orderId);
             return PlusNBatchCancelResponse.fail("취소 대상이 없습니다.");
         }
 
-        // 전체 취소 가능 여부 사전 검증
+        // =========================
+        // 1. 전체 취소 가능 여부 확인
+        // =========================
         for (PlusNCancelRequest req : tickets) {
 
             PlusNInquiryRequest inquiry = new PlusNInquiryRequest();
@@ -88,34 +89,48 @@ public class PlusNService {
             inquiry.setOrder_sales(req.getOrder_sales());
 
             PlusNInquiryResponse inquiryRes = client.inquiry(inquiry);
-            var inquiryResult = responseMapper.mapInquiry(inquiryRes);
 
-            if (!inquiryResult.isSuccess()) {
+            String code = inquiryRes.getReturn_div();
 
-                log.error("[PlusN] 취소 불가 orderId={}, message={}",
-                        orderId, inquiryResult.getMessage());
+            if (!"0000".equals(code) && !"0005".equals(code)) {
+
+                log.error("[PlusN] 취소 불가 order_sales={}, message={}",
+                        req.getOrder_sales(),
+                        inquiryRes.getReturn_msg());
 
                 return PlusNBatchCancelResponse.fail(
-                        "취소 불가: " + inquiryResult.getMessage()
+                        "취소 불가: " + inquiryRes.getReturn_msg()
+                );
+            }
+
+            // 사용된 쿠폰
+            if (inquiryRes.getResult_date() != null) {
+                log.error("[PlusN] 사용된 쿠폰 order_sales={}",
+                        req.getOrder_sales());
+
+                return PlusNBatchCancelResponse.fail(
+                        "사용된 쿠폰이 포함되어 취소할 수 없습니다."
                 );
             }
         }
 
-        // 전부 취소 실행
+        // =========================
+        // 2. 전체 취소 실행
+        // =========================
         List<String> canceledTickets = new ArrayList<>();
 
         for (PlusNCancelRequest req : tickets) {
-
+            log.info("[PlusN] cancel try order_sales={}", req.getOrder_sales());
             PlusNCancelResponse cancelRes = client.cancel(req);
-            var cancelResult = responseMapper.mapCancel(cancelRes);
 
-            if (!cancelResult.isSuccess()) {
+            if (!"0000".equals(cancelRes.getReturn_div())) {
 
-                log.error("[PlusN] 취소 실패 orderId={}, message={}",
-                        orderId, cancelResult.getMessage());
+                log.error("[PlusN] 취소 실패 order_sales={}, message={}",
+                        req.getOrder_sales(),
+                        cancelRes.getReturn_msg());
 
                 return PlusNBatchCancelResponse.fail(
-                        "취소 실패: " + cancelResult.getMessage()
+                        "취소 실패: " + cancelRes.getReturn_msg()
                 );
             }
 
