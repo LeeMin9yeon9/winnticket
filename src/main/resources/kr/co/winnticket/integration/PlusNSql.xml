@@ -48,8 +48,8 @@
 
     <!-- 취소 -->
     <resultMap id="PlusNCancelMap" type="kr.co.winnticket.integration.plusn.dto.PlusNCancelRequest">
+        <id property="order_sales" column="ORDER_SALES"/>
         <result property="order_id" column="ORDER_ID"/>
-        <result property="order_sales" column="ORDER_SALES"/>
         <result property="result_date" column="RESULT_DATE"/>
     </resultMap>
     <select id="selectPlusNCancel" resultMap="PlusNCancelMap">
