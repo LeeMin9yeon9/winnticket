@@ -6,7 +6,6 @@ import java.util.List;
 
 @Data
 public class PlusNOrderRequest {
-    private Integer rowNo;
     private String order_id;
     private String user_name;
     private String user_hp;
@@ -16,6 +15,7 @@ public class PlusNOrderRequest {
 
     @Data
     public static class ClassDiv {
+        private Integer rowNo;
         private String gubun;         // A/B
         private String goods_code;    // 상품코드
         private String cnt;           // 수량(문서상 String, 1 고정)
