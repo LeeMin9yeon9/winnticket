@@ -7,4 +7,5 @@ import java.util.UUID;
 @Data
 public class PlusNTicket {
     private UUID ticketId;
+    private String goodsCode;
 }
