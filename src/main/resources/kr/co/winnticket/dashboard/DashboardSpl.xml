@@ -111,9 +111,9 @@
         SELECT
             p.name AS partnerName,
             COUNT(DISTINCT pr.id) AS productCount,
-            COUNT(DISTINCT o.id) AS orderCount,
-            COALESCE(SUM(oi.total_price), 0) AS salesAmount,
-            COALESCE(SUM((pov.additional_price - pov.base_price) * oi.quantity), 0) AS netProfit
+            COALESCE(SUM(oi.quantity),0) AS orderCount,   -- 판매티켓 수
+            COALESCE(SUM(oi.total_price), 0) AS salesAmount,  -- 매출
+            COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit  -- 순이켓
 
         FROM partners p
                  LEFT JOIN products pr
@@ -189,9 +189,9 @@
 
         SELECT
         DATE(o.created_at) AS date,
-        SUM(oi.quantity) AS orderCount,
+        COALESCE(SUM(oi.quantity),0) AS orderCount,
         COALESCE(SUM(oi.total_price), 0) AS salesAmount,
-        COALESCE(SUM((pov.additional_price - pov.base_price) * oi.quantity), 0) AS netProfit
+        COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit
 
         FROM orders o
         JOIN order_items oi
