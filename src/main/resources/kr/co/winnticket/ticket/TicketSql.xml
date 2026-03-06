@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.ticket.mapper.TicketMapper">
-    <!-- 쿠폰 사용처리 -->
+    <!-- 플러스앤 쿠폰 사용처리 -->
     <update id="updateTicketUsed">
         UPDATE order_tickets
         SET
@@ -27,4 +27,15 @@
           AND tc.used_at IS NULL
             LIMIT 100
     </select>
+
+    <!-- 스파비스 쿠폰 사용처리 -->
+    <update id="updateSpavisTicketUsed">
+        UPDATE order_tickets
+        SET
+            ticket_used = true,
+            ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+        WHERE partner_id = #{partnerId}
+          AND ticket_number = #{couponNo}
+          AND ticket_used = false
+    </update>
 </mapper>
