@@ -6,13 +6,13 @@
 
     <!--주문-->
     <resultMap id="PlusNOrderMap" type="kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest">
-        <id property="rowNo" column="ROW_NO"/>
         <result property="order_id" column="ORDER_ID"/>
         <result property="user_name" column="USER_NAME"/>
         <result property="user_hp" column="USER_HP"/>
         <result property="user_email" column="USER_EMAIL"/>
         <result property="order_date" column="ORDER_DATE"/>
         <collection property="class_div" ofType="kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest$ClassDiv">
+            <id property="rowNo" column="ROW_NO"/>
             <result property="gubun" column="GUBUN"/>
             <result property="goods_code" column="GOODS_CODE"/>
             <result property="cnt" column="CNT"/>
@@ -68,7 +68,8 @@
 
     <select id="selectTicketsForPlusN" resultType="kr.co.winnticket.integration.plusn.dto.PlusNTicket">
         SELECT
-            ot.id AS ticket_id
+            ot.id AS ticket_id,
+            pov.code AS goods_code
         FROM order_tickets ot
                  JOIN order_items oi
                       ON ot.order_item_id = oi.id
@@ -78,7 +79,7 @@
                       ON pov.id = oio.option_value_id
         WHERE oi.order_id = #{orderId}
           AND oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
-        ORDER BY oi.id, pov.code, ot.id
+        ORDER BY oi.id, ot.id
     </select>
 
     <update id="updateTicketOrderSales">

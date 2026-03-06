@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -37,23 +36,27 @@ public class PlusNService {
         );
 
         List<PlusNOrderResponse.Coupon> coupons = res.getCoupon();
-
-        if (coupons == null || coupons.isEmpty()) {
-            throw new IllegalStateException("PlusN coupon 응답 없음");
-        }
-
         List<PlusNTicket> tickets = mapper.selectTicketsForPlusN(orderId);
 
-        if (tickets.size() != coupons.size()) {
-            throw new IllegalStateException(
-                    "PlusN coupon 수와 ticket 수 불일치"
-            );
-        }
+        Map<String, Queue<PlusNOrderResponse.Coupon>> couponMap =
+                coupons.stream()
+                        .collect(Collectors.groupingBy(
+                                PlusNOrderResponse.Coupon::getGoods_code,
+                                Collectors.toCollection(LinkedList::new)
+                        ));
 
-        for (int i = 0; i < tickets.size(); i++) {
+        for (PlusNTicket ticket : tickets) {
 
-            PlusNTicket ticket = tickets.get(i);
-            PlusNOrderResponse.Coupon coupon = coupons.get(i);
+            Queue<PlusNOrderResponse.Coupon> queue =
+                    couponMap.get(ticket.getGoodsCode());
+
+            if (queue == null || queue.isEmpty()) {
+                throw new IllegalStateException(
+                        "PlusN coupon 매칭 실패 goods_code=" + ticket.getGoodsCode()
+                );
+            }
+
+            PlusNOrderResponse.Coupon coupon = queue.poll();
 
             mapper.updateTicketOrderSales(
                     ticket.getTicketId(),
