@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.ticket.mapper.TicketMapper">
+    <update id="updateTicketUsed">
+        UPDATE order_tickets
+        SET
+            ticket_used = true,
+            ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+        WHERE partner_id = #{partnerId}
+          AND partner_order_code = #{orderSales}
+          AND ticket_used = false
+    </update>
+</mapper>
