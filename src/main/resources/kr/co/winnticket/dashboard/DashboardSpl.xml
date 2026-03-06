@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="kr.co.winnticket.dashboard.mapper.DashboardMapper">
 
 
@@ -33,14 +34,16 @@
         FROM partners
     </select>
 
-    <!-- 활성화 파트너 수-->
+
+    <!-- 활성 파트너 -->
     <select id="selectActivePartnerCount" resultType="int">
         SELECT COUNT(*)
         FROM partners
         WHERE status = 'ACTIVE'
     </select>
 
-    <!-- 비활성화 파트너 수 -->
+
+    <!-- 비활성 파트너 -->
     <select id="selectInactivePartnerCount" resultType="int">
         SELECT COUNT(*)
         FROM partners
@@ -54,44 +57,44 @@
         FROM orders
     </select>
 
-    <!-- 완료 주문 수 -->
-    <select id="selectOrderCount" resultType="int">
 
+    <!-- 주문 완료 -->
+    <select id="selectOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE status = 'COMPLETED'
-        AND payment_status = 'PAID'
-
+          AND payment_status = 'PAID'
     </select>
 
-    <!-- 취소 주문 수 -->
+
+    <!-- 주문 취소 -->
     <select id="selectCancelOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE status = 'CANCELED'
-        OR payment_status = 'CANCELED'
+           OR payment_status = 'CANCELED'
     </select>
 
 
-    <!-- 이번달 주문 -->
+    <!-- 이번달 전체 주문 -->
     <select id="selectThisMonthTotalOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE created_at >= DATE_TRUNC('month', NOW())
     </select>
 
-    <!--이번달 주문 완료 수-->
-    <select id="selectThisMonthOrderCount" resultType="int">
 
+    <!-- 이번달 완료 주문 -->
+    <select id="selectThisMonthOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE status = 'COMPLETED'
-            AND payment_status = 'PAID'
-            AND created_at >= DATE_TRUNC('month', NOW())
-
+          AND payment_status = 'PAID'
+          AND created_at >= DATE_TRUNC('month', NOW())
     </select>
 
-    <!--이번달 주문 취소 수-->
+
+    <!-- 이번달 취소 주문 -->
     <select id="selectThisMonthCancelOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
@@ -100,46 +103,38 @@
     </select>
 
 
-    <!-- 파트너별 매출 -->
+
+    <!-- 파트너 매출 현황 -->
     <select id="selectPartnerSales"
             resultType="kr.co.winnticket.dashboard.dto.DashboardPartnerSalesDto">
 
         SELECT
             p.name AS partnerName,
-
             COUNT(DISTINCT pr.id) AS productCount,
             COUNT(DISTINCT o.id) AS orderCount,
-
-            /* 매출 */
-            COALESCE(SUM(oi.total_price),0) AS salesAmount,
-
-            /* 순이익 */
-            COALESCE(SUM((pov.base_price - pov.additional_price) * oi.quantity),0) AS netProfit
+            COALESCE(SUM(oi.total_price), 0) AS salesAmount,
+            COALESCE(SUM((pov.additional_price - pov.base_price) * oi.quantity), 0) AS netProfit
 
         FROM partners p
-
                  LEFT JOIN products pr
                            ON pr.partner_id = p.id
-
                  LEFT JOIN order_items oi
                            ON oi.product_id = pr.id
-
                  LEFT JOIN orders o
                            ON o.id = oi.order_id
-                               AND o.status = 'COMPLETED'
-                               AND o.payment_status = 'PAID'
-
                  LEFT JOIN order_item_options oio
                            ON oio.order_item_id = oi.id
-
                  LEFT JOIN product_option_values pov
                            ON pov.id = oio.option_value_id
+
+        WHERE o.status = 'COMPLETED'
+          AND o.payment_status = 'PAID'
 
         GROUP BY p.id, p.name
         ORDER BY salesAmount DESC
 
-
     </select>
+
 
 
     <!-- 카테고리별 상품 -->
@@ -161,13 +156,14 @@
     </select>
 
 
+
     <!-- 상위 판매 상품 -->
     <select id="selectTopProducts"
             resultType="kr.co.winnticket.dashboard.dto.DashboardTopProductDto">
 
         SELECT
             p.name AS productName,
-            COUNT(DISTINCT o.id) AS orderCount
+            SUM(oi.quantity) AS orderCount
 
         FROM order_items oi
 
@@ -186,44 +182,44 @@
     </select>
 
 
-    <!-- 최근 7일 판매 추이 -->
+
+    <!-- 판매 추이 -->
     <select id="selectDailySales"
             resultType="kr.co.winnticket.dashboard.dto.DashboardDailySalesDto">
 
         SELECT
         DATE(o.created_at) AS date,
         SUM(oi.quantity) AS orderCount,
-        COALESCE(SUM(oi.total_price),0) AS salesAmount
+        COALESCE(SUM(oi.total_price), 0) AS salesAmount,
+        COALESCE(SUM((pov.additional_price - pov.base_price) * oi.quantity), 0) AS netProfit
 
         FROM orders o
         JOIN order_items oi
         ON oi.order_id = o.id
+        JOIN order_item_options oio
+        ON oio.order_item_id = oi.id
+        JOIN product_option_values pov
+        ON pov.id = oio.option_value_id
 
         WHERE o.status = 'COMPLETED'
         AND o.payment_status = 'PAID'
 
         <choose>
-
-            <!-- 주간 -->
             <when test="period == 'week'">
                 AND o.created_at >= NOW() - INTERVAL '7 days'
             </when>
-
-            <!-- 월간 -->
             <when test="period == 'month'">
                 AND o.created_at >= DATE_TRUNC('month', NOW())
             </when>
-
-            <!-- 연간 -->
             <when test="period == 'year'">
                 AND o.created_at >= DATE_TRUNC('year', NOW())
             </when>
-
         </choose>
 
         GROUP BY DATE(o.created_at)
         ORDER BY date
 
     </select>
+
 
 </mapper>

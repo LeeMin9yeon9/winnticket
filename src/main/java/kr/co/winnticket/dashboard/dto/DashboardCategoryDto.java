@@ -14,7 +14,5 @@ public class DashboardCategoryDto {
     @Schema(description="상품 수")
     private int productCount;
 
-    @Schema(description = "순이익")
-    private long netProfit;
 
 }
