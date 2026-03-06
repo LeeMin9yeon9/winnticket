@@ -6,6 +6,7 @@
 
     <!--주문-->
     <resultMap id="PlusNOrderMap" type="kr.co.winnticket.integration.plusn.dto.PlusNOrderRequest">
+        <id property="rowNo" column="ROW_NO"/>
         <result property="order_id" column="ORDER_ID"/>
         <result property="user_name" column="USER_NAME"/>
         <result property="user_hp" column="USER_HP"/>
@@ -20,6 +21,7 @@
     </resultMap>
     <select id="selectPlusNOrderBase" resultMap="PlusNOrderMap">
         SELECT
+            ROW_NUMBER() OVER() AS ROW_NO,
             o.order_number AS ORDER_ID,
             o.customer_name AS USER_NAME,
             o.customer_phone AS USER_HP,
