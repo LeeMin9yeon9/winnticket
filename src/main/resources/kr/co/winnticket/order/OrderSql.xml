@@ -499,7 +499,7 @@
     <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
         SELECT id
         FROM orders
-        WHERE order_number = #{orderNumber}
+        WHERE id = #{orderId}::uuid
     </select>
 
 </mapper>

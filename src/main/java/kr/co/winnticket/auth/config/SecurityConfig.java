@@ -168,6 +168,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of(
+                "https://*.ngrok-free.dev",
                 "https://*.benepia.co.kr",
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
