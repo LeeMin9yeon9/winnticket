@@ -39,6 +39,7 @@
          ON oi.id = oio.order_item_id
          JOIN product_option_values pov
          ON pov.id = oio.option_value_id
+         JOIN generate_series(1, oi.quantity) g(n) ON true
         WHERE o.id = #{orderId}
         And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
