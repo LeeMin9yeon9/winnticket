@@ -3,7 +3,6 @@ package kr.co.winnticket.order.admin.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
@@ -48,7 +47,6 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final TicketCouponService ticketCouponService;
     private final ProductMapper productMapper;
-    private final ShopCartService shopCartService;
 
 
     // 파트너 연동
