@@ -28,20 +28,20 @@
             CASE
                 WHEN oio.option_value LIKE '%소인%' THEN 'B'
                 ELSE 'A'
-            END AS GUBUN,
+                END AS GUBUN,
             pov.code AS GOODS_CODE,
             '1' AS CNT,
             '' AS SELECTED_DATE
         FROM orders o
-         JOIN order_items oi
-         ON o.id = oi.order_id
-         JOIN order_item_options oio
-         ON oi.id = oio.order_item_id
-         JOIN product_option_values pov
-         ON pov.id = oio.option_value_id
-         JOIN generate_series(1, oi.quantity) g(n) ON true
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+                 JOIN order_item_options oio
+                      ON oi.id = oio.order_item_id
+                 JOIN product_option_values pov
+                      ON pov.id = oio.option_value_id
+                 CROSS JOIN generate_series(1, oi.quantity) g(n)
         WHERE o.id = #{orderId}
-        And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
+          AND oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
     </select>
 
     <!-- 취소 -->
