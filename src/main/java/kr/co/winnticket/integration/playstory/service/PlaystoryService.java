@@ -7,12 +7,14 @@ import kr.co.winnticket.integration.playstory.dto.*;
 import kr.co.winnticket.integration.playstory.mapper.PlaystoryMapper;
 import kr.co.winnticket.integration.playstory.mapper.PlaystoryResponseMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PlaystoryService {
 
     private final PlaystoryClient playstoryClient;
@@ -24,6 +26,7 @@ public class PlaystoryService {
         PlaystoryOrderRequest req = mapper.selectPlaystoryOrder(orderId);
         req.setChnId(config.getChnId());
 
+        log.info("Playstory request = {}", req);
         PlaystoryOrderResponse response = playstoryClient.order(req);
 
         IntegrationResult result = responseMapper.mapOrder(response);
