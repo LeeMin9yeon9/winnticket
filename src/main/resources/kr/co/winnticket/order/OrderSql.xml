@@ -209,6 +209,7 @@
     <select id="selectOrderTicketList" resultType="kr.co.winnticket.order.admin.dto.OrderTicketListGetResDto">
         SELECT
             a.id,  -- 티켓id
+            a.order_item_id,  -- 주문상품_id
             a.ticket_number,  -- 티켓번호
             b.product_name || ' (' || STRING_AGG(f.option_value, ' ' ORDER BY f.id) || ')' product_name,  -- 상품명
             e.name partner_name,  -- 파트너명

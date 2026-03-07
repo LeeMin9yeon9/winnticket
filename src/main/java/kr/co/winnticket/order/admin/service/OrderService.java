@@ -3,6 +3,7 @@ package kr.co.winnticket.order.admin.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
@@ -172,37 +173,31 @@ public class OrderService {
             if (split.isHasWoongin()) {
                 log.info("[웅진 상품이래요!]");
                 woongjinService.order(auId);
-                log.info("[웅진 결과!] = {}", woongjinService.order(auId));
             }
 
             if (split.isHasPlaystory()) {
                 log.info("[플레이스토리 상품이래요!]");
                 playstoryService.order(auId);
-                log.info("[플레이스토리 결과!] = {}", playstoryService.order(auId));
             }
 
             if (split.isHasMair()) {
                 log.info("[엠에어 상품이래요!]");
                 mairService.issueTickets(order.getOrderNumber());
-                log.info("[엠에어 결과!] = {}", mairService.issueTickets(order.getOrderNumber()));
             }
 
             if (split.isHasCoreworks()) {
                 log.info("[코어웍스 상품이래요!]");
                 coreWorksService.order(auId);
-                log.info("[코어웍스 결과!] = {}", coreWorksService.order(auId));
             }
 
             if (split.isHasSmartInfini()) {
                 log.info("[스마트인피니 상품이래요!]");
                 smartInfiniService.order(auId);
-                log.info("[스마트인피니 결과!] = {}", smartInfiniService.order(auId));
             }
 
             if (split.isHasPlusN()) {
                 log.info("[플러스앤 상품이래요!]");
                 plusNService.order(auId);
-                log.info("[플러스앤 결과!] = {}", plusNService.order(auId));
             }
 
             /*
@@ -416,7 +411,7 @@ public class OrderService {
 
     // 주문 취소
     @Transactional
-    public void cancelOrder(UUID orderId) throws JsonProcessingException{
+    public void cancelOrder(UUID orderId) throws Exception {
 
         // 주문 조회
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
@@ -462,10 +457,53 @@ public class OrderService {
             dto.setCancelReason("관리자 취소");
 
             cancelResult = kcpService.cancelPoint(dto);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
 
-        else {
-            throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
+        List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
+        PartnerSplitResult split = splitByPartner(items);
+
+        if (split.isHasWoongin()) {
+            log.info("[웅진 상품이래요!]");
+            woongjinService.cancel(orderId);
+        }
+
+        if (split.isHasPlaystory()) {
+            log.info("[플레이스토리 상품이래요!]");
+            playstoryService.cancel(orderId);
+        }
+
+        if (split.isHasMair()) {
+            log.info("[엠에어 상품이래요!]");
+            //mairService.cancelByOrder(order.getOrderNumber(), items.g);
+        }
+
+        if (split.isHasCoreworks()) {
+            log.info("[코어웍스 상품이래요!]");
+            coreWorksService.cancel(orderId);
+        }
+
+        if (split.isHasSmartInfini()) {
+            log.info("[스마트인피니 상품이래요!]");
+            smartInfiniService.cancelMulti(orderId);
+        }
+
+        if (split.isHasPlusN()) {
+            log.info("[플러스앤 상품이래요!]");
+            plusNService.cancel(orderId);
+        }
+
+        /*
+        if (split.isHasAquaplanet()) {
+            log.info("[아쿠아플래닛 상품이래요!]");
+            aquaplanetService.cancel(orderId);
+        }
+         */
+
+        if (split.isHasSpavis()) {
+            log.info("[스파비스 상품이래요!]");
+            spavisService.check(orderId);
         }
 
         String payloadJson = objectMapper.writeValueAsString(cancelResult);
@@ -499,5 +537,50 @@ public class OrderService {
         completePayment(orderId);
     }
 
+    // 문자 재전송
+    @Transactional
+    public void resendTicketSms(UUID orderId) {
+        // 주문 조회
+        OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
+        if (order == null) {
+            throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+        }
+
+        // 결제 완료만 취소
+        if (order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalStateException("결제 완료된 주문만 재전송할 수 있습니다.");
+        } else if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new IllegalStateException("주문 완료된 주문만 재전송할 수 있습니다.");
+        }
+
+        // 상품 조회
+        List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
+
+        PartnerSplitResult split = splitByPartner(items);
+
+        log.info("[SMS RESEND] orderId={}, split={}", orderId, split);
+
+        if(split.isHasSpavis() || split.isHasNormalProduct()){
+            // 티켓 조회
+            List<OrderTicketListGetResDto> tickets = mapper.selectOrderTicketList(orderId);
+
+            // ticketMap 생성
+            Map<UUID, List<String>> ticketMap = new HashMap<>();
+
+            for (OrderTicketListGetResDto ticket : tickets) {
+                ticketMap
+                        .computeIfAbsent(ticket.getOrderItemId(), k -> new ArrayList<>())
+                        .add(ticket.getTicketNumber());
+            }
+
+            // 일반상품만 추출
+            List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
+
+            // 발권 문자 재전송
+            sendTicketIssuedSms(order, normalItems, ticketMap);
+
+            log.info("[TICKET_SMS_RESEND] orderId={}", orderId);
+        }
+    }
 }
 

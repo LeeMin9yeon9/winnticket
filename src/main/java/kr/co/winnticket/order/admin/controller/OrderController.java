@@ -107,9 +107,18 @@ public class OrderController {
     @Operation(summary = "주문 취소(관리자)", description = "관리자가 주문을 취소합니다.")
     public ResponseEntity<ApiResponse<String>> cancelOrder(
             @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
-    ) throws JsonProcessingException {
+    ) throws Exception {
         service.cancelOrder(orderId);
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료",orderId.toString()));
+    }
+
+    @PostMapping("{id}/sms/resend-ticket")
+    @Operation(summary = "문자 재전송(관리자)", description = "관리자가 티켓정보를 재전송합니다.")
+    public ResponseEntity<ApiResponse<String>> resendTicketSms(
+            @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
+    ) throws Exception {
+        service.resendTicketSms(orderId);
+        return ResponseEntity.ok(ApiResponse.success("재전송 완료",orderId.toString()));
     }
 
 
