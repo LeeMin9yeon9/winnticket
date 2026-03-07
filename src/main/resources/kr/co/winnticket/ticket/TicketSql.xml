@@ -39,7 +39,7 @@
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
           AND oi.partner_id = #{partnerId}
-          AND ot.ticket_number = #{ticketNumber}
+          AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
     </update>
 </mapper>
