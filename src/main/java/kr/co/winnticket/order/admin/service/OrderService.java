@@ -148,7 +148,7 @@ public class OrderService {
                         ticketNumber = ticketCouponService.issueCoupon(item.getId());
                     } else {
                         log.info("[아니 선사입아냐]");
-                        ticketNumber = generateTicketNumber(auId, item.getId());
+                        ticketNumber = generateTicketNumber();
 
                         mapper.insertOrderTicket(
                                 item.getId(),   // orderItemId
@@ -385,10 +385,9 @@ public class OrderService {
     }
 
     // 티켓번호 생성
-    private String generateTicketNumber(UUID auId, UUID orderItemId) {
-        return "T-"
+    private String generateTicketNumber() {
+        return "T"
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                + "-"
                 + UUID.randomUUID().toString().substring(0, 8);
     }
 
