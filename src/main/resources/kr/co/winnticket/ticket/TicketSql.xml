@@ -10,7 +10,7 @@
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
-        WHERE oi.partner_id = #{partnerId}
+          And oi.partner_id = #{partnerId}
           AND ot.partner_order_code = #{orderSales}
           AND ot.ticket_used = false
     </update>
