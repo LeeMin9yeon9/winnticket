@@ -41,9 +41,9 @@
                     'A1'
             End) AS OPT_CD,
             1  AS OPT_AMOUNT,
-            '26030718153001' As PROD_CD,
+            pov.code As PROD_CD,
             oio.additional_price               AS OPT_PRICE,
-            ot.ticket_number           AS CPN_NO
+            '26030718153001'           AS CPN_NO
         FROM orders o
          JOIN order_items oi
               ON o.id = oi.order_id
