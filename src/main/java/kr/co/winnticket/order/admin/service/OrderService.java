@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
@@ -440,7 +439,7 @@ public class OrderService {
 
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             //cancelVirtualAccount(order);
-        } else if (method == PaymentMethod.CARD) {
+        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
             cancelResult =  payletterService.cancel(orderId);
         } else if (method == PaymentMethod.POINT) {
 
