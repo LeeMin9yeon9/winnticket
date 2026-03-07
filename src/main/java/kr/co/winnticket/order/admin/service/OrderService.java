@@ -388,7 +388,7 @@ public class OrderService {
     private String generateTicketNumber() {
         return "T"
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                + UUID.randomUUID().toString().substring(0, 4);
+                + UUID.randomUUID().toString().substring(0, 8);
     }
 
     // 티켓 사용 처리
