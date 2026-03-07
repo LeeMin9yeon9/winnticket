@@ -31,17 +31,14 @@ public class PlaystoryClient {
     }
 
     public PlaystoryOrderResponse order(PlaystoryOrderRequest req) {
-        req.setChnId(config.getChnId());
         return post("/api/order", req, PlaystoryOrderResponse.class);
     }
 
     public PlaystoryCheckResponse check(PlaystoryCheckRequest req) {
-        req.setChnId(config.getChnId());
         return post("/api/check", req, PlaystoryCheckResponse.class);
     }
 
     public PlaystoryCheckCancelResponse cancel(PlaystoryCheckCancelRequest req) {
-        req.setChnId(config.getChnId());
         return post("/api/cancel", req, PlaystoryCheckCancelResponse.class);
     }
 }
