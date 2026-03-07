@@ -136,13 +136,9 @@ public class PayletterService {
                     ? String.valueOf(payload.get("custom_parameter"))
                     : null;
 
-            if(orderIdStr == null){
-                throw new IllegalStateException("orderId 없음");
-            }
-
             UUID orderId = UUID.fromString(orderIdStr);
 
-            log.info("[PAYLETTER] callback received orderNumber={}", orderId);
+            log.info("[PAYLETTER] callback received orderId={}", orderId);
 
             // 콜백 필수 값 추출
             String userId = payload.get("user_id") != null ? String.valueOf(payload.get("user_id")) : null;
@@ -197,13 +193,16 @@ public class PayletterService {
 
             // 이미 처리된 콜백이면 종료
             if(updated != 1){
-                log.warn("[PAYLETTER] already processed orderId={}", orderId);
+                log.info("[PAYLETTER] already processed orderId={}", orderId);
+                return;
 
             }
+            log.info("[PAYLETTER] callback processed orderId={}", orderId);
+
 
         } catch (Exception e) {
             log.error("[PAYLETTER] callback error payload={}", payload, e);
-            throw new RuntimeException(e);
+
         }
     }
 
@@ -374,6 +373,8 @@ public class PayletterService {
 
         return res;
     }
+
+
 
 
 }
