@@ -8,7 +8,7 @@ import java.util.List;
 public class PlaystoryOrderRequest {
 
     @JsonProperty("CHN_ID")
-    private String chnId;   // 판매채널 ID (P240076)
+    private String chnId;   // 판매채널 ID
 
     @JsonProperty("ORD_PHONE")
     private String ordPhone;

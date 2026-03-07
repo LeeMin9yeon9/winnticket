@@ -34,7 +34,12 @@
             o.customer_name        AS REC_NAME,
             o.customer_email       AS REC_EMAIL,
             o.order_number         AS SHOP_ORDER_NO,
-            'A1'         AS OPT_CD,
+            (Case
+                When pov.code = 'P260509' THEN
+                    'B1'
+                Else
+                    'A1'
+            End) AS OPT_CD,
             1  AS OPT_AMOUNT,
             pov.code As PROD_CD,
             oio.additional_price               AS OPT_PRICE,

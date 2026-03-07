@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
@@ -160,6 +161,8 @@ public class OrderService {
 
                 ticketMap.put(item.getId(), ticketNumbers);
             }
+
+            log.info("[티켓] = {}", ticketMap);
 
             // 주문 상태 변경
             log.info("[주문상태 변경 시작!]");
@@ -412,9 +415,9 @@ public class OrderService {
     @Transactional
     public void cancelOrder(UUID orderId) throws Exception {
 
-        // 주문 조회
+        // 1. 주문 조회
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
-        if(order == null){
+        if (order == null) {
             throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
         }
 
@@ -422,7 +425,6 @@ public class OrderService {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
 
-        // 결제 완료만 취소
         if (order.getPaymentStatus() != PaymentStatus.PAID) {
             throw new IllegalStateException("결제 완료된 주문만 취소할 수 있습니다.");
         }
@@ -432,20 +434,68 @@ public class OrderService {
         if (usedTicketCount > 0) {
             throw new IllegalStateException("사용된 티켓이 포함된 주문은 취소할 수 없습니다.");
         }
-        // 2) 결제수단 분기
-        PaymentMethod method = order.getPaymentMethod();
 
+        // 상품 조회
+        List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
+
+        PartnerSplitResult split = splitByPartner(items);
+
+        /*
+         * =========================
+         * 1. 파트너 취소 먼저
+         * =========================
+         */
+
+        if (split.isHasWoongin()) {
+            log.info("[웅진 취소 시작]");
+            woongjinService.cancel(orderId);
+        }
+
+        if (split.isHasPlaystory()) {
+            log.info("[플레이스토리 취소 시작]");
+            playstoryService.cancel(orderId);
+        }
+
+        if (split.isHasMair()) {
+            log.info("[엠에어 취소 시작]");
+            // mairService.cancelByOrder(order.getOrderNumber());
+        }
+
+        if (split.isHasCoreworks()) {
+            log.info("[코어웍스 취소 시작]");
+            coreWorksService.cancel(orderId);
+        }
+
+        if (split.isHasSmartInfini()) {
+            log.info("[스마트인피니 취소 시작]");
+            smartInfiniService.cancelMulti(orderId);
+        }
+
+        if (split.isHasPlusN()) {
+            log.info("[플러스앤 취소 시작]");
+            plusNService.cancel(orderId);
+        }
+
+    /*
+    if (split.isHasAquaplanet()) {
+        aquaplanetService.cancel(orderId);
+    }
+    */
+
+        /*
+         * =========================
+         * 2. PG 취소
+         * =========================
+         */
+
+        PaymentMethod method = order.getPaymentMethod();
         Object cancelResult = null;
 
-        if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
-            //cancelVirtualAccount(order);
-        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
-            cancelResult =  payletterService.cancel(orderId);
+
+        if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
+            cancelResult = payletterService.cancel(orderId);
         } else if (method == PaymentMethod.POINT) {
-
             Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
-
-            log.info("payInfo = {}", payInfo);
 
             if (payInfo == null || payInfo.get("pg_tid") == null) {
                 throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
@@ -456,68 +506,37 @@ public class OrderService {
             dto.setCancelReason("관리자 취소");
 
             cancelResult = kcpService.cancelPoint(dto);
+
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
 
-        List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
-        PartnerSplitResult split = splitByPartner(items);
+        /*
+         * =========================
+         * 3. DB 상태 변경
+         * =========================
+         */
 
-        if (split.isHasWoongin()) {
-            log.info("[웅진 상품이래요!]");
-            woongjinService.cancel(orderId);
-        }
+        String payloadJson = objectMapper.writeValueAsString(cancelResult);
 
-        if (split.isHasPlaystory()) {
-            log.info("[플레이스토리 상품이래요!]");
-            playstoryService.cancel(orderId);
-        }
+        int updated = mapper.updateOrderCancelSuccess(orderId, payloadJson);
 
-        if (split.isHasMair()) {
-            log.info("[엠에어 상품이래요!]");
-            //mairService.cancelByOrder(order.getOrderNumber(), items.g);
-        }
-
-        if (split.isHasCoreworks()) {
-            log.info("[코어웍스 상품이래요!]");
-            coreWorksService.cancel(orderId);
-        }
-
-        if (split.isHasSmartInfini()) {
-            log.info("[스마트인피니 상품이래요!]");
-            smartInfiniService.cancelMulti(orderId);
-        }
-
-        if (split.isHasPlusN()) {
-            log.info("[플러스앤 상품이래요!]");
-            plusNService.cancel(orderId);
+        if (updated != 1) {
+            throw new IllegalStateException("주문 취소 상태 변경 실패");
         }
 
         /*
-        if (split.isHasAquaplanet()) {
-            log.info("[아쿠아플래닛 상품이래요!]");
-            aquaplanetService.cancel(orderId);
-        }
+         * =========================
+         * 4. 문자 발송
+         * =========================
          */
 
-        if (split.isHasSpavis()) {
-            log.info("[스파비스 상품이래요!]");
-            spavisService.check(orderId);
-        }
-
-        String payloadJson = objectMapper.writeValueAsString(cancelResult);
-        int updated = mapper.updateOrderCancelSuccess(orderId, payloadJson);
-
-
-       if(updated != 1){
-           throw new IllegalStateException("주문 취소 상태 변경 실패");
-       }
-
         sendOrderCancelledSms(order);
-        log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
 
+        log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
     }
 
+    /*
     @Transactional
     public void completePaymentByOrderNumber(String orderNumber) {
 
@@ -535,6 +554,7 @@ public class OrderService {
         //  기존 결제 완료 로직 호출
         completePayment(orderId);
     }
+     */
 
     // 문자 재전송
     @Transactional
