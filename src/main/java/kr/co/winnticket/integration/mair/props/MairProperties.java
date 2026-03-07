@@ -11,8 +11,8 @@ public class MairProperties {
 
     private String mode; // dev | prod
 
-    private String mkno;  // 채널 구분자 HDGH
-    private String mkid;  // 채널 아이디 HDGH1
+    private String mkNo;  // 채널 구분자 HDGH
+    private String mkId;  // 채널 아이디 HDGH1
 
     private Integer connectTimeoutMs = 2000;   // 연결 시도 시간 제한
     private Integer responseTimeoutMs = 5000;   // 응답 대기 시간 제한
