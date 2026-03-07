@@ -14,4 +14,5 @@ public class MairOrderInfoDto {
     private String customerName;  // 주문자
     private String customerPhone;  // 주문자핸드폰
     private String paymentStatus;  // 결제상태
+    private String orderStatus; //주문상태
 }

@@ -3,38 +3,32 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.winnticket.integration.mair.mapper.MairOrderMapper">
 
-    <select id="selectOrderInfo"
-            parameterType="string"
-            resultType="kr.co.winnticket.integration.mair.dto.MairOrderInfoDto">
+    <!--주문 기본정보 조회-->
+    <select id="selectOrderInfo" parameterType="string" resultType="kr.co.winnticket.integration.mair.dto.MairOrderInfoDto">
 
-        SELECT
-            o.id AS orderId,
-            o.order_number AS orderNumber,
-            o.payment_status AS paymentStatus,
-            o.customer_name AS customerName,
-            o.customer_phone AS customerPhone
-        FROM orders o
-         JOIN order_items oi
-              ON o.id = oi.order_id
-        WHERE o.order_number = #{orderNumber}
-      And oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
+            SELECT
+                o.id AS orderId,
+                o.order_number AS orderNumber,
+                o.payment_status AS paymentStatus,
+                o.customer_name AS customerName,
+                o.customer_phone AS customerPhone
+            FROM orders o
+            WHERE o.order_number = #{orderNumber}
     </select>
 
         <!-- 주문 조회-->
-    <select id="selectOrderItemInfos"
-            parameterType="java.util.UUID"
-            resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
-        SELECT
-            oi.id AS orderItemId,
-            oi.product_id AS productId,
-            p.code AS productCode,
-            oi.quantity AS quantity
-        FROM order_items oi
-        JOIN products p
-        ON p.id = oi.product_id
-        WHERE oi.order_id = #{orderId}
-        And oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
-        ORDER BY oi.created_at ASC
+    <select id="selectOrderItemInfos" parameterType="java.util.UUID" resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
+            SELECT
+                 oi.id AS orderItemId,
+                 oi.product_id AS productId,
+                 p.code AS productCode,
+                 oi.quantity AS quantity
+            FROM order_items oi
+            JOIN products p
+                ON p.id = oi.product_id
+            WHERE oi.order_id = #{orderId}
+                AND oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
+            ORDER BY oi.created_at ASC
     </select>
 
     <!-- 중복 발송 방지용 -->

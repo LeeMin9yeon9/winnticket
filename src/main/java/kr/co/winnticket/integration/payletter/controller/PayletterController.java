@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 @Log4j2
 @RestController
@@ -32,18 +33,23 @@ public class PayletterController {
 
         service.handleCallback(payload);
 
-        String orderNumber = String.valueOf(payload.get("custom_parameter"));
+        Object param = payload.get("custom_parameter");
+        if(param == null){
+            log.error("[PAYLETTER] custom_parameter missing payload={}", payload);
+            return ApiResponse.success("OK");
+        }
 
-        orderService.completePaymentByOrderNumber(orderNumber);
-
+        UUID orderId = UUID.fromString(String.valueOf(param));
 
         log.info("[PAYLETTER] callback payload={}", payload);
+
+        orderService.completePayment(orderId);
 
         return ApiResponse.success("OK");
     }
 
 
-    @GetMapping("/return")
+    @RequestMapping(value = "/return", method = {RequestMethod.GET, RequestMethod.POST})
     @Operation(summary = "Payletter 결제 완료 후 redirect", description = "Payletter 결제 완료 후 페이지 이동")
     public void payReturn(
             @RequestParam(required = false) String custom_parameter, HttpServletResponse response
@@ -56,7 +62,7 @@ public class PayletterController {
         );
     }
 
-    @GetMapping("/cancel")
+    @PostMapping("/cancel")
     @Operation(summary = "Payletter 결제 취소 redirect", description = "Payletter 결제 취소 후 주문페이지 이동")
     public String payCancel(
             @RequestParam(required = false) String custom_parameter) {
