@@ -3,6 +3,7 @@ package kr.co.winnticket.order.admin.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
@@ -543,6 +544,13 @@ public class OrderService {
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
         if (order == null) {
             throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+        }
+
+        // 결제 완료만 취소
+        if (order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalStateException("결제 완료된 주문만 재전송할 수 있습니다.");
+        } else if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new IllegalStateException("주문 완료된 주문만 재전송할 수 있습니다.");
         }
 
         // 상품 조회
