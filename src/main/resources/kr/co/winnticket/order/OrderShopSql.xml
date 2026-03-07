@@ -208,7 +208,6 @@
     <update id="updatePayletterCallbackSuccessIfNotPaid">
         UPDATE orders
         SET
-            payment_status = 'PAID'::payment_status,
         paid_at = CURRENT_TIMESTAMP,
         pg_provider = 'PAYLETTER',
         pg_tid = #{tid},
