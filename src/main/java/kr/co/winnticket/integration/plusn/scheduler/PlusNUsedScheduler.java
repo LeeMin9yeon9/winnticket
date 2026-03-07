@@ -72,17 +72,23 @@ public class PlusNUsedScheduler {
                 if (order.getCoupon() == null) continue;
 
                 for (Coupon coupon : order.getCoupon()) {
+                    try {
 
-                    int result = ticketMapper.updateTicketUsed(
-                            UUID.fromString("85f50a52-7096-470e-95f5-a8e9c1cd6589"),
-                            coupon.getOrder_sales(),
-                            coupon.getResult_date()
-                    );
+                        int result = ticketMapper.updateTicketUsed(
+                                UUID.fromString("85f50a52-7096-470e-95f5-a8e9c1cd6589"),
+                                coupon.getOrder_sales(),
+                                coupon.getResult_date()
+                        );
 
-                    if (result > 0) {
-                        updated++;
-                        log.info("[PlusN] ticket used order_sales={}",
-                                coupon.getOrder_sales());
+                        if (result > 0) {
+                            updated++;
+                        }
+
+                    } catch (Exception e) {
+
+                        log.error("[PlusN] update error orderSales={}",
+                                coupon.getOrder_sales(), e);
+
                     }
                 }
             }

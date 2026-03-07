@@ -41,9 +41,7 @@ public class SpavisScheduler {
             for (String couponNo : couponNos) {
 
                 try {
-
-                    SPCouponCheckResponse res =
-                            spavisClient.checkCoupon(couponNo);
+                    SPCouponCheckResponse res = spavisClient.checkCoupon(couponNo);
 
                     if (res == null) continue;
 
@@ -67,7 +65,6 @@ public class SpavisScheduler {
                     }
 
                 } catch (Exception e) {
-
                     log.error("[Spavis] error couponNo={}", couponNo, e);
 
                 }
