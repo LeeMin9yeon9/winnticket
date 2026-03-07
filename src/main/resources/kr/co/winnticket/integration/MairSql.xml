@@ -8,87 +8,39 @@
             resultType="kr.co.winnticket.integration.mair.dto.MairOrderInfoDto">
 
         SELECT
-            id AS orderId,
-            order_number AS orderNumber,
-            payment_status AS paymentStatus,
-            customer_name AS customerName,
-            customer_phone AS customerPhone
-        FROM orders
-        WHERE order_number = #{orderNumber}
-
+            o.id AS orderId,
+            o.order_number AS orderNumber,
+            o.payment_status AS paymentStatus,
+            o.customer_name AS customerName,
+            o.customer_phone AS customerPhone
+        FROM orders o
+         JOIN order_items oi
+              ON o.id = oi.order_id
+        WHERE o.order_number = #{orderNumber}
+      And oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
     </select>
 
         <!-- 주문 조회-->
     <select id="selectOrderItemInfos"
             parameterType="java.util.UUID"
             resultType="kr.co.winnticket.integration.mair.dto.MairOrderItemInfoDto">
-
         SELECT
-
-        oi.id AS orderItemId,
-        oi.product_id AS productId,
-        p.code AS productCode,
-        oi.quantity AS quantity
+            oi.id AS orderItemId,
+            oi.product_id AS productId,
+            p.code AS productCode,
+            oi.quantity AS quantity
         FROM order_items oi
         JOIN products p
         ON p.id = oi.product_id
-
         WHERE oi.order_id = #{orderId}
-
+        And oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
         ORDER BY oi.created_at ASC
-
     </select>
-
-
-    <!--티켓저장 테스트 -->
-    <insert id="insertOrderTicket">
-        INSERT INTO order_tickets (
-            id,
-            order_item_id,
-            ticket_number,
-            ticket_used,
-            ticket_canceled,
-            created_at
-        ) VALUES (
-                     uuid_generate_v4(),
-                     #{orderItemId},
-                     #{ticketNumber},
-                     false,
-                     false,
-                     CURRENT_TIMESTAMP
-                 )
-    </insert>
 
     <!-- 중복 발송 방지용 -->
     <select id="countOrderTickets" resultType="int">
         SELECT COUNT(1)
         FROM order_tickets
         WHERE order_item_id = #{orderItemId}
-    </select>
-
-    <!-- orderItemId에 속한 티켓번호 조회 -->
-    <select id="selectTicketNumbers" resultType="string">
-        SELECT ot.ticket_number
-        FROM order_tickets ot
-        WHERE ot.order_item_id = #{orderItemId}
-        ORDER BY ot.created_at ASC
-    </select>
-
-    <!-- 취소 , 상태 업데이트 -->
-    <update id="updateTicketsCanceled">
-        UPDATE order_tickets
-        SET ticket_canceled = true
-        WHERE order_item_id = #{orderItemId}
-          AND ticket_canceled = false
-          AND ticket_used = false
-    </update>
-
-    <!-- 취소 가능한 티켓 개수(미사용 + 미취소) -->
-    <select id="countCancelableTickets" resultType="int">
-        SELECT COUNT(1)
-        FROM order_tickets ot
-        WHERE ot.order_item_id = #{orderItemId}
-          AND ot.ticket_canceled = false
-          AND ot.ticket_used = false
     </select>
 </mapper>

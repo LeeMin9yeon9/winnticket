@@ -24,7 +24,6 @@ public class MairService {
 
     private final MairOrderMapper mapper;
     private final MairCouponClient client;
-    private final MairProperties props;
     private final MairResponseMapper responseMapper;
 
     // 쿠폰 발송 요청
@@ -89,8 +88,6 @@ public class MairService {
                             + result.getMessage()
             );
         }
-
-        mapper.updateTicketsCanceled(orderItemId);
     }
 
     // 사용여부 확인

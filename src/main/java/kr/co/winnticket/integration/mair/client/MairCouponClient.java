@@ -47,8 +47,8 @@ public class MairCouponClient {
     // 요청 파라미터 form 방식(공통)
     private MultiValueMap<String, String> baseForm(String itcd, String trno) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("MKNO", properties.getMkno()); // 채널구분코드
-        form.add("MKID", properties.getMkid());  // 채널 아이디
+        form.add("MKNO", properties.getMkNo()); // 채널구분코드
+        form.add("MKID", properties.getMkId());  // 채널 아이디
         form.add("ITCD", itcd);   // 상품코드
         form.add("TRNO", trno);   // 거래고유번호
         return form;
