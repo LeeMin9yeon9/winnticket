@@ -24,7 +24,5 @@ public interface MairOrderMapper {
     // 티켓 중복 발송 방지
     int countOrderTickets(@Param("orderItemId") UUID orderItemId);
 
-    // 티켓 취소 처리
-    int updateTicketsCanceled(UUID orderItemId);
 }
 
