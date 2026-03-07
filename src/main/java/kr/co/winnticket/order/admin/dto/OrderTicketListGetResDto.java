@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.dto;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -30,4 +31,8 @@ public class OrderTicketListGetResDto {
 
     @Schema(description = "사용일시")
     private LocalDateTime ticketUsedDate;
+
+    @Hidden
+    @Schema(description = "주문상품_id")
+    private UUID orderItemId;
 }
