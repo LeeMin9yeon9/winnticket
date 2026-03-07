@@ -113,7 +113,7 @@ public class OrderController {
     }
 
     @PostMapping("{id}/sms/resend-ticket")
-    @Operation(summary = "주문 취소(관리자)", description = "관리자가 티켓정보를 재전송합니다.")
+    @Operation(summary = "문자 재전송(관리자)", description = "관리자가 티켓정보를 재전송합니다.")
     public ResponseEntity<ApiResponse<String>> resendTicketSms(
             @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
     ) throws Exception {
