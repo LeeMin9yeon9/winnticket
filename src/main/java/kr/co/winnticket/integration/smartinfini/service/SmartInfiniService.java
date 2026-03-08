@@ -72,10 +72,10 @@ public class SmartInfiniService {
 
         SIOrderSearchRequest req =
                 mapper.selectSmartinfinisearchByOrderNo(orderId);
-
+        log.info("SmartInfini req = {}", req);
         SIOrderSearchResponse res =
                 client.searchByOrderNo(req);
-
+        log.info("SmartInfini res = {}", res);
         var result =
                 responseMapper.mapSearch(res);
 
@@ -119,10 +119,10 @@ public class SmartInfiniService {
                 LocalDateTime.now()
                         .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         );
-
+        log.info("SmartInfini cancelReq = {}", cancelReq);
         SICancelListResponse res =
                 client.cancelList(cancelReq);
-
+        log.info("SmartInfini res = {}", res);
         var result =
                 responseMapper.mapCancelList(res);
 
