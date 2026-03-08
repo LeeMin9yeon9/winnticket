@@ -8,7 +8,7 @@ import java.util.List;
 public class WJOrderInquiryResponse {
     private String code; // 응답코드
     private String message; // 응답메세지
-    private List<WJOrderResponse.DataBlock> data; // 응답 데이터
+    private List<WJOrderInquiryResponse.DataBlock> data; // 응답 데이터
 
     @Data
     public static class DataBlock {
@@ -17,7 +17,7 @@ public class WJOrderInquiryResponse {
         private String customer_name; // 주문자이름
         private String customer_phone; // 주문자 휴대폰 번호
         private String customer_email; // 주문자 이메일
-        private List<WJOrderResponse.Product> products; // 상품리스트
+        private List<WJOrderInquiryResponse.Product> products; // 상품리스트
         private String created_at; // 주문등록일시
         private String updated_at; // 주문수정일시
     }

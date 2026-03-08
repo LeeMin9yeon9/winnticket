@@ -388,7 +388,7 @@ public class OrderService {
     private String generateTicketNumber() {
         return "T"
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                + UUID.randomUUID().toString().substring(0, 8);
+                + UUID.randomUUID().toString().substring(0, 4);
     }
 
     // 티켓 사용 처리
@@ -445,6 +445,12 @@ public class OrderService {
          * =========================
          */
 
+        if (split.isHasPlusN()) {
+            log.info("[플러스앤 취소 시작]");
+            plusNService.cancel(orderId);
+        }
+
+        /*
         if (split.isHasWoongin()) {
             log.info("[웅진 취소 시작]");
             woongjinService.cancel(orderId);
@@ -469,11 +475,7 @@ public class OrderService {
             log.info("[스마트인피니 취소 시작]");
             smartInfiniService.cancelMulti(orderId);
         }
-
-        if (split.isHasPlusN()) {
-            log.info("[플러스앤 취소 시작]");
-            plusNService.cancel(orderId);
-        }
+         */
 
     /*
     if (split.isHasAquaplanet()) {
@@ -490,8 +492,9 @@ public class OrderService {
         PaymentMethod method = order.getPaymentMethod();
         Object cancelResult = null;
 
-
-        if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
+        if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            // 가상계좌는 보통 취소 없음
+        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
             cancelResult = payletterService.cancel(orderId);
         } else if (method == PaymentMethod.POINT) {
             Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
