@@ -22,4 +22,7 @@ public interface SmartInfiniMapper {
 
     // 주문취소(다건)
     SICancelListRequest selectSmartinfiniCancelList(UUID orderId);
+
+    // 주문후 파트너 코드 저장
+    void updatePartnerOrderInfo(String ticketCode, String couponNo, String orderSales);
 }

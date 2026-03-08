@@ -34,12 +34,19 @@ public class SmartInfiniService {
         log.info("SmartInfini request = {}", req);
         SIOrderResponse res = client.order(req);
         log.info("SmartInfini response = {}", res);
-        var result =
-                responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
+        var result = responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
 
         if (!result.isSuccess()) {
             throw new RuntimeException(
                     "SmartInfini 주문 실패: " + result.getMessage()
+            );
+        }
+
+        for (SIOrderResponse.Coupon c : res.getCoupon()) {
+            mapper.updatePartnerOrderInfo(
+                    c.getTicketCode(),
+                    c.getCouponNo(),   // partnerOrderCode
+                    c.getOrderSales()  // partnerOrderNumber
             );
         }
 
@@ -76,12 +83,10 @@ public class SmartInfiniService {
         SIOrderSearchResponse res =
                 client.searchByOrderNo(req);
         log.info("SmartInfini res = {}", res);
-        var result =
-                responseMapper.mapSearch(res);
 
-        if (!result.isSuccess()) {
+        if (res == null) {
             throw new RuntimeException(
-                    "SmartInfini 주문조회 실패: " + result.getMessage()
+                    "SmartInfini 주문조회 실패"
             );
         }
 
@@ -123,12 +128,10 @@ public class SmartInfiniService {
         SICancelListResponse res =
                 client.cancelList(cancelReq);
         log.info("SmartInfini res = {}", res);
-        var result =
-                responseMapper.mapCancelList(res);
 
-        if (!result.isSuccess()) {
+        if (res == null) {
             throw new RuntimeException(
-                    "SmartInfini 다건취소 실패: " + result.getMessage()
+                    "SmartInfini 다건취소 실패"
             );
         }
 
