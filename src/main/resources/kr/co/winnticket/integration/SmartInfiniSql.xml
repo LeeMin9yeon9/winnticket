@@ -29,7 +29,7 @@
             o.customer_name AS USER_NAME,
             o.customer_phone AS USER_HP,
             o.customer_email AS USER_EMAIL,
-            to_char(o.created_at, 'YYYYMMDDHH24MISS') AS ORDER_DATE,
+            to_char(o.created_at, 'YYYY-MM-DD HH24:MI:SS') AS ORDER_DATE,
             o.payment_method AS PAY_METHOD,
             '' AS DEAL_ID,
             ot.ticket_number AS TICKET_CODE,
@@ -40,12 +40,12 @@
         FROM orders o
          JOIN order_items oi
               ON o.id = oi.order_id
-         JOIN order_item_options oio
-              ON oi.id = oio.order_item_id
-         JOIN product_option_values pov
-              ON pov.id = oio.option_value_id
          JOIN order_tickets ot
               ON oi.id = ot.order_item_id
+         LEFT JOIN order_item_options oio
+                   ON oi.id = oio.order_item_id
+         LEFT JOIN product_option_values pov
+                   ON pov.id = oio.option_value_id
         WHERE o.id = #{orderId}
         And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
     </select>
