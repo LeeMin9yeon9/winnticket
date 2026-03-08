@@ -53,8 +53,8 @@
     <update id="updatePartnerOrderInfo">
         UPDATE order_tickets
         SET
-            partner_order_code = #{partnerOrderCode},
-            partner_order_number = #{partnerOrderNumber}
+            partner_order_code = #{couponNo},
+            partner_order_number = #{orderSales}
         WHERE ticket_number = #{ticketCode}
     </update>
 
@@ -81,7 +81,7 @@
     <select id="selectSmartinfiniCancelList" resultMap="SICancelListMap">
         SELECT
             o.order_number AS ORDER_NO,
-            ot.partner_order_code AS ORDER_SALES
+            ot.partner_order_number AS ORDER_SALES
         FROM orders o
          JOIN order_items oi
               ON o.id = oi.order_id
