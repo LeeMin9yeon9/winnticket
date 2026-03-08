@@ -10,7 +10,6 @@ import java.util.UUID;
 public interface TicketMapper {
 
     int updateTicketUsed(
-            @Param("partnerId") UUID partnerId,
             @Param("orderSales") String orderSales,
             @Param("resultDate") String resultDate
     );
@@ -20,8 +19,24 @@ public interface TicketMapper {
 
     // 스파비스 쿠폰 사용처리
     void updateSpavisTicketUsed(
-            @Param("partnerId") UUID partnerId,
             @Param("couponNo") String couponNo,
             @Param("resultDate") String resultDate
+    );
+
+    // 플레이스토리 주문조회
+    List<UUID> selectPlaystoryCheckOrders();
+
+    // 플레이스토리 쿠폰 사용처리
+    int updatePlaystoryTicketUsed(
+            @Param("couponNo") String couponNo,
+            @Param("resultDate") String resultDate
+    );
+
+    // 웅진 주문 조회
+    List<String> selectWoongjinOrders();
+
+    // 웅진 쿠폰 사용처리
+    void updateWoongjinTicketUsed(
+            @Param("couponNo") String couponNo
     );
 }

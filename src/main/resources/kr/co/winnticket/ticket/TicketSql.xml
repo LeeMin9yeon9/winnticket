@@ -10,7 +10,7 @@
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
-          And oi.partner_id = #{partnerId}
+          And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
           AND ot.partner_order_code = #{orderSales}
           AND ot.ticket_used = false
     </update>
@@ -27,7 +27,7 @@
                       ON oic.ticket_coupon_id = tc.id
         WHERE oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
           AND tc.used_at IS NULL
-            LIMIT 100
+          AND o.created_at >= NOW() - INTERVAL '3 days'
     </select>
 
     <!-- 스파비스 쿠폰 사용처리 -->
@@ -38,7 +38,55 @@
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
-          AND oi.partner_id = #{partnerId}
+          AND oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
+          AND ot.ticket_number = #{couponNo}
+          AND ot.ticket_used = false
+    </update>
+
+    <!-- 플레이스토리 주문조회 -->
+    <select id="selectPlaystoryCheckOrders" resultType="java.util.UUID">
+        SELECT DISTINCT o.id
+        FROM orders o
+                 JOIN order_items oi ON oi.order_id = o.id
+                 JOIN order_tickets ot ON ot.order_item_id = oi.id
+        WHERE oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
+          AND ot.ticket_used = false
+          AND o.created_at >= NOW() - INTERVAL '3 days'
+    </select>
+
+    <!-- 플레이스토리 쿠폰 사용처리 -->
+    <update id="updatePlaystoryTicketUsed">
+        UPDATE order_tickets ot
+        SET
+            ticket_used = true,
+            ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+            FROM order_items oi
+        WHERE ot.order_item_id = oi.id
+          AND oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
+          AND ot.ticket_number = #{couponNo}
+          AND ot.ticket_used = false
+    </update>
+
+    <!-- 웅진 주문조회 -->
+    <select id="selectWoongjinOrders" resultType="java.util.String">
+        SELECT DISTINCT o.order_number
+        FROM orders o
+                 JOIN order_items oi ON oi.order_id = o.id
+                 JOIN order_tickets ot ON ot.order_item_id = oi.id
+        WHERE oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
+          AND ot.ticket_used = false
+          AND o.created_at >= NOW() - INTERVAL '3 days'
+    </select>
+
+    <!-- 웅진 쿠폰 사용처리 -->
+    <update id="updateWoongjinTicketUsed">
+        UPDATE order_tickets ot
+        SET
+            ticket_used = true,
+            ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+            FROM order_items oi
+        WHERE ot.order_item_id = oi.id
+          AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
     </update>
