@@ -24,6 +24,9 @@ public class SIOrderSearchResponse {
         @JsonProperty("return_msg")
         private String returnMsg;
 
+        @JsonProperty("coupon")
+        private String coupon;
+
         @JsonProperty("order_sales")
         private String orderSales;
 
