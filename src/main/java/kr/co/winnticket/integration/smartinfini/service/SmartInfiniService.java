@@ -6,6 +6,7 @@ import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniMapper;
 import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniResponseMapper;
 import kr.co.winnticket.integration.smartinfini.props.SmartInfiniProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,15 +16,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SmartInfiniService {
 
     private final SmartInfiniClient client;
     private final SmartInfiniMapper mapper;
     private final SmartInfiniProperties props;
     private final SmartInfiniResponseMapper responseMapper;
-
-    private static final DateTimeFormatter CANCEL_DTF =
-            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     // =========================
     // 주문
@@ -32,9 +31,9 @@ public class SmartInfiniService {
 
         SIOrderRequest req = mapper.selectSmartinfiniOrder(orderId);
         req.setChannelCode(props.getChannelId());
-
+        log.info("SmartInfini request = {}", req);
         SIOrderResponse res = client.order(req);
-
+        log.info("SmartInfini response = {}", res);
         var result =
                 responseMapper.map(res.getReturnDiv(), res.getReturnMsg());
 
@@ -73,10 +72,10 @@ public class SmartInfiniService {
 
         SIOrderSearchRequest req =
                 mapper.selectSmartinfinisearchByOrderNo(orderId);
-
+        log.info("SmartInfini req = {}", req);
         SIOrderSearchResponse res =
                 client.searchByOrderNo(req);
-
+        log.info("SmartInfini res = {}", res);
         var result =
                 responseMapper.mapSearch(res);
 
@@ -120,10 +119,10 @@ public class SmartInfiniService {
                 LocalDateTime.now()
                         .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         );
-
+        log.info("SmartInfini cancelReq = {}", cancelReq);
         SICancelListResponse res =
                 client.cancelList(cancelReq);
-
+        log.info("SmartInfini res = {}", res);
         var result =
                 responseMapper.mapCancelList(res);
 
