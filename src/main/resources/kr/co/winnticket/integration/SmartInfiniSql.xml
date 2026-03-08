@@ -89,7 +89,7 @@
               ON oi.id = ot.order_item_id
         WHERE o.id = #{orderId}
         And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
-        AND ot.partner_ticket_no IS NOT NULL
+        AND ot.partner_order_number IS NOT NULL
     </select>
 
     <!-- 문자 재전송 -->
