@@ -5,6 +5,7 @@ import kr.co.winnticket.integration.playstory.dto.PlaystoryCheckRequest;
 import kr.co.winnticket.integration.playstory.dto.PlaystoryOrderRequest;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
 import java.util.UUID;
 
 @Mapper

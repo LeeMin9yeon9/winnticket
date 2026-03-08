@@ -55,7 +55,6 @@ public class SpavisScheduler {
                         if ("I".equals(coupon.getStatusDiv())) {
 
                             ticketMapper.updateSpavisTicketUsed(
-                                    UUID.fromString("0f46cad1-6fb4-4514-938f-d309850f0668"),
                                     coupon.getCouponNo(),
                                     coupon.getResultDate()
                             );

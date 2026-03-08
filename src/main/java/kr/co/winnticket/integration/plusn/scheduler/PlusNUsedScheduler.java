@@ -75,7 +75,6 @@ public class PlusNUsedScheduler {
                     try {
 
                         int result = ticketMapper.updateTicketUsed(
-                                UUID.fromString("85f50a52-7096-470e-95f5-a8e9c1cd6589"),
                                 coupon.getOrder_sales(),
                                 coupon.getResult_date()
                         );
