@@ -68,7 +68,7 @@
     </update>
 
     <!-- 웅진 주문조회 -->
-    <select id="selectWoongjinOrders" resultType="java.util.String">
+    <select id="selectWoongjinOrders" resultType="String">
         SELECT DISTINCT o.order_number
         FROM orders o
                  JOIN order_items oi ON oi.order_id = o.id
