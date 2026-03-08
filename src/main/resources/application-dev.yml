@@ -109,7 +109,7 @@ playstory:
 smartinfini:
   base-url: "https://nsi.smartinfini.com/cinterface"
   token: "BZIG91YGLkcts0U2Uau5Kg=="
-  hannel-id : "36"
+  channel-id : "36"
 
 # 뱅크다 연동
 bankda:
