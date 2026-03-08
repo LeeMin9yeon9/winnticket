@@ -50,6 +50,14 @@
         And oi.partner_id = 'eec583a7-ce38-4cd0-927e-c35b5391a66d'
     </select>
 
+    <update id="updatePartnerOrderInfo">
+        UPDATE order_tickets
+        SET
+            partner_order_code = #{partnerOrderCode},
+            partner_order_number = #{partnerOrderNumber}
+        WHERE ticket_number = #{ticketCode}
+    </update>
+
     <!-- 조회 -->
     <select id="selectSmartinfinisearchByOrderNo" resultType="kr.co.winnticket.integration.smartinfini.dto.SIOrderSearchRequest">
         SELECT

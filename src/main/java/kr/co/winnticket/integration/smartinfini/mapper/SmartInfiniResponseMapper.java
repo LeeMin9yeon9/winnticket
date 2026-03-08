@@ -21,46 +21,4 @@ public class SmartInfiniResponseMapper {
 
         return IntegrationResult.success();
     }
-
-    // 조회
-    public IntegrationResult mapSearch(SIOrderSearchResponse res) {
-
-        if (res == null || res.getInquiryList() == null || res.getInquiryList().isEmpty()) {
-            return IntegrationResult.fail("EMPTY", "조회 결과 없음");
-        }
-
-        for (SIOrderSearchResponse.InquiryItem item : res.getInquiryList()) {
-
-            if (!"0000".equals(item.getReturnDiv())) {
-
-                return IntegrationResult.fail(
-                        item.getReturnDiv(),
-                        item.getReturnMsg()
-                );
-            }
-        }
-
-        return IntegrationResult.success();
-    }
-
-    // 취소
-    public IntegrationResult mapCancelList(SICancelListResponse res) {
-
-        if (res == null || res.getCancelList() == null || res.getCancelList().isEmpty()) {
-            return IntegrationResult.fail("EMPTY", "취소 응답 없음");
-        }
-
-        for (SICancelListResponse.CancelResult item : res.getCancelList()) {
-
-            if (!"0000".equals(item.getReturnDiv())) {
-
-                return IntegrationResult.fail(
-                        item.getReturnDiv(),
-                        item.getReturnMsg()
-                );
-            }
-        }
-
-        return IntegrationResult.success();
-    }
 }
