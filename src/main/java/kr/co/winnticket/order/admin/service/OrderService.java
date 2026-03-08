@@ -450,6 +450,11 @@ public class OrderService {
             plusNService.cancel(orderId);
         }
 
+        if (split.isHasSmartInfini()) {
+            log.info("[스마트인피니 취소 시작]");
+            smartInfiniService.cancelMulti(orderId);
+        }
+
         /*
         if (split.isHasWoongin()) {
             log.info("[웅진 취소 시작]");
@@ -469,11 +474,6 @@ public class OrderService {
         if (split.isHasCoreworks()) {
             log.info("[코어웍스 취소 시작]");
             coreWorksService.cancel(orderId);
-        }
-
-        if (split.isHasSmartInfini()) {
-            log.info("[스마트인피니 취소 시작]");
-            smartInfiniService.cancelMulti(orderId);
         }
          */
 
