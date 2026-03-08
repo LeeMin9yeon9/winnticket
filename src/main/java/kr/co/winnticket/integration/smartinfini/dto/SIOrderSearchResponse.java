@@ -30,6 +30,9 @@ public class SIOrderSearchResponse {
         @JsonProperty("order_sales")
         private String orderSales;
 
+        @JsonProperty("ticket_code")
+        private String ticket_code;
+
         @JsonProperty("result_date")
         private String resultDate;
     }
