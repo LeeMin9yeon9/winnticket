@@ -119,19 +119,7 @@ bankda:
 
 # 파트너 연동 (아쿠아플라넷)
 aquaplanet:
-  base-url: "https://exgatedev.hanhwaresort.co.kr:443/iGate/SIF/json.jdo" # 개발
-  tmsg-ver-dv-cd: "01"
-  envr-info-dv-cd: "D"
-  stn-msg-encp-cd: "0"
-  stn-msg-comp-cd: "0"
-  lang-cd: "KO"
-  std-tmsg-prgr-no: "00"
-  frs-rqst-sys-cd: "SIF"
-  rqst-rsps-dv-cd: "S"
-  trsc-sync-dv-cd: "S"
-  stn-msg-tr-tp-cd: "O"
-  system-type: "HABIS"
-  wrkr-no: "I1711019"
-  mask-auth: "0"
+  url: "https://exgatedev.hanhwaresort.co.kr/iGate/SIF/json.jdo" # 개발
+
 
 

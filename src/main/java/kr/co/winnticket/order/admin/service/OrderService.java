@@ -6,7 +6,7 @@ import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
-import kr.co.winnticket.integration.aquaplanet.service.AquaplanetService;
+import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
@@ -56,7 +56,7 @@ public class OrderService {
     private final CoreWorksService coreWorksService;
     private final SmartInfiniService smartInfiniService;
     private final PlusNService plusNService;
-    private final AquaplanetService aquaplanetService;
+    private final AquaPlanetService aquaplanetService;
     private final SpavisService spavisService;
     private final KcpService kcpService;
 
