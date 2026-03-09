@@ -114,5 +114,5 @@ bankda:
 
 # 파트너 연동 (아쿠아플라넷)
 aquaplanet:
-  url: "https://exgatedev.hanhwaresort.co.kr/iGate/SIF/json.jdo" # 개발
+  url: "https://exgatedev.hanwharesort.co.kr/iGate/SIF/json.jdo" # 개발
 
