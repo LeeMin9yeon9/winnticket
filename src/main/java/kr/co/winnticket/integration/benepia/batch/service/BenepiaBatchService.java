@@ -107,7 +107,7 @@ public class BenepiaBatchService {
         List<Map<String, String>> items = new ArrayList<>();
         for (Map<String, Object> row : ids) {
             Map<String, String> m = new HashMap<>();
-            m.put("custCoCd", custCoCd);
+            m.put("coopCoCd", custCoCd);
             m.put("prdId", String.valueOf(row.get("prdId")));
             items.add(m);
         }
@@ -130,7 +130,7 @@ public class BenepiaBatchService {
 
             // product (필수 필드 구성)
             Map<String, Object> product = new LinkedHashMap<>();
-            product.put("custCoCd", custCoCd);
+            product.put("coopCoCd", custCoCd);
             product.put("prdId", row.get("prdId"));
             product.put("prdNm", row.get("prdNm"));
             product.put("orgnPrc", toInt(row.get("orgnPrc")));
