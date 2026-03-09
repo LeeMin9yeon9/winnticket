@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.lscompany.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.lscompany.dto.LsPlaceReqDto;
 import kr.co.winnticket.integration.lscompany.dto.LsPlaceResDto;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
@@ -21,30 +22,38 @@ public class LsCompanyClient {
 
     public LsPlaceResDto getPlaces() {
 
-    String url = properties.getBaseUrl() + "/place";
+        String url = properties.getBaseUrl() + "/place";
 
-    LsPlaceReqDto req = new LsPlaceReqDto();
-    LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+        LsPlaceReqDto req = new LsPlaceReqDto();
+        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
         data.setAgentNo(properties.getAgentNo());
         req.setData(data);
 
-    HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json;charset=UTF-8");
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set("Authorization", properties.getToken());
 
-    HttpEntity<LsPlaceReqDto> entity = new HttpEntity<>(req, headers);
+        HttpEntity<LsPlaceReqDto> entity = new HttpEntity<>(req, headers);
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            log.info("REQUEST JSON STRING = {}", mapper.writeValueAsString(req));
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
 
         log.info("LS URL = {}", url);
         log.info("REQUEST JSON = {}", req);
 
-    ResponseEntity<LsPlaceResDto> response =
-            restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    LsPlaceResDto.class
-            );
+        ResponseEntity<LsPlaceResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsPlaceResDto.class
+                );
 
         log.info("LS RESPONSE = {}", response.getBody());
 
