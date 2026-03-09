@@ -29,7 +29,7 @@ public class LsCompanyClient {
         req.setData(data);
 
     HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Content-Type", "application/json;charset=UTF-8");
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set("Authorization", properties.getToken());
 
