@@ -14,6 +14,7 @@ import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
+import kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
@@ -359,5 +360,45 @@ public class OrderShopService {
         sb.setLength(sb.length() - 1);
 
         return sb.toString();
+    }
+
+    // QR 생성
+    public OrderQrCouponGetResDto getQrCoupon(String orderNumber) {
+
+        // 주문 기본 정보
+        OrderQrCouponGetResDto res = mapper.selectOrderQrInfo(orderNumber);
+
+        if (res == null) {
+            throw new IllegalArgumentException("쿠폰이 존재하지 않습니다.");
+        }
+
+        // 주문에 속한 티켓 목록 조회
+        List<OrderQrCouponGetResDto.Ticket> tickets = mapper.selectTicketsByOrderNumber(orderNumber);
+
+        if (tickets == null || tickets.isEmpty()) {
+            throw new IllegalArgumentException("티켓이 존재하지 않습니다.");
+        }
+
+        // 파트너별 QR 값 설정
+        for (OrderQrCouponGetResDto.Ticket ticket : tickets) {
+
+            String partnerId = res.getPartnerId();
+
+            // 스파비스
+            if ("0f46cad1-6fb4-4514-938f-d309850f0668".equals(partnerId)) {
+                ticket.setQrValue(ticket.getTicketNumber());
+            }
+
+            // 서울랜드
+            else if ("eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)) {
+                ticket.setQrValue(ticket.getPartnerOrderCode());
+            } else {
+                throw new IllegalArgumentException("QR 쿠폰이 없는 상품입니다.");
+            }
+        }
+
+        res.setTickets(tickets);
+
+        return res;
     }
 }

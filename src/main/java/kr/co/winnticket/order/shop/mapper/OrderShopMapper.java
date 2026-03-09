@@ -1,6 +1,7 @@
 package kr.co.winnticket.order.shop.mapper;
 
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
+import kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -104,6 +105,10 @@ public interface OrderShopMapper {
             @Param("orderNumber") String orderNumber
     );
 
+    // 문자 쿠폰 번호 조회
+    OrderQrCouponGetResDto selectOrderQrInfo(@Param("orderNumber") String orderNumber);
 
+    // 문자 QR
+    List<OrderQrCouponGetResDto.Ticket> selectTicketsByOrderNumber(@Param("orderNumber") String orderNumber);
 
 }

@@ -21,8 +21,16 @@ public interface MairOrderMapper {
             @Param("orderId") UUID orderId
     );
 
-    // 티켓 중복 발송 방지
-    int countOrderTickets(@Param("orderItemId") UUID orderItemId);
+    // 엠에어 쿠폰번호 저장
+    void updatePartnerOrderCode(
+            @Param("orderItemId") UUID orderItemId,
+            @Param("tno") String tno
+    );
+
+    // 남은 티켓 개수 확인( 여러개 주문 시)
+    int countRemainTickets(UUID orderItemId);
+
+
 
 }
 
