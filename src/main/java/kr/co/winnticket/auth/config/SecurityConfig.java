@@ -103,7 +103,8 @@ public class SecurityConfig {
                                 "/api/payletter/callback",
                                 "/api/payletter/return",
                                 "/api/payletter/cancel",
-                                "/api/ticketCoupon/**"
+                                "/api/ticketCoupon/**",
+                                "/api/lscompany/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
