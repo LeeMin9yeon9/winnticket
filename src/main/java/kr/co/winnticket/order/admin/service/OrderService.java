@@ -306,7 +306,6 @@ public class OrderService {
                             && !"e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)
                             && !"15f283a9-fd6c-47ba-862d-0af9697a3e1b".equals(partnerId)
                             && !"1d5228eb-6d03-4e12-b370-b2ceb19a77cc".equals(partnerId)
-                            && !"eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)
                             && !"85f50a52-7096-470e-95f5-a8e9c1cd6589".equals(partnerId)
                             && !"d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId));
                 })
@@ -335,6 +334,9 @@ public class OrderService {
 
     // 발권완료 문자 발송
     private void sendTicketIssuedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items, Map<UUID, List<String>> ticketMap) {
+
+        Set<String> qrSentProducts = new HashSet<>();
+
         for (OrderProductListGetResDto item : items) {
 
             UUID productId = item.getProductId();
@@ -357,7 +359,6 @@ public class OrderService {
            // vars.put("티켓번호", String.join("\n", tickets));
             String couponText;
 
-            Set<String> qrSentProducts = new HashSet<>();
             // 스마트인피니 / 스파비스  QR 링크
             String partnerId = String.valueOf(item.getPartnerId());
 
