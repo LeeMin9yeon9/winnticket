@@ -29,11 +29,10 @@ public class MairController {
 
         List<MairCouponResDto> result = service.issueTickets(orderNumber);
 
-        return ResponseEntity.ok( ApiResDto.success("엠에어 쿠폰 발송 성공", result)
+        return ResponseEntity.ok( ApiResDto.success("엠에어 쿠폰 발송 성공",result)
         );
     }
 
-    // 취소 테스트
     @PostMapping("/cancel/{orderNumber}")
     @Operation(summary = " 엠에어 취소 ", description = "엠에어 쿠폰 취소요청 API")
     public  ResponseEntity<ApiResDto<List<IntegrationResult>>> cancelPost(@PathVariable String orderNumber) {

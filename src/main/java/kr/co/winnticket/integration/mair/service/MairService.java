@@ -29,15 +29,16 @@ public class MairService {
     // 쿠폰 발송 요청
     public List<MairCouponResDto> issueTickets(String orderNumber) {
 
+        // 주문 기본정보 조회
         MairOrderInfoDto order = mapper.selectOrderInfo(orderNumber);
 
-        if(order == null){
+        if (order == null) {
             log.info("[MAIR] 주문이 존재하지 않습니다.");
-            throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+            throw new RuntimeException("주문 없음 orderNumber=" + orderNumber);
         }
 
         // 결제 완료 주문만 발송
-        if(!"PAID".equals(order.getPaymentStatus()) && !"COMPLETED".equals(order.getOrderStatus())){
+        if (!"PAID".equals(order.getPaymentStatus())) {
             log.info("[MAIR] 결제 완료 주문만 쿠폰 발송 가능합니다.");
             throw new IllegalStateException("결제 완료 주문만 쿠폰 발송 가능합니다.");
         }
@@ -45,49 +46,55 @@ public class MairService {
         // 주문상품 조회
         List<MairOrderItemInfoDto> items = mapper.selectOrderItemInfos(order.getOrderId());
 
+        if (items == null || items.isEmpty()) {
+            log.info("엠에어 상품 없음 orderNumber={}", orderNumber);
+            return List.of();
+        }
+
         List<MairCouponResDto> results = new ArrayList<>();
 
         for (MairOrderItemInfoDto item : items) {
-            MairService.log.info("[MAIR][ISSUE] REQUEST ITCD={}, TRNO={}, NAME={}, HP={}",
+
+            int remain = mapper.countRemainTickets(item.getOrderItemId());
+
+            log.info("[MAIR] 발권 대상 orderItemId={}, productCode={}, remain={}",
+                    item.getOrderItemId(),
                     item.getProductCode(),
-                    orderNumber,
-                    order.getCustomerName(),
-                    normalizeHp(order.getCustomerPhone()));
-            if (item.getProductCode() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+                    remain);
+
+            if (remain == 0) {
+                log.info("[MAIR] 이미 발권 완료 orderItemId={}", item.getOrderItemId());
                 continue;
             }
 
-            int issued = mapper.countOrderTickets(item.getOrderItemId());
-            int need = item.getQuantity() - issued;
+            for (int i = 0; i < remain; i++) {
 
-            for (int i = 0; i < need; i++) {
+                // 엠에어 발권
                 MairCouponResDto res = client.issue(
                         item.getProductCode(),
                         orderNumber,
                         order.getCustomerName(),
-                        normalizeHp(order.getCustomerPhone())
+                        order.getCustomerPhone()
                 );
+                log.info("[MAIR] 응답 result={}, TNO={}", res.getResult(), res.getTno());
 
-                MairService.log.info("[MAIR][ISSUE] RESPONSE={}", res);
-                IntegrationResult result = responseMapper.mapIssue(res);
-
-                log.info("[MAIR] 발급로그 result = " + result);
-
-                if (!result.isSuccess()) {
-                    throw new RuntimeException(
-                            "엠에어 발송 실패 - code: "
-                                    + result.getCode()
-                                    + ", message: "
-                                    + result.getMessage()
-                    );
+                if (!"OK".equals(res.getResult())) {
+                    throw new RuntimeException("엠에어 발권 실패 result=" + res.getResult());
                 }
 
+                mapper.updatePartnerOrderCode(
+                        item.getOrderItemId(),
+                        res.getTno()
+                );
+
+
+                log.info("[MAIR] 쿠폰 저장 완료 TNO={}", res.getTno());
                 results.add(res);
             }
         }
-
         return results;
     }
+
 
     // 취소
     public List<IntegrationResult> cancelByOrder(String orderNumber) {

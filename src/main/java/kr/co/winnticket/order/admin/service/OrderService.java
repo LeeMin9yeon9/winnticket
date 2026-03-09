@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
@@ -61,6 +60,8 @@ public class OrderService {
     private final SpavisService spavisService;
     private final KcpService kcpService;
 
+    private static final String QR_URL = "https://www.winnticket.store/coupon/";
+
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
         OrderAdminStatusGetResDto model = mapper.selectOrderAdminStatus();
@@ -103,7 +104,6 @@ public class OrderService {
     // 결제 완료 처리
     @Transactional
     public void completePayment(UUID auId) {
-        try {
             // 주문 조회
             OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(auId);
 
@@ -111,15 +111,14 @@ public class OrderService {
                 throw new IllegalArgumentException("주문이 존재하지 않습니다.");
             }
 
-            if (order.getPaymentStatus() == PaymentStatus.PAID) {
-                log.info("이미 결제 완료 → completePayment skip. orderId={}", auId);
+            // 결제 상태 / 결제일시 업데이트
+            int updated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
+
+            if(updated == 0){
+                log.info("이미 결제 완료 skip orderId={}", auId);
                 return;
             }
 
-            // 결제 상태 / 결제일시 업데이트
-            log.info("[결제일시 업데이트 시작!]");
-            mapper.updatePaymentComplete(auId, LocalDateTime.now());
-            log.info("[결제일시 업데이트 종료!]");
             // 주문 상품 목록 조회
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
@@ -173,33 +172,58 @@ public class OrderService {
 
             log.info("split = {}", split);
             if (split.isHasWoongin()) {
-                log.info("[웅진 상품이래요!]");
-                woongjinService.order(auId);
+                try {
+                    log.info("[Woonjin Products]");
+                    woongjinService.order(auId);
+                }catch (Exception e){
+                    log.error("Woonjin 발권 실패 orderId={}", auId, e);
+                }
             }
 
             if (split.isHasPlaystory()) {
-                log.info("[플레이스토리 상품이래요!]");
-                playstoryService.order(auId);
+                try {
+                    log.info("[Playstory Products]");
+                    playstoryService.order(auId);
+                }catch (Exception e){
+                    log.error("Playstory 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasMair()) {
-                log.info("[엠에어 상품이래요!]");
-                mairService.issueTickets(order.getOrderNumber());
+                try {
+                    log.info("[Mair Products]");
+                    mairService.issueTickets(order.getOrderNumber());
+                }catch (Exception e){
+                    log.error("Mair 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasCoreworks()) {
-                log.info("[코어웍스 상품이래요!]");
-                coreWorksService.order(auId);
+                try {
+                    log.info("[Coreworks Products]");
+                    coreWorksService.order(auId);
+                }catch (Exception e){
+                    log.error("Coreworks 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasSmartInfini()) {
-                log.info("[스마트인피니 상품이래요!]");
-                smartInfiniService.order(auId);
+                try {
+                    log.info("[SmartInfini Products]");
+                    smartInfiniService.order(auId);
+                }catch (Exception e){
+                    log.error("SmartInfini 발권 실패 orderId={}",auId,e);
+                }
+
             }
 
             if (split.isHasPlusN()) {
-                log.info("[플러스앤 상품이래요!]");
-                plusNService.order(auId);
+                try {
+                    log.info("[PlusN Products]");
+                    plusNService.order(auId);
+                }catch (Exception e){
+                    log.error("PlusN 발권 실패 orderId={}",auId,e);
+                }
             }
 
             /*
@@ -209,17 +233,13 @@ public class OrderService {
             }
              */
 
-            if (split.isHasSpavis() || split.isHasNormalProduct()) {
-                log.info("[자체 상품이래요!]");
+            if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini()) {
+                log.info("[Main Products]");
                 List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
                 log.info("[발권 문자 발송 시작]");
                 sendTicketIssuedSms(order, normalItems, ticketMap);
                 log.info("[발권 문자 발송 종료]");
             }
-        } catch (Exception e) {
-            log.error("주문 생성 중 오류 발생", e);
-            throw e; // 다시 던짐 (중요)
-        }
     }
 
     // 상품 분기 처리
@@ -334,7 +354,31 @@ public class OrderService {
             vars.put("주문자명", order.getCustomerName());
             vars.put("상품명", item.getProductName());
             List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
-            vars.put("티켓번호", String.join("\n", tickets));
+           // vars.put("티켓번호", String.join("\n", tickets));
+            String couponText;
+
+            Set<String> qrSentProducts = new HashSet<>();
+            // 스마트인피니 / 스파비스  QR 링크
+            String partnerId = String.valueOf(item.getPartnerId());
+
+            if ("eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId) ||
+                    "0f46cad1-6fb4-4514-938f-d309850f0668".equals(partnerId)) {
+
+                if(qrSentProducts.contains(partnerId)){
+                    continue;
+                }
+
+                qrSentProducts.add(partnerId);
+
+                couponText = QR_URL + order.getOrderNumber();
+            }
+
+            // 일반 상품 → 티켓번호
+            else {
+                couponText = String.join("\n", tickets);
+            }
+
+            vars.put("티켓번호", couponText);
             vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
             vars.put("수량", String.valueOf(item.getQuantity()));
 
