@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.co.winnticket.common.enums.OrderStatus;
@@ -61,6 +60,15 @@ public class OrderService {
     private final SpavisService spavisService;
     private final KcpService kcpService;
 
+    private static final String QR_URL = "https://www.winnticket.store/coupon/";
+    private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
+    private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
+    private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
+    private static final String COREWORKS = "1d5228eb-6d03-4e12-b370-b2ceb19a77cc";
+    private static final String PLUSN = "85f50a52-7096-470e-95f5-a8e9c1cd6589";
+    private static final String SMARTINFINI = "eec583a7-ce38-4cd0-927e-c35b5391a66d";
+    private static final String SPAVIS = "0f46cad1-6fb4-4514-938f-d309850f0668";
+    private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
         OrderAdminStatusGetResDto model = mapper.selectOrderAdminStatus();
@@ -103,7 +111,6 @@ public class OrderService {
     // 결제 완료 처리
     @Transactional
     public void completePayment(UUID auId) {
-        try {
             // 주문 조회
             OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(auId);
 
@@ -111,15 +118,14 @@ public class OrderService {
                 throw new IllegalArgumentException("주문이 존재하지 않습니다.");
             }
 
-            if (order.getPaymentStatus() == PaymentStatus.PAID) {
-                log.info("이미 결제 완료 → completePayment skip. orderId={}", auId);
+            // 결제 상태 / 결제일시 업데이트
+            int updated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
+
+            if(updated == 0){
+                log.info("이미 결제 완료 skip orderId={}", auId);
                 return;
             }
 
-            // 결제 상태 / 결제일시 업데이트
-            log.info("[결제일시 업데이트 시작!]");
-            mapper.updatePaymentComplete(auId, LocalDateTime.now());
-            log.info("[결제일시 업데이트 종료!]");
             // 주문 상품 목록 조회
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
@@ -144,10 +150,10 @@ public class OrderService {
                     String ticketNumber;
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
-                        log.info("[응 선사입]");
+                        log.info("[선사입]");
                         ticketNumber = ticketCouponService.issueCoupon(item.getId());
                     } else {
-                        log.info("[아니 선사입아냐]");
+                        log.info("[선사입 아님]");
                         ticketNumber = generateTicketNumber();
 
                         mapper.insertOrderTicket(
@@ -173,33 +179,58 @@ public class OrderService {
 
             log.info("split = {}", split);
             if (split.isHasWoongin()) {
-                log.info("[웅진 상품이래요!]");
-                woongjinService.order(auId);
+                try {
+                    log.info("[Woonjin Products]");
+                    woongjinService.order(auId);
+                }catch (Exception e){
+                    log.error("Woonjin 발권 실패 orderId={}", auId, e);
+                }
             }
 
             if (split.isHasPlaystory()) {
-                log.info("[플레이스토리 상품이래요!]");
-                playstoryService.order(auId);
+                try {
+                    log.info("[Playstory Products]");
+                    playstoryService.order(auId);
+                }catch (Exception e){
+                    log.error("Playstory 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasMair()) {
-                log.info("[엠에어 상품이래요!]");
-                mairService.issueTickets(order.getOrderNumber());
+                try {
+                    log.info("[Mair Products]");
+                    mairService.issueTickets(order.getOrderNumber());
+                }catch (Exception e){
+                    log.error("Mair 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasCoreworks()) {
-                log.info("[코어웍스 상품이래요!]");
-                coreWorksService.order(auId);
+                try {
+                    log.info("[Coreworks Products]");
+                    coreWorksService.order(auId);
+                }catch (Exception e){
+                    log.error("Coreworks 발권 실패 orderId={}",auId,e);
+                }
             }
 
             if (split.isHasSmartInfini()) {
-                log.info("[스마트인피니 상품이래요!]");
-                smartInfiniService.order(auId);
+                try {
+                    log.info("[SmartInfini Products]");
+                    smartInfiniService.order(auId);
+                }catch (Exception e){
+                    log.error("SmartInfini 발권 실패 orderId={}",auId,e);
+                }
+
             }
 
             if (split.isHasPlusN()) {
-                log.info("[플러스앤 상품이래요!]");
-                plusNService.order(auId);
+                try {
+                    log.info("[PlusN Products]");
+                    plusNService.order(auId);
+                }catch (Exception e){
+                    log.error("PlusN 발권 실패 orderId={}",auId,e);
+                }
             }
 
             /*
@@ -209,17 +240,13 @@ public class OrderService {
             }
              */
 
-            if (split.isHasSpavis() || split.isHasNormalProduct()) {
-                log.info("[자체 상품이래요!]");
+            if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini()) {
+                log.info("[Main Products]");
                 List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
                 log.info("[발권 문자 발송 시작]");
                 sendTicketIssuedSms(order, normalItems, ticketMap);
                 log.info("[발권 문자 발송 종료]");
             }
-        } catch (Exception e) {
-            log.error("주문 생성 중 오류 발생", e);
-            throw e; // 다시 던짐 (중요)
-        }
     }
 
     // 상품 분기 처리
@@ -240,21 +267,21 @@ public class OrderService {
             log.error("partnerId = {}", partnerId);
 
             // 파트너별 상품이 있는지 체크
-            if ("bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)) { // 웅진컴퍼스
+            if (WOOGJIN.equals(partnerId)) { // 웅진컴퍼스
                 hasWoongin = true;
-            } else if("e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)) { // 플레이스토리
+            } else if(PLAYSTORY.equals(partnerId)) { // 플레이스토리
                 hasPlaystory = true;
-            } else if("15f283a9-fd6c-47ba-862d-0af9697a3e1b".equals(partnerId)) {// 엠에어
+            } else if(MAIR.equals(partnerId)) {// 엠에어
                 hasMair = true;
-            } else if("1d5228eb-6d03-4e12-b370-b2ceb19a77cc".equals(partnerId)) { // 코어웍스
+            } else if(COREWORKS.equals(partnerId)) { // 코어웍스
                 hasCoreworks = true;
-            } else if("eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)) { // 스마트인피니
+            } else if(SMARTINFINI.equals(partnerId)) { // 스마트인피니
                 hasSmartInfini = true;
-            } else if("85f50a52-7096-470e-95f5-a8e9c1cd6589".equals(partnerId)) { // 플러스앤
+            } else if(PLUSN.equals(partnerId)) { // 플러스앤
                 hasPlusN = true;
-            } else if("d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId)) { // 아쿠아플래닛
+            } else if(AQUAPLANET.equals(partnerId)) { // 아쿠아플래닛
                 hasAquaplanet = true;
-            } else if("0f46cad1-6fb4-4514-938f-d309850f0668".equals(partnerId)) { // 스파비스
+            } else if(SPAVIS.equals(partnerId)) { // 스파비스
                 hasSpavis = true;
             } else { // 일반상품
                 hasNormalProduct = true;
@@ -282,13 +309,12 @@ public class OrderService {
                     String partnerId = String.valueOf(item.getPartnerId());
 
                     return partnerId == null
-                            || (!"bd0e1a6e-b871-44a0-827c-f44c0d82f3f4".equals(partnerId)
-                            && !"e8e6f928-ebe2-44f9-930c-4a3f9a061b3c".equals(partnerId)
-                            && !"15f283a9-fd6c-47ba-862d-0af9697a3e1b".equals(partnerId)
-                            && !"1d5228eb-6d03-4e12-b370-b2ceb19a77cc".equals(partnerId)
-                            && !"eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)
-                            && !"85f50a52-7096-470e-95f5-a8e9c1cd6589".equals(partnerId)
-                            && !"d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId));
+                            || (!WOOGJIN.equals(partnerId)
+                            && !PLAYSTORY.equals(partnerId)
+                            && !MAIR.equals(partnerId)
+                            && !COREWORKS.equals(partnerId)
+                            && !PLUSN.equals(partnerId)
+                            && !AQUAPLANET.equals(partnerId));
                 })
                 .toList();
     }
@@ -315,6 +341,9 @@ public class OrderService {
 
     // 발권완료 문자 발송
     private void sendTicketIssuedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items, Map<UUID, List<String>> ticketMap) {
+
+        Set<String> qrSentProducts = new HashSet<>();
+
         for (OrderProductListGetResDto item : items) {
 
             UUID productId = item.getProductId();
@@ -334,7 +363,30 @@ public class OrderService {
             vars.put("주문자명", order.getCustomerName());
             vars.put("상품명", item.getProductName());
             List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
-            vars.put("티켓번호", String.join("\n", tickets));
+           // vars.put("티켓번호", String.join("\n", tickets));
+            String couponText;
+
+            // 스마트인피니 / 스파비스  QR 링크
+            String partnerId = String.valueOf(item.getPartnerId());
+
+            if (SMARTINFINI.equals(partnerId) ||
+                    SPAVIS.equals(partnerId)) {
+
+                if(qrSentProducts.contains(partnerId)){
+                    continue;
+                }
+
+                qrSentProducts.add(partnerId);
+
+                couponText = QR_URL + order.getOrderNumber();
+            }
+
+            // 일반 상품 → 티켓번호
+            else {
+                couponText = String.join("\n", tickets);
+            }
+
+            vars.put("티켓번호", couponText);
             vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
             vars.put("수량", String.valueOf(item.getQuantity()));
 

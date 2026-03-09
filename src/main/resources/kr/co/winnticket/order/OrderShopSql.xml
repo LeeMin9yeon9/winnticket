@@ -281,6 +281,56 @@
         WHERE order_number = #{orderNumber}
     </update>
 
+    <!-- QR 쿠폰 조회 -->
+    <select id="selectOrderQrInfo" resultType="kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto">
+        SELECT
+            oi.partner_id AS partnerId,
+            oi.product_name AS productName,
+            o.customer_name AS customerName,
+            oi.quantity AS quantity,
+
+            TO_CHAR(oi.created_at,'YYYY-MM-DD') AS issuedAt,
+
+            CASE
+                WHEN p.usage_period LIKE '%구매로부터%'
+                    THEN TO_CHAR(oi.created_at + INTERVAL '60 days','YYYY-MM-DD')
+
+                WHEN p.usage_period ~ '\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}'
+                THEN split_part(p.usage_period,'~',2)
+
+                ELSE p.usage_period
+                END AS expireDate,
+
+            oio.option_value AS optionName,
+            (SELECT tel FROM site_info LIMIT 1) AS customerCenterPhone
+
+        FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            JOIN products p ON p.id = oi.product_id
+            LEFT JOIN order_item_options oio ON oio.order_item_id = oi.id
+
+        WHERE o.order_number = #{orderNumber}
+            LIMIT 1
+
+    </select>
+
+
+    <select id="selectTicketsByOrderNumber" resultType="kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto$Ticket">
+
+        SELECT
+            ot.id AS ticketId,
+            ot.ticket_number AS ticketNumber,
+            ot.partner_order_code AS partnerOrderCode,
+            ot.ticket_used AS ticketUsed
+
+        FROM order_tickets ot
+                 JOIN order_items oi ON oi.id = ot.order_item_id
+                 JOIN orders o ON o.id = oi.order_id
+
+        WHERE o.order_number = #{orderNumber}
+
+    </select>
+
 
 
 

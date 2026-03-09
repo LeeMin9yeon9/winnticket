@@ -31,19 +31,23 @@ public class PayletterController {
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
     public ApiResponse<String> callback(@RequestBody Map<String, Object> payload){
 
-        service.handleCallback(payload);
+        try {
+            service.handleCallback(payload);
 
-        Object param = payload.get("custom_parameter");
-        if(param == null){
-            log.error("[PAYLETTER] custom_parameter missing payload={}", payload);
-            return ApiResponse.success("OK");
+            Object param = payload.get("custom_parameter");
+            if (param == null) {
+                log.error("[PAYLETTER] custom_parameter missing payload={}", payload);
+                return ApiResponse.success("OK");
+            }
+
+            UUID orderId = UUID.fromString(String.valueOf(param));
+
+            log.info("[PAYLETTER] callback payload={}", payload);
+
+            orderService.completePayment(orderId);
+        }catch (Exception e){
+            log.error("[PAYLETTER CALLBACK ERROR] payload={}", payload, e);
         }
-
-        UUID orderId = UUID.fromString(String.valueOf(param));
-
-        log.info("[PAYLETTER] callback payload={}", payload);
-
-        orderService.completePayment(orderId);
 
         return ApiResponse.success("OK");
     }
