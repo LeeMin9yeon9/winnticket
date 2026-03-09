@@ -123,9 +123,9 @@ aquaplanet:
 
 # 파트너 연동(LS컴퍼니)
 lscompany:
-  base-url: https://unity-dev.lscompany-api.com/Api_v3
-  agent-no: CH2603091
-  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXBlIjoic2VsbGVyIiwicGFyYW1zIjp7ImNvZGUiOiJDSDI2MDMwOTEifX0.DCPJ-iJwpeew-UYPRuscjr4MBJRp4MooNFgsn8m-9es
+  base-url: "https://unity-dev.lscompany-api.com/Api_v3"
+  agent-no: "CH2603091"
+  token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXBlIjoic2VsbGVyIiwicGFyYW1zIjp7ImNvZGUiOiJDSDI2MDMwOTEifX0.DCPJ-iJwpeew-UYPRuscjr4MBJRp4MooNFgsn8m-9es"
 
 
 
