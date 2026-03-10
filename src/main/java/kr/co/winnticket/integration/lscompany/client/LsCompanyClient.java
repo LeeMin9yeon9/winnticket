@@ -30,15 +30,18 @@ public class LsCompanyClient {
         req.setData(data);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set("Authorization", properties.getToken());
 
         ObjectMapper mapper = new ObjectMapper();
         String json = "";
 
+
+
         try {
             json = mapper.writeValueAsString(req);
+            log.info("FINAL REQUEST JSON = {}", new ObjectMapper().writeValueAsString(req));
             log.info("REQUEST JSON STRING = {}", json);
         } catch (Exception e) {
             log.error("JSON 변환 실패", e);
