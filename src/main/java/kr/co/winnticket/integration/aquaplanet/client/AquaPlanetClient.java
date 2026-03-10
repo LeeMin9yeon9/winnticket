@@ -52,12 +52,11 @@ public class AquaPlanetClient {
         sh.setTMSG_WRTG_DT(now.substring(0, 8));
         sh.setFRS_RQST_DTM(now);
         sh.setTMSG_RQST_DTM(now);
-        sh.setTMSG_CRE_SYS_NM("SIF" + (int)(Math.random() * 90000));
-        sh.setSTD_TMSG_SEQ_NO("1" + System.currentTimeMillis());
+        sh.setTMSG_CRE_SYS_NM("SIF12345"); // 성공했던 시스템명
+        sh.setSTN_TMSG_IP("13.109.91.167"); // 성공했던 IP
         sh.setRECV_SVC_CD(svcCd);
         sh.setINTF_ID(intfId);
-        // 정의서에 명시된 필수값(IP) 추가 권장
-        sh.setSTN_TMSG_IP("127.0.0.1");
+        sh.setSTD_TMSG_SEQ_NO("1" + System.currentTimeMillis() / 1000);
         return sh;
     }
 }
