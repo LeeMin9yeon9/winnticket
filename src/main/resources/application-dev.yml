@@ -38,7 +38,7 @@ benepia:
   cust-co-cd: z819
   confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
   token-create-url: https://stg-auth.benepia.co.kr/api/token/request
-  batch-base-url: https://stg-collections.benepia.co.kr
+  batch-base-url: http://stg-collections.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: A8MCD
   api-key: "6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61"
