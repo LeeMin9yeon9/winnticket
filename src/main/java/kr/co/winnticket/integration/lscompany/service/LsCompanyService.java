@@ -1,10 +1,16 @@
 package kr.co.winnticket.integration.lscompany.service;
 
 import kr.co.winnticket.integration.lscompany.client.LsCompanyClient;
-import kr.co.winnticket.integration.lscompany.dto.LsPlaceResDto;
+import kr.co.winnticket.integration.lscompany.dto.*;
+import kr.co.winnticket.integration.lscompany.mapper.LsCompanyMapper;
+import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -12,12 +18,60 @@ import org.springframework.stereotype.Service;
 public class LsCompanyService {
 
     private final LsCompanyClient client;
+    private final LsCompanyProperties properties;
+    private final LsCompanyMapper mapper;
 
+    // 시설 조회
     public LsPlaceResDto getPlaces() {
 
-        log.info("LS 시설 조회 요청");
+        LsPlaceReqDto dto = new LsPlaceReqDto();
+        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
 
-        return client.getPlaces();
+        dto.setData(data);
+        return client.post("place", dto, LsPlaceResDto.class);
+    }
+
+    // 상품 조회
+    public LsProductResDto getProducts(){
+
+        LsProductReqDto dto = new LsProductReqDto();
+        LsProductReqDto.Data data = new LsProductReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
+        data.setType("all");
+
+        dto.setData(data);
+        return client.post("product", dto, LsProductResDto.class);
+
+    }
+
+    // 티켓 발권
+    public LsIssueResDto issueTicket(UUID orderId) {
+
+        LsIssueReqDto req = mapper.selectLsIssueRequest(orderId);
+
+        if (req == null || req.getData() == null) {
+            throw new RuntimeException("LS 발권 주문 데이터가 없습니다. orderId=" + orderId);
+        }
+        if (req.getData().getOrder() == null || req.getData().getOrder().isEmpty()) {
+            throw new RuntimeException("LS 발권 대상 티켓이 없습니다. orderId=" + orderId);
+        }
+
+        req.getData().setAgentNo(properties.getAgentNo());
+        req.getData().setDate(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        );
+
+        // 티켓수신자 정보는 주문자 정보와 동일하게 세팅
+        if (req.getData().getName() == null || req.getData().getName().isBlank()) {
+            req.getData().setName(req.getData().getOrderName());
+        }
+
+        if (req.getData().getHp() == null || req.getData().getHp().isBlank()) {
+            req.getData().setHp(req.getData().getOrderHp());
+        }
+
+        return client.issue(req);
     }
 }
 

@@ -10,6 +10,7 @@ import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
+import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
@@ -59,6 +60,7 @@ public class OrderService {
     private final AquaPlanetService aquaplanetService;
     private final SpavisService spavisService;
     private final KcpService kcpService;
+    private final LsCompanyService lsCompanyService;
 
     private static final String QR_URL = "https://www.winnticket.store/coupon/";
     private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
@@ -69,6 +71,8 @@ public class OrderService {
     private static final String SMARTINFINI = "eec583a7-ce38-4cd0-927e-c35b5391a66d";
     private static final String SPAVIS = "0f46cad1-6fb4-4514-938f-d309850f0668";
     private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
+    private static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
+
     // 주문 상태 조회
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
         OrderAdminStatusGetResDto model = mapper.selectOrderAdminStatus();
@@ -233,6 +237,15 @@ public class OrderService {
                 }
             }
 
+//            if (split.isHasLsCompany()){
+//                try {
+//                    log.info("[LSCompany Products]");
+//                    lsCompanyService.issueTicket();
+//                }catch (Exception e){
+//                    log.error("LSCompany 발권 실패 orderId={}",auId,e);
+//                }
+//            }
+
             /*
             if (split.isHasAquaplanet()) {
                 aquaplanetService.couponIssue(auId);
@@ -260,6 +273,7 @@ public class OrderService {
         boolean hasAquaplanet = false;
         boolean hasSpavis = false;
         boolean hasNormalProduct = false;
+        boolean hasLsCompany = false;
 
         for (OrderProductListGetResDto item : items) {
             String partnerId = String.valueOf(item.getPartnerId());
@@ -283,7 +297,10 @@ public class OrderService {
                 hasAquaplanet = true;
             } else if(SPAVIS.equals(partnerId)) { // 스파비스
                 hasSpavis = true;
-            } else { // 일반상품
+            } else if(LSCOMPANY.equals(partnerId)){
+                hasLsCompany = true;
+            }
+            else { // 일반상품
                 hasNormalProduct = true;
             }
         }
@@ -297,7 +314,9 @@ public class OrderService {
                 hasPlusN,
                 hasAquaplanet,
                 hasSpavis,
-                hasNormalProduct
+                hasNormalProduct,
+                hasLsCompany
+
         );
     }
 

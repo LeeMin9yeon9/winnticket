@@ -47,7 +47,7 @@
             )
     </update>
 
-    <!-- 여러개 티켓 주문 시 남은 티켓 개수 -->
+    <!-- 여러개 티켓 주문 시 남은 티켓 개수 조회 -->
     <select id="countRemainTickets" resultType="int">
         SELECT COUNT(*)
         FROM order_tickets

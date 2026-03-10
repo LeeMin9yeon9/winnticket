@@ -1,8 +1,7 @@
 package kr.co.winnticket.integration.lscompany.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.winnticket.integration.lscompany.dto.LsPlaceReqDto;
-import kr.co.winnticket.integration.lscompany.dto.LsPlaceResDto;
+import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -10,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Log4j2
@@ -19,56 +19,53 @@ public class LsCompanyClient {
 
     private final RestTemplate restTemplate;
     private final LsCompanyProperties properties;
+    private final ObjectMapper objectMapper;
 
-    public LsPlaceResDto getPlaces() {
-
-        String url = properties.getBaseUrl() + "/place";
-
-        LsPlaceReqDto req = new LsPlaceReqDto();
-        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
-        data.setAgentNo(properties.getAgentNo());
-        req.setData(data);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.set("Authorization", properties.getToken());
-
-        log.info("LS TOKEN = {}", properties.getToken());
-
-        ObjectMapper mapper = new ObjectMapper();
-        String json = "";
-
-
-
+    public <T> T post(String path, Object requestBody, Class<T> responseType) {
         try {
-            json = mapper.writeValueAsString(req);
-            log.info("FINAL REQUEST JSON = {}", new ObjectMapper().writeValueAsString(req));
-            log.info("REQUEST JSON STRING = {}", json);
+            String url = properties.getBaseUrl() + "/" + path;
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.set("Authorization", properties.getToken());
+
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+            log.info("LS URL = {}", url);
+            log.info("LS REQUEST JSON = {}", json);
+
+            ResponseEntity<T> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    responseType
+            );
+
+            log.info("LS RESPONSE = {}", response.getBody());
+
+            return response.getBody();
         } catch (Exception e) {
-            log.error("JSON 변환 실패", e);
+            log.error("LS API 호출 실패", e);
+            throw new RuntimeException("LS API 호출 실패", e);
         }
+    }
 
-        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+    // 시설 조회
+    public LsPlaceResDto place(LsPlaceReqDto req){
+        return post("place", req, LsPlaceResDto.class);
+    }
 
-        try {
-            log.info("REQUEST JSON STRING = {}", mapper.writeValueAsString(req));
-        } catch (Exception e) {
-            log.error("JSON 변환 실패", e);
-        }
-        
-        ResponseEntity<LsPlaceResDto> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.POST,
-                        entity,
-                        LsPlaceResDto.class
-                );
+    // 상품 조회
+    public LsProductResDto product(LsProductReqDto req){
+        return post("product", req, LsProductResDto.class);
+    }
 
-        log.info("LS RESPONSE = {}", response.getBody());
-
-        return response.getBody();
-}
+    // 티켓 발권
+    public LsIssueResDto issue(LsIssueReqDto req){
+        return post("issue", req, LsIssueResDto.class);
+    }
 
 }
 

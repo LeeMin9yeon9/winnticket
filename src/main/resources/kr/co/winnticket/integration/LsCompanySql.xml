@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.mair.mapper.MairOrderMapper">
+
+    <resultMap id="LsIssueMap" type="kr.co.winnticket.integration.lscompany.dto.LsIssueReqDto">
+        <association property="data" javaType="kr.co.winnticket.integration.lscompany.dto.LsIssueReqDto$Data">
+            <result property="orderName" column="USER_NAME"/>
+            <result property="orderHp" column="USER_PHONE"/>
+            <result property="name" column="USER_NAME"/>
+            <result property="hp" column="USER_PHONE"/>
+            <result property="email" column="USER_EMAIL"/>
+            <result property="orderNo" column="ORDER_NUMBER"/>
+
+            <collection property="order" ofType="kr.co.winnticket.integration.lscompany.dto.LsIssueReqDto$Data$Order">
+                <result property="transactionId" column="TRANSACTION_ID"/>
+                <result property="optionId" column="OPTION_ID"/>
+                <result property="price" column="PRICE"/>
+                <result property="discount" column="DISCOUNT"/>
+                <result property="orderSdate" column="ORDER_SDATE"/>
+                <result property="orderEdate" column="ORDER_EDATE"/>
+            </collection>
+        </association>
+    </resultMap>
+
+    <!--주문-->
+    <select id="selectLsIssueRequest" resultMap="LsIssueMap">
+
+        SELECT
+
+            o.order_number                      AS ORDER_NUMBER,
+            o.customer_name                     AS USER_NAME,
+            o.customer_phone                    AS USER_PHONE,
+            o.customer_email                    AS USER_EMAIL,
+            o.customer_name                     AS RECEIVER_NAME,
+            o.customer_phone                    AS RECEIVER_HP,
+            ot.ticket_number                    AS TRANSACTION_ID,
+            pov.code                            AS OPTION_ID,
+            oio.additional_price::varchar       AS PRICE
+
+        FROM orders o
+                 JOIN order_items oi
+                      ON o.id = oi.order_id
+                 JOIN order_item_options oio
+                      ON oi.id = oio.order_item_id
+                 JOIN product_option_values pov
+                      ON pov.id = oio.option_value_id
+                 JOIN order_tickets ot
+                      ON oi.id = ot.order_item_id
+        WHERE o.id = #{orderId}
+          AND oi.partner_id = 'b49be80d-4150-408b-80e6-e11c6f13db9d'
+
+        ORDER BY ot.ticket_number
+    </select>
+
+
+</mapper>
