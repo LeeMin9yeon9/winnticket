@@ -15,7 +15,7 @@
     </select>
 
     <!-- 베네피아 배치 상품정보 조회 (티켓=여행상품 prdType=10, prdGb=03) -->
-    <select id="selectTicketProductsForBenepia" resultType="map">
+    <select id="selectBenepiaProducts" resultType="map">
         <![CDATA[
         SELECT
             'z819' AS "custCoCd",
