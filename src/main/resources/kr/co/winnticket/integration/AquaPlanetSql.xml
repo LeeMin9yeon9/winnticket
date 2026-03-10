@@ -4,7 +4,6 @@
     <!-- 쿠폰 발행을 위한 데이터 조회 -->
     <select id="selectAquaPlanetIssueData" resultType="kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetInterfaceDTO$IssueInput">
         SELECT
-            /* 법인/계약번호 분기 (정의서 기반 예시) */
             CASE WHEN pov.code LIKE 'U133%' THEN '4000' ELSE '1000' END AS "CORP_CD",
             CASE WHEN pov.code LIKE 'U133%' THEN '11900078' ELSE '20001073' END AS "CONT_NO",
             o.order_number AS "SEQ",
@@ -12,7 +11,6 @@
             pov.code AS "GOODS_NO",
             oi.quantity AS "ISSUE_QTY",
             o.customer_name AS "RCVER_NM",
-            /* 전화번호 파싱 (010-1234-5678 -> 010 / 1234 / 5678) */
             SUBSTRING(REPLACE(o.customer_phone, '-', ''), 1, 3) AS "RCVER_TEL_AREA_NO",
             SUBSTRING(REPLACE(o.customer_phone, '-', ''), 4, LENGTH(REPLACE(o.customer_phone, '-', '')) - 7) AS "RCVER_TEL_EXCHGE_NO",
             RIGHT(REPLACE(o.customer_phone, '-', ''), 4) AS "RCVER_TEL_NO"
@@ -33,11 +31,4 @@
             SELECT id FROM order_items WHERE order_id = #{orderId}
         )
     </update>
-
-    <select id="selectTicketIdsByOrderId" resultType="java.util.UUID">
-        SELECT ot.id
-        FROM order_tickets ot
-                 JOIN order_items oi ON ot.order_item_id = oi.id
-        WHERE oi.order_id = #{orderId}
-    </select>
 </mapper>
