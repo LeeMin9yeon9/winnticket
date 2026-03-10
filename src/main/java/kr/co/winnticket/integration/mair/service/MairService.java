@@ -68,20 +68,22 @@ public class MairService {
             }
 
             for (int i = 0; i < remain; i++) {
+                String trno = orderNumber + "-" + (i + 1);
 
                 // 엠에어 발권
                 MairCouponResDto res = client.issue(
                         item.getProductCode(),
-                        orderNumber,
+                        trno,
                         order.getCustomerName(),
                         order.getCustomerPhone()
                 );
-                log.info("[MAIR] 응답 result={}, TNO={}", res.getResult(), res.getTno());
+                log.info("[MAIR] 응답 TRNO={},result={}, TNO={}",trno, res.getResult(), res.getTno());
 
                 if (!"OK".equals(res.getResult())) {
                     throw new RuntimeException("엠에어 발권 실패 result=" + res.getResult());
                 }
 
+                // 티켓 하나씩 쿠폰번호 저장
                 mapper.updatePartnerOrderCode(
                         item.getOrderItemId(),
                         res.getTno()
@@ -178,7 +180,7 @@ public class MairService {
                     result.getCode(),
                     result.getMessage());
 
-            return result;   // ⭐ 반드시 반환
+            return result;
         }
 
         throw new RuntimeException("조회 가능한 상품이 없습니다.");

@@ -28,7 +28,8 @@ public interface MairOrderMapper {
     );
 
     // 남은 티켓 개수 확인( 여러개 주문 시)
-    int countRemainTickets(UUID orderItemId);
+    int countRemainTickets(@Param("orderItemId") UUID orderItemId);
+
 
 
 

@@ -286,6 +286,7 @@
         SELECT
             oi.partner_id AS partnerId,
             oi.product_name AS productName,
+            oio.option_value AS optionName,
             o.customer_name AS customerName,
             oi.quantity AS quantity,
 

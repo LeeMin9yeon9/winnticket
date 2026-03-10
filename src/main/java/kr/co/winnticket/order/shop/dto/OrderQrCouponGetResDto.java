@@ -15,6 +15,9 @@ public class OrderQrCouponGetResDto {
     @Schema(description = "상품명")
     private String productName;
 
+    @Schema(description = "상품옵션명")
+    private String optionName;
+
     @Schema(description = "주문자명")
     private String customerName;
 

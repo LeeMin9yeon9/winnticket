@@ -1,12 +1,19 @@
 package kr.co.winnticket.integration.lscompany.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import kr.co.winnticket.common.dto.ApiResponse;
+import kr.co.winnticket.integration.lscompany.dto.LsIssueResDto;
 import kr.co.winnticket.integration.lscompany.dto.LsPlaceResDto;
+import kr.co.winnticket.integration.lscompany.dto.LsProductResDto;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,10 +28,19 @@ public class LsCompanyController {
         return service.getPlaces();
     }
 
-//    @Operation(summary = "LS컴퍼니 상품정보 조회")
-//    @PostMapping("/products")
-//    public ApiResponse<LsProductResDto> getProducts() {
-//
-//        return ApiResponse.success(service.getProducts());
-//    }
+    @Operation(summary = "LS컴퍼니 상품정보 조회")
+    @PostMapping("/products")
+    public ApiResponse<LsProductResDto> getProducts() {
+
+        return ApiResponse.success(service.getProducts());
+    }
+
+    @Operation(summary = "LS컴퍼니 티켓 발권")
+    @PostMapping("/issue")
+    public ApiResponse<LsIssueResDto> issue(
+            @Parameter(description = "주문ID")
+            @RequestParam UUID orderId
+    ) {
+        return ApiResponse.success(service.issueTicket(orderId));
+    }
 }
