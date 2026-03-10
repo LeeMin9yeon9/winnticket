@@ -14,6 +14,7 @@ public class PartnerSplitResult {
     private boolean hasPlusN; // 플러스앤 상품 존재 여부
     private boolean hasAquaplanet; // 아쿠아플래닛 상품 존재 여부
     private boolean hasSpavis; // 스파비스 상품 존재 여부
+    private boolean hasLsCompany; //LS컴퍼니 상품 존재 여부
     private boolean hasNormalProduct; // 일반 상품 존재 여부
 
 }
