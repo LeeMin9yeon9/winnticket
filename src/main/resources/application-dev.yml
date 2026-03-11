@@ -119,7 +119,16 @@ bankda:
 
 # 파트너 연동 (아쿠아플라넷)
 aquaplanet:
-  url: "https://exgatedev.hanwharesort.co.kr/iGate/SIF/json.jdo" # 개발
+  base-url: https://exgatedev.hanwharesort.co.kr:443/iGate/SIF/json.jdo
+  corp-cd: 4000
+  cont-no: 11900078
+  wrkr-no: l1711019
+  system-type: HABIS
+  mask-auth: "0"
+  system-name: SIF99999
+  stn-tmsg-ip: 13.209.91.167
+  stn-tmsg-mac: 00-00-00-00-00-00
+  envr-info-dv-cd: D
 
 # 파트너 연동(LS컴퍼니)
 lscompany:
