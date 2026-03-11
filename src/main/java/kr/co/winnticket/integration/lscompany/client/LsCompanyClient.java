@@ -19,62 +19,132 @@ public class LsCompanyClient {
 
     private final RestTemplate restTemplate;
     private final LsCompanyProperties properties;
-    private final ObjectMapper objectMapper;
 
-    public <T> T post(String path, Object requestBody, Class<T> responseType) {
+    /**
+     * 시설 조회
+     */
+    public LsPlaceResDto getPlaces() {
+
+        String url = properties.getBaseUrl() + "/place";
+
+        // 요청 DTO 생성
+        LsPlaceReqDto req = new LsPlaceReqDto();
+        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
+        req.setData(data);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", properties.getToken());
+
+        log.info("LS TOKEN = {}", properties.getToken());
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+
         try {
-
-            String url = properties.getBaseUrl() + "/" + path;
-
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(requestBody);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-            headers.set("Authorization", properties.getToken());
-
-            HttpEntity<String> entity = new HttpEntity<>(json, headers);
-
-            log.info("LS URL = {}", url);
-            log.info("LS REQUEST JSON = {}", json);
-
-            ResponseEntity<T> response =
-                    restTemplate.exchange(
-                            url,
-                            HttpMethod.POST,
-                            entity,
-                            responseType
-                    );
-
-            log.info("LS RESPONSE = {}", response.getBody());
-
-            return response.getBody();
-
+            json = mapper.writeValueAsString(req);
+            log.info("REQUEST JSON STRING = {}", json);
         } catch (Exception e) {
-
-            log.error("LS API 호출 실패", e);
-            throw new RuntimeException("LS API 호출 실패", e);
-
+            log.error("JSON 변환 실패", e);
         }
+
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        ResponseEntity<LsPlaceResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsPlaceResDto.class
+                );
+
+        log.info("LS RESPONSE = {}", response.getBody());
+
+        return response.getBody();
     }
 
-    // 시설 조회
-    public LsPlaceResDto place(LsPlaceReqDto req){
-        return post("place", req, LsPlaceResDto.class);
+
+    /**
+     * 상품 조회
+     */
+    public LsProductResDto getProducts() {
+
+        String url = properties.getBaseUrl() + "/product";
+
+        // 요청 DTO
+        LsProductReqDto req = new LsProductReqDto();
+        LsProductReqDto.Data data = new LsProductReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
+        data.setType("all");   // 전체조회
+        req.setData(data);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", properties.getToken());
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+
+        try {
+            json = mapper.writeValueAsString(req);
+            log.info("LS REQUEST JSON = {}", json);
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
+
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        ResponseEntity<LsProductResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsProductResDto.class
+                );
+
+        log.info("LS RESPONSE = {}", response.getBody());
+
+        return response.getBody();
     }
 
-    // 상품 조회
-    public LsProductResDto product(LsProductReqDto req){
-        return post("product", req, LsProductResDto.class);
-    }
 
-    // 티켓 발권
-    public LsIssueResDto issue(LsIssueReqDto req){
-        return post("issue", req, LsIssueResDto.class);
-    }
+    /**
+     * 티켓 발권
+     */
+    public LsIssueResDto issue(LsIssueReqDto req) {
 
+        String url = properties.getBaseUrl() + "/issue";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", properties.getToken());
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+
+        try {
+            json = mapper.writeValueAsString(req);
+            log.info("LS ISSUE REQUEST JSON = {}", json);
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
+
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        ResponseEntity<LsIssueResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsIssueResDto.class
+                );
+
+        log.info("LS ISSUE RESPONSE = {}", response.getBody());
+
+        return response.getBody();
+    }
 }
-
-
-

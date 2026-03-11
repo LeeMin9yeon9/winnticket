@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 @Schema(title = "[LS컴퍼니 상품 조회 요청 DTO] LsProductReqDto")
+
 public class LsProductReqDto {
 
     @Schema(description = "요청데이터")
