@@ -24,25 +24,13 @@ public class LsCompanyService {
     // 시설 조회
     public LsPlaceResDto getPlaces() {
 
-        LsPlaceReqDto dto = new LsPlaceReqDto();
-        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
-        data.setAgentNo(properties.getAgentNo());
-
-        dto.setData(data);
-        return client.post("place", dto, LsPlaceResDto.class);
+        return client.getPlaces();
     }
 
     // 상품 조회
     public LsProductResDto getProducts(){
 
-        LsProductReqDto dto = new LsProductReqDto();
-        LsProductReqDto.Data data = new LsProductReqDto.Data();
-        data.setAgentNo(properties.getAgentNo());
-        data.setType("all");
-
-        dto.setData(data);
-        return client.post("product", dto, LsProductResDto.class);
-
+        return client.getProducts();
     }
 
     // 티켓 발권
@@ -53,16 +41,21 @@ public class LsCompanyService {
         if (req == null || req.getData() == null) {
             throw new RuntimeException("LS 발권 주문 데이터가 없습니다. orderId=" + orderId);
         }
+
         if (req.getData().getOrder() == null || req.getData().getOrder().isEmpty()) {
             throw new RuntimeException("LS 발권 대상 티켓이 없습니다. orderId=" + orderId);
         }
 
+        // 업체코드
         req.getData().setAgentNo(properties.getAgentNo());
+
+        // 발권일자
         req.getData().setDate(
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                LocalDateTime.now()
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
 
-        // 티켓수신자 정보는 주문자 정보와 동일하게 세팅
+        // 티켓 수신자 정보 기본값
         if (req.getData().getName() == null || req.getData().getName().isBlank()) {
             req.getData().setName(req.getData().getOrderName());
         }
