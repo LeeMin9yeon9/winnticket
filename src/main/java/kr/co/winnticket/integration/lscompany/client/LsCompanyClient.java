@@ -30,11 +30,20 @@ public class LsCompanyClient {
         req.setData(data);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.set("Authorization", properties.getToken());
+        headers.add("Authorization", properties.getToken());
 
-        HttpEntity<LsPlaceReqDto> entity = new HttpEntity<>(req, headers);
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+
+        try {
+            json = mapper.writeValueAsString(req);
+            log.info("LS REQUEST JSON = {}", json);
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
         ResponseEntity<LsPlaceResDto> response =
                 restTemplate.exchange(

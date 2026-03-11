@@ -18,7 +18,7 @@ public class LsProductResDto {
     @Schema(description = "결과코드")
     private String resultCode;
 
-    private String resCode;
+    private String rescode;
 
     @Schema(description = "결과 메세지")
     private String resultMessage;
