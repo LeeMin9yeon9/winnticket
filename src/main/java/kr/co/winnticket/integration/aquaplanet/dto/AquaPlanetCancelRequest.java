@@ -1,18 +1,21 @@
 package kr.co.winnticket.integration.aquaplanet.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class AquaPlanetCancelRequest {
 
-    @Schema(example = "4000")
+    @JsonIgnore
+    private Long ticketId;
+
+    @JsonProperty("CORP_CD")
     private String corpCd;
 
-    @Schema(example = "11900078")
+    @JsonProperty("CONT_NO")
     private String contNo;
 
-    @Schema(example = "2848261732439801")
+    @JsonProperty("REPR_CPON_INDICT_NO")
     private String reprCponIndictNo;
-
 }

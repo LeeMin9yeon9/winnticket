@@ -1,93 +1,246 @@
 package kr.co.winnticket.integration.aquaplanet.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCancelRequest;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCancelResponse;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetIssueRequest;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetIssueResponse;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetRecallRequest;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetRecallResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AquaPlanetClient {
 
     private final RestTemplate aquaPlanetRestTemplate;
+    private final ObjectMapper aquaPlanetObjectMapper;
 
-    private static final String URL =
-            "https://exgatedev.hanwharesort.co.kr:443/iGate/SIF/json.jdo";
+    @Value("${aquaplanet.url}")
+    private String url;
 
-    public String call(String svcCd, String intfId, String dataKey, Map<String,Object> row){
+    @Value("${aquaplanet.system-name}")
+    private String systemName;
 
-        Map<String,Object> body = new HashMap<>();
+    @Value("${aquaplanet.stn-tmsg-ip}")
+    private String stnTmsgIp;
 
-        body.put("SystemHeader", createSystemHeader(svcCd,intfId));
-        body.put("TransactionHeader", createTransactionHeader());
-        body.put("MessageHeader", new HashMap<>());
+    @Value("${aquaplanet.wrkr-no}")
+    private String wrkrNo;
 
-        Map<String,Object> data = new HashMap<>();
-        data.put(dataKey, List.of(row));
+    public AquaPlanetIssueResponse issue(AquaPlanetIssueRequest req) {
+        try {
+            Map<String, Object> body = createBody(
+                    "HBSSAMCPN0306",
+                    "SIF00HBSSAMCPN0306",
+                    "ds_input",
+                    req
+            );
 
-        body.put("Data", data);
+            log.info("[AquaPlanet][ISSUE][REQ] ticketId={}, body={}", req.getTicketId(), body);
 
+            String responseBody = send(body);
+
+            log.info("[AquaPlanet][ISSUE][RES] ticketId={}, body={}", req.getTicketId(), responseBody);
+
+            return parseIssueResponse(responseBody);
+
+        } catch (Exception e) {
+            log.error("[AquaPlanet][ISSUE][ERR] ticketId={}, message={}", req.getTicketId(), e.getMessage(), e);
+            throw new RuntimeException("아쿠아플라넷 발행 실패", e);
+        }
+    }
+
+    public AquaPlanetCancelResponse cancel(AquaPlanetCancelRequest req) {
+        try {
+            Map<String, Object> body = createBody(
+                    "HBSSAMCPN1003",
+                    "SIF00HBSSAMCPN1003",
+                    "ds_input",
+                    req
+            );
+
+            log.info("[AquaPlanet][CANCEL][REQ] ticketId={}, body={}", req.getTicketId(), body);
+
+            String responseBody = send(body);
+
+            log.info("[AquaPlanet][CANCEL][RES] ticketId={}, body={}", req.getTicketId(), responseBody);
+
+            return parseCancelResponse(responseBody);
+
+        } catch (Exception e) {
+            log.error("[AquaPlanet][CANCEL][ERR] ticketId={}, message={}", req.getTicketId(), e.getMessage(), e);
+            throw new RuntimeException("아쿠아플라넷 취소 실패", e);
+        }
+    }
+
+    public AquaPlanetRecallResponse checkRecall(AquaPlanetRecallRequest req) {
+        try {
+            Map<String, Object> body = createBody(
+                    "HBSSAMCPN1100",
+                    "SIF00HBSSAMCPN1100",
+                    "ds_input",
+                    req
+            );
+
+            log.info("[AquaPlanet][RECALL][REQ] ticketId={}, body={}", req.getTicketId(), body);
+
+            String responseBody = send(body);
+
+            log.info("[AquaPlanet][RECALL][RES] ticketId={}, body={}", req.getTicketId(), responseBody);
+
+            return parseRecallResponse(responseBody);
+
+        } catch (Exception e) {
+            log.error("[AquaPlanet][RECALL][ERR] ticketId={}, message={}", req.getTicketId(), e.getMessage(), e);
+            throw new RuntimeException("아쿠아플라넷 회수조회 실패", e);
+        }
+    }
+
+    private String send(Map<String, Object> body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<Map<String,Object>> entity =
-                new HttpEntity<>(body, headers);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<String> response =
-                aquaPlanetRestTemplate.exchange(
-                        URL,
-                        HttpMethod.POST,
-                        entity,
-                        String.class
-                );
+        ResponseEntity<String> response = aquaPlanetRestTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
 
         return response.getBody();
     }
 
-    private Map<String,Object> createSystemHeader(String svcCd,String intfId){
+    private Map<String, Object> createBody(String svcCd, String intfId, String dataKey, Object row) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("SystemHeader", createSystemHeader(svcCd, intfId));
+        body.put("TransactionHeader", createTransactionHeader());
+        body.put("MessageHeader", new HashMap<>());
 
-        String now = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        Map<String, Object> data = new HashMap<>();
+        data.put(dataKey, List.of(row));
+        body.put("Data", data);
 
-        Map<String,Object> header = new HashMap<>();
+        return body;
+    }
 
-        header.put("TMSG_VER_DV_CD","01");
-        header.put("ENVR_INFO_DV_CD","D");
-        header.put("STN_MSG_ENCP_CD","0");
-        header.put("STN_MSG_COMP_CD","0");
-        header.put("LANG_CD","KO");
-        header.put("TMSG_WRTG_DT",now.substring(0,8));
-        header.put("TMSG_CRE_SYS_NM","SIF99999");
-        header.put("STD_TMSG_SEQ_NO",System.currentTimeMillis()+"");
-        header.put("STD_TMSG_PRGR_NO","00");
-        header.put("STN_TMSG_IP","13.109.91.167");
-        header.put("STN_TMSG_MAC","00-00-00-00-00-00");
-        header.put("FRS_RQST_SYS_CD","SIF");
-        header.put("FRS_RQST_DTM",now);
-        header.put("TRMS_SYS_CD","SIF");
-        header.put("RQST_RSPS_DV_CD","S");
-        header.put("TRSC_SYNC_DV_CD","S");
-        header.put("TMSG_RQST_DTM",now);
-        header.put("RECV_SVC_CD",svcCd);
-        header.put("INTF_ID",intfId);
+    private Map<String, Object> createSystemHeader(String svcCd, String intfId) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 
+        Map<String, Object> header = new HashMap<>();
+        header.put("TMSG_VER_DV_CD", "01");
+        header.put("ENVR_INFO_DV_CD", "D");
+        header.put("STN_MSG_ENCP_CD", "0");
+        header.put("STN_MSG_COMP_CD", "0");
+        header.put("LANG_CD", "KO");
+        header.put("TMSG_WRTG_DT", now.substring(0, 8));
+        header.put("TMSG_CRE_SYS_NM", systemName);
+        header.put("STD_TMSG_SEQ_NO", String.valueOf(System.currentTimeMillis()));
+        header.put("STD_TMSG_PRGR_NO", "00");
+        header.put("STN_TMSG_IP", stnTmsgIp);
+        header.put("STN_TMSG_MAC", "00-00-00-00-00-00");
+        header.put("FRS_RQST_SYS_CD", "SIF");
+        header.put("FRS_RQST_DTM", now);
+        header.put("TRMS_SYS_CD", "SIF");
+        header.put("RQST_RSPS_DV_CD", "S");
+        header.put("TRSC_SYNC_DV_CD", "S");
+        header.put("TMSG_RQST_DTM", now);
+        header.put("RECV_SVC_CD", svcCd);
+        header.put("INTF_ID", intfId);
         return header;
     }
 
-    private Map<String,Object> createTransactionHeader(){
-
-        Map<String,Object> header = new HashMap<>();
-
-        header.put("STN_MSG_TR_TP_CD","O");
-        header.put("SYSTEM_TYPE","HABIS");
-        header.put("WRKR_NO","l1711019");
-        header.put("MASK_AUTH","0");
-
+    private Map<String, Object> createTransactionHeader() {
+        Map<String, Object> header = new HashMap<>();
+        header.put("STN_MSG_TR_TP_CD", "O");
+        header.put("SYSTEM_TYPE", "HABIS");
+        header.put("WRKR_NO", wrkrNo);
+        header.put("MASK_AUTH", "0");
         return header;
     }
 
+    private AquaPlanetIssueResponse parseIssueResponse(String json) throws Exception {
+        JsonNode root = aquaPlanetObjectMapper.readTree(json);
+
+        String msgPrcsRsltCd = root.path("MessageHeader").path("MSG_PRCS_RSLT_CD").asText();
+        if (!"0".equals(msgPrcsRsltCd)) {
+            throw new RuntimeException(extractMessage(root));
+        }
+
+        JsonNode outputNode = root.path("Data").path("ds_output").get(0);
+        if (outputNode == null || outputNode.isMissingNode()) {
+            throw new RuntimeException("발행 응답 ds_output 없음");
+        }
+
+        return aquaPlanetObjectMapper.treeToValue(outputNode, AquaPlanetIssueResponse.class);
+    }
+
+    private AquaPlanetCancelResponse parseCancelResponse(String json) throws Exception {
+        JsonNode root = aquaPlanetObjectMapper.readTree(json);
+
+        String msgPrcsRsltCd = root.path("MessageHeader").path("MSG_PRCS_RSLT_CD").asText();
+        if (!"0".equals(msgPrcsRsltCd)) {
+            throw new RuntimeException(extractMessage(root));
+        }
+
+        JsonNode outputNode = root.path("Data").path("ds_output").get(0);
+        if (outputNode == null || outputNode.isMissingNode()) {
+            throw new RuntimeException("취소 응답 ds_output 없음");
+        }
+
+        return aquaPlanetObjectMapper.treeToValue(outputNode, AquaPlanetCancelResponse.class);
+    }
+
+    private AquaPlanetRecallResponse parseRecallResponse(String json) throws Exception {
+        JsonNode root = aquaPlanetObjectMapper.readTree(json);
+
+        String msgPrcsRsltCd = root.path("MessageHeader").path("MSG_PRCS_RSLT_CD").asText();
+
+        if ("-1".equals(msgPrcsRsltCd)) {
+            AquaPlanetRecallResponse empty = new AquaPlanetRecallResponse();
+            empty.setDsResult(List.of());
+            return empty;
+        }
+
+        if (!"0".equals(msgPrcsRsltCd)) {
+            throw new RuntimeException(extractMessage(root));
+        }
+
+        JsonNode resultNode = root.path("Data").path("ds_result");
+        AquaPlanetRecallResponse response = new AquaPlanetRecallResponse();
+        if (resultNode == null || resultNode.isMissingNode()) {
+            response.setDsResult(List.of());
+            return response;
+        }
+
+        List<AquaPlanetRecallResponse.Result> results =
+                aquaPlanetObjectMapper.readerForListOf(AquaPlanetRecallResponse.Result.class)
+                        .readValue(resultNode);
+
+        response.setDsResult(results);
+        return response;
+    }
+
+    private String extractMessage(JsonNode root) {
+        JsonNode msgNode = root.path("MessageHeader").path("MSG_DATA_SUB");
+        if (msgNode.isArray() && !msgNode.isEmpty()) {
+            return msgNode.get(0).path("MSG_CTNS").asText("아쿠아플라넷 오류");
+        }
+        return "아쿠아플라넷 오류";
+    }
 }

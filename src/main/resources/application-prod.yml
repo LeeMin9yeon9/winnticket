@@ -147,3 +147,6 @@ smartinfini:
 # 파트너 연동 (아쿠아플라넷)
 aquaplanet:
   url: "https://exgate.hanhwaresort.co.kr:443/iGate/SIF/json.jdo" # 운영
+  system-name: SIF99999
+  stn-tmsg-ip: 13.109.91.167
+  wrkr-no: l1711019
