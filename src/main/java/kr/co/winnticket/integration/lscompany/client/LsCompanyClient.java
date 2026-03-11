@@ -9,7 +9,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Log4j2
@@ -24,33 +23,26 @@ public class LsCompanyClient {
 
         String url = properties.getBaseUrl() + "/place";
 
-        LsPlaceReqDto req = new LsPlaceReqDto();
-        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
-        data.setAgentNo(properties.getAgentNo());
-        req.setData(data);
+        // curl과 동일한 JSON 생성
+        String body = String.format(
+                "{\"data\":{\"agentNo\":\"%s\"}}",
+                properties.getAgentNo()
+        );
+
+        log.info("LS REQUEST BODY = {}", body);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.add("Authorization", properties.getToken());
+        headers.set("Content-Type", "application/json");
+        headers.set("Accept", "application/json");
+        headers.set("Authorization", properties.getToken());
 
-        ObjectMapper mapper = new ObjectMapper();
-        String json = "";
-
-        try {
-            json = mapper.writeValueAsString(req);
-            log.info("REQUEST JSON STRING = {}", json);
-        } catch (Exception e) {
-            log.error("JSON 변환 실패", e);
-        }
-
-        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<LsPlaceResDto> response =
                 restTemplate.exchange(
                         url,
                         HttpMethod.POST,
-                        entity,
+                        request,
                         LsPlaceResDto.class
                 );
 
