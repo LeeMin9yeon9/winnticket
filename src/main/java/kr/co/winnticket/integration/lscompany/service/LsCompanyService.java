@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,39 +35,176 @@ public class LsCompanyService {
     }
 
     // 티켓 발권
-    public LsIssueResDto issueTicket(UUID orderId) {
+    public LsIssueResDto issueTicket(String orderNumber) {
 
-        LsIssueReqDto req = mapper.selectLsIssueRequest(orderId);
+        // 주문 정보 조회
+        LsOrderInfoDto orderInfo = mapper.selectOrderInfo(orderNumber);
 
-        if (req == null || req.getData() == null) {
-            throw new RuntimeException("LS 발권 주문 데이터가 없습니다. orderId=" + orderId);
+        if (orderInfo == null) {
+            throw new RuntimeException("주문정보 없음 orderNumber=" + orderNumber);
         }
 
-        if (req.getData().getOrder() == null || req.getData().getOrder().isEmpty()) {
-            throw new RuntimeException("LS 발권 대상 티켓이 없습니다. orderId=" + orderId);
+        // 주문 상품 조회
+        List<LsOrderItemInfoDto> items =
+                mapper.selectOrderItemInfos(orderInfo.getOrderId());
+
+        if (items == null || items.isEmpty()) {
+            throw new RuntimeException("주문아이템 없음 orderNumber=" + orderNumber);
         }
 
-        // 업체코드
-        req.getData().setAgentNo(properties.getAgentNo());
+        // LS 발권 요청 DTO 생성
+        LsIssueReqDto req = new LsIssueReqDto();
+        LsIssueReqDto.Data data = new LsIssueReqDto.Data();
 
-        // 발권일자
-        req.getData().setDate(
-                LocalDateTime.now()
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        );
+        // LS 업체코드
+        data.setAgentNo(properties.getAgentNo());
 
-        // 티켓 수신자 정보 기본값
-        if (req.getData().getName() == null || req.getData().getName().isBlank()) {
-            req.getData().setName(req.getData().getOrderName());
+        // 주문자 정보
+        data.setOrderName(orderInfo.getCustomerName());
+        data.setOrderHp(orderInfo.getCustomerPhone());
+
+        // 티켓 수신자 정보 (주문자와 동일)
+        data.setName(orderInfo.getCustomerName());
+        data.setHp(orderInfo.getCustomerPhone());
+        data.setEmail(orderInfo.getCustomerEmail());
+
+        // 발권요청시간 (yyyyMMddHHmmss)
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        data.setDate(now);
+
+        // 윈앤티켓 주문번호
+        data.setOrderNo(orderNumber);
+
+        List<LsIssueReqDto.Data.Order> orderList = new ArrayList<>();
+
+        log.info("LS 발권 요청 개수 = {}", orderList.size());
+
+        // 쿠폰 수량만큼 발권 요청 생성
+            for (LsOrderItemInfoDto item : items) {
+                // 발권 안된 티켓 조회
+                List<String> ticketNumbers = mapper.selectOrderTicketNumbers(item.getOrderItemId());
+
+                if (ticketNumbers == null || ticketNumbers.isEmpty()) {
+                    log.info("이미 발권 완료된 상품 orderItemId={}", item.getOrderItemId());
+                    continue;
+                }
+                int issueCount = Math.min(item.getQuantity(), ticketNumbers.size());
+
+                for (int i = 0; i < issueCount; i++) {
+
+                    String ticketNumber = ticketNumbers.get(i);
+
+                    LsIssueReqDto.Data.Order o = new LsIssueReqDto.Data.Order();
+
+                    o.setTransactionId(ticketNumber);         // transactionId = 윈앤티켓 티켓번호
+                    o.setOptionId(item.getOptionId());      // LS 옵션ID
+                    o.setPrice(String.valueOf(item.getPrice()));    // 판매가
+                    o.setDiscount(String.valueOf(item.getDiscount()));   // 할인금액
+
+                    orderList.add(o);
+                }
+            }
+
+            if (orderList.isEmpty()) {
+                log.info("LS 발권 대상 없음 orderNumber={}", orderNumber);
+                return null;
+            }
+
+            data.setOrder(orderList);
+            req.setData(data);
+
+            log.info("LS 발권 요청 = {}", req);
+
+             //LS API 발권 호출
+            LsIssueResDto res = client.issue(req);
+
+            log.info("LS 발권 응답 = {}", res);
+
+            if (!"0000".equals(res.getResultCode())) {
+
+                log.error("LS 발권 실패 resultCode={} message={}",
+                        res.getResultCode(),
+                        res.getResultMessage());
+
+                throw new RuntimeException("LS 발권 실패 : " + res.getResultMessage());
+            }
+
+            // 바코드 개수 검증
+            if (res.getBarcodeArr() == null || res.getBarcodeArr().isEmpty()) {
+                throw new RuntimeException("LS 바코드 응답 없음");
+            }
+
+            if (res.getBarcodeArr().size() != orderList.size()) {
+                log.error("LS 발권 개수 불일치 요청={} 응답={}",
+                        orderList.size(),
+                        res.getBarcodeArr().size());
+            }
+
+             // 발권 성공 시 바코드 저장
+        if (res.getBarcodeArr() != null) {
+            for (LsIssueResDto.BarcodeArr barcode : res.getBarcodeArr()) {
+
+                mapper.updatePartnerBarcode(
+                        barcode.getBarcode(),
+                        barcode.getTransactionId()
+                );
+            }
+        }
+            log.info("LS 발권 완료 orderNumber={}", orderNumber);
+                return res;
+            }
+
+        // 티켓 상태조회
+        public LsStatusResDto inquiryTicket(String ticketNumber){
+
+            String transactionId = ticketNumber;
+
+            return client.inquiryTicket(transactionId);
+
         }
 
-        if (req.getData().getHp() == null || req.getData().getHp().isBlank()) {
-            req.getData().setHp(req.getData().getOrderHp());
+        // 티켓 취소
+        public List<LsCancelResDto> cancelTicket(String orderNumber) {
+
+            // 주문에 해당하는 티켓번호 조회
+            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderNumber(orderNumber);
+
+            List<LsCancelResDto> results = new ArrayList<>();
+
+            if (ticketNumbers == null || ticketNumbers.isEmpty()) {
+                log.info("LS 취소 대상 없음 orderNumber={}", orderNumber);
+                return results;
+            }
+
+            for (String ticketNumber : ticketNumbers) {
+
+                try {
+
+                    LsCancelResDto res = client.cancelTicket(ticketNumber);
+
+                    log.info("LS 취소 응답 ticketNumber={} res={}", ticketNumber, res);
+
+                    results.add(res);
+
+                } catch (Exception e) {
+
+                    log.error("LS 취소 실패 ticketNumber={}", ticketNumber, e);
+
+                }
+            }
+            return results;
         }
 
-        return client.issue(req);
+
+        // LS 티켓 문자 재전송
+        public LsResendResDto resendTicket(String orderNumber){
+
+            return client.resendTicket(orderNumber);
+
+        }
     }
-}
+
 
 
 

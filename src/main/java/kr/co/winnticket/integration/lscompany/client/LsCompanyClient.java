@@ -99,10 +99,7 @@ public class LsCompanyClient {
             return response.getBody();
         }
 
-
-        /**
-         * 티켓 발권
-         */
+        // 티켓 발권
         public LsIssueResDto issue(LsIssueReqDto req) {
 
             String url = properties.getBaseUrl() + "/issue";
@@ -133,6 +130,105 @@ public class LsCompanyClient {
                     );
 
             log.info("LS ISSUE RESPONSE = {}", response.getBody());
+
+            return response.getBody();
+        }
+
+        // 티켓 상태조회
+        public LsStatusResDto inquiryTicket(String transactionId){
+
+            String url = properties.getBaseUrl() + "/inquiry";
+
+            LsStatusReqDto req = new LsStatusReqDto();
+            LsStatusReqDto.Data data = new LsStatusReqDto.Data();
+
+            data.setAgentNo(properties.getAgentNo());
+            data.setTransactionId(transactionId);
+
+            req.setData(data);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Authorization", properties.getToken());
+
+            HttpEntity<LsStatusReqDto> entity = new HttpEntity<>(req, headers);
+
+            ResponseEntity<LsStatusResDto> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            entity,
+                            LsStatusResDto.class
+                    );
+
+            log.info("LS inquiry response = {}", response.getBody());
+
+            return response.getBody();
+        }
+
+        // 티켓 발권 취소
+        public LsCancelResDto cancelTicket(String transactionId){
+
+            String url = properties.getBaseUrl() + "/cancel";
+
+            LsCancelReqDto req = new LsCancelReqDto();
+            LsCancelReqDto.Data data = new LsCancelReqDto.Data();
+
+            data.setAgentNo(properties.getAgentNo());
+            data.setTransactionId(transactionId);
+
+            req.setData(data);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Authorization", properties.getToken());
+
+            HttpEntity<LsCancelReqDto> entity = new HttpEntity<>(req, headers);
+
+            ResponseEntity<LsCancelResDto> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            entity,
+                            LsCancelResDto.class
+                    );
+
+            log.info("LS cancel response = {}", response.getBody());
+
+            return response.getBody();
+        }
+
+        // 티켓 재전송
+        public LsResendResDto resendTicket(String orderNumber){
+
+            String url = properties.getBaseUrl() + "/resend";
+
+            LsResendReqDto req = new LsResendReqDto();
+            LsResendReqDto.Data data = new LsResendReqDto.Data();
+
+            data.setAgentNo(properties.getAgentNo());
+            data.setOrderNo(orderNumber);
+
+            req.setData(data);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Authorization", properties.getToken());
+
+            HttpEntity<LsResendReqDto> entity = new HttpEntity<>(req, headers);
+
+            ResponseEntity<LsResendResDto> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            entity,
+                            LsResendResDto.class
+                    );
+
+            log.info("LS resend response = {}", response.getBody());
 
             return response.getBody();
         }

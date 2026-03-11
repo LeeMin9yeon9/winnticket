@@ -133,9 +133,16 @@ public class OrderService {
             // 주문 상품 목록 조회
             List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
-            log.info("[입금완료 문자 발송 시작!]");
-            sendPaymentConfirmedSms(order, items);
-            log.info("[입금완료 문자 발송 종료!]");
+            try {
+                log.info("[입금완료 문자 발송 시작!]");
+                sendPaymentConfirmedSms(order, items);
+                log.info("[입금완료 문자 발송 종료!]");
+
+            } catch (Exception e) {
+
+                log.error("[입금완료 문자 발송 실패] orderId={}", auId, e);
+
+            }
 
             // 티켓 발행
             Map<UUID, List<String>> ticketMap = new HashMap<>();
@@ -155,7 +162,12 @@ public class OrderService {
                     // 선사입쿠폰
                     if(Boolean.TRUE.equals(prePurchased)){
                         log.info("[선사입]");
-                        ticketNumber = ticketCouponService.issueCoupon(item.getId());
+                        try {
+                            ticketNumber = ticketCouponService.issueCoupon(item.getId());
+                        }catch (Exception e){
+                            log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
+                            throw new RuntimeException("쿠폰 재고 없음");
+                        }
                     } else {
                         log.info("[선사입 아님]");
                         ticketNumber = generateTicketNumber();
@@ -237,14 +249,14 @@ public class OrderService {
                 }
             }
 
-//            if (split.isHasLsCompany()){
-//                try {
-//                    log.info("[LSCompany Products]");
-//                    lsCompanyService.issueTicket();
-//                }catch (Exception e){
-//                    log.error("LSCompany 발권 실패 orderId={}",auId,e);
-//                }
-//            }
+            if (split.isHasLsCompany()){
+                try {
+                    log.info("[LSCompany Products]");
+                    lsCompanyService.issueTicket(order.getOrderNumber());
+                }catch (Exception e){
+                    log.error("LSCompany 발권 실패 orderId={}",auId,e);
+                }
+            }
 
             /*
             if (split.isHasAquaplanet()) {
@@ -254,13 +266,18 @@ public class OrderService {
              */
 
             if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini()) {
-                log.info("[Main Products]");
-                List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
-                log.info("[발권 문자 발송 시작]");
-                sendTicketIssuedSms(order, normalItems, ticketMap);
-                log.info("[발권 문자 발송 종료]");
+                try {
+                    log.info("[Main Products]");
+                    List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
+                    log.info("[발권 문자 발송 시작]");
+                    sendTicketIssuedSms(order, normalItems, ticketMap);
+                    log.info("[발권 문자 발송 종료]");
+                } catch (Exception e) {
+                    log.error("[발권 문자 발송 실패] orderId={}", auId, e);
+
+                }
             }
-    }
+        }
 
     // 상품 분기 처리
     private PartnerSplitResult splitByPartner(List<OrderProductListGetResDto> items) {
@@ -297,7 +314,7 @@ public class OrderService {
                 hasAquaplanet = true;
             } else if(SPAVIS.equals(partnerId)) { // 스파비스
                 hasSpavis = true;
-            } else if(LSCOMPANY.equals(partnerId)){
+            } else if(LSCOMPANY.equals(partnerId)){ // LS컴퍼니
                 hasLsCompany = true;
             }
             else { // 일반상품
@@ -517,13 +534,18 @@ public class OrderService {
          */
 
         if (split.isHasPlusN()) {
-            log.info("[플러스앤 취소 시작]");
+            log.info("[플러스앤 orderCancel start]");
             plusNService.cancel(orderId);
         }
 
         if (split.isHasSmartInfini()) {
-            log.info("[스마트인피니 취소 시작]");
+            log.info("[스마트인피니 orderCancel start]");
             smartInfiniService.cancelMulti(orderId);
+        }
+
+        if (split.isHasLsCompany()){
+            log.info("[LS컴퍼니 orderCancel start]");
+            lsCompanyService.cancelTicket(order.getOrderNumber());
         }
 
         /*

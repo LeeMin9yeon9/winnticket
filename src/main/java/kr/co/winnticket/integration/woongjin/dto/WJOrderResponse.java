@@ -1,9 +1,12 @@
 package kr.co.winnticket.integration.woongjin.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import java.util.List;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WJOrderResponse {
 
     private String code; // 응답코드
