@@ -23,8 +23,11 @@ public class LsCompanyClient {
 
     public <T> T post(String path, Object requestBody, Class<T> responseType) {
         try {
+
             String url = properties.getBaseUrl() + "/" + path;
-            String json = objectMapper.writeValueAsString(requestBody);
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(requestBody);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
@@ -36,19 +39,23 @@ public class LsCompanyClient {
             log.info("LS URL = {}", url);
             log.info("LS REQUEST JSON = {}", json);
 
-            ResponseEntity<T> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    responseType
-            );
+            ResponseEntity<T> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            entity,
+                            responseType
+                    );
 
             log.info("LS RESPONSE = {}", response.getBody());
 
             return response.getBody();
+
         } catch (Exception e) {
+
             log.error("LS API 호출 실패", e);
             throw new RuntimeException("LS API 호출 실패", e);
+
         }
     }
 
