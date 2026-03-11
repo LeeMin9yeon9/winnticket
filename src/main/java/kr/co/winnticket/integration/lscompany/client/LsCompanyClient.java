@@ -20,9 +20,6 @@ public class LsCompanyClient {
     private final RestTemplate restTemplate;
     private final LsCompanyProperties properties;
 
-    /**
-     * 시설 조회
-     */
     public LsPlaceResDto getPlaces() {
 
         String url = properties.getBaseUrl() + "/place";
@@ -33,8 +30,10 @@ public class LsCompanyClient {
         data.setAgentNo(properties.getAgentNo());
         req.setData(data);
 
+
+
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set("Authorization", properties.getToken());
 
@@ -45,12 +44,19 @@ public class LsCompanyClient {
 
         try {
             json = mapper.writeValueAsString(req);
+            log.info("FINAL REQUEST JSON = {}", new ObjectMapper().writeValueAsString(req));
             log.info("REQUEST JSON STRING = {}", json);
         } catch (Exception e) {
             log.error("JSON 변환 실패", e);
         }
 
         HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        try {
+            log.info("REQUEST JSON STRING = {}", mapper.writeValueAsString(req));
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
 
         ResponseEntity<LsPlaceResDto> response =
                 restTemplate.exchange(
@@ -64,6 +70,7 @@ public class LsCompanyClient {
 
         return response.getBody();
     }
+
 
 
     /**
