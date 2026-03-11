@@ -1,11 +1,13 @@
 package kr.co.winnticket.integration.lscompany.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "[LS컴퍼니 시설정보 조회 응답 DTO]LsPlaceResDto")
 public class LsPlaceResDto {
 
@@ -14,6 +16,8 @@ public class LsPlaceResDto {
 
         @Schema(description = "결과코드")
         private String resultCode;
+
+        private String resCode;
 
         @Schema(description = "결과 메시지")
         private String resultMessage;
