@@ -31,11 +31,20 @@ public class LsCompanyClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.set("Authorization", properties.getToken());
 
-        log.info("Authorization = {}", headers.getFirst("Authorization"));
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
 
-        HttpEntity<LsPlaceReqDto> entity = new HttpEntity<>(req, headers);
+        try {
+            json = mapper.writeValueAsString(req);
+            log.info("REQUEST JSON STRING = {}", json);
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
+        }
+
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
         ResponseEntity<LsPlaceResDto> response =
                 restTemplate.exchange(
