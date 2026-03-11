@@ -44,7 +44,6 @@
         WHERE o.id = #{orderId}
         AND oi.partner_id = 'd16d7f6f-e432-40ee-9f57-e4aaa2c65751'
         AND ot.partner_order_number IS NULL
-        AND pov.code IN ('U133192','U128160','U134503','U133189')
         ORDER BY ot.id, oio.id
     </select>
 
@@ -82,7 +81,6 @@
         AND oi.partner_id = 'd16d7f6f-e432-40ee-9f57-e4aaa2c65751'
         AND ot.partner_order_code IS NOT NULL
         AND ot.partner_order_number IS NOT NULL
-        AND pov.code IN ('U133192','U128160','U134503','U133189')
         ORDER BY ot.id, oio.id
     </select>
 
