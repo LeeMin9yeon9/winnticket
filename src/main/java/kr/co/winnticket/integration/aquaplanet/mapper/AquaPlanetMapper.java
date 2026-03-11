@@ -17,10 +17,8 @@ public interface AquaPlanetMapper {
     List<AquaPlanetRecallRequest> selectCancelTargets(@Param("orderId") UUID orderId);
 
     void updateAquaPlanetTicket(
-            @Param("ticketId") Long ticketId,
+            @Param("ticketId") UUID ticketId,
             @Param("reprCponIndictNo") String reprCponIndictNo,
             @Param("reprCponSeq") String reprCponSeq
     );
-
-    void updateTicketCancel(@Param("ticketId") Long ticketId);
 }
