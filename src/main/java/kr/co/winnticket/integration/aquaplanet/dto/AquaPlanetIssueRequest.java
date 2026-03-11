@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class AquaPlanetIssueRequest {
 
     @JsonIgnore
-    private Long ticketId;
+    private UUID ticketId;
 
     @JsonProperty("CORP_CD")
     private String corpCd;
