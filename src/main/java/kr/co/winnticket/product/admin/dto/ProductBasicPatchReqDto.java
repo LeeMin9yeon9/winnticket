@@ -8,6 +8,7 @@ import kr.co.winnticket.common.enums.SalesStatus;
 import lombok.Data;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,6 +57,12 @@ public class ProductBasicPatchReqDto {
 
     @Schema(description = "선사입형 여부")
     private Boolean prePurchased;
+
+    @Schema(description = "판매시작일")
+    private LocalDate salesStartDate;
+
+    @Schema(description = "판매종료일")
+    private LocalDate salesEndDate;
 
     @Hidden
     @Schema(description = "아이디")

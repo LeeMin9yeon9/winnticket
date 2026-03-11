@@ -320,6 +320,12 @@
             <if test="model.prePurchased != null">
                 PRE_PURCHASED = #{model.prePurchased},
             </if>
+            <if test="model.salesStartDate != null">
+                SALES_START_DATE = #{model.salesStartDate},
+            </if>
+            <if test="model.salesEndDate != null">
+                SALES_END_DATE = #{model.salesEndDate},
+            </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
