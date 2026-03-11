@@ -125,8 +125,6 @@ public class AquaPlanetService {
                     throw new RuntimeException("아쿠아플라넷 취소 실패: " + cancelResponse.getResultMsg());
                 }
 
-                mapper.updateTicketCancel(target.getTicketId());
-
                 log.info(
                         "[AquaPlanet][CANCEL] 취소 성공. orderId={}, ticketId={}, reprCponIndictNo={}",
                         orderId,
