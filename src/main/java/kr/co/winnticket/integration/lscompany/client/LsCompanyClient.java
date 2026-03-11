@@ -30,8 +30,8 @@ public class LsCompanyClient {
         req.setData(data);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        headers.add("Accept", "application/json");
+        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.add("Authorization", properties.getToken());
 
         ObjectMapper mapper = new ObjectMapper();
@@ -72,7 +72,7 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -110,7 +110,7 @@ public class LsCompanyClient {
             String url = properties.getBaseUrl() + "/issue";
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
