@@ -9,15 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Log4j2
 @Component
@@ -29,68 +21,30 @@ public class LsCompanyClient {
     private final ObjectMapper objectMapper;
 
     public LsPlaceResDto getPlaces() {
-        String urlStr = properties.getBaseUrl() + "/place";
-        String body = "{\"data\":{\"agentNo\":\"" + properties.getAgentNo() + "\"}}";
 
-        log.info("LS URL = {}", properties.getBaseUrl() + "/place");
+        String url = properties.getBaseUrl() + "/place";
 
-        log.info("LS URL = {}", urlStr);
-        log.info("LS TOKEN = [{}]", properties.getToken());
-        log.info("LS REQUEST BODY = {}", body);
+        LsPlaceReqDto req = new LsPlaceReqDto();
+        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
+        req.setData(data);
 
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(urlStr);
-            conn = (HttpURLConnection) url.openConnection();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", properties.getToken());
 
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setUseCaches(false);
+        HttpEntity<LsPlaceReqDto> entity = new HttpEntity<>(req, headers);
 
-            // curl 최대한 비슷하게
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("Accept", "application/json");
-            conn.setRequestProperty("Authorization", properties.getToken());
+        ResponseEntity<LsPlaceResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsPlaceResDto.class
+                );
 
-            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-
-            // 구형 서버 대응: chunked 말고 고정 길이로 보냄
-            conn.setFixedLengthStreamingMode(bodyBytes.length);
-
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(bodyBytes);
-                os.flush();
-            }
-
-            int status = conn.getResponseCode();
-            log.info("LS HTTP STATUS = {}", status);
-
-            InputStream is = (status >= 200 && status < 300)
-                    ? conn.getInputStream()
-                    : conn.getErrorStream();
-
-            String responseBody;
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                responseBody = br.lines().collect(Collectors.joining("\n"));
-            }
-
-            log.info("LS RAW RESPONSE = {}", responseBody);
-
-            if (status >= 200 && status < 300) {
-                return objectMapper.readValue(responseBody, LsPlaceResDto.class);
-            } else {
-                throw new RuntimeException("LS API 호출 실패. status=" + status + ", body=" + responseBody);
-            }
-
-        } catch (Exception e) {
-            log.error("LS API 호출 실패", e);
-            throw new RuntimeException("LS API 호출 실패", e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+        return response.getBody();
     }
 
 
