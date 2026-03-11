@@ -2,72 +2,148 @@ package kr.co.winnticket.integration.aquaplanet.service;
 
 import kr.co.winnticket.integration.aquaplanet.client.AquaPlanetClient;
 import kr.co.winnticket.integration.aquaplanet.dto.*;
+import kr.co.winnticket.integration.aquaplanet.mapper.AquaPlanetMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AquaPlanetService {
 
+    private final AquaPlanetMapper mapper;
     private final AquaPlanetClient client;
 
-    public String searchProducts(AquaPlanetProductRequest req){
+    @Transactional
+    public List<AquaPlanetIssueResponse> issueOrder(UUID orderId) {
 
-        Map<String,Object> row = new HashMap<>();
-        row.put("CORP_CD",req.getCorpCd());
-        row.put("CONT_NO",req.getContNo());
-        row.put("STDR_DATE",req.getStdrDate());
+        List<AquaPlanetIssueRequest> targets = mapper.selectIssueTargets(orderId);
 
-        return client.call(
-                "HBSSAMCNT0114",
-                "SIF00HBSSAMCNT0114",
-                "ds_search",
-                row
-        );
+        if (targets == null || targets.isEmpty()) {
+            log.info("[AquaPlanet][ISSUE] 발행 대상 없음. orderId={}", orderId);
+            return List.of();
+        }
+
+        List<AquaPlanetIssueResponse> results = new ArrayList<>();
+
+        for (AquaPlanetIssueRequest target : targets) {
+            try {
+                AquaPlanetIssueResponse response = client.issue(target);
+                response.setTicketId(target.getTicketId());
+
+                mapper.updateAquaPlanetTicket(
+                        target.getTicketId(),
+                        response.getReprCponIndictNo(),
+                        response.getReprCponSeq()
+                );
+
+                results.add(response);
+
+                log.info(
+                        "[AquaPlanet][ISSUE] 발행 성공. orderId={}, ticketId={}, reprCponIndictNo={}, reprCponSeq={}",
+                        orderId,
+                        target.getTicketId(),
+                        response.getReprCponIndictNo(),
+                        response.getReprCponSeq()
+                );
+
+            } catch (Exception e) {
+                log.error(
+                        "[AquaPlanet][ISSUE] 발행 실패. orderId={}, ticketId={}, goodsNo={}",
+                        orderId,
+                        target.getTicketId(),
+                        target.getGoodsNo(),
+                        e
+                );
+                throw e;
+            }
+        }
+
+        return results;
     }
 
-    public String issueCoupon(AquaPlanetIssueRequest req){
+    @Transactional
+    public void cancelOrder(UUID orderId) {
 
-        Map<String,Object> row = new HashMap<>();
+        List<AquaPlanetRecallRequest> targets = mapper.selectCancelTargets(orderId);
 
-        row.put("CORP_CD",req.getCorpCd());
-        row.put("CONT_NO",req.getContNo());
-        row.put("SEQ",req.getSeq());
-        row.put("ISSUE_DATE",req.getIssueDate());
-        row.put("GOODS_NO",req.getGoodsNo());
-        row.put("ISSUE_QTY",req.getIssueQty());
-        row.put("UNITY_ISSUE_YN",req.getUnityIssueYn());
-        row.put("RCVER_NM",req.getRcverNm());
-        row.put("RCVER_TEL_NATION_NO",req.getRcverTelNationNo());
-        row.put("RCVER_TEL_AREA_NO",req.getRcverTelAreaNo());
-        row.put("RCVER_TEL_EXCHGE_NO",req.getRcverTelExchgeNo());
-        row.put("RCVER_TEL_NO",req.getRcverTelNo());
+        if (targets == null || targets.isEmpty()) {
+            log.info("[AquaPlanet][CANCEL] 취소 대상 없음. orderId={}", orderId);
+            return;
+        }
 
-        return client.call(
-                "HBSSAMCPN0306",
-                "SIF00HBSSAMCPN0306",
-                "ds_input",
-                row
-        );
+        for (AquaPlanetRecallRequest target : targets) {
+            try {
+                AquaPlanetRecallResponse recallResponse = client.checkRecall(target);
+
+                if (!recallResponse.isCancelable()) {
+                    log.error(
+                            "[AquaPlanet][CANCEL] 취소 불가 상태. orderId={}, ticketId={}, reprCponIndictNo={}",
+                            orderId,
+                            target.getTicketId(),
+                            target.getReprCponIndictNo()
+                    );
+                    throw new RuntimeException("사용되었거나 폐기된 쿠폰은 취소할 수 없습니다.");
+                }
+
+            } catch (Exception e) {
+                log.error(
+                        "[AquaPlanet][CANCEL] 회수조회 실패. orderId={}, ticketId={}, reprCponIndictNo={}",
+                        orderId,
+                        target.getTicketId(),
+                        target.getReprCponIndictNo(),
+                        e
+                );
+                throw e;
+            }
+        }
+
+        for (AquaPlanetRecallRequest target : targets) {
+            try {
+                AquaPlanetCancelRequest cancelRequest = new AquaPlanetCancelRequest();
+                cancelRequest.setTicketId(target.getTicketId());
+                cancelRequest.setCorpCd(target.getCorpCd());
+                cancelRequest.setContNo(target.getContNo());
+                cancelRequest.setReprCponIndictNo(target.getReprCponIndictNo());
+
+                AquaPlanetCancelResponse cancelResponse = client.cancel(cancelRequest);
+
+                if (!"00".equals(cancelResponse.getResultCode()) && !"0".equals(cancelResponse.getResultCode())) {
+                    log.error(
+                            "[AquaPlanet][CANCEL] 취소 응답 실패. orderId={}, ticketId={}, resultCode={}, resultMsg={}",
+                            orderId,
+                            target.getTicketId(),
+                            cancelResponse.getResultCode(),
+                            cancelResponse.getResultMsg()
+                    );
+                    throw new RuntimeException("아쿠아플라넷 취소 실패: " + cancelResponse.getResultMsg());
+                }
+
+                mapper.updateTicketCancel(target.getTicketId());
+
+                log.info(
+                        "[AquaPlanet][CANCEL] 취소 성공. orderId={}, ticketId={}, reprCponIndictNo={}",
+                        orderId,
+                        target.getTicketId(),
+                        target.getReprCponIndictNo()
+                );
+
+            } catch (Exception e) {
+                log.error(
+                        "[AquaPlanet][CANCEL] 취소 실패. orderId={}, ticketId={}, reprCponIndictNo={}",
+                        orderId,
+                        target.getTicketId(),
+                        target.getReprCponIndictNo(),
+                        e
+                );
+                throw e;
+            }
+        }
     }
-
-    public String cancelCoupon(AquaPlanetCancelRequest req){
-
-        Map<String,Object> row = new HashMap<>();
-
-        row.put("CORP_CD",req.getCorpCd());
-        row.put("CONT_NO",req.getContNo());
-        row.put("REPR_CPON_INDICT_NO",req.getReprCponIndictNo());
-
-        return client.call(
-                "HBSSAMCPN1003",
-                "SIF00HBSSAMCPN1003",
-                "ds_input",
-                row
-        );
-    }
-
 }

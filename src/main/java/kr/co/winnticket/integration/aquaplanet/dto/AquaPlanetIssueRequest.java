@@ -1,45 +1,48 @@
 package kr.co.winnticket.integration.aquaplanet.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class AquaPlanetIssueRequest {
 
-    @Schema(example = "4000")
+    @JsonIgnore
+    private Long ticketId;
+
+    @JsonProperty("CORP_CD")
     private String corpCd;
 
-    @Schema(example = "11900078")
+    @JsonProperty("CONT_NO")
     private String contNo;
 
-    @Schema(example = "1")
+    @JsonProperty("SEQ")
     private Integer seq;
 
-    @Schema(example = "20260311")
+    @JsonProperty("ISSUE_DATE")
     private String issueDate;
 
-    @Schema(example = "U133192")
+    @JsonProperty("GOODS_NO")
     private String goodsNo;
 
-    @Schema(example = "1")
+    @JsonProperty("ISSUE_QTY")
     private Integer issueQty;
 
-    @Schema(example = "N")
+    @JsonProperty("UNITY_ISSUE_YN")
     private String unityIssueYn;
 
-    @Schema(example = "김한빛")
+    @JsonProperty("RCVER_NM")
     private String rcverNm;
 
-    @Schema(example = "82")
+    @JsonProperty("RCVER_TEL_NATION_NO")
     private String rcverTelNationNo;
 
-    @Schema(example = "010")
+    @JsonProperty("RCVER_TEL_AREA_NO")
     private String rcverTelAreaNo;
 
-    @Schema(example = "9930")
+    @JsonProperty("RCVER_TEL_EXCHGE_NO")
     private String rcverTelExchgeNo;
 
-    @Schema(example = "5681")
+    @JsonProperty("RCVER_TEL_NO")
     private String rcverTelNo;
-
 }
