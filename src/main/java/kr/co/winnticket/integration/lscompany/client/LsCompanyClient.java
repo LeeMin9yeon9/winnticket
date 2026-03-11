@@ -5,12 +5,12 @@ import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Log4j2
 @Component
@@ -30,8 +30,8 @@ public class LsCompanyClient {
         req.setData(data);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.add("Content-Type", "application/json");
+        headers.add("Accept", "application/json");
         headers.set("Authorization", properties.getToken());
 
         ObjectMapper mapper = new ObjectMapper();
@@ -59,11 +59,7 @@ public class LsCompanyClient {
         return response.getBody();
     }
 
-
-
-        /**
-         * 상품 조회
-         */
+    // 상품 조회
         public LsProductResDto getProducts() {
 
             String url = properties.getBaseUrl() + "/product";
@@ -76,8 +72,8 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Content-Type", "application/json");
+            headers.add("Accept", "application/json");
             headers.set("Authorization", properties.getToken());
 
             ObjectMapper mapper = new ObjectMapper();
@@ -114,8 +110,8 @@ public class LsCompanyClient {
             String url = properties.getBaseUrl() + "/issue";
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Content-Type", "application/json");
+            headers.add("Accept", "application/json");
             headers.set("Authorization", properties.getToken());
 
             ObjectMapper mapper = new ObjectMapper();
