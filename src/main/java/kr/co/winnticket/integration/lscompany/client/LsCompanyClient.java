@@ -20,44 +20,57 @@ public class LsCompanyClient {
     private final RestTemplate restTemplate;
     private final LsCompanyProperties properties;
 
-        public LsPlaceResDto getPlaces() {
-            String url = properties.getBaseUrl() + "/place";
+    public LsPlaceResDto getPlaces() {
 
-            LsPlaceReqDto req = new LsPlaceReqDto();
-            LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
-            data.setAgentNo(properties.getAgentNo());
-            req.setData(data);
+        String url = properties.getBaseUrl() + "/place";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-            headers.set("Authorization", properties.getToken());
-            log.info("LS TOKEN = {}", properties.getToken());
-            ObjectMapper mapper = new ObjectMapper();
-            String json = "";
-            try {
-                json = mapper.writeValueAsString(req);
+        LsPlaceReqDto req = new LsPlaceReqDto();
+        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+        data.setAgentNo(properties.getAgentNo());
+        req.setData(data);
 
-                log.info("FINAL REQUEST JSON = {}", new ObjectMapper().writeValueAsString(req));
-                log.info("REQUEST JSON STRING = {}", json);
-            } catch (Exception e) {
-                log.error("JSON 변환 실패", e);
 
-            }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", properties.getToken());
 
-            HttpEntity<String> entity = new HttpEntity<>(json, headers);
-            try {
-                log.info("REQUEST JSON STRING = {}", mapper.writeValueAsString(req));
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+
+        try {
+            json = mapper.writeValueAsString(req);
+            log.info("FINAL REQUEST JSON = {}", new ObjectMapper().writeValueAsString(req));
+            log.info("REQUEST JSON STRING = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
             }
-            log.info("LS URL = {}", url);
-            log.info("REQUEST JSON = {}", req);
 
-            ResponseEntity<LsPlaceResDto> response = restTemplate.exchange(url, HttpMethod.POST, entity, LsPlaceResDto.class);
-            log.info("LS RESPONSE = {}", response.getBody());
-            return response.getBody();
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        try {
+            log.info("REQUEST JSON STRING = {}", mapper.writeValueAsString(req));
+        } catch (Exception e) {
+            log.error("JSON 변환 실패", e);
         }
+        log.info("LS URL = {}", url);
+
+        log.info("REQUEST JSON = {}", req);
+
+        ResponseEntity<LsPlaceResDto> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        LsPlaceResDto.class );
+
+        log.info("LS RESPONSE = {}", response.getBody());
+
+        return response.getBody();
+        }
+
+
 
 
         /**
