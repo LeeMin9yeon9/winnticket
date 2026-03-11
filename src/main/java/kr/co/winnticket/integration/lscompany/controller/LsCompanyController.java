@@ -1,19 +1,13 @@
 package kr.co.winnticket.integration.lscompany.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.integration.lscompany.dto.LsIssueResDto;
-import kr.co.winnticket.integration.lscompany.dto.LsPlaceResDto;
-import kr.co.winnticket.integration.lscompany.dto.LsProductResDto;
+import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,11 +30,38 @@ public class LsCompanyController {
     }
 
     @Operation(summary = "LS컴퍼니 티켓 발권")
-    @PostMapping("/issue")
-    public ApiResponse<LsIssueResDto> issue(
-            @Parameter(description = "주문ID")
-            @RequestParam UUID orderId
-    ) {
-        return ApiResponse.success(service.issueTicket(orderId));
+    @PostMapping("/issue/{orderNo}")
+    public ApiResponse<LsIssueResDto> issueTicket(
+            @PathVariable String orderNo) {
+
+        return ApiResponse.success(service.issueTicket(orderNo));
     }
+
+    @Operation(summary = "LS 티켓 상태 조회")
+    @PostMapping("/inquiry")
+    public ApiResponse<LsStatusResDto> inquiry(
+            @RequestParam String transactionId
+    ) {
+        return ApiResponse.success(service.inquiryTicket(transactionId));
+    }
+
+    @Operation(summary = "LS 티켓 취소")
+    @PostMapping("/cancel")
+    public ApiResponse <List<LsCancelResDto>> cancel(
+            @RequestParam String orderNumber
+    ) {
+
+        return ApiResponse.success(service.cancelTicket(orderNumber));
+    }
+
+    @Operation(summary = "LS 티켓 문자 재전송")
+    @PostMapping("/resend")
+    public ApiResponse<LsResendResDto> resendTicket(
+            @RequestParam String orderNumber
+    ){
+        return ApiResponse.success(service.resendTicket(orderNumber)
+        );
+    }
+
+
 }

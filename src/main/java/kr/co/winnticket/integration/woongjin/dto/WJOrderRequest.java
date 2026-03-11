@@ -1,9 +1,12 @@
 package kr.co.winnticket.integration.woongjin.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import java.util.List;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WJOrderRequest {
 
     // 웅진이 요구하는 주문번호 (우리쪽 주문번호)
