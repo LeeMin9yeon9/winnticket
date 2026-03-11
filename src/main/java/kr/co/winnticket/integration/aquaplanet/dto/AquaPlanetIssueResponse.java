@@ -3,10 +3,12 @@ package kr.co.winnticket.integration.aquaplanet.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class AquaPlanetIssueResponse {
 
-    private Long ticketId;
+    private UUID ticketId;
 
     @JsonProperty("CORP_CD")
     private String corpCd;
