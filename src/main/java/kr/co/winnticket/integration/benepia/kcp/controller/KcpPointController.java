@@ -37,8 +37,11 @@ public class KcpPointController {
             @Valid @RequestBody KcpPointReqDto dto
     ) {
 
+//        log.info("[KCP][POINT][REQ] orderNo={}, amount={}, benepiaId={}",
+//                dto.getOrderNo(), dto.getAmount(), dto.getBenepiaId());
+
         log.info("[KCP][POINT][REQ] orderNo={}, amount={}, benepiaId={}",
-                dto.getOrderNo(), dto.getAmount(), dto.getBenepiaId());
+                 dto.getAmount(), dto.getBenepiaId());
 
         KcpPointResDto res = service.getPoint(dto);
 

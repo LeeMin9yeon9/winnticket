@@ -42,6 +42,12 @@ benepia:
   prdgb-file: ticket
   kcp-co-cd: A8MCD
   api-key: "6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61"
+  kcp:
+    site-cd: A8MCD
+    cert-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_CERT.pem
+    private-key-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_PRIKEY.pem
+    privateKeyPassword: winn123#@!
+    base-url: https://spl.kcp.co.kr
 
 benepia-batch:
   max-file-bytes: 20971520   # 20MB
@@ -49,12 +55,6 @@ benepia-batch:
   retry-sleep-ms: 2000
   work-dir: /home/ubuntu/benepia     # 서버에 쓰기 가능한 경로
 
-  kcp:
-    site-cd: A8MCD
-    cert-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_CERT.pem
-    private-key-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_PRIKEY.pem
-    privateKeyPassword: winn123#@!
-    base-url: https://spl.kcp.co.kr
 
 # 신용카드 연동
 payletter:
