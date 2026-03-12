@@ -259,14 +259,16 @@ public class OrderService {
                 }
             }
 
-            /*
             if (split.isHasAquaplanet()) {
-                aquaplanetService.couponIssue(auId);
-                continue;
+                try {
+                    log.info("[Aquaplanet Products]");
+                    aquaplanetService.issueOrder(auId);
+                }catch (Exception e){
+                    log.error("Aquaplanet 발권 실패 orderId={}",auId,e);
+                }
             }
-             */
 
-            if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini()) {
+            if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini() || split.isHasAquaplanet() || split.isHasLsCompany()) {
                 try {
                     log.info("[Main Products]");
                     List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
@@ -349,8 +351,7 @@ public class OrderService {
                             && !PLAYSTORY.equals(partnerId)
                             && !MAIR.equals(partnerId)
                             && !COREWORKS.equals(partnerId)
-                            && !PLUSN.equals(partnerId)
-                            && !AQUAPLANET.equals(partnerId));
+                            && !PLUSN.equals(partnerId));
                 })
                 .toList();
     }
@@ -428,7 +429,7 @@ public class OrderService {
             else {
                 couponText = String.join("\n", tickets);
             }
-            
+
             vars.put("티켓번호", couponText);
             vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
             vars.put("수량", String.valueOf(item.getQuantity()));
@@ -555,6 +556,10 @@ public class OrderService {
             lsCompanyService.cancelTicket(order.getOrderNumber());
         }
 
+        if (split.isHasAquaplanet()) {
+            log.info("[아쿠아플라넷 orderCancel start]");
+            aquaplanetService.cancelOrder(orderId);
+        }
         /*
         if (split.isHasWoongin()) {
             log.info("[웅진 취소 시작]");
@@ -576,12 +581,6 @@ public class OrderService {
             coreWorksService.cancel(orderId);
         }
          */
-
-    /*
-    if (split.isHasAquaplanet()) {
-        aquaplanetService.cancel(orderId);
-    }
-    */
 
         /*
          * =========================
@@ -681,7 +680,7 @@ public class OrderService {
 
         log.info("[SMS RESEND] orderId={}, split={}", orderId, split);
 
-        if(split.isHasSpavis() || split.isHasNormalProduct()){
+        if(split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini() || split.isHasAquaplanet() || split.isHasLsCompany()){
             // 티켓 조회
             List<OrderTicketListGetResDto> tickets = mapper.selectOrderTicketList(orderId);
 
