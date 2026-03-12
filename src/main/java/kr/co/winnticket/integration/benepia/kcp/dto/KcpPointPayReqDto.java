@@ -34,9 +34,9 @@ public class KcpPointPayReqDto {
     @Schema(description = "베네피아 비밀번호",example = "skmns@9955")
     private String benepiaPwd;
 
-    @NotNull
-    @Schema(description = "회원 소속사 코드", example = "TEST 시 5555")
-    private String memcorpCd;
+//    @NotNull
+//    @Schema(description = "회원 소속사 코드")
+//    private String memcorpCd;
 
     @NotNull
     @Schema(description = "상품명")
