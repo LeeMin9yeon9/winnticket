@@ -47,8 +47,7 @@
             oi.product_id AS productId,
             MAX(pov.code) AS optionId,  <!--상품옵션코드-->
             oi.quantity AS quantity,
-            oi.price AS price,
-            oi.discount_price AS discount
+            oi.unit_price AS price
         FROM order_items oi
                  JOIN order_item_options oio
                       ON oio.order_item_id = oi.id
@@ -56,9 +55,8 @@
                       ON pov.id = oio.option_value_id
         WHERE oi.order_id = #{orderId}
           AND oi.partner_id = 'b49be80d-4150-408b-80e6-e11c6f13db9d'
-        GROUP BY oi.id, oi.product_id, oi.quantity, oi.price, oi.discount_price
+        GROUP BY oi.id, oi.product_id, oi.quantity, oi.unit_price
         ORDER BY oi.created_at ASC
-
     </select>
 
 
