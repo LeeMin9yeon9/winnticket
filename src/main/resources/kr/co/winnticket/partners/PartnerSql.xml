@@ -11,7 +11,7 @@
         <result property="code" column="code"/>
         <result property="name" column="name"/>
         <result property="type" column="type" javaType="kr.co.winnticket.common.enums.PartnerType"/>
-
+        <result property="ticketCodeType" column="ticket_code_type" javaType="kr.co.winnticket.common.enums.TicketCodeType"/>
         <result property="commissionRate" column="commissionRate"/>
         <result property="businessNumber" column="businessNumber"/>
         <result property="address" column="address"/>
@@ -25,14 +25,14 @@
     </resultMap>
 
     <!-- 파트너 목록 / 검색 -->
-    <select id="selectPartnerList"
-            resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
+    <select id="selectPartnerList" resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
 
         SELECT
         p.ID AS id,
         p.CODE AS code,
         p.NAME AS name,
         p.TYPE AS type,
+        p.TICKET_CODE_TYPE AS ticketCodeType,
         p.STATUS AS status,
         p.CREATED_AT AS createdAt,
         p.UPDATED_AT AS updatedAt
@@ -87,6 +87,7 @@
             p.CODE AS code,
             p.NAME AS name,
             p.TYPE AS type,
+            p.TICKET_CODE_TYPE AS ticketCodeType,
             p.COMMISSION_RATE AS commissionRate,
             p.BUSINESS_NUMBER AS businessNumber,
             p.ADDRESS AS address,
@@ -109,6 +110,7 @@
             CODE,
             NAME,
             TYPE,
+            TICKET_CODE_TYPE,
             STATUS,
             BUSINESS_NUMBER,
             ADDRESS,
@@ -129,6 +131,7 @@
                   #{code},
                   #{name},
                   #{type},
+                  #{ticketCodeType},
                   #{status},
                   #{businessNumber},
                   #{address},
@@ -154,6 +157,7 @@
             <if test="model.code != null">CODE = #{model.code},</if>
             <if test="model.name != null">NAME = #{model.name},</if>
             <if test="model.type != null">TYPE = #{model.type},</if>
+            <if test="model.ticketCodeType != null">TICKET_CODE_TYPE = #{model.ticketCodeType},</if>
             <if test="model.status != null">STATUS = #{model.status},</if>
             <if test="model.businessNumber != null">BUSINESS_NUMBER = #{model.businessNumber},</if>
             <if test="model.address != null">ADDRESS = #{model.address},</if>
