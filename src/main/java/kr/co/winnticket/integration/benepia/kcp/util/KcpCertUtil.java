@@ -17,6 +17,7 @@ public class KcpCertUtil {
             return cert.trim();
 
         } catch (Exception e){
+
             throw new RuntimeException("KCP cert load fail",e);
         }
     }
