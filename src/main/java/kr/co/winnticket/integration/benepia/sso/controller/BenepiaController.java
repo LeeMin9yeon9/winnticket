@@ -22,7 +22,7 @@ public class BenepiaController {
     private final BenepiaEntryService entryService;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
-    @Operation(summary = "베네피아 > 윈앤티켓 진입", description = "베네피아에서 전달된 encParam을 복호화하여 세션에 저장한 윈앤티켓으로 옴"
+    @Operation(summary = "베네피아 > 윈앤티켓 복호화", description = "베네피아에서 전달된 encParam을 복호화하여 세션에 저장한 윈앤티켓으로 옴"
     )
     public String entry(HttpServletRequest request, HttpSession session) {
 
