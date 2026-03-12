@@ -78,7 +78,6 @@ public class LsCompanyService {
 
         List<LsIssueReqDto.Data.Order> orderList = new ArrayList<>();
 
-        log.info("LS 발권 요청 개수 = {}", orderList.size());
 
         // 쿠폰 수량만큼 발권 요청 생성
             for (LsOrderItemInfoDto item : items) {
@@ -114,6 +113,7 @@ public class LsCompanyService {
             data.setOrder(orderList);
             req.setData(data);
 
+            log.info("LS 발권 요청 개수 = {}", orderList.size());
             log.info("LS 발권 요청 = {}", req);
 
              //LS API 발권 호출
@@ -121,8 +121,7 @@ public class LsCompanyService {
 
             log.info("LS 발권 응답 = {}", res);
 
-            if (!"0000".equals(res.getResultCode())) {
-
+            if (!"0000".equals(res.getResultCode())&& !"E104".equals(res.getResultCode())) {
                 log.error("LS 발권 실패 resultCode={} message={}",
                         res.getResultCode(),
                         res.getResultMessage());
@@ -169,17 +168,31 @@ public class LsCompanyService {
 
             // 주문에 해당하는 티켓번호 조회
             List<String> ticketNumbers = mapper.selectTicketNumbersByOrderNumber(orderNumber);
-
             List<LsCancelResDto> results = new ArrayList<>();
 
             if (ticketNumbers == null || ticketNumbers.isEmpty()) {
                 log.info("LS 취소 대상 없음 orderNumber={}", orderNumber);
-                return results;
+                throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
             }
 
             for (String ticketNumber : ticketNumbers) {
-
                 try {
+                    // LS 상태조회
+                    LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
+
+                    if (statusRes == null) {
+                        log.warn("LS 상태조회 응답 없음 ticketNumber={}", ticketNumber);
+                        continue;
+                    }
+
+                    // 미사용 상태(T000)만 취소
+                    if (!"T000".equals(statusRes.getResultCode())) {
+                        log.info("LS 취소 제외 ticketNumber={}, resultCode={}, message={}",
+                                ticketNumber,
+                                statusRes.getResultCode(),
+                                statusRes.getResultMessage());
+                        continue;
+                    }
 
                     LsCancelResDto res = client.cancelTicket(ticketNumber);
 
@@ -188,11 +201,14 @@ public class LsCompanyService {
                     results.add(res);
 
                 } catch (Exception e) {
-
                     log.error("LS 취소 실패 ticketNumber={}", ticketNumber, e);
-
                 }
             }
+
+            if (results.isEmpty()) {
+                throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
+            }
+
             return results;
         }
 
