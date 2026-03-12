@@ -13,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/lscompany")
 public class LsCompanyController {
+
     private final LsCompanyService service;
 
     @Operation(summary = "LS컴퍼니 시설정보 조회", description = "LS컴퍼니 시설정보 조회 API")

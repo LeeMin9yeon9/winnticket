@@ -20,41 +20,41 @@ public class LsCompanyClient {
     private final LsCompanyProperties properties;
     private final ObjectMapper objectMapper;
 
-    public LsPlaceResDto getPlaces() {
+        public LsPlaceResDto getPlaces() {
 
-        String url = properties.getBaseUrl() + "/place";
+            String url = properties.getBaseUrl() + "/place";
 
-        LsPlaceReqDto req = new LsPlaceReqDto();
-        LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
-        data.setAgentNo(properties.getAgentNo());
-        req.setData(data);
+            LsPlaceReqDto req = new LsPlaceReqDto();
+            LsPlaceReqDto.Data data = new LsPlaceReqDto.Data();
+            data.setAgentNo(properties.getAgentNo());
+            req.setData(data);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.add("Authorization", properties.getToken());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.add("Authorization", properties.getToken());
 
-        ObjectMapper mapper = new ObjectMapper();
-        String json = "";
+            ObjectMapper mapper = new ObjectMapper();
+            String json = "";
 
-        try {
-            json = mapper.writeValueAsString(req);
-            log.info("LS REQUEST JSON = {}", json);
-        } catch (Exception e) {
-            log.error("JSON 변환 실패", e);
+            try {
+                json = mapper.writeValueAsString(req);
+                log.info("LS REQUEST JSON = {}", json);
+            } catch (Exception e) {
+                log.error("JSON 변환 실패", e);
+            }
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+            ResponseEntity<LsPlaceResDto> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            entity,
+                            LsPlaceResDto.class
+                    );
+
+            return response.getBody();
         }
-        HttpEntity<String> entity = new HttpEntity<>(json, headers);
-
-        ResponseEntity<LsPlaceResDto> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.POST,
-                        entity,
-                        LsPlaceResDto.class
-                );
-
-        return response.getBody();
-    }
 
 
     // 상품 조회
@@ -152,7 +152,16 @@ public class LsCompanyClient {
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
-            HttpEntity<LsStatusReqDto> entity = new HttpEntity<>(req, headers);
+            String json = "";
+
+            try {
+                json = objectMapper.writeValueAsString(req);
+                log.info("LS inquiry request = {}", json);
+            } catch (Exception e) {
+                log.error("JSON 변환 실패", e);
+            }
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+//            HttpEntity<LsStatusReqDto> entity = new HttpEntity<>(req, headers);
 
             ResponseEntity<LsStatusResDto> response =
                     restTemplate.exchange(
@@ -185,8 +194,17 @@ public class LsCompanyClient {
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
-            HttpEntity<LsCancelReqDto> entity = new HttpEntity<>(req, headers);
+            String json = "";
 
+            try {
+                json = objectMapper.writeValueAsString(req);
+                log.info("LS inquiry request = {}", json);
+            } catch (Exception e) {
+                log.error("JSON 변환 실패", e);
+            }
+
+            //HttpEntity<LsCancelReqDto> entity = new HttpEntity<>(req, headers);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
             ResponseEntity<LsCancelResDto> response =
                     restTemplate.exchange(
                             url,
@@ -218,7 +236,17 @@ public class LsCompanyClient {
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
-            HttpEntity<LsResendReqDto> entity = new HttpEntity<>(req, headers);
+            String json = "";
+
+            try {
+                json = objectMapper.writeValueAsString(req);
+                log.info("LS inquiry request = {}", json);
+            } catch (Exception e) {
+                log.error("JSON 변환 실패", e);
+            }
+
+            //HttpEntity<LsResendReqDto> entity = new HttpEntity<>(req, headers);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
             ResponseEntity<LsResendResDto> response =
                     restTemplate.exchange(
