@@ -289,8 +289,8 @@ public class OrderService {
         boolean hasPlusN = false;
         boolean hasAquaplanet = false;
         boolean hasSpavis = false;
-        boolean hasNormalProduct = false;
         boolean hasLsCompany = false;
+        boolean hasNormalProduct = false;
 
         for (OrderProductListGetResDto item : items) {
             String partnerId = String.valueOf(item.getPartnerId());
@@ -331,9 +331,8 @@ public class OrderService {
                 hasPlusN,
                 hasAquaplanet,
                 hasSpavis,
-                hasNormalProduct,
-                hasLsCompany
-
+                hasLsCompany,
+                hasNormalProduct
         );
     }
 
