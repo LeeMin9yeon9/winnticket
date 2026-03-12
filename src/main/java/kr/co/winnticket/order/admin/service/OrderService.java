@@ -62,8 +62,8 @@ public class OrderService {
     private final KcpService kcpService;
     private final LsCompanyService lsCompanyService;
 
-    private static final String QR_URL = "https://www.winnticket.store/qr?";
-    private static final String BARCODE_URL = "https://www.winnticket.store/barcode?";
+    private static final String QR_URL = "https://www.winnticket.store/qr?orderNumber=";
+    private static final String BARCODE_URL = "https://www.winnticket.store/barcode?orderNumber=";
     private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
     private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
     private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
