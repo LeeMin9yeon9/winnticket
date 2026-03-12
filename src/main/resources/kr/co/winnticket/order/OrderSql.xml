@@ -503,4 +503,11 @@
         WHERE order_number = #{orderNumber}
     </select>
 
+    <!-- 파트너 티켓타입코드 조회 -->
+    <select id="selectTicketCodeType" resultType="String">
+        SELECT
+            ticket_code_type
+        FROM partners
+        WHERE id = #{partnerId}
+    </select>
 </mapper>
