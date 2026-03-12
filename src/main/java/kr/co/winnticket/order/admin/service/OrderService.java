@@ -62,7 +62,8 @@ public class OrderService {
     private final KcpService kcpService;
     private final LsCompanyService lsCompanyService;
 
-    private static final String QR_URL = "https://www.winnticket.store/coupon/";
+    private static final String QR_URL = "https://www.winnticket.store/qr?";
+    private static final String BARCODE_URL = "https://www.winnticket.store/barcode?";
     private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
     private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
     private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
@@ -377,7 +378,7 @@ public class OrderService {
     // 발권완료 문자 발송
     private void sendTicketIssuedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items, Map<UUID, List<String>> ticketMap) {
 
-        Set<String> qrSentProducts = new HashSet<>();
+        Set<String> sentProducts = new HashSet<>();
 
         for (OrderProductListGetResDto item : items) {
 
@@ -401,26 +402,33 @@ public class OrderService {
            // vars.put("티켓번호", String.join("\n", tickets));
             String couponText;
 
-            // 스마트인피니 / 스파비스  QR 링크
-            String partnerId = String.valueOf(item.getPartnerId());
+            String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
 
-            if (SMARTINFINI.equals(partnerId) ||
-                    SPAVIS.equals(partnerId)) {
-
-                if(qrSentProducts.contains(partnerId)){
+            if (ticketCodeType.equals("QR")) {
+                if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
                     continue;
                 }
 
-                qrSentProducts.add(partnerId);
+                sentProducts.add(String.valueOf(item.getPartnerId()));
 
                 couponText = QR_URL + order.getOrderNumber();
-            }
+            } else if (ticketCodeType.equals("BARCODE")) {
+                if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
+                    continue;
+                }
 
-            // 일반 상품 → 티켓번호
+                sentProducts.add(String.valueOf(item.getPartnerId()));
+
+                couponText = BARCODE_URL + order.getOrderNumber();
+            }
+            /*else if (ticketCodeType.equals("NUMBER")){
+                couponText = String.join("\n", tickets);
+            }*/
+
             else {
                 couponText = String.join("\n", tickets);
             }
-
+            
             vars.put("티켓번호", couponText);
             vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
             vars.put("수량", String.valueOf(item.getQuantity()));
@@ -659,7 +667,7 @@ public class OrderService {
             throw new IllegalArgumentException("주문이 존재하지 않습니다.");
         }
 
-        // 결제 완료만 취소
+        // 결제 완료만 재전송
         if (order.getPaymentStatus() != PaymentStatus.PAID) {
             throw new IllegalStateException("결제 완료된 주문만 재전송할 수 있습니다.");
         } else if (order.getStatus() != OrderStatus.COMPLETED) {
