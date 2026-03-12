@@ -51,14 +51,14 @@ public class KcpService {
             body.put("site_cd", properties.getKcp().getSiteCd());
             body.put("kcp_cert_info", certInfo);
             body.put("pay_method", "POINT");
-            //body.put("ordr_idxx", dto.getOrderNo());
+            //body.put("ordr_idxx", dto.getOrderNo()); 빼도되는거같음
             body.put("amount", dto.getAmount());
 
             body.put("pt_issue", "SCWB");
             body.put("pt_txtype", "97000000");
             body.put("pt_idno", dto.getBenepiaId());
             body.put("pt_pwd", dto.getBenepiaPwd());
-            body.put("pt_memcorp_cd",dto.getMemcorpCd());
+            body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());
 
             String json = objectMapper.writeValueAsString(body);
 
@@ -124,7 +124,7 @@ public class KcpService {
             body.put("pt_idno", dto.getBenepiaId());                // 베네피아ID
             body.put("pt_pwd", dto.getBenepiaPwd());                // 베네피아PW
 
-            body.put("pt_memcorp_cd", dto.getMemcorpCd());    // 소속사코드 : z819
+            body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());    // 소속사코드
             body.put("pt_mny",String.valueOf(dto.getAmount()));     // 포인트결제금액 : amount 금액과 동일해야함
             body.put("pt_paycode", "04");                           // 결제코드:04
 

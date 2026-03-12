@@ -69,6 +69,7 @@ benepia:
   api-key: "6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61"
   kcp:
     site-cd: A8MCD
+    pt-memcorp-cd: A8MCD
     cert-path: /home/winnticket/cert/KCP_AUTH_A8MCD_CERT.pem
     private-key-path: /home/winnticket/cert/KCP_AUTH_A8MCD_PRIKEY.pem
     base-url: https://spl.kcp.co.kr

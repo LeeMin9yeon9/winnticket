@@ -46,6 +46,9 @@ public class BenepiaProperties {
         // 사이트 코드
         private String siteCd;
 
+        // 소속사코드 개발 : 5555
+        private String ptMemcorpCd;
+
         // cert.pem
         private String certPath;
 
