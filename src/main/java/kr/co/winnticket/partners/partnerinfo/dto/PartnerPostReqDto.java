@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
+import kr.co.winnticket.common.enums.TicketCodeType;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -26,6 +27,9 @@ public class PartnerPostReqDto {
 
     @Schema(description = "파트너타입")
     private PartnerType type;
+
+    @Schema(description = "티켓타입")
+    private TicketCodeType ticketCodeType;
 
     @Schema(description = "상태")
     private PartnerStatus status;

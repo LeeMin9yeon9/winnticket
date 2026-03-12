@@ -2,6 +2,7 @@ package kr.co.winnticket.partners.partnerinfo.dto;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
+import kr.co.winnticket.common.enums.TicketCodeType;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -20,17 +21,16 @@ public class PartnerListGetResDto {
     @Schema(description = "파트너명")
     private String name;
 
-    @Schema(description = "파트너 타입",
-            example = "CORPORATE",
-            allowableValues = {"VENUE","PROMOTER","AGENCY","ARTIST","CORPORATE"})
+    @Schema(description = "파트너 타입", example = "CORPORATE", allowableValues = {"VENUE","PROMOTER","AGENCY","ARTIST","CORPORATE"})
     private String type;
+
+    @Schema(description = "티켓타입")
+    private TicketCodeType ticketCodeType;
 
     @Schema(description = "담당자명")
     private String managerName;
 
-    @Schema(description = "파트너 상태",
-            example = "ACTIVE",
-            allowableValues = {"ACTIVE","INACTIVE","PENDING","SUSPENDED"})
+    @Schema(description = "파트너 상태", example = "ACTIVE", allowableValues = {"ACTIVE","INACTIVE","PENDING","SUSPENDED"})
     private String status;
 
     @Schema(description = "계약 시작일")
