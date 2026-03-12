@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 @Log4j2
@@ -19,12 +20,20 @@ public class BenepiaSeedEcbCrypto {
     // 베네피아 -> 윈앤티켓 웹 encParam 복호화
     public String decrypt(String encParam,String seedKey){
         try{
+
             //String urlDecoded = URLDecoder.decode(encParam,StandardCharsets.UTF_8);
             // space → + 보정
-            encParam = encParam.replace(" ", "+");
+            // URL 인코딩이 들어온 경우만 decode
+            String value = encParam;
+            if (value.contains("%")) {
+                value = URLDecoder.decode(value, StandardCharsets.UTF_8);
+            }
+
+            // 모바일 브라우저 대응 (+ → space 되는 문제)
+            value = value.replace(" ", "+");
 
             // Base64 디코딩
-            byte[] cipher = Base64.getDecoder().decode(encParam);
+            byte[] cipher = Base64.getDecoder().decode(value);
 
             // SEED ECB 복호화
             byte[] key = seedKey.getBytes(StandardCharsets.ISO_8859_1);
