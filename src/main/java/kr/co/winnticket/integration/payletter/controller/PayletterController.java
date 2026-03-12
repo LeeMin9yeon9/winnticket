@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -29,28 +28,58 @@ public class PayletterController {
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
-    public ApiResponse<String> callback(@RequestBody Map<String, Object> payload){
+    public Map<String, Object> callback(@RequestBody Map<String, Object> payload){
+
+        log.info("[PAYLETTER] callback received payload={}", payload);
 
         try {
             service.handleCallback(payload);
 
             Object param = payload.get("custom_parameter");
-            if (param == null) {
-                log.error("[PAYLETTER] custom_parameter missing payload={}", payload);
-                return ApiResponse.success("OK");
+            if (param != null) {
+                UUID orderId = UUID.fromString(String.valueOf(param));
+                orderService.completePayment(orderId);
+                log.info("[PAYLETTER] payment processed orderId={}", orderId);
+            }else {
+                log.warn("[PAYLETTER] custom_parameter missing payload={}", payload);
             }
 
-            UUID orderId = UUID.fromString(String.valueOf(param));
+            log.info("[PAYLETTER] callback response code=0");
+            return Map.of(
+                    "code", 0,
+                    "message", "success"
+            );
 
-            log.info("[PAYLETTER] callback payload={}", payload);
-
-            orderService.completePayment(orderId);
-        }catch (Exception e){
+        } catch (Exception e){
             log.error("[PAYLETTER CALLBACK ERROR] payload={}", payload, e);
+            return Map.of(
+                    "code", 1,
+                    "message", "fail"
+            );
         }
-
-        return ApiResponse.success("OK");
     }
+//    public ApiResponse<String> callback(@RequestBody Map<String, Object> payload){
+//
+//        try {
+//            service.handleCallback(payload);
+//
+//            Object param = payload.get("custom_parameter");
+//            if (param == null) {
+//                log.error("[PAYLETTER] custom_parameter missing payload={}", payload);
+//                return ApiResponse.success("OK");
+//            }
+//
+//            UUID orderId = UUID.fromString(String.valueOf(param));
+//
+//            log.info("[PAYLETTER] callback payload={}", payload);
+//
+//            orderService.completePayment(orderId);
+//        }catch (Exception e){
+//            log.error("[PAYLETTER CALLBACK ERROR] payload={}", payload, e);
+//        }
+//
+//        return ApiResponse.success("OK");
+//    }
 
 
     @RequestMapping(value = "/return", method = {RequestMethod.GET, RequestMethod.POST})
