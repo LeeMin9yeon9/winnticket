@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.dto;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,6 +18,10 @@ public class OrderProductListGetResDto {
 
     @Schema(description = "상품ID")
     private UUID productId;
+
+    @Hidden
+    @Schema(description = "상품코드")
+    private String productCode;
 
     @Schema(description = "상품명")
     private String productName;

@@ -4,10 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointReqDto;
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointResDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.*;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.service.OrderService;
@@ -63,6 +60,21 @@ public class KcpPointController {
         KcpPointPayResDto res = service.pointPayAndUpdate(dto);
 
         return ResponseEntity.ok(ApiResponse.success("포인트 결제 요청 성공", res));
+    }
+
+    @PostMapping("/cancel")
+    @Operation(summary = "베네피아 KCP 포인트 취소", description = "베네피아 포인트 결제를 취소합니다.")
+    public ResponseEntity<ApiResponse<KcpModResDto>> cancel(
+            @Valid @RequestBody KcpPointCancelReqDto dto
+    ) {
+
+        log.info("[KCP][CANCEL][REQ] orderNo={}, tno={}", dto.getOrderNo(), dto.getTno());
+
+        KcpModResDto res = service.cancelPoint(dto);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("포인트 취소 성공", res)
+        );
     }
 
 }

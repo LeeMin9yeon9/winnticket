@@ -61,6 +61,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "주문금액")
     private int discountPrice;
 
+    @Schema(description = "포인트금액")
+    private Integer pointAmount;
+
     @Schema(description = "티켓사용여부")
     private boolean allTicketUsed;
 

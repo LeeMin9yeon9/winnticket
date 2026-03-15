@@ -51,7 +51,8 @@ public interface OrderShopMapper {
     // 총 가격 update
     void updateOrderPrice(
             @Param("orderId") UUID orderId,
-            @Param("finalPrice") int finalPrice
+            @Param("finalPrice") int finalPrice,
+            @Param("pointAmount") int pointAmount
     );
 
     // payletter 결제요청 결과 저장
@@ -110,5 +111,7 @@ public interface OrderShopMapper {
 
     // 문자 QR
     List<OrderQrCouponGetResDto.Ticket> selectTicketsByOrderNumber(@Param("orderNumber") String orderNumber);
+
+
 
 }
