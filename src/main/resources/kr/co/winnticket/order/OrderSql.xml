@@ -510,4 +510,11 @@
         FROM partners
         WHERE id = #{partnerId}
     </select>
+
+    <!--포인트 취소 시 주문번호 조회-->
+    <select id="selectPointTno" resultType="string">
+        SELECT point_tid
+        FROM orders
+        WHERE order_number = #{orderNumber}
+    </select>
 </mapper>

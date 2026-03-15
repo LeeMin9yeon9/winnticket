@@ -116,23 +116,23 @@ public class OrderService {
     // 결제 완료 처리
     @Transactional
     public void completePayment(UUID auId) {
-            // 주문 조회
-            OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(auId);
+        // 주문 조회
+        OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(auId);
 
-            if (order == null) {
-                throw new IllegalArgumentException("주문이 존재하지 않습니다.");
-            }
+        if (order == null) {
+            throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+        }
 
-            // 결제 상태 / 결제일시 업데이트
-            int updated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
+        // 결제 상태 / 결제일시 업데이트
+        int updated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
 
-            if(updated == 0){
-                log.info("이미 결제 완료 skip orderId={}", auId);
-                return;
-            }
+        if (updated == 0) {
+            log.info("이미 결제 완료 skip orderId={}", auId);
+            return;
+        }
 
-            // 주문 상품 목록 조회
-            List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
+        // 주문 상품 목록 조회
+        List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
             try {
                 log.info("[입금완료 문자 발송 시작!]");
@@ -510,7 +510,7 @@ public class OrderService {
     @Transactional
     public void cancelOrder(UUID orderId) throws Exception {
 
-        // 1. 주문 조회
+        // 주문 조회
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
         if (order == null) {
             throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
@@ -594,7 +594,27 @@ public class OrderService {
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             // 가상계좌는 보통 취소 없음
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
+
             cancelResult = payletterService.cancel(orderId);
+
+            // 혼합결제 포인트 반환
+            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+
+                String tno = mapper.selectPointTno(order.getOrderNumber());
+
+                if (tno != null) {
+
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+
+                    dto.setTno(tno);
+                    dto.setCancelReason("혼합결제 취소");
+
+                    kcpService.cancelPoint(dto);
+
+                    log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                }
+            }
+
         } else if (method == PaymentMethod.POINT) {
             Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
 

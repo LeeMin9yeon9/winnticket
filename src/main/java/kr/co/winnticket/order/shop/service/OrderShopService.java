@@ -6,12 +6,15 @@ import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
+import kr.co.winnticket.order.admin.service.OrderService;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto;
@@ -55,6 +58,7 @@ public class OrderShopService {
     private final BankAccountService bankAccountService;
     private final PriceService priceService;
     private final KcpService kcpService;
+    private final OrderService orderService;
     // 주문조회
     public OrderShopGetResDto selectOrderShop(String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
@@ -70,37 +74,35 @@ public class OrderShopService {
     // 주문생성
     @Transactional
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
-        try {
+
         log.info("createOrder start, channelId={}", reqDto.getChannelId());
 
         Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
         Boolean cardAllowed = (useCard != null && useCard);
 
         Boolean usePoint = channelMapper.selectUsePointById(reqDto.getChannelId());
-        Boolean pointAllowed = (usePoint != null && usePoint);
 
+        // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
+        PaymentMethod paymentMethod = reqDto.getPaymentMethod();
+        // 카드 미허용 채널이면 카드 -> 무통장
+        if (!cardAllowed && paymentMethod == PaymentMethod.CARD) {
+            paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
+        }
 
-            // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
-            PaymentMethod paymentMethod = reqDto.getPaymentMethod();
-            // 카드 미허용 채널이면 카드 -> 무통장
-            if (!cardAllowed && paymentMethod == PaymentMethod.CARD) {
-                paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
-            }
-
-            // 포인트 미허용 채널이면 차단
-            if(paymentMethod == PaymentMethod.POINT && !pointAllowed){
-                throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
-            }
+        // 포인트 미허용 채널이면 차단
+        if (usePoint == false) {
+            throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
+        }
 
 
         // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
-            reqDto.getChannelId(),
-            reqDto.getCustomerName(),
-            reqDto.getCustomerPhone(),
-            reqDto.getCustomerEmail(),
-            reqDto.getTotalPrice(),
-            reqDto.getDiscountPrice(),
+                reqDto.getChannelId(),
+                reqDto.getCustomerName(),
+                reqDto.getCustomerPhone(),
+                reqDto.getCustomerEmail(),
+                reqDto.getTotalPrice(),
+                reqDto.getDiscountPrice(),
                 paymentMethod.name()
         );
 
@@ -119,8 +121,8 @@ public class OrderShopService {
             // 가격 계산
             int unitPrice;
 
-            if(ProductType.STAY.equals(product.getType())) {
-                unitPrice = priceService.calculateStayUnitPrice(item.getOptions(),item.getStayDates());
+            if (ProductType.STAY.equals(product.getType())) {
+                unitPrice = priceService.calculateStayUnitPrice(item.getOptions(), item.getStayDates());
             } else {
                 unitPrice = priceService.calculateNormalPrice(item.getProductId(), reqDto.getChannelId(), item.getOptions());
             }
@@ -161,12 +163,12 @@ public class OrderShopService {
                         throw new IllegalArgumentException("재고가 부족합니다.");
                     }
 
-                    mapper.insertOrderItemOption (
-                        orderItemId,
-                        option.getName(),
-                        optionValue.getValue(),
-                        optionValue.getId(),
-                        optionValue.getAdditionalPrice()
+                    mapper.insertOrderItemOption(
+                            orderItemId,
+                            option.getName(),
+                            optionValue.getValue(),
+                            optionValue.getId(),
+                            optionValue.getAdditionalPrice()
                     );
                 }
             }
@@ -174,12 +176,26 @@ public class OrderShopService {
 
         // 최종결제금액 업데이트 총 금액 - 할인금액
         int finalPrice = orderTotalPrice - reqDto.getDiscountPrice();
+
         log.info("====토탈가격 - orderTotalPrice={}", orderTotalPrice);
         log.info("====최종가격 - finalPrice={}", finalPrice);
-        mapper.updateOrderPrice(orderId, finalPrice);
 
-        // 주문성공 시 장바구니 비우기
-        shopCartService.clearCart(session);
+        // 최종 결제금액 - 포인트 금액
+        Integer pointAmount = reqDto.getPointAmount() == null ? 0 : reqDto.getPointAmount();
+
+        int pgAmount = finalPrice - pointAmount;
+
+        if (pointAmount > finalPrice) {
+            throw new IllegalArgumentException("포인트가 결제금액보다 큽니다.");
+        }
+
+        if (pgAmount < 0) {
+            throw new IllegalArgumentException("포인트 금액 오류");
+        }
+
+        mapper.updateOrderPrice(orderId, finalPrice, pointAmount);
+
+        log.info("결제금액 구조 finalPrice={}, pointAmount={}, pgAmount={}", finalPrice, pointAmount, pgAmount);
 
         OrderCreateResDto resDto = new OrderCreateResDto();
         resDto.setOrderId(orderId);
@@ -187,8 +203,11 @@ public class OrderShopService {
         resDto.setOrderNumber(orderNumber);
         resDto.setFinalPrice(finalPrice);
 
+        // 주문성공 시 장바구니 비우기
+        shopCartService.clearCart(session);
+
         // 무통장(일반/베네피아 가능)
-        if(paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT){
+        if (paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT) {
             resDto.setPaymentStatus("READY");
             OrderAdminDetailGetResDto orderDetail =
                     orderMapper.selectOrderAdminDetail(orderId);
@@ -212,42 +231,148 @@ public class OrderShopService {
 
             return resDto;
         }
-            // POINT
-            if(paymentMethod == PaymentMethod.POINT){
-                // 포인트 결제는 별도 API에서 처리
-                resDto.setPaymentStatus("READY");
-                return resDto;
+        if (paymentMethod == PaymentMethod.POINT) {
+
+            String benepiaId = reqDto.getBenepiaId();
+            String benepiaPwd = reqDto.getBenepiaPwd();
+
+            if (benepiaId == null || benepiaPwd == null) {
+                throw new IllegalArgumentException("베네피아 ID/PW 필요");
             }
 
-            //CARD
-            if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
+            List<OrderProductListGetResDto> items =
+                    orderMapper.selectOrderProductList(orderId);
+
+            KcpPointPayReqDto dto = new KcpPointPayReqDto();
+
+            dto.setOrderNo(orderNumber);
+            dto.setAmount(pointAmount);
+
+            dto.setProductName(items.get(0).getProductName());
+            dto.setProductCode(items.get(0).getProductCode());
+
+            dto.setBuyerName(reqDto.getCustomerName());
+            dto.setBuyerEmail(reqDto.getCustomerEmail());
+            dto.setBuyerPhone(reqDto.getCustomerPhone());
+
+            dto.setBenepiaId(benepiaId);
+            dto.setBenepiaPwd(benepiaPwd);
+
+            try {
+
+                kcpService.pointPayAndUpdate(dto);
+
+                log.info("[POINT] 포인트 단독결제 성공 orderId={}", orderId);
+
+                // ⭐ 반드시 결제완료 로직 실행
+                orderService.completePayment(orderId);
+
+            } catch (Exception e) {
+
+                log.error("[POINT] 포인트 결제 실패", e);
+
+                throw new RuntimeException("포인트 결제 실패");
+            }
+
+            resDto.setPaymentStatus("PAID");
+
+            return resDto;
+        }
+        // POINT
+        // 혼합결제 포인트 먼저 차감
+
+        boolean pointDeducted = false;
+
+        if (pointAmount > 0) {
+
+            String benepiaId = reqDto.getBenepiaId();
+            String benepiaPwd = reqDto.getBenepiaPwd();
+
+            if (benepiaId == null || benepiaPwd == null) {
+                throw new IllegalArgumentException("베네피아 ID/PW 필요");
+            }
+
+            List<OrderProductListGetResDto> items = orderMapper.selectOrderProductList(orderId);
+
+            KcpPointPayReqDto dto = new KcpPointPayReqDto();
+
+            dto.setOrderNo(orderNumber);
+            dto.setAmount(pointAmount);
+
+            dto.setProductName(items.get(0).getProductName());
+            dto.setProductCode(items.get(0).getProductCode());
+
+            dto.setBuyerName(reqDto.getCustomerName());
+            dto.setBuyerEmail(reqDto.getCustomerEmail());
+            dto.setBuyerPhone(reqDto.getCustomerPhone());
+
+            dto.setBenepiaId(benepiaId);
+            dto.setBenepiaPwd(benepiaPwd);
+
+            try {
+
+                kcpService.pointPayAndUpdate(dto);
+                pointDeducted = true;
+
+                log.info("혼합결제 포인트 선차감 완료 orderId={}", orderId);
+
+            } catch (Exception e) {
+
+                log.error("포인트 결제 실패", e);
+
+                throw new RuntimeException("포인트 결제 실패");
+            }
+        }
+
+        //CARD
+        if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
+            try {
 
 
+                // PG 결제 요청
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,
                         orderNumber,
-                        finalPrice,
+                        pgAmount,
                         reqDto.getCustomerName(),
                         reqDto.getCustomerEmail(),
                         reqDto.getCustomerPhone(),
                         paymentMethod.name()
                 );
-            resDto.setPaymentStatus("REQUESTED");
-            resDto.setPgProvider("PAYLETTER");
-            resDto.setPgTid(String.valueOf(payRes.getToken()));
-            resDto.setPgOnlineUrl(payRes.getOnlineUrl());
-            resDto.setPgMobileUrl(payRes.getMobileUrl());
-            return resDto;
-        }
 
+                resDto.setPaymentStatus("REQUESTED");
+                resDto.setPgProvider("PAYLETTER");
+                resDto.setPgTid(String.valueOf(payRes.getToken()));
+                resDto.setPgOnlineUrl(payRes.getOnlineUrl());
+                resDto.setPgMobileUrl(payRes.getMobileUrl());
+
+                return resDto;
+            } catch (Exception pgError) {
+                log.error("[PG ERROR] 결제요청 실패 orderId={}", orderId, pgError);
+
+                if(pointDeducted){
+                    try {
+                        String tno = orderMapper.selectPointTno(orderNumber);
+                        if(tno != null){
+                            KcpPointCancelReqDto cancelReqDto = new KcpPointCancelReqDto();
+
+                            cancelReqDto.setTno(tno);
+                            cancelReqDto.setCancelReason("PG 결제  실패 롤백");
+
+                            kcpService.cancelPoint(cancelReqDto);
+
+                            log.info("[POINT ROLLBACK] 포인트 자동복구 orderId={}", orderId);
+                        }
+                    }catch (Exception rollbackError){
+                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}",orderId,rollbackError);
+                    }
+                }
+                throw new RuntimeException("PG 결제 요청 실패");
+            }
+        }
         return resDto;
-
-
-        } catch (Exception e) {
-            log.error("결재완료 중 오류 발생", e);
-            throw e; // 다시 던짐 (중요)
-        }
     }
+
 
     // 주문접수 문자 생성
     private void sendOrderReceiptSms(OrderAdminDetailGetResDto order,

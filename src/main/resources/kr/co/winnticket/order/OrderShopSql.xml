@@ -173,7 +173,8 @@
     <update id="updateOrderPrice">
         update ORDERS
         Set
-            FINAL_PRICE = #{finalPrice}
+            FINAL_PRICE = #{finalPrice},
+            POINT_AMOUNT = #{pointAmount}
         Where 1 = 1
         And id = #{orderId}
     </update>
@@ -211,10 +212,10 @@
         paid_at = CURRENT_TIMESTAMP,
         pg_provider = 'PAYLETTER',
         pg_tid = #{tid},
-            pg_approval_no = #{cid},
-            pg_callback_payload = CAST(#{payloadJson} AS jsonb),
-            pg_callback_received_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
+        pg_approval_no = #{cid},
+        pg_callback_payload = CAST(#{payloadJson} AS jsonb),
+        pg_callback_received_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
     <![CDATA[
           AND payment_status <> 'PAID'::payment_status
@@ -228,13 +229,9 @@
         UPDATE orders
         SET
             payment_status = 'FAILED'::payment_status,
-
             payment_fail_reason = #{failReason},
-
             pg_callback_payload = CAST(#{payloadJson} AS jsonb),
-
             pg_callback_received_at = CURRENT_TIMESTAMP,
-
             updated_at = CURRENT_TIMESTAMP
 
         WHERE id = #{orderId}::uuid
@@ -262,14 +259,9 @@
     <update id="updatePointPaymentApproved">
         UPDATE orders
         SET
-            payment_status = 'PAID',
-            pg_provider = 'KCP',
-            pg_tid = #{pgTid},
-            pg_approval_no = #{approvalNo},
-            paid_at = NOW(),
+            point_tid = #{pgTid},
             updated_at = NOW()
         WHERE order_number = #{orderNumber}
-        AND payment_status = 'READY'
     </update>
 
     <!--KCP 포인트 결제실패-->

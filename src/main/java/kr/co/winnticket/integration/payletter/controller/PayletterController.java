@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -28,7 +29,7 @@ public class PayletterController {
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
-    public Map<String, Object> callback(@RequestBody Map<String, Object> payload){
+    public Map<String, Object> callback(@RequestBody Map<String, Object> payload, HttpSession session){
 
         log.info("[PAYLETTER] callback received payload={}", payload);
 
