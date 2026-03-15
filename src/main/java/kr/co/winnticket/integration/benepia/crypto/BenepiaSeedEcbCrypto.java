@@ -40,7 +40,9 @@ public class BenepiaSeedEcbCrypto {
             byte[] plain = KISA_SEED_ECB.SEED_ECB_Decrypt(key,cipher,0,cipher.length);
 
             log.info("[BENEPIA][DECRYPT SUCCESS !!!!!!!!!!!!!!!!!]");
-            return new String(plain, StandardCharsets.UTF_8).trim();
+            String result = new String(plain, StandardCharsets.UTF_8);
+            log.info("[BENEPIA] 복호화 결과 = {}", result);
+            return result;
 
         } catch(Exception e){
             log.error("[BENEPIA][DECRYPT FAIL !!!!!!!!!!!!!!!!!]", e);
