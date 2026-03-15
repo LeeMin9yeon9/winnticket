@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaParamParser;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
+import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,6 +37,7 @@ public class BenepiaEntryService {
             log.info("[BENEPIA][ENTRY][SERVICE] 베네피아사번_userid={}", dto.getUserid());
             log.info("[BENEPIA][ENTRY][SERVICE] 베네피아 토큰키_tknKey={}", dto.getTknKey());
 
+            BenepiaContext.set(dto);
             // redirect 대비 세션 저장
             session.setAttribute("BENEP_DECRYPTED", dto);
             session.setAttribute("BENEP_TKN_KEY", dto.getTknKey());

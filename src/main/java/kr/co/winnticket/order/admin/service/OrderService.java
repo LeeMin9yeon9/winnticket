@@ -9,6 +9,9 @@ import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
+import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
+import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
@@ -48,6 +51,7 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final TicketCouponService ticketCouponService;
     private final ProductMapper productMapper;
+    private final BenepiaOrderService benepiaOrderService;
 
 
     // 파트너 연동
@@ -191,6 +195,23 @@ public class OrderService {
             log.info("[주문상태 변경 시작!]");
             mapper.updateOrderStatus(auId);
             log.info("[주문상태 변경 종료!]");
+
+            // 베네피아 주문 전송
+            try {
+                BenepiaDecryptedParamDto bene = BenepiaContext.get();
+
+                if(bene != null){
+
+                    log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
+
+                    benepiaOrderService.sendOrder(order, items, bene);
+                }
+
+            }catch(Exception e){
+
+                log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
+
+            }
 
             PartnerSplitResult split = splitByPartner(items);
 
