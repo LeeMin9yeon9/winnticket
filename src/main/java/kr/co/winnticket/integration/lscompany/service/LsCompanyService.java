@@ -69,7 +69,7 @@ public class LsCompanyService {
         data.setEmail(orderInfo.getCustomerEmail());
 
         // 발권요청시간 (yyyyMMddHHmmss)
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         data.setDate(now);
 
@@ -99,7 +99,7 @@ public class LsCompanyService {
                     o.setTransactionId(ticketNumber);         // transactionId = 윈앤티켓 티켓번호
                     o.setOptionId(item.getOptionId());      // LS 옵션ID
                     o.setPrice(String.valueOf(item.getPrice()));    // 판매가
-                    o.setDiscount(String.valueOf(item.getDiscount()));   // 할인금액
+                    o.setDiscount(item.getDiscount() == null ? "0" : String.valueOf(item.getDiscount()));   // 할인금액
 
                     orderList.add(o);
                 }
@@ -186,7 +186,7 @@ public class LsCompanyService {
                     }
 
                     // 미사용 상태(T000)만 취소
-                    if (!"T000".equals(statusRes.getResultCode())) {
+                    if (statusRes == null || !"T000".equals(statusRes.getResultCode())) {
                         log.info("LS 취소 제외 ticketNumber={}, resultCode={}, message={}",
                                 ticketNumber,
                                 statusRes.getResultCode(),

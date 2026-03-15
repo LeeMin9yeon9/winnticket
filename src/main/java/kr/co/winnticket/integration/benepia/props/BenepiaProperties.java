@@ -34,6 +34,9 @@ public class BenepiaProperties {
     // ticket (파일명용)
     private String prdgbFile;
 
+    // 배치 서버 url
+    private String orderBaseUrl;
+
     // Kcp코드
     private String KcpCoCd;
 
