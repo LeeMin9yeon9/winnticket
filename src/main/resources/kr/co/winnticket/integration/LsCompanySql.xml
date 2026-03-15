@@ -45,7 +45,9 @@
         SELECT
             oi.id AS orderItemId,
             oi.product_id AS productId,
-            MAX(pov.code) AS optionId,  <!--상품옵션코드-->
+            MAX(pov.code) AS optionId,
+            MAX(pov.code) AS classifyCode,
+            MAX(pov.value) AS classify,
             oi.quantity AS quantity,
             oi.unit_price AS price
         FROM order_items oi
