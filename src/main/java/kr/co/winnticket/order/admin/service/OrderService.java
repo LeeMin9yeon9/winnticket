@@ -665,6 +665,23 @@ public class OrderService {
 
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
+        } else if (updated == 1) {
+            // 베네피아 주문 취소 전송
+            try {
+                BenepiaDecryptedParamDto bene = BenepiaContext.get();
+
+                if(bene != null){
+
+                    log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
+
+                    benepiaOrderService.sendOrder(order, items, bene);
+                }
+
+            }catch(Exception e){
+
+                log.error("[BENEPIA 주문 전송 실패] orderId={}", order.getId(), e);
+
+            }
         }
 
         /*
