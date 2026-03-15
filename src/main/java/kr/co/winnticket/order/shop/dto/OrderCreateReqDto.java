@@ -40,9 +40,18 @@ public class OrderCreateReqDto {
     @Schema(description = "할인금액")
     private int discountPrice;
 
+    @Min(0)
+    @Schema(description = "사용 포인트 금액", example = "0")
+    private Integer pointAmount;
+
     @NotNull
     @Schema(description = "결제수단", example = "BANK_TRANSFER 또는 CARD")
     private PaymentMethod paymentMethod;
+
+    // 베네피아 kcp 전용
+    private String benepiaId;
+    private String benepiaPwd;
+
 
     //@Schema(description = "PG 결제수단 코드(CARD일 때만 사용)", example = "creditcard")
     //private String pgCode;

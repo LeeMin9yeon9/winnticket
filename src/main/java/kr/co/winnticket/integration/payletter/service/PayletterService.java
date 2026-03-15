@@ -132,9 +132,11 @@ public class PayletterService {
             }
 
             // custom_parameter에서 orderNumber 사용
-            String orderIdStr = payload.get("custom_parameter") != null
-                    ? String.valueOf(payload.get("custom_parameter"))
-                    : null;
+            String orderIdStr = payload.get("custom_parameter") != null ? String.valueOf(payload.get("custom_parameter")) : null;
+
+            if(orderIdStr == null || orderIdStr.isBlank()){
+                throw new IllegalStateException("custom_parameter 없음");
+            }
 
             UUID orderId = UUID.fromString(orderIdStr);
 
@@ -173,7 +175,7 @@ public class PayletterService {
 
             log.info("[PAYLETTER] callback payhash check expected={}, actual={}", expected, payhash);
 
-            if (!expected.equalsIgnoreCase(payhash)) {
+            if (!expected.equalsIgnoreCase(payhash.trim())) {
                 throw new IllegalStateException("payhash 검증 실패");
             }
 

@@ -118,4 +118,7 @@ public interface OrderMapper {
 
     // 파트너 티켓코드타입 조회
     String selectTicketCodeType(UUID partnerId);
+
+    // 포인트 취소시 tno(주문번호) 조회
+    String selectPointTno(@Param("orderNumber") String orderNumber);
 }

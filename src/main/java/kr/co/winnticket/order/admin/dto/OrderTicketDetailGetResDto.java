@@ -27,4 +27,7 @@ public class OrderTicketDetailGetResDto {
 
     @Schema(description = "사용일시")
     private LocalDateTime ticketUsedDate;
+
+    @Schema(description = "포인트 금액")
+    private Integer pointAmount;
 }
