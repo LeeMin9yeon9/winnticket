@@ -14,6 +14,12 @@ public class LsOrderItemInfoDto {
 
     private String optionId;   // LS optionId
 
+    private String classify;      // 권종명
+
+    private String optionType;
+
+    private String optionTypeCode;
+
     private Integer quantity;  // 주문수량
 
     private Integer price;     // 판매가
