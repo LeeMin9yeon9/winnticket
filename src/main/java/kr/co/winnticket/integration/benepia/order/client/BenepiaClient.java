@@ -27,10 +27,16 @@ public class BenepiaClient {
 
         log.info("[BENEPIA] ORDER REQUEST = {}", request);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<BenepiaOrderRequest> entity =
+                new HttpEntity<>(request, headers);
+
         ResponseEntity<String> res =
                 restTemplate.postForEntity(
                         url,
-                        request,
+                        entity,
                         String.class
                 );
 
@@ -49,10 +55,16 @@ public class BenepiaClient {
 
         log.info("[BENEPIA] CANCEL REQUEST = {}", request);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<BenepiaCancelRequest> entity =
+                new HttpEntity<>(request, headers);
+
         ResponseEntity<String> res =
                 restTemplate.postForEntity(
                         url,
-                        request,
+                        entity,
                         String.class
                 );
 

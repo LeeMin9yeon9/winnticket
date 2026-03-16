@@ -677,7 +677,7 @@ public class OrderService {
 
                     log.info("[BENEPIA 주문 취소 전송] benefitId={}", bene.getBenefit_id());
 
-                    benepiaOrderService.sendOrder(order, items, bene);
+                    benepiaOrderService.cancelOrder(order, items, bene);
                 }
 
             }catch(Exception e){
