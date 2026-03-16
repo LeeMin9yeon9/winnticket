@@ -63,7 +63,6 @@ public class BenepiaBatchService {
             List<File> idFiles = createIdsFilesSplit(ids, today);
             for (File f : idFiles) {
                 uploadWithRetry(f, "ids", "IDS_UPLOAD", today);
-                safeDelete(f);
             }
             log(today, "IDS", "SUCCESS", null, "ids 업로드 완료");
         } catch (Exception e) {
@@ -82,7 +81,6 @@ public class BenepiaBatchService {
 
             for (File f : productFiles) {
                 uploadWithRetry(f, "products", "PRODUCTS_UPLOAD", today);
-                safeDelete(f);
             }
             log(today, "PRODUCTS", "SUCCESS", null, "products 업로드 완료");
         } catch (Exception e) {
@@ -340,10 +338,13 @@ public class BenepiaBatchService {
         Files.createDirectories(Path.of(workDir));
     }
 
+    /*
     private void safeDelete(File f) {
         try { if (f != null && f.exists()) f.delete(); } catch (Exception ignored) {}
     }
 
+
+     */
     private void log(String batchDate, String step, String status, String fileName, String message) {
         mapper.insertBenepiaBatchLog(batchDate, step, status, fileName, message);
     }

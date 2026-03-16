@@ -198,7 +198,11 @@ public class OrderService {
 
             // 베네피아 주문 전송
             try {
-                BenepiaDecryptedParamDto bene = BenepiaContext.get();
+                //BenepiaDecryptedParamDto bene = BenepiaContext.get();
+
+                BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
+                bene.setBenefit_id("testtravel");
+                bene.setSitecode("5555");
 
                 if(bene != null){
 
@@ -442,12 +446,7 @@ public class OrderService {
                 sentProducts.add(String.valueOf(item.getPartnerId()));
 
                 couponText = BARCODE_URL + order.getOrderNumber();
-            }
-            /*else if (ticketCodeType.equals("NUMBER")){
-                couponText = String.join("\n", tickets);
-            }*/
-
-            else {
+            } else {
                 couponText = String.join("\n", tickets);
             }
 
@@ -665,14 +664,18 @@ public class OrderService {
 
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
-        } else if (updated == 1) {
+        } else {
             // 베네피아 주문 취소 전송
             try {
-                BenepiaDecryptedParamDto bene = BenepiaContext.get();
+                //BenepiaDecryptedParamDto bene = BenepiaContext.get();
+
+                BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
+                bene.setBenefit_id("testtravel");
+                bene.setSitecode("5555");
 
                 if(bene != null){
 
-                    log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
+                    log.info("[BENEPIA 주문 취소 전송] benefitId={}", bene.getBenefit_id());
 
                     benepiaOrderService.sendOrder(order, items, bene);
                 }
