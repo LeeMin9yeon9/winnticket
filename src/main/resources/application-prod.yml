@@ -138,12 +138,12 @@ playstory:
 # 뱅크다 연동
 bankda:
   url: "https://a.bankda.com/dtsvc/bank_tr.php"
-  token: "369fe06f41dbe5efc7b69a28da47bb2f"
+  token: ${BANKDA_TOKEN}
 
 # 파트너 연동 (스마트인피니(서울랜드))
 smartinfini:
   base-url: "https://nsi.smartinfini.com/cinterface"
-  token: "BZIG91YGLkcts0U2Uau5Kg=="
+  token: ${SMARTINFINE_TOKEN}
   channel-id : "36"
 
 # 파트너 연동 (아쿠아플라넷)
@@ -152,3 +152,10 @@ aquaplanet:
   system-name: SIF99999
   stn-tmsg-ip: 13.109.91.167
   wrkr-no: l1711019
+
+# 파트너 연동(LS컴퍼니 아직 개발서버꺼 )
+lscompany:
+  base-url: "https://unity-dev.lscompany-api.com/Api_v3"
+  agent-no: "CH2603091"
+  token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXBlIjoic2VsbGVyIiwicGFyYW1zIjp7ImNvZGUiOiJDSDI2MDMwOTEifX0.DCPJ-iJwpeew-UYPRuscjr4MBJRp4MooNFgsn8m-9es"
+
