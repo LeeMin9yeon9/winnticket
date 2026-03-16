@@ -7,6 +7,7 @@ import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +36,7 @@ public class LsCompanyService {
     }
 
     // 티켓 발권
+    @Transactional
     public LsIssueResDto issueTicket(String orderNumber) {
 
         // 주문 정보 조회
@@ -69,7 +71,7 @@ public class LsCompanyService {
         data.setEmail(orderInfo.getCustomerEmail());
 
         // 발권요청시간 (yyyyMMddHHmmss)
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 
         data.setDate(now);
 
@@ -88,7 +90,8 @@ public class LsCompanyService {
                     log.info("이미 발권 완료된 상품 orderItemId={}", item.getOrderItemId());
                     continue;
                 }
-                int issueCount = Math.min(item.getQuantity(), ticketNumbers.size());
+
+                int issueCount = ticketNumbers.size();
 
                 for (int i = 0; i < issueCount; i++) {
 
@@ -186,7 +189,7 @@ public class LsCompanyService {
                     }
 
                     // 미사용 상태(T000)만 취소
-                    if (statusRes == null || !"T000".equals(statusRes.getResultCode())) {
+                    if (!"T000".equals(statusRes.getResultCode())) {
                         log.info("LS 취소 제외 ticketNumber={}, resultCode={}, message={}",
                                 ticketNumber,
                                 statusRes.getResultCode(),

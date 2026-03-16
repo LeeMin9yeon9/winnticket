@@ -41,24 +41,37 @@
 
 
     <!-- 주문상품 조회 -->
-    <select id="selectOrderItemInfos" parameterType="java.util.UUID" resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderItemInfoDto">
+    <select id="selectOrderItemInfos"
+            parameterType="java.util.UUID"
+            resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderItemInfoDto">
+
         SELECT
-            oi.id AS orderItemId,
-            oi.product_id AS productId,
-            MAX(pov.code) AS optionId,
-            MAX(pov.code) AS classifyCode,
-            MAX(pov.value) AS classify,
-            oi.quantity AS quantity,
-            oi.unit_price AS price
+        oi.id AS orderItemId,
+        p.code AS productCode,
+        pov.code AS optionId,         <!-- classifyCode -->
+        pov.value AS classify,        <!-- classify -->
+        po.code AS optionTypeCode,
+        po.name AS optionType,
+
+        oi.quantity AS quantity,
+        oi.unit_price AS price
+
         FROM order_items oi
-                 JOIN order_item_options oio
-                      ON oio.order_item_id = oi.id
-                 JOIN product_option_values pov
-                      ON pov.id = oio.option_value_id
+
+        JOIN products p
+        ON p.id = oi.product_id
+        JOIN order_item_options oio
+        ON oio.order_item_id = oi.id
+        JOIN product_option_values pov
+        ON pov.id = oio.option_value_id
+        JOIN product_options po
+        ON po.id = pov.option_id
+
         WHERE oi.order_id = #{orderId}
-          AND oi.partner_id = 'b49be80d-4150-408b-80e6-e11c6f13db9d'
-        GROUP BY oi.id, oi.product_id, oi.quantity, oi.unit_price
+        AND oi.partner_id = 'b49be80d-4150-408b-80e6-e11c6f13db9d'
+
         ORDER BY oi.created_at ASC
+
     </select>
 
 
