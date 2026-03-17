@@ -30,7 +30,8 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            //headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -58,7 +59,7 @@ public class LsCompanyClient {
 
 
     // 상품 조회
-        public LsProductResDto getProducts() {
+        public LsProductResDto getProducts(String productCode) {
 
             String url = properties.getBaseUrl() + "/product";
 
@@ -66,11 +67,17 @@ public class LsCompanyClient {
             LsProductReqDto req = new LsProductReqDto();
             LsProductReqDto.Data data = new LsProductReqDto.Data();
             data.setAgentNo(properties.getAgentNo());
-            data.setType("all");   // 전체조회
+            if (productCode != null) {
+                data.setType("single");
+                data.setProductCode(productCode);
+            } else {
+                data.setType("all");
+            }
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+//            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -105,7 +112,8 @@ public class LsCompanyClient {
             String url = properties.getBaseUrl() + "/issue";
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+           // headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -148,7 +156,8 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+           // headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -190,7 +199,8 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            //headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -198,7 +208,7 @@ public class LsCompanyClient {
 
             try {
                 json = objectMapper.writeValueAsString(req);
-                log.info("LS inquiry request = {}", json);
+                log.info("LS cancel request = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
             }
@@ -240,7 +250,7 @@ public class LsCompanyClient {
 
             try {
                 json = objectMapper.writeValueAsString(req);
-                log.info("LS inquiry request = {}", json);
+                log.info("LS resend request = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
             }

@@ -30,9 +30,12 @@ public class LsCompanyService {
     }
 
     // 상품 조회
-    public LsProductResDto getProducts(){
-
-        return client.getProducts();
+//    public LsProductResDto getProducts(){
+//
+//        return client.getProducts();
+//    }
+    public LsProductResDto getProducts(String productCode){
+        return client.getProducts(productCode);
     }
 
     // 티켓 발권
@@ -124,7 +127,7 @@ public class LsCompanyService {
 
             log.info("LS 발권 응답 = {}", res);
 
-            if (!"0000".equals(res.getResultCode())&& !"E104".equals(res.getResultCode())) {
+            if (!"0000".equals(res.getResultCode())) {
                 log.error("LS 발권 실패 resultCode={} message={}",
                         res.getResultCode(),
                         res.getResultMessage());
