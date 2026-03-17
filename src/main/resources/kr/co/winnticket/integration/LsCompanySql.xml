@@ -80,6 +80,7 @@
         UPDATE order_tickets
         SET partner_order_code = #{barcode}
         WHERE ticket_number = #{transactionId}
+        AND partner_order_code IS NULL
 
     </update>
 
@@ -94,12 +95,13 @@
 
     </select>
 
-    <!--티켓 취소 시 주문번호로 티켓번호 조회-->
+    <!--주문 기준 티켓번호 조회 (취소/재전송용)-->
     <select id="selectTicketNumbersByOrderId" resultType="string">
         SELECT ot.ticket_number
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
         WHERE oi.order_id = #{orderId}
     </select>
+
 
 </mapper>

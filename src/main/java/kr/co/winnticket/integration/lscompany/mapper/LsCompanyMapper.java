@@ -22,7 +22,7 @@ public interface LsCompanyMapper {
             @Param("orderId") UUID orderId
     );
 
-    // LS 바코드 저장
+    // 발권 성공 시 LS 바코드 저장
     void updatePartnerBarcode(
             @Param("barcode") String barcode,
             @Param("transactionId") String transactionId
@@ -33,7 +33,7 @@ public interface LsCompanyMapper {
             @Param("orderItemId") UUID orderItemId
     );
 
-    // 취소시 주문번호로 티켓번호 조회
+    // 주문 기준 티켓번호 조회 (취소 / 재전송용)
     List<String> selectTicketNumbersByOrderId (@Param("orderId") UUID orderId);
 
 }

@@ -255,10 +255,32 @@ public class LsCompanyService {
 
 
         // LS 티켓 문자 재전송
-        public LsResendResDto resendTicket(String orderNumber){
+        public List<LsResendResDto> resendTicket(UUID orderId) {
 
-            return client.resendTicket(orderNumber);
+            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
 
+            List<LsResendResDto> results = new ArrayList<>();
+
+            for (String ticketNumber : ticketNumbers) {
+                try {
+                    LsResendResDto res = client.resendTicket(ticketNumber);
+
+                    if ("0000".equals(res.getResultCode())) {
+                        log.info("문자 재전송 성공 ticketNumber={}", ticketNumber);
+                    } else {
+                        log.warn("문자 재전송 실패 ticketNumber={} code={}",
+                                ticketNumber,
+                                res.getResultCode());
+                    }
+
+                    results.add(res);
+
+                } catch (Exception e) {
+                    log.error("문자 재전송 실패 ticketNumber={}", ticketNumber, e);
+                }
+            }
+
+            return results;
         }
     }
 
