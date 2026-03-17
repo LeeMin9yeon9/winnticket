@@ -10,7 +10,6 @@ import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
-import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
@@ -281,6 +280,7 @@ public class OrderService {
                     lsCompanyService.issueTicket(order.getOrderNumber());
                 }catch (Exception e){
                     log.error("LSCompany 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("LS 발권 실패 → 주문 롤백 필요");
                 }
             }
 
@@ -323,7 +323,7 @@ public class OrderService {
         for (OrderProductListGetResDto item : items) {
             String partnerId = String.valueOf(item.getPartnerId());
 
-            log.error("partnerId = {}", partnerId);
+            log.info("partnerId = {}", partnerId);
 
             // 파트너별 상품이 있는지 체크
             if (WOOGJIN.equals(partnerId)) { // 웅진컴퍼스
@@ -376,7 +376,8 @@ public class OrderService {
                             && !PLAYSTORY.equals(partnerId)
                             && !MAIR.equals(partnerId)
                             && !COREWORKS.equals(partnerId)
-                            && !PLUSN.equals(partnerId));
+                            && !PLUSN.equals(partnerId))
+                            && !LSCOMPANY.equals(partnerId);
                 })
                 .toList();
     }
@@ -573,13 +574,14 @@ public class OrderService {
 
         if (split.isHasLsCompany()){
             log.info("[LS컴퍼니 orderCancel start]");
-            lsCompanyService.cancelTicket(order.getOrderNumber());
+            lsCompanyService.cancelTicket(orderId);
         }
 
         if (split.isHasAquaplanet()) {
             log.info("[아쿠아플라넷 orderCancel start]");
             aquaplanetService.cancelOrder(orderId);
         }
+
         /*
         if (split.isHasWoongin()) {
             log.info("[웅진 취소 시작]");
