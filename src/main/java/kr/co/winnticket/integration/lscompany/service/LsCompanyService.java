@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -170,20 +171,20 @@ public class LsCompanyService {
         }
 
         // 티켓 취소
-        public List<LsCancelResDto> cancelTicket(String orderNumber) {
+        public List<LsCancelResDto> cancelTicket(UUID orderId) {
 
-            // 주문에 해당하는 티켓번호 조회
-            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderNumber(orderNumber);
+            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
+
             List<LsCancelResDto> results = new ArrayList<>();
 
             if (ticketNumbers == null || ticketNumbers.isEmpty()) {
-                log.info("LS 취소 대상 없음 orderNumber={}", orderNumber);
+                log.info("LS 취소 대상 없음 orderId={}", orderId);
                 throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
             }
 
             for (String ticketNumber : ticketNumbers) {
                 try {
-                    // LS 상태조회
+                    // 상태조회
                     LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
 
                     if (statusRes == null) {
@@ -191,20 +192,54 @@ public class LsCompanyService {
                         continue;
                     }
 
-                    // 미사용 상태(T000)만 취소
+                    // T000만 취소 가능
                     if (!"T000".equals(statusRes.getResultCode())) {
-                        log.info("LS 취소 제외 ticketNumber={}, resultCode={}, message={}",
+                        log.info("LS 취소 제외 ticketNumber={}, status={}",
                                 ticketNumber,
-                                statusRes.getResultCode(),
-                                statusRes.getResultMessage());
+                                statusRes.getResultCode());
                         continue;
                     }
 
+                    String status = statusRes.getResultCode();
+
+                    switch (status) {
+                        case "T001":
+                            log.info("이미 사용된 티켓");
+                            break;
+                        case "T002":
+                            log.info("취소 진행중");
+                            break;
+                        case "T003":
+                            log.info("이미 취소됨");
+                            break;
+                    }
+
+                    // 취소 요청
                     LsCancelResDto res = client.cancelTicket(ticketNumber);
+                    String code = res.getResultCode();
 
-                    log.info("LS 취소 응답 ticketNumber={} res={}", ticketNumber, res);
+                    // 성공
+                    if ("0000".equals(code)) {
+                        log.info("LS 취소 성공 ticketNumber={}", ticketNumber);
+                        results.add(res);
+                        continue;
+                    }
 
-                    results.add(res);
+                    // 이미 취소됨
+                    if ("E209".equals(code)) {
+                        log.info("이미 취소된 티켓 ticketNumber={}", ticketNumber);
+                        continue;
+                    }
+
+                    // 취소 불가
+                    if ("E207".equals(code)) {
+                        log.warn("취소 불가 티켓 ticketNumber={}", ticketNumber);
+                        continue;
+                    }
+
+                    // 기타 에러
+                    throw new RuntimeException("LS 취소 실패 ticket=" + ticketNumber + " code=" + code);
+
 
                 } catch (Exception e) {
                     log.error("LS 취소 실패 ticketNumber={}", ticketNumber, e);

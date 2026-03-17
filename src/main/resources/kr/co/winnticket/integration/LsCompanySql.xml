@@ -89,23 +89,17 @@
         FROM order_tickets
         WHERE order_item_id = #{orderItemId}
           AND partner_order_code IS NULL
+          AND (ticket_used IS NULL OR ticket_used = false)
         ORDER BY created_at
 
     </select>
 
     <!--티켓 취소 시 주문번호로 티켓번호 조회-->
-    <select id="selectTicketNumbersByOrderNumber" resultType="string">
-        SELECT
-            ot.ticket_number
+    <select id="selectTicketNumbersByOrderId" resultType="string">
+        SELECT ot.ticket_number
         FROM order_tickets ot
-                 JOIN order_items oi
-                      ON oi.id = ot.order_item_id
-                 JOIN orders o
-                      ON o.id = oi.order_id
-        WHERE o.order_number = #{orderNumber}
-          AND ot.partner_order_code IS NOT NULL
-          AND COALESCE(ot.ticket_used, false) = false
-        ORDER BY ot.created_at
+                 JOIN order_items oi ON oi.id = ot.order_item_id
+        WHERE oi.order_id = #{orderId}
     </select>
 
 </mapper>

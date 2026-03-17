@@ -34,5 +34,6 @@ public interface LsCompanyMapper {
     );
 
     // 취소시 주문번호로 티켓번호 조회
-    List<String> selectTicketNumbersByOrderNumber(String orderNumber);
+    List<String> selectTicketNumbersByOrderId (@Param("orderId") UUID orderId);
+
 }

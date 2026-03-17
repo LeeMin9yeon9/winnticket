@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,10 +51,10 @@ public class LsCompanyController {
     @Operation(summary = "LS 티켓 취소")
     @PostMapping("/cancel")
     public ApiResponse <List<LsCancelResDto>> cancel(
-            @RequestParam String orderNumber
+            @PathVariable UUID orderId
     ) {
 
-        return ApiResponse.success(service.cancelTicket(orderNumber));
+        return ApiResponse.success(service.cancelTicket(orderId));
     }
 
     @Operation(summary = "LS 티켓 문자 재전송")
