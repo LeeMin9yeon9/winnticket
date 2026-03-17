@@ -25,9 +25,10 @@ public class LsCompanyController {
 
     @Operation(summary = "LS컴퍼니 상품정보 조회")
     @PostMapping("/products")
-    public ApiResponse<LsProductResDto> getProducts() {
-
-        return ApiResponse.success(service.getProducts());
+    public ApiResponse<LsProductResDto> getProducts(
+            @RequestParam(required = false) String productCode
+    ) {
+        return ApiResponse.success(service.getProducts(productCode));
     }
 
     @Operation(summary = "LS컴퍼니 티켓 발권")
