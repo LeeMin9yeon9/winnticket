@@ -31,20 +31,20 @@ public class LsCompanyService {
     }
 
     // 상품 조회
-//    public LsProductResDto getProducts(){
-//
-//        return client.getProducts();
-//    }
     public LsProductResDto getProducts(String productCode){
         return client.getProducts(productCode);
     }
 
     // 티켓 발권
     @Transactional
-    public LsIssueResDto issueTicket(String orderNumber) {
+    public LsIssueResDto issueTicket(UUID orderId) {
 
         // 주문 정보 조회
-        LsOrderInfoDto orderInfo = mapper.selectOrderInfo(orderNumber);
+       // LsOrderInfoDto orderInfo = mapper.selectOrderInfo(orderNumber);
+        LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
+
+        String orderNumber = orderInfo.getOrderNumber();
+
 
         if (orderInfo == null) {
             throw new RuntimeException("주문정보 없음 orderNumber=" + orderNumber);
@@ -182,13 +182,34 @@ public class LsCompanyService {
                 return res;
             }
 
+
+
         // 티켓 상태조회
-        public LsStatusResDto inquiryTicket(String ticketNumber){
+        public List<LsStatusResDto> inquiryTicket(UUID orderId) {
 
-            String transactionId = ticketNumber;
+            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
 
-            return client.inquiryTicket(transactionId);
+            if (ticketNumbers == null || ticketNumbers.isEmpty()) {
+                throw new RuntimeException("조회할 티켓 없음 orderId=" + orderId);
+            }
 
+            List<LsStatusResDto> results = new ArrayList<>();
+
+            for (String ticketNumber : ticketNumbers) {
+
+                try {
+                    LsStatusResDto res = client.inquiryTicket(ticketNumber);
+
+                    if (res != null) {
+                        results.add(res);
+                    }
+
+                } catch (Exception e) {
+                    log.error("상태조회 실패 ticket={}", ticketNumber, e);
+                }
+            }
+
+            return results;
         }
 
         // 티켓 취소
@@ -198,58 +219,43 @@ public class LsCompanyService {
             List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
 
             if (ticketNumbers == null || ticketNumbers.isEmpty()) {
-                throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
+                throw new RuntimeException("취소 가능한 티켓 없음");
             }
 
+            //  상태 전체 조회
+            List<LsStatusResDto> statusList = inquiryTicket(orderId);
+
             // 사전 검증
-            for (String ticketNumber : ticketNumbers) {
-
-                LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
-
-                if (statusRes == null) {
-                    throw new RuntimeException("상태조회 실패 ticket=" + ticketNumber);
-                }
+            for (LsStatusResDto statusRes : statusList) {
 
                 String status = statusRes.getResultCode();
 
                 if (!"T000".equals(status)) {
                     switch (status) {
                         case "T001":
-                            throw new RuntimeException("이미 사용된 티켓 포함 → 주문취소 불가");
+                            throw new RuntimeException("이미 사용된 티켓 포함 → 취소 불가");
                         case "T002":
-                            throw new RuntimeException("취소 진행중 티켓 포함 → 주문취소 불가");
+                            throw new RuntimeException("취소 진행중 티켓 포함 → 취소 불가");
                         case "T003":
-                            throw new RuntimeException("이미 취소된 티켓 포함 → 주문취소 불가");
+                            throw new RuntimeException("이미 취소된 티켓 포함 → 취소 불가");
                         default:
-                            throw new RuntimeException("알 수 없는 상태 → 주문취소 불가");
+                            throw new RuntimeException("알 수 없는 상태 → 취소 불가");
                     }
                 }
             }
 
-            // 전체 취소 실행
+            // 전체 취소
             List<LsCancelResDto> results = new ArrayList<>();
 
             for (String ticketNumber : ticketNumbers) {
-                try {
-                    LsCancelResDto res = client.cancelTicket(ticketNumber);
 
-                    if (res == null) {
-                        throw new RuntimeException("LS 취소 응답 없음 ticket=" + ticketNumber);
-                    }
+                LsCancelResDto res = client.cancelTicket(ticketNumber);
 
-                    String code = res.getResultCode();
-
-                    if (!"0000".equals(code)) {
-                        throw new RuntimeException("LS 취소 실패 ticket=" + ticketNumber + " code=" + code);
-                    }
-
-                    log.info("LS 취소 성공 ticket={}", ticketNumber);
-                    results.add(res);
-
-                } catch (Exception e) {
-                    log.error("LS 취소 실패 ticket={}", ticketNumber, e);
-                    throw new RuntimeException("취소 중 오류 발생 → 전체 취소 중단");
+                if (res == null || !"0000".equals(res.getResultCode())) {
+                    throw new RuntimeException("취소 실패 ticket=" + ticketNumber);
                 }
+
+                results.add(res);
             }
 
             return results;

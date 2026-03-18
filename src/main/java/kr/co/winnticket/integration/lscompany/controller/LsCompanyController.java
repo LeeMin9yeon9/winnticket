@@ -33,19 +33,19 @@ public class LsCompanyController {
     }
 
     @Operation(summary = "LS컴퍼니 티켓 발권")
-    @PostMapping("/issue/{orderNo}")
+    @PostMapping("/issue/{orderId}")
     public ApiResponse<LsIssueResDto> issueTicket(
-            @PathVariable String orderNo) {
+            @PathVariable UUID orderId) {
 
-        return ApiResponse.success(service.issueTicket(orderNo));
+        return ApiResponse.success(service.issueTicket(orderId));
     }
 
-    @Operation(summary = "LS 티켓 상태 조회")
-    @PostMapping("/inquiry")
-    public ApiResponse<LsStatusResDto> inquiry(
-            @RequestParam String transactionId
+    @Operation(summary = "LS 티켓 상태 조회 (주문 기준)")
+    @PostMapping("/inquiry/{orderId}")
+    public ApiResponse<List<LsStatusResDto>> inquiry(
+            @PathVariable UUID orderId
     ) {
-        return ApiResponse.success(service.inquiryTicket(transactionId));
+        return ApiResponse.success(service.inquiryTicket(orderId));
     }
 
     @Operation(summary = "LS 티켓 취소")
