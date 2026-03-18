@@ -40,10 +40,9 @@ public class LsCompanyService {
     public LsIssueResDto issueTicket(UUID orderId) {
         // 주문 정보 조회
         LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
-
+        log.info("orderInfo = {}", orderInfo);
 
         String orderNumber = orderInfo.getOrderNumber();
-
 
         if (orderInfo == null) {
             throw new RuntimeException("주문정보 없음 orderNumber=" + orderNumber);
