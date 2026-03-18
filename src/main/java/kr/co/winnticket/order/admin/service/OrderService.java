@@ -198,23 +198,23 @@ public class OrderService {
 
             // 베네피아 주문 전송
 
-            try {
-                BenepiaDecryptedParamDto bene = BenepiaContext.get();
+            if(order.getChannelName().equals("베네피아")) {
+                try {
+                    //BenepiaDecryptedParamDto bene = BenepiaContext.get();
 
-                /*BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
-                bene.setBenefit_id("testtravel");
-                bene.setSitecode("5555");
-                */
-                if (bene != null) {
-                    log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
+                    BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
+                    bene.setBenefit_id("testtravel");
+                    bene.setSitecode("5555");
+                    if (bene != null) {
+                        log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
 
-                    benepiaOrderService.sendOrder(order, items, bene);
-                }
+                        benepiaOrderService.sendOrder(order, items, bene);
+                    }
 
                 } catch (Exception e) {
                     log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
                 }
-
+            }
             PartnerSplitResult split = splitByPartner(items);
 
             log.info("split = {}", split);
@@ -375,8 +375,8 @@ public class OrderService {
                             && !PLAYSTORY.equals(partnerId)
                             && !MAIR.equals(partnerId)
                             && !COREWORKS.equals(partnerId)
-                            && !PLUSN.equals(partnerId))
-                            && !LSCOMPANY.equals(partnerId);
+                            && !PLUSN.equals(partnerId)
+                            && !LSCOMPANY.equals(partnerId));
                 })
                 .toList();
     }
@@ -430,7 +430,7 @@ public class OrderService {
 
             String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
 
-            if (ticketCodeType.equals("QR")) {
+            if ("QR".equals(ticketCodeType)) {
                 if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
                     continue;
                 }
@@ -438,7 +438,7 @@ public class OrderService {
                 sentProducts.add(String.valueOf(item.getPartnerId()));
 
                 couponText = QR_URL + order.getOrderNumber();
-            } else if (ticketCodeType.equals("BARCODE")) {
+            } else if ("BARCODE".equals(ticketCodeType)) {
                 if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
                     continue;
                 }
@@ -666,25 +666,27 @@ public class OrderService {
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
         } else {
-            // 베네피아 주문 취소 전송
-            try {
-                //BenepiaDecryptedParamDto bene = BenepiaContext.get();
+            if(order.getChannelName().equals("베네피아")) {
+                // 베네피아 주문 취소 전송
+                try {
+                    //BenepiaDecryptedParamDto bene = BenepiaContext.get();
 
-                BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
-                bene.setBenefit_id("testtravel");
-                bene.setSitecode("5555");
+                    BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
+                    bene.setBenefit_id("testtravel");
+                    bene.setSitecode("5555");
 
-                if(bene != null){
+                    if (bene != null) {
 
-                    log.info("[BENEPIA 주문 취소 전송] benefitId={}", bene.getBenefit_id());
+                        log.info("[BENEPIA 주문 취소 전송] benefitId={}", bene.getBenefit_id());
 
-                    benepiaOrderService.cancelOrder(order, items, bene);
+                        benepiaOrderService.cancelOrder(order, items, bene);
+                    }
+
+                } catch (Exception e) {
+
+                    log.error("[BENEPIA 주문 전송 실패] orderId={}", order.getId(), e);
+
                 }
-
-            }catch(Exception e){
-
-                log.error("[BENEPIA 주문 전송 실패] orderId={}", order.getId(), e);
-
             }
         }
 
