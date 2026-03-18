@@ -47,7 +47,7 @@ public class OrderAdminDetailGetResDto {
     private PaymentStatus paymentStatus;
 
     @Schema(description = "결제금액")
-    private int finalPrice;
+    private Integer finalPrice;
 
     @Schema(description = "결제수단")
     private PaymentMethod paymentMethod;
@@ -59,7 +59,7 @@ public class OrderAdminDetailGetResDto {
     private int totalPrice;
 
     @Schema(description = "주문금액")
-    private int discountPrice;
+    private Integer discountPrice;
 
     @Schema(description = "포인트금액")
     private Integer pointAmount;

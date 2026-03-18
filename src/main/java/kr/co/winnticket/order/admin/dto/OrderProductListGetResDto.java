@@ -39,11 +39,11 @@ public class OrderProductListGetResDto {
     private String optionName;
 
     @Schema(description = "수량")
-    private int quantity;
+    private Integer quantity;
 
     @Schema(description = "단가")
-    private int unitPrice;
+    private Integer unitPrice;
 
     @Schema(description = "소계")
-    private int totalPrice;
+    private Integer totalPrice;
 }
