@@ -196,6 +196,7 @@ public class OrderService {
             log.info("[주문상태 변경 종료!]");
 
             // 베네피아 주문 전송
+
             try {
                 //BenepiaDecryptedParamDto bene = BenepiaContext.get();
 

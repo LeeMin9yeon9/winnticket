@@ -13,6 +13,8 @@ public class LsOrderItemInfoDto {
 
     private UUID productId;
 
+    private String productCode;
+
     private String optionId;   // LS optionId
 
     private String classify;      // 권종명
@@ -27,6 +29,6 @@ public class LsOrderItemInfoDto {
 
     private Integer discount;  // 할인금액
 
-    private OptionCode optionCode; // 옵션코드 매핑용
+    private OptionCode optionCode; // 옵션코드 매핑
 
 }
