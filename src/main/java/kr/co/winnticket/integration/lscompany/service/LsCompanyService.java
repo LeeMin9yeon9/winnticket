@@ -192,83 +192,64 @@ public class LsCompanyService {
         }
 
         // 티켓 취소
+        @Transactional
         public List<LsCancelResDto> cancelTicket(UUID orderId) {
 
             List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
 
-            List<LsCancelResDto> results = new ArrayList<>();
-
             if (ticketNumbers == null || ticketNumbers.isEmpty()) {
-                log.info("LS 취소 대상 없음 orderId={}", orderId);
                 throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
             }
 
+            // 사전 검증
             for (String ticketNumber : ticketNumbers) {
-                try {
-                    // 상태조회
-                    LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
 
-                    if (statusRes == null) {
-                        log.warn("LS 상태조회 응답 없음 ticketNumber={}", ticketNumber);
-                        continue;
-                    }
+                LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
 
-                    // T000만 취소 가능
-                    if (!"T000".equals(statusRes.getResultCode())) {
-                        log.info("LS 취소 제외 ticketNumber={}, status={}",
-                                ticketNumber,
-                                statusRes.getResultCode());
-                        continue;
-                    }
+                if (statusRes == null) {
+                    throw new RuntimeException("상태조회 실패 ticket=" + ticketNumber);
+                }
 
-                    String status = statusRes.getResultCode();
+                String status = statusRes.getResultCode();
 
+                if (!"T000".equals(status)) {
                     switch (status) {
                         case "T001":
-                            log.info("이미 사용된 티켓");
-                            break;
+                            throw new RuntimeException("이미 사용된 티켓 포함 → 주문취소 불가");
                         case "T002":
-                            log.info("취소 진행중");
-                            break;
+                            throw new RuntimeException("취소 진행중 티켓 포함 → 주문취소 불가");
                         case "T003":
-                            log.info("이미 취소됨");
-                            break;
+                            throw new RuntimeException("이미 취소된 티켓 포함 → 주문취소 불가");
+                        default:
+                            throw new RuntimeException("알 수 없는 상태 → 주문취소 불가");
                     }
-
-                    // 취소 요청
-                    LsCancelResDto res = client.cancelTicket(ticketNumber);
-                    String code = res.getResultCode();
-
-                    // 성공
-                    if ("0000".equals(code)) {
-                        log.info("LS 취소 성공 ticketNumber={}", ticketNumber);
-                        results.add(res);
-                        continue;
-                    }
-
-                    // 이미 취소됨
-                    if ("E209".equals(code)) {
-                        log.info("이미 취소된 티켓 ticketNumber={}", ticketNumber);
-                        continue;
-                    }
-
-                    // 취소 불가
-                    if ("E207".equals(code)) {
-                        log.warn("취소 불가 티켓 ticketNumber={}", ticketNumber);
-                        continue;
-                    }
-
-                    // 기타 에러
-                    throw new RuntimeException("LS 취소 실패 ticket=" + ticketNumber + " code=" + code);
-
-
-                } catch (Exception e) {
-                    log.error("LS 취소 실패 ticketNumber={}", ticketNumber, e);
                 }
             }
 
-            if (results.isEmpty()) {
-                throw new RuntimeException("취소 가능한 LS 티켓이 없습니다.");
+            // 전체 취소 실행
+            List<LsCancelResDto> results = new ArrayList<>();
+
+            for (String ticketNumber : ticketNumbers) {
+                try {
+                    LsCancelResDto res = client.cancelTicket(ticketNumber);
+
+                    if (res == null) {
+                        throw new RuntimeException("LS 취소 응답 없음 ticket=" + ticketNumber);
+                    }
+
+                    String code = res.getResultCode();
+
+                    if (!"0000".equals(code)) {
+                        throw new RuntimeException("LS 취소 실패 ticket=" + ticketNumber + " code=" + code);
+                    }
+
+                    log.info("LS 취소 성공 ticket={}", ticketNumber);
+                    results.add(res);
+
+                } catch (Exception e) {
+                    log.error("LS 취소 실패 ticket={}", ticketNumber, e);
+                    throw new RuntimeException("취소 중 오류 발생 → 전체 취소 중단");
+                }
             }
 
             return results;
@@ -278,27 +259,36 @@ public class LsCompanyService {
         // LS 티켓 문자 재전송
         public List<LsResendResDto> resendTicket(UUID orderId) {
 
-            List<String> ticketNumbers = mapper.selectTicketNumbersByOrderId(orderId);
+            LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
+
+            if (orderInfo == null) {
+                throw new RuntimeException("주문정보 없음 orderId=" + orderId);
+            }
+
+            if ("CANCELLED".equals(orderInfo.getOrderStatus())) {
+                throw new RuntimeException("취소된 주문은 재발송 불가");
+            }
+
+            String orderNumber = orderInfo.getOrderNumber();
 
             List<LsResendResDto> results = new ArrayList<>();
 
-            for (String ticketNumber : ticketNumbers) {
-                try {
-                    LsResendResDto res = client.resendTicket(ticketNumber);
+            try {
+                // 1번만 호출
+                LsResendResDto res = client.resendTicket(orderNumber);
 
-                    if ("0000".equals(res.getResultCode())) {
-                        log.info("문자 재전송 성공 ticketNumber={}", ticketNumber);
-                    } else {
-                        log.warn("문자 재전송 실패 ticketNumber={} code={}",
-                                ticketNumber,
-                                res.getResultCode());
-                    }
-
-                    results.add(res);
-
-                } catch (Exception e) {
-                    log.error("문자 재전송 실패 ticketNumber={}", ticketNumber, e);
+                if ("0000".equals(res.getResultCode())) {
+                    log.info("문자 재전송 성공 orderNumber={}", orderNumber);
+                } else {
+                    log.warn("문자 재전송 실패 orderNumber={} code={}",
+                            orderNumber,
+                            res.getResultCode());
                 }
+
+                results.add(res);
+
+            } catch (Exception e) {
+                log.error("문자 재전송 실패 orderNumber={}", orderNumber, e);
             }
 
             return results;

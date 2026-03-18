@@ -95,14 +95,25 @@
 
     </select>
 
-    <!--주문 기준 티켓번호 조회 (취소/재전송용)-->
+    <!--주문 기준 티켓번호 조회 (취소용)-->
     <select id="selectTicketNumbersByOrderId" resultType="string">
         SELECT ot.ticket_number
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
         WHERE oi.order_id = #{orderId}
-          AND (ot.ticket_used IS NULL OR ot.ticket_used = false)
     </select>
+
+    <!--주문기준 주문정보 조회-->
+    <select id="selectOrderInfoByOrderId" resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderInfoDto">
+        SELECT
+            o.order_number   AS orderNumber,
+            o.status   AS orderStatus
+        FROM orders o
+        WHERE o.id = #{orderId}
+
+    </select>
+
+
 
 
 </mapper>
