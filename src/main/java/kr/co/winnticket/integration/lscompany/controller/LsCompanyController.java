@@ -49,7 +49,7 @@ public class LsCompanyController {
     }
 
     @Operation(summary = "LS 티켓 취소")
-    @PostMapping("/cancel")
+    @PostMapping("/cancel/{orderId}")
     public ApiResponse <List<LsCancelResDto>> cancel(
             @PathVariable UUID orderId
     ) {
