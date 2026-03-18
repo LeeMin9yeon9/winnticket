@@ -41,6 +41,7 @@ public class LsCompanyService {
         // 주문 정보 조회
         LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
 
+
         String orderNumber = orderInfo.getOrderNumber();
 
 
@@ -49,7 +50,10 @@ public class LsCompanyService {
         }
 
         // 주문 상품 조회
-        List<LsOrderItemInfoDto> items = mapper.selectOrderItemInfos(orderInfo.getOrderId());
+        List<LsOrderItemInfoDto> items = mapper.selectOrderItemInfos(orderId);
+
+        log.info("orderId param = {}", orderId);
+        log.info("orderInfo.orderId = {}", orderInfo.getOrderId());
 
         log.info(" LS 요청용 DB 조회 결과 = {}", items);
 
