@@ -76,11 +76,16 @@ public class OrderShopService {
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
 
         log.info("createOrder start, channelId={}", reqDto.getChannelId());
+        log.info(" paymentMethod = {}", reqDto.getPaymentMethod());
+        log.info(" pointAmount(raw) = {}", reqDto.getPointAmount());
+
+
 
         Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
         Boolean cardAllowed = (useCard != null && useCard);
 
         Boolean usePoint = channelMapper.selectUsePointById(reqDto.getChannelId());
+        log.info("usePoint(DB) = {}", usePoint);
 
         // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
         PaymentMethod paymentMethod = reqDto.getPaymentMethod();
@@ -93,6 +98,9 @@ public class OrderShopService {
         Integer pointAmount = reqDto.getPointAmount() == null ? 0 : reqDto.getPointAmount();
 
         boolean isPointUsed = pointAmount > 0 || paymentMethod == PaymentMethod.POINT;
+
+        log.info("pointAmount(계산) = {}", pointAmount);
+        log.info("isPointUsed = {}", isPointUsed);
 
 
         if (isPointUsed && !Boolean.TRUE.equals(usePoint)) {
