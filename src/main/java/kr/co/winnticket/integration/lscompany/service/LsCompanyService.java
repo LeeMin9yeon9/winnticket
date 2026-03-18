@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.lscompany.service;
 
+import kr.co.winnticket.common.enums.OptionCode;
 import kr.co.winnticket.integration.lscompany.client.LsCompanyClient;
 import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.mapper.LsCompanyMapper;
@@ -62,6 +63,7 @@ public class LsCompanyService {
         LsIssueReqDto req = new LsIssueReqDto();
         LsIssueReqDto.Data data = new LsIssueReqDto.Data();
 
+
         // LS 업체코드
         data.setAgentNo(properties.getAgentNo());
 
@@ -81,6 +83,7 @@ public class LsCompanyService {
 
         // 윈앤티켓 주문번호
         data.setOrderNo(orderNumber);
+
 
         List<LsIssueReqDto.Data.Order> orderList = new ArrayList<>();
 
@@ -107,6 +110,11 @@ public class LsCompanyService {
                     o.setOptionId(item.getOptionId());      // LS 옵션ID
                     o.setPrice(String.valueOf(item.getPrice()));    // 판매가
                     o.setDiscount(item.getDiscount() == null ? "0" : String.valueOf(item.getDiscount()));   // 할인금액
+
+                    LsOptionMapping mapping = mapToLsOption(item.getOptionCode());
+
+                    o.setOptionType(mapping.optionType);
+                    o.setOptionName(mapping.optionName);
 
                     orderList.add(o);
                 }
@@ -282,6 +290,30 @@ public class LsCompanyService {
 
             return results;
         }
+
+    // 내부 static class
+    private static class LsOptionMapping {
+        String optionType;
+        String optionName;
+
+        public LsOptionMapping(String optionType, String optionName) {
+            this.optionType = optionType;
+            this.optionName = optionName;
+        }
+    }
+
+    // 매핑 메서드
+    private LsOptionMapping mapToLsOption(OptionCode optionCode) {
+        if (optionCode == null) {
+            throw new IllegalArgumentException("OptionCode 없음");
+        }
+
+        return switch (optionCode) {
+            case MOBILE -> new LsOptionMapping("PRT1", "단품");
+            case MOBILE_MANUAL -> new LsOptionMapping("PRT1", "단품");
+            case OPTION -> new LsOptionMapping("PRT2", "패키지");
+        };
+    }
     }
 
 

@@ -73,6 +73,7 @@ public class LsCompanyClient {
             } else {
                 data.setType("all");
             }
+
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
@@ -116,6 +117,7 @@ public class LsCompanyClient {
            // headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
+
 
             ObjectMapper mapper = new ObjectMapper();
             String json = "";

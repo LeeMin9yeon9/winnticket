@@ -5,6 +5,7 @@ public enum OptionCode {
     MOBILE_MANUAL("모바일수동"),
     OPTION("선택옵션");
 
+
     private final String displayName;
 
     OptionCode(String displayName) {
