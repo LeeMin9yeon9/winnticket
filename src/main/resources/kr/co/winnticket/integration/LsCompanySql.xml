@@ -44,7 +44,7 @@
     <select id="selectOrderItemInfos"
             resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderItemInfoDto">
 
-        SELECT DISTINCT
+        SELECT
             oi.id AS orderItemId,
             p.code AS productCode,
             pov.code AS optionId,

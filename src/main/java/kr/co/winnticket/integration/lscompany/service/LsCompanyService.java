@@ -38,9 +38,7 @@ public class LsCompanyService {
     // 티켓 발권
     @Transactional
     public LsIssueResDto issueTicket(UUID orderId) {
-
         // 주문 정보 조회
-       // LsOrderInfoDto orderInfo = mapper.selectOrderInfo(orderNumber);
         LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
 
         String orderNumber = orderInfo.getOrderNumber();
@@ -52,6 +50,8 @@ public class LsCompanyService {
 
         // 주문 상품 조회
         List<LsOrderItemInfoDto> items = mapper.selectOrderItemInfos(orderInfo.getOrderId());
+
+        log.info(" LS 요청용 DB 조회 결과 = {}", items);
 
         if (items == null || items.isEmpty()) {
             throw new RuntimeException("주문아이템 없음 orderNumber=" + orderNumber);
