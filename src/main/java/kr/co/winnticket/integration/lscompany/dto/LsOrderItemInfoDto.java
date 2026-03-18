@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.lscompany.dto;
 
+import kr.co.winnticket.common.enums.OptionCode;
 import lombok.Data;
 
 import java.util.UUID;
@@ -25,4 +26,7 @@ public class LsOrderItemInfoDto {
     private Integer price;     // 판매가
 
     private Integer discount;  // 할인금액
+
+    private OptionCode optionCode; // 옵션코드 매핑용
+
 }

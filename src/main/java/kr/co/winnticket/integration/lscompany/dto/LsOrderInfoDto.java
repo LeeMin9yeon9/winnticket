@@ -22,4 +22,6 @@ public class LsOrderInfoDto {
 
     private String orderStatus;
 
+
+
 }

@@ -62,6 +62,9 @@ public class LsIssueReqDto {
 
             @Schema(description = "유효기간 종료일")
             private String orderEdate;
+
+            private String optionType;
+            private String optionName;
         }
     }
 }
