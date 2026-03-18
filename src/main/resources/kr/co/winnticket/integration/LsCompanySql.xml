@@ -100,8 +100,12 @@
     <!--주문기준 주문정보 조회-->
     <select id="selectOrderInfoByOrderId" resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderInfoDto">
         SELECT
-            o.order_number   AS orderNumber,
-            o.status   AS orderStatus
+            o.id AS orderId,
+            o.order_number AS orderNumber,
+            o.customer_name AS customerName,
+            o.customer_phone AS customerPhone,
+            o.customer_email AS customerEmail,
+            o.status AS orderStatus
         FROM orders o
         WHERE o.id = #{orderId}
 
