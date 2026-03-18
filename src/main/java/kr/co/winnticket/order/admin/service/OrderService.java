@@ -10,6 +10,7 @@ import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
+import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
@@ -198,24 +199,21 @@ public class OrderService {
             // 베네피아 주문 전송
 
             try {
-                //BenepiaDecryptedParamDto bene = BenepiaContext.get();
+                BenepiaDecryptedParamDto bene = BenepiaContext.get();
 
-                BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
+                /*BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
                 bene.setBenefit_id("testtravel");
                 bene.setSitecode("5555");
-
-                if(bene != null){
-
+                */
+                if (bene != null) {
                     log.info("[BENEPIA 주문 전송] benefitId={}", bene.getBenefit_id());
 
                     benepiaOrderService.sendOrder(order, items, bene);
                 }
 
-            }catch(Exception e){
-
-                log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
-
-            }
+                } catch (Exception e) {
+                    log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
+                }
 
             PartnerSplitResult split = splitByPartner(items);
 
