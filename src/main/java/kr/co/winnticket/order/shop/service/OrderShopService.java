@@ -90,7 +90,7 @@ public class OrderShopService {
         }
 
         // 포인트 미허용 채널이면 차단
-        if (usePoint == false) {
+        if (!Boolean.TRUE.equals(usePoint)) {
             throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
         }
 
