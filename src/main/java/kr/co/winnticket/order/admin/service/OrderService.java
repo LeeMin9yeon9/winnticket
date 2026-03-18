@@ -278,7 +278,7 @@ public class OrderService {
             if (split.isHasLsCompany()){
                 try {
                     log.info("[LSCompany Products]");
-                    lsCompanyService.issueTicket(order.getOrderNumber());
+                    lsCompanyService.issueTicket(order.getId());
                 }catch (Exception e){
                     log.error("LSCompany 발권 실패 orderId={}",auId,e);
                     throw new RuntimeException("LS 발권 실패 → 주문 롤백 필요");
