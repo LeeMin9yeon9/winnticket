@@ -59,11 +59,13 @@ public class BenepiaClient {
         }
     }
 
-    public String cancelOrder(BenepiaCancelRequest request) {
+    public String cancelOrder(BenepiaCancelRequest request, String orderNumber) {
         String url = props.getOrderBaseUrl()
                 + "/v1/partners/"
                 + props.getKcpCoCd()
-                + "/orderCancel";
+                + "/orders/"
+                + orderNumber
+                + "/cancel";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
