@@ -33,7 +33,10 @@ public interface LsCompanyMapper {
             @Param("orderItemId") UUID orderItemId
     );
 
-    // 주문 기준 티켓번호 조회 (취소 / 재전송용)
-    List<String> selectTicketNumbersByOrderId (@Param("orderId") UUID orderId);
+    // 티켓기준 티켓번호 조회 (취소용)
+    List<String> selectTicketNumbersByOrderId(@Param("orderId") UUID orderId);
+
+    // 티켓기준 주문정보 조회 (재전송용)
+    LsOrderInfoDto selectOrderInfoByOrderId(@Param("orderId") UUID orderId);
 
 }
