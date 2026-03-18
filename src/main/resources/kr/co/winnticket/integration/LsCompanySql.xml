@@ -101,6 +101,7 @@
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
         WHERE oi.order_id = #{orderId}
+          AND (ot.ticket_used IS NULL OR ot.ticket_used = false)
     </select>
 
 
