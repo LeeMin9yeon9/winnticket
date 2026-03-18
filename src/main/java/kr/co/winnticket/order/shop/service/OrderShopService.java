@@ -90,7 +90,12 @@ public class OrderShopService {
         }
 
         // 포인트 미허용 채널이면 차단
-        if (!Boolean.TRUE.equals(usePoint)) {
+        Integer pointAmount = reqDto.getPointAmount() == null ? 0 : reqDto.getPointAmount();
+
+        boolean isPointUsed = pointAmount > 0 || paymentMethod == PaymentMethod.POINT;
+
+
+        if (isPointUsed && !Boolean.TRUE.equals(usePoint)) {
             throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
         }
 
@@ -181,8 +186,6 @@ public class OrderShopService {
         log.info("====최종가격 - finalPrice={}", finalPrice);
 
         // 최종 결제금액 - 포인트 금액
-        Integer pointAmount = reqDto.getPointAmount() == null ? 0 : reqDto.getPointAmount();
-
         int pgAmount = finalPrice - pointAmount;
 
         if (pointAmount > finalPrice) {
