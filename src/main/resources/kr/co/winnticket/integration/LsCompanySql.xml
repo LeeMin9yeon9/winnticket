@@ -101,6 +101,7 @@
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
         WHERE oi.order_id = #{orderId}
+        ORDER BY ot.created_at
     </select>
 
     <!--주문기준 주문정보 조회-->
