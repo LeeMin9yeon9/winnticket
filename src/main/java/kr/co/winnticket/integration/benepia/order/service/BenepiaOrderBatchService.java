@@ -76,7 +76,7 @@ public class BenepiaOrderBatchService {
         // =========================
         // 3. 10000건 단위 분할 업로드
         // =========================
-        int fileSeq = 1;
+        int fileSeq = 0;
         for (int start = 0; start < body.size(); start += MAX_SIZE) {
             int end = Math.min(start + MAX_SIZE, body.size());
             List<Object> chunk = new ArrayList<>(body.subList(start, end));
@@ -103,10 +103,8 @@ public class BenepiaOrderBatchService {
             String date = LocalDate.now()
                     .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-            String seq = String.format("%03d", fileSeq);
-
             String fileName =
-                    props.getKcpCoCd() + "_03_orders_" + date + "_" + seq + ".json";
+                    props.getKcpCoCd() + "_03_orders_" + date + "_" + fileSeq + ".json";
 
             String path = System.getProperty("user.dir") + "/benepia/" + fileName;
 
