@@ -107,7 +107,7 @@
             a.memo -- 요청사항
         FROM
             orders a
-        WHERE DATE(cancelled_at) = #{targetDate}
+        WHERE DATE(canceled_at) = #{targetDate}
           AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
           AND payment_status = 'CANCELED'
         ORDER BY ordered_at ASC
