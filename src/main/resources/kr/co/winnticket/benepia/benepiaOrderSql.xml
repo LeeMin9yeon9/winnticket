@@ -54,7 +54,6 @@
             orders a
         WHERE DATE(ordered_at) = #{targetDate}
           AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
-          AND payment_status = 'PAID'
         ORDER BY ordered_at ASC
     </select>
 
