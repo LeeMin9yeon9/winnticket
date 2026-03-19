@@ -26,7 +26,8 @@ public interface OrderShopMapper {
             @Param("customerEmail") String customerEmail,
             @Param("totalPrice") int totalPrice,
             @Param("discountPrice") int discountPrice,
-            @Param("paymentMethod") String paymentMethod
+            @Param("paymentMethod") String paymentMethod,
+            @Param("benepiaId") String benepiaId
     );
 
     // 주문별 상품별 insert
