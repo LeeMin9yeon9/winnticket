@@ -1,11 +1,12 @@
 package kr.co.winnticket.integration.benepia.order.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
-import kr.co.winnticket.integration.benepia.order.client.BenepiaClient;
-import kr.co.winnticket.integration.benepia.order.dto.*;
+import kr.co.winnticket.integration.benepia.order.client.BenepiaOrderBatchApiClient;
+import kr.co.winnticket.integration.benepia.order.dto.BenepiaCancelRequest;
+import kr.co.winnticket.integration.benepia.order.dto.BenepiaOrderBatchRequest;
+import kr.co.winnticket.integration.benepia.order.dto.BenepiaOrderRequest;
+import kr.co.winnticket.integration.benepia.order.mapper.BenepiaOrderBatchMapper;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
-import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
@@ -15,41 +16,140 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class BenepiaOrderService {
+public class BenepiaOrderBatchService {
 
-    private final BenepiaClient client;
+    private final BenepiaOrderBatchMapper mapper;
+    private final BenepiaOrderService orderService;
+    private final BenepiaOrderBatchApiClient client;
     private final BenepiaProperties props;
+    private final ObjectMapper objectMapper;
     private final ProductMapper productMapper;
+
+    private static final int MAX_SIZE = 10000;
+
+    public void runBatch(LocalDate targetDate) {
+
+        List<Object> body = new ArrayList<>();
+
+        // =========================
+        // 1. 주문 먼저
+        // =========================
+        List<OrderAdminDetailGetResDto> orders = mapper.selectBatchOrders(targetDate);
+
+        for (OrderAdminDetailGetResDto order : orders) {
+            List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
+
+            BenepiaOrderRequest req = buildOrderRequest(order, items);
+            if (req != null) {
+                body.add(req);
+            }
+        }
+
+        // =========================
+        // 2. 취소 나중
+        // =========================
+        List<OrderAdminDetailGetResDto> cancels = mapper.selectBatchCancels(targetDate);
+
+        for (OrderAdminDetailGetResDto order : cancels) {
+            List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
+
+            BenepiaCancelRequest req = buildCancelRequest(order, items);
+            if (req != null) {
+                body.add(req);
+            }
+        }
+
+        if (body.isEmpty()) {
+            log.info("[BENEPIA BATCH] 대상 없음. targetDate={}", targetDate);
+            return;
+        }
+
+        // =========================
+        // 3. 10000건 단위 분할 업로드
+        // =========================
+        int fileSeq = 1;
+        for (int start = 0; start < body.size(); start += MAX_SIZE) {
+            int end = Math.min(start + MAX_SIZE, body.size());
+            List<Object> chunk = new ArrayList<>(body.subList(start, end));
+
+            BenepiaOrderBatchRequest batch = new BenepiaOrderBatchRequest();
+            batch.setBody(chunk);
+
+            File file = createFile(batch, fileSeq);
+
+            client.uploadBatch(file);
+
+            log.info("[BENEPIA BATCH SUCCESS] file={}, count={}", file.getName(), chunk.size());
+
+            fileSeq++;
+        }
+    }
+
+    // =========================
+    // 파일 생성
+    // =========================
+    private File createFile(BenepiaOrderBatchRequest batch, int fileSeq) {
+
+        try {
+            String date = LocalDate.now()
+                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+            String seq = String.format("%03d", fileSeq);
+
+            String fileName =
+                    props.getKcpCoCd() + "_03_orders_" + date + "_" + seq + ".json";
+
+            String path = System.getProperty("user.dir") + "/benepia/" + fileName;
+
+            File file = new File(path);
+
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(file, batch);
+
+            log.info("[BENEPIA BATCH FILE CREATED] {}", path);
+
+            return file;
+
+        } catch (Exception e) {
+            log.error("[BENEPIA BATCH FILE CREATE FAIL]", e);
+            throw new RuntimeException(e);
+        }
+    }
 
     // =========================
     // null 방어 유틸
     // =========================
-    private String nvl(String val){
+    private String nvl(String val) {
         return val == null ? "" : val;
     }
 
-    private Integer nvl(Integer val){
+    private Integer nvl(Integer val) {
         return val == null ? 0 : val;
     }
 
     // =========================
-    // 주문 전송
+    // 주문 Request 생성
     // =========================
-    public void sendOrder(
+    public BenepiaOrderRequest buildOrderRequest(
             OrderAdminDetailGetResDto order,
             List<OrderProductListGetResDto> items) {
 
-        if(items == null || items.isEmpty()) return;
+        if (order == null || items == null || items.isEmpty()) {
+            return null;
+        }
 
         BenepiaOrderRequest req = new BenepiaOrderRequest();
 
@@ -58,16 +158,13 @@ public class BenepiaOrderService {
         req.setBenefitId(nvl(order.getBenepiaId()));
         req.setCoCd("5555");
 
-        // =========================
-        // 주문 정보
-        // =========================
         BenepiaOrderRequest.Order orderInfo = new BenepiaOrderRequest.Order();
 
         orderInfo.setOrdId(nvl(order.getOrderNumber()));
 
         String orderName = nvl(items.get(0).getProductName());
-        if(items.size() > 1){
-            orderName += " 외 " + (items.size()-1) + "건";
+        if (items.size() > 1) {
+            orderName += " 외 " + (items.size() - 1) + "건";
         }
 
         orderInfo.setOrdNm(orderName);
@@ -75,8 +172,7 @@ public class BenepiaOrderService {
         orderInfo.setOrgnPrc(nvl(order.getFinalPrice()));
 
         orderInfo.setOrdDt(
-                order.getOrderedAt()
-                        .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                order.getOrderedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         );
 
         orderInfo.setPtnAccntId("");
@@ -89,60 +185,44 @@ public class BenepiaOrderService {
 
         orderInfo.setOrdDtlUrl(nvl(orderUrl));
         orderInfo.setOrdDtlUrlTyp("Y");
-
         orderInfo.setOrdDtlUrlMobl(nvl(orderUrl));
         orderInfo.setOrdDtlUrlTypMobl("Y");
 
         req.setOrder(orderInfo);
 
-        // =========================
-        // 결제 정보
-        // =========================
         List<BenepiaOrderRequest.Payment> payments = new ArrayList<>();
 
         int totalPrice = nvl(order.getFinalPrice());
         int pointAmount = nvl(order.getPointAmount());
         int remainAmount = totalPrice - pointAmount;
 
-        // =========================
-        // 1. 포인트 결제
-        // =========================
-        if(pointAmount > 0){
+        if (pointAmount > 0) {
             BenepiaOrderRequest.Payment pointPayment = new BenepiaOrderRequest.Payment();
-            pointPayment.setSttlMeanId("10"); // 포인트
+            pointPayment.setSttlMeanId("10");
             pointPayment.setSttlPrc(pointAmount);
-
             payments.add(pointPayment);
         }
 
-        // =========================
-        // 2. 실제 결제수단
-        // =========================
-        if(remainAmount > 0){
+        if (remainAmount > 0) {
             BenepiaOrderRequest.Payment mainPayment = new BenepiaOrderRequest.Payment();
 
-            switch (order.getPaymentMethod()){
+            switch (order.getPaymentMethod()) {
                 case CARD, VIRTUAL_ACCOUNT, KAKAOPAY -> mainPayment.setSttlMeanId("9");
                 case GIFT -> mainPayment.setSttlMeanId("63");
-                case POINT -> mainPayment.setSttlMeanId("10"); // 전체 포인트 결제 케이스
+                case POINT -> mainPayment.setSttlMeanId("10");
                 default -> mainPayment.setSttlMeanId("9");
             }
 
             mainPayment.setSttlPrc(remainAmount);
-
             payments.add(mainPayment);
         }
 
         req.setPayments(payments);
 
-        // =========================
-        // 상품 정보
-        // =========================
         List<BenepiaOrderRequest.Product> products = new ArrayList<>();
 
-        for(OrderProductListGetResDto p : items){
-            ProductDetailGetResDto detail =
-                    productMapper.selectProductDetail(p.getProductId());
+        for (OrderProductListGetResDto p : items) {
+            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
 
             BenepiaOrderRequest.Product product = new BenepiaOrderRequest.Product();
 
@@ -162,13 +242,11 @@ public class BenepiaOrderService {
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
-
             product.setPrdDtlUrlMobl(nvl(productUrl));
             product.setPrdDtlUrlTypMobl("Y");
 
-            // 이미지 null 방어
             String img = "";
-            if(detail.getImageUrl() != null && !detail.getImageUrl().isEmpty()){
+            if (detail.getImageUrl() != null && !detail.getImageUrl().isEmpty()) {
                 img = detail.getImageUrl().get(0);
             }
 
@@ -189,9 +267,6 @@ public class BenepiaOrderService {
             product.setSeasonYn("");
             product.setRepResvNm("");
 
-            // =========================
-            // 항공 예약정보 (무조건 "" 세팅)
-            // =========================
             List<BenepiaOrderRequest.AirResvInfo> airList = new ArrayList<>();
             BenepiaOrderRequest.AirResvInfo air = new BenepiaOrderRequest.AirResvInfo();
 
@@ -206,6 +281,7 @@ public class BenepiaOrderService {
             air.setAirline("");
             air.setSeatClass("");
             air.setPassengerTyp("");
+
             airList.add(air);
             product.setAirResvInfoList(airList);
 
@@ -213,20 +289,22 @@ public class BenepiaOrderService {
         }
 
         req.setProducts(products);
-        validatePrice(req);
-        createJsonFile(req);
 
-        client.sendOrder(req);
+        validatePrice(req);
+
+        return req;
     }
 
     // =========================
-    // 취소 전송
+    // 취소 Request 생성
     // =========================
-    public void cancelOrder(
+    public BenepiaCancelRequest buildCancelRequest(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items){
+            List<OrderProductListGetResDto> items) {
 
-        if(order.getBenepiaId() == null || items == null || items.isEmpty()) return;
+        if (order == null || order.getBenepiaId() == null || items == null || items.isEmpty()) {
+            return null;
+        }
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
@@ -240,58 +318,48 @@ public class BenepiaOrderService {
         cancel.setOrdId(nvl(order.getOrderNumber()));
 
         String orderName = nvl(items.get(0).getProductName());
-        if(items.size() > 1){
-            orderName += " 외 " + (items.size()-1) + "건";
+        if (items.size() > 1) {
+            orderName += " 외 " + (items.size() - 1) + "건";
         }
 
         cancel.setOrdNm(orderName);
-
         cancel.setCnclPrc(nvl(order.getFinalPrice()));
         cancel.setOrgnCnclPrc(nvl(order.getFinalPrice()));
 
+        if (order.getCanceledAt() == null) {
+            throw new RuntimeException("베네피아 취소일시 없음");
+        }
+
         cancel.setCnclDt(
-                LocalDateTime.now()
-                        .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                order.getCanceledAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         );
 
         req.setOrderCancel(cancel);
 
-
-        // =========================
-        // 결제 정보
-        // =========================
         List<BenepiaCancelRequest.Payment> payments = new ArrayList<>();
 
         int totalPrice = nvl(order.getFinalPrice());
         int pointAmount = nvl(order.getPointAmount());
         int remainAmount = totalPrice - pointAmount;
 
-        // =========================
-        // 1. 포인트 결제
-        // =========================
-        if(pointAmount > 0){
+        if (pointAmount > 0) {
             BenepiaCancelRequest.Payment pointPayment = new BenepiaCancelRequest.Payment();
-            pointPayment.setSttlMeanId("10"); // 포인트
+            pointPayment.setSttlMeanId("10");
             pointPayment.setSttlPrc(pointAmount);
-
             payments.add(pointPayment);
         }
 
-        // =========================
-        // 2. 실제 결제수단
-        // =========================
-        if(remainAmount > 0){
+        if (remainAmount > 0) {
             BenepiaCancelRequest.Payment mainPayment = new BenepiaCancelRequest.Payment();
 
-            switch (order.getPaymentMethod()){
+            switch (order.getPaymentMethod()) {
                 case CARD, VIRTUAL_ACCOUNT, KAKAOPAY -> mainPayment.setSttlMeanId("9");
                 case GIFT -> mainPayment.setSttlMeanId("63");
-                case POINT -> mainPayment.setSttlMeanId("10"); // 전체 포인트 결제 케이스
+                case POINT -> mainPayment.setSttlMeanId("10");
                 default -> mainPayment.setSttlMeanId("9");
             }
 
             mainPayment.setSttlPrc(remainAmount);
-
             payments.add(mainPayment);
         }
 
@@ -299,15 +367,14 @@ public class BenepiaOrderService {
 
         List<BenepiaCancelRequest.Product> products = new ArrayList<>();
 
-        for(OrderProductListGetResDto p : items){
-            ProductDetailGetResDto detail =
-                    productMapper.selectProductDetail(p.getProductId());
+        for (OrderProductListGetResDto p : items) {
+            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
 
             BenepiaCancelRequest.Product product = new BenepiaCancelRequest.Product();
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getProductName()));
+            product.setPrdOptNm(nvl(p.getOptionName()));
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
@@ -321,13 +388,11 @@ public class BenepiaOrderService {
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
-
             product.setPrdDtlUrlMobl(nvl(productUrl));
             product.setPrdDtlUrlTypMobl("Y");
 
-            // 이미지 null 방어
             String img = "";
-            if(detail.getImageUrl() != null && !detail.getImageUrl().isEmpty()){
+            if (detail.getImageUrl() != null && !detail.getImageUrl().isEmpty()) {
                 img = detail.getImageUrl().get(0);
             }
 
@@ -342,102 +407,31 @@ public class BenepiaOrderService {
         req.setProducts(products);
 
         validateCancelPrice(req);
-        createJsonFile(req);
 
-        client.cancelOrder(req, order.getOrderNumber());
-    }
-
-    // =========================
-    // JSON 파일 생성
-    // =========================
-    private void createJsonFile(BenepiaOrderRequest req){
-
-        try{
-            ObjectMapper mapper = new ObjectMapper();
-
-            String date = LocalDate.now()
-                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-
-            String fileName =
-                    props.getKcpCoCd() + "_03_orders_" + date + "_001.json";
-
-            String path = System.getProperty("user.dir") + "/benepia/" + fileName;
-
-            File file = new File(path);
-
-            if(!file.getParentFile().exists()){
-                file.getParentFile().mkdirs();
-            }
-
-            mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(file, req);
-
-            log.info("[BENEPIA] JSON FILE CREATED = {}", path);
-
-        }catch (Exception e){
-            log.error("[BENEPIA] JSON FILE CREATE FAIL", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    // =========================
-    // JSON 파일 생성
-    // =========================
-    private void createJsonFile(BenepiaCancelRequest req){
-
-        try{
-            ObjectMapper mapper = new ObjectMapper();
-
-            String date = LocalDate.now()
-                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-
-            String fileName =
-                    props.getKcpCoCd() + "_03_canc_" + date + "_001.json";
-
-            String path = System.getProperty("user.dir") + "/benepia/" + fileName;
-
-            File file = new File(path);
-
-            if(!file.getParentFile().exists()){
-                file.getParentFile().mkdirs();
-            }
-
-            mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(file, req);
-
-            log.info("[BENEPIA] JSON FILE CREATED = {}", path);
-
-        }catch (Exception e){
-            log.error("[BENEPIA] JSON FILE CREATE FAIL", e);
-            throw new RuntimeException(e);
-        }
+        return req;
     }
 
     // =========================
     // 검증
     // =========================
-    private void validatePrice(BenepiaOrderRequest req){
+    private void validatePrice(BenepiaOrderRequest req) {
+        int paymentSum = req.getPayments()
+                .stream()
+                .mapToInt(BenepiaOrderRequest.Payment::getSttlPrc)
+                .sum();
 
-        int paymentSum =
-                req.getPayments()
-                        .stream()
-                        .mapToInt(p -> p.getSttlPrc())
-                        .sum();
-
-        if(paymentSum != req.getOrder().getOrdPrc()){
+        if (paymentSum != req.getOrder().getOrdPrc()) {
             throw new RuntimeException("베네피아 금액 불일치");
         }
     }
 
-    private void validateCancelPrice(BenepiaCancelRequest req){
+    private void validateCancelPrice(BenepiaCancelRequest req) {
+        int paymentSum = req.getPayments()
+                .stream()
+                .mapToInt(BenepiaCancelRequest.Payment::getSttlPrc)
+                .sum();
 
-        int paymentSum =
-                req.getPayments()
-                        .stream()
-                        .mapToInt(p -> p.getSttlPrc())
-                        .sum();
-
-        if(paymentSum != req.getOrderCancel().getCnclPrc()){
+        if (paymentSum != req.getOrderCancel().getCnclPrc()) {
             throw new RuntimeException("베네피아 취소 금액 불일치");
         }
     }

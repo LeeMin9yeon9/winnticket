@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.benepia.order.mapper.BenepiaOrderBatchMapper">
+    <select id="selectBatchOrders" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
+        Select
+            a.id, -- 주문_ID
+            a.order_number, -- 주문번호
+            a.ordered_at, -- 주문일시
+            (
+                Select
+                    x.name
+                From
+                    channels x
+                Where 1 = 1
+                  And x.id = a.channel_id
+            ) channel_name, -- 채널명
+            a.status, -- 주문상태
+            a.customer_name, -- 주문자
+            a.customer_phone, -- 주문자 연락처
+            a.customer_email,  -- 주문자이메일
+            a.payment_status, -- 결제상태
+            a.final_price, -- 결제금액
+            a.payment_method, -- 결제수단
+            a.paid_at,  -- 결제일시
+            a.canceled_at,  -- 취소일시
+            a.total_price, -- 상품총금액
+            a.discount_price, -- 할인금액
+            a.all_ticket_used,  -- 모든티켓사용여부
+            (
+                select
+                    SUM(x.quantity)
+                from
+                    order_items x
+                Where 1 = 1
+                  And x.order_id = a.ID
+            ) all_cnt,  -- 상품개수
+            (
+                select
+                    count(*)
+                from
+                    order_tickets x
+                        Join
+                    order_items y
+                    On x.order_item_id = y.id
+                Where 1 = 1
+                  And y.order_id = a.ID
+                  And x.ticket_used = true
+            ) USED_TICKET_CNT,  -- 사용티켓수
+            a.benepia_id,  -- 베네피아id
+            a.memo -- 요청사항
+        FROM
+            orders a
+        WHERE DATE(ordered_at) = #{targetDate}
+          AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
+          AND payment_status = 'PAID'
+        ORDER BY ordered_at ASC
+    </select>
+
+    <select id="selectBatchCancels" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
+        Select
+            a.id, -- 주문_ID
+            a.order_number, -- 주문번호
+            a.ordered_at, -- 주문일시
+            (
+                Select
+                    x.name
+                From
+                    channels x
+                Where 1 = 1
+                  And x.id = a.channel_id
+            ) channel_name, -- 채널명
+            a.status, -- 주문상태
+            a.customer_name, -- 주문자
+            a.customer_phone, -- 주문자 연락처
+            a.customer_email,  -- 주문자이메일
+            a.payment_status, -- 결제상태
+            a.final_price, -- 결제금액
+            a.payment_method, -- 결제수단
+            a.paid_at,  -- 결제일시
+            a.canceled_at,  -- 취소일시
+            a.total_price, -- 상품총금액
+            a.discount_price, -- 할인금액
+            a.all_ticket_used,  -- 모든티켓사용여부
+            (
+                select
+                    SUM(x.quantity)
+                from
+                    order_items x
+                Where 1 = 1
+                  And x.order_id = a.ID
+            ) all_cnt,  -- 상품개수
+            (
+                select
+                    count(*)
+                from
+                    order_tickets x
+                        Join
+                    order_items y
+                    On x.order_item_id = y.id
+                Where 1 = 1
+                  And y.order_id = a.ID
+                  And x.ticket_used = true
+            ) USED_TICKET_CNT,  -- 사용티켓수
+            a.benepia_id,  -- 베네피아id
+            a.memo -- 요청사항
+        FROM
+            orders a
+        WHERE DATE(cancelled_at) = #{targetDate}
+          AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
+          AND payment_status = 'CANCELED'
+        ORDER BY ordered_at ASC
+    </select>
+
+    <select id="selectOrderItems" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
+        Select
+            a.id, -- 주문상품_ID
+            a.product_id, -- 상품ID
+            a.product_name, -- 상품명
+            (
+                Select
+                    x.name
+                From menu_categories x
+                         Join
+                     Products y
+                     On x.id = y.category_id
+                where 1 = 1
+                  And y.id = a.product_id
+            ) category_name, -- 카테고리명
+            d.name partner_name,  -- 파트너명
+            d.id partner_id,  -- 파트너id
+            STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
+            a.quantity,
+            a.unit_price,
+            a.total_price
+        FROM
+            order_items a
+                JOIN orders b
+                     ON b.id = a.order_id
+                JOIN products c
+                     ON c.id = a.product_id
+                LEFT JOIN partners d
+                          ON d.id = c.partner_id
+                LEFT JOIN order_item_options e
+                          ON e.order_item_id = a.id
+        Where 1 = 1
+          And a.order_id = #{orderId}
+        GROUP BY
+            a.id,
+            a.product_name,
+            d.name,
+            d.id,
+            a.quantity,
+            a.unit_price,
+            a.total_price
+        ORDER BY ordered_at ASC
+    </select>
+</mapper>

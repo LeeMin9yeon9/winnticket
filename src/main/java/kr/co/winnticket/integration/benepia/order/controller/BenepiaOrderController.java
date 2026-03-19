@@ -5,6 +5,7 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import kr.co.winnticket.integration.benepia.order.dto.BenepiaCancelRequest;
 import kr.co.winnticket.integration.benepia.order.dto.BenepiaOrderRequest;
+import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderBatchService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
@@ -16,6 +17,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,37 +29,17 @@ import java.util.UUID;
 @Log4j2
 public class BenepiaOrderController {
 
-    private final BenepiaOrderService service;
     private final OrderMapper orderMapper;
+    private final BenepiaOrderBatchService batchService;
 
-    @GetMapping("/order/{orderId}")
-    public void testOrder(@PathVariable UUID orderId){
-
-        OrderAdminDetailGetResDto order =
-                orderMapper.selectOrderAdminDetail(orderId);
-
-        List<OrderProductListGetResDto> items =
-                orderMapper.selectOrderProductList(orderId);
-
-        // 테스트용 bene 객체
-        BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
-        bene.setBenefit_id("testtravel");
-        bene.setSitecode("5555");
-
-    }
-    @GetMapping("/cancle/{orderId}")
-    public void testCancle(@PathVariable UUID orderId){
-
-        OrderAdminDetailGetResDto order =
-                orderMapper.selectOrderAdminDetail(orderId);
-
-        List<OrderProductListGetResDto> items =
-                orderMapper.selectOrderProductList(orderId);
-
-        // 테스트용 bene 객체
-        BenepiaDecryptedParamDto bene = new BenepiaDecryptedParamDto();
-        bene.setBenefit_id("testtravel");
-        bene.setSitecode("5555");
-
+    @PostMapping("/batch")
+    public String runBatch(
+            @RequestParam(required = false) String date){
+        LocalDate target =
+                (date == null)
+                        ? LocalDate.now().minusDays(1)
+                        : LocalDate.parse(date);
+        batchService.runBatch(target);
+        return "BATCH SUCCESS";
     }
 }
