@@ -39,10 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -107,7 +104,11 @@ public class OrderShopService {
             throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
         }
 
-        BenepiaDecryptedParamDto bene = BenepiaContext.get();
+        String benefitId = Optional.ofNullable(
+                        (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
+                )
+                .map(BenepiaDecryptedParamDto::getBenefit_id)
+                .orElse(null);
 
         // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
@@ -118,7 +119,7 @@ public class OrderShopService {
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
                 paymentMethod.name(),
-                bene.getBenefit_id()
+                benefitId
         );
 
         UUID orderId = (UUID) result.get("id");

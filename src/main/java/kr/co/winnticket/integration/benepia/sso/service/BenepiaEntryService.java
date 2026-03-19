@@ -37,7 +37,6 @@ public class BenepiaEntryService {
             log.info("[BENEPIA][ENTRY][SERVICE] 베네피아사번_userid={}", dto.getUserid());
             log.info("[BENEPIA][ENTRY][SERVICE] 베네피아 토큰키_tknKey={}", dto.getTknKey());
 
-            BenepiaContext.set(dto);
             // redirect 대비 세션 저장
             session.setAttribute("BENEP_DECRYPTED", dto);
             session.setAttribute("BENEP_TKN_KEY", dto.getTknKey());
