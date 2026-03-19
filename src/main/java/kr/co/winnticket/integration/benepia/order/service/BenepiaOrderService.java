@@ -73,7 +73,7 @@ public class BenepiaOrderService {
 
         orderInfo.setOrdNm(orderName);
         orderInfo.setOrdPrc(nvl(order.getFinalPrice()));
-        orderInfo.setOrgnPrc(0);
+        orderInfo.setOrgnPrc(nvl(order.getFinalPrice()));
 
         orderInfo.setOrdDt(
                 order.getOrderedAt()
@@ -154,7 +154,7 @@ public class BenepiaOrderService {
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(0);
+            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
 
             String originProductUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
             String productEncrypted = crypto.encrypt(originProductUrl);
@@ -250,7 +250,7 @@ public class BenepiaOrderService {
         cancel.setOrdNm(orderName);
 
         cancel.setCnclPrc(nvl(order.getFinalPrice()));
-        cancel.setOrgnCnclPrc(0);
+        cancel.setOrgnCnclPrc(nvl(order.getFinalPrice()));
 
         cancel.setCnclDt(
                 LocalDateTime.now()
@@ -314,7 +314,7 @@ public class BenepiaOrderService {
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(0);
+            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
 
             String originProductUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
             String productEncrypted = crypto.encrypt(originProductUrl);
