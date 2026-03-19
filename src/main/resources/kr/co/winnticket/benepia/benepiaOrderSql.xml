@@ -52,9 +52,10 @@
             a.memo -- 요청사항
         FROM
             orders a
-        WHERE DATE(ordered_at) = #{targetDate}
-          AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
-        ORDER BY ordered_at ASC
+        WHERE DATE(a.ordered_at) = #{targetDate}
+          AND a.channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
+        And a.benepia_id Is Not Null
+        ORDER BY a.ordered_at ASC
     </select>
 
     <select id="selectBatchCancels" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
@@ -106,10 +107,11 @@
             a.memo -- 요청사항
         FROM
             orders a
-        WHERE DATE(canceled_at) = #{targetDate}
-          AND channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
-          AND payment_status = 'CANCELED'
-        ORDER BY ordered_at ASC
+        WHERE DATE(a.canceled_at) = #{targetDate}
+          AND a.channel_id = '1e477aeb-2548-4bfb-80ff-e5b7ebdaa7d9'
+          AND a.payment_status = 'CANCELED'
+          And a.benepia_id Is Not Null
+        ORDER BY a.ordered_at ASC
     </select>
 
     <select id="selectOrderItems" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
