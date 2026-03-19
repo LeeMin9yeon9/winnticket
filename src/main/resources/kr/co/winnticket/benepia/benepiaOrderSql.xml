@@ -114,44 +114,40 @@
     </select>
 
     <select id="selectOrderItems" resultType="kr.co.winnticket.order.admin.dto.OrderProductListGetResDto">
-        select
-            *
-        From (Select a.id,                                                        -- 주문상품_ID
-                     a.product_id,                                                -- 상품ID
-                     a.product_name,                                              -- 상품명
-                     (Select x.name
-                      From menu_categories x
-                               Join
-                           Products y
-                           On x.id = y.category_id
-                      where 1 = 1
-                        And y.id = a.product_id)                   category_name, -- 카테고리명
-                     d.name                                        partner_name,  -- 파트너명
-                     d.id                                          partner_id,    -- 파트너id
-                     STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,   -- 옵션명
-                     a.quantity,
-                     a.unit_price,
-                     b.ordered_at,
-                     a.total_price
-              FROM order_items a
-                       JOIN orders b
-                            ON b.id = a.order_id
-                       JOIN products c
-                            ON c.id = a.product_id
-                       LEFT JOIN partners d
-                                 ON d.id = c.partner_id
-                       LEFT JOIN order_item_options e
-                                 ON e.order_item_id = a.id
-              Where 1 = 1
-                And a.order_id = #{orderId}
-              GROUP BY a.id,
-                       a.product_name,
-                       d.name,
-                       d.id,
-                       a.quantity,
-                       a.unit_price,
-                       a.total_price
-              ) a
-        ORDER BY a.ordered_at ASC
+        Select a.id,                                                        -- 주문상품_ID
+             a.product_id,                                                -- 상품ID
+             a.product_name,                                              -- 상품명
+             (Select x.name
+              From menu_categories x
+                       Join
+                   Products y
+                   On x.id = y.category_id
+              where 1 = 1
+                And y.id = a.product_id)                   category_name, -- 카테고리명
+             d.name                                        partner_name,  -- 파트너명
+             d.id                                          partner_id,    -- 파트너id
+             STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,   -- 옵션명
+             a.quantity,
+             a.unit_price,
+             b.ordered_at,
+             a.total_price
+      FROM order_items a
+               JOIN orders b
+                    ON b.id = a.order_id
+               JOIN products c
+                    ON c.id = a.product_id
+               LEFT JOIN partners d
+                         ON d.id = c.partner_id
+               LEFT JOIN order_item_options e
+                         ON e.order_item_id = a.id
+      Where 1 = 1
+        And a.order_id = #{orderId}
+      GROUP BY a.id,
+               a.product_name,
+               d.name,
+               d.id,
+               a.quantity,
+               a.unit_price,
+               a.total_price
     </select>
 </mapper>
