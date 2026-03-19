@@ -85,7 +85,7 @@ public class BenepiaOrderService {
         String originUrl = "/orders/shop/" + order.getOrderNumber();
         String encrypted = crypto.encrypt(originUrl);
         String encoded = URLEncoder.encode(encrypted, StandardCharsets.UTF_8);
-        String orderUrl = "https://vacation.benepia.co.kr/frnt/partnersite/partnerSite.do"
+        String orderUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
                 + "?coopCoCd=" + props.getCustCoCd()
                 + "&returnurl=" + encoded;
 
@@ -159,7 +159,7 @@ public class BenepiaOrderService {
             String originProductUrl = "/product/" + detail.getCode() + "?channel=BENE";
             String productEncrypted = crypto.encrypt(originProductUrl);
             String productEncoded = URLEncoder.encode(productEncrypted, StandardCharsets.UTF_8);
-            String productUrl = "https://vacation.benepia.co.kr/frnt/partnersite/partnerSite.do"
+            String productUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
                     + "?coopCoCd=" + props.getCustCoCd()
                     + "&returnurl=" + productEncoded;
 
@@ -316,7 +316,12 @@ public class BenepiaOrderService {
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(0);
 
-            String productUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
+            String originProductUrl = "/product/" + detail.getCode() + "?channel=BENE";
+            String productEncrypted = crypto.encrypt(originProductUrl);
+            String productEncoded = URLEncoder.encode(productEncrypted, StandardCharsets.UTF_8);
+            String productUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
+                    + "?coopCoCd=" + props.getCustCoCd()
+                    + "&returnurl=" + productEncoded;
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
