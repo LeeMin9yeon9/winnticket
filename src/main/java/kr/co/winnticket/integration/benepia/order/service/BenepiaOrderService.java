@@ -1,6 +1,7 @@
 package kr.co.winnticket.integration.benepia.order.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import kr.co.winnticket.integration.benepia.order.client.BenepiaClient;
 import kr.co.winnticket.integration.benepia.order.dto.*;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
@@ -14,6 +15,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,6 +30,7 @@ public class BenepiaOrderService {
     private final BenepiaClient client;
     private final BenepiaProperties props;
     private final ProductMapper productMapper;
+    private final BenepiaSeedEcbCrypto crypto;
 
     // =========================
     // null 방어 유틸
@@ -44,8 +48,7 @@ public class BenepiaOrderService {
     // =========================
     public void sendOrder(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items,
-            BenepiaDecryptedParamDto bene){
+            List<OrderProductListGetResDto> items) {
 
         if(items == null || items.isEmpty()) return;
 
@@ -53,8 +56,8 @@ public class BenepiaOrderService {
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
-        req.setBenefitId(nvl(bene.getBenefit_id()));
-        req.setCoCd(nvl(bene.getSitecode()));
+        req.setBenefitId(nvl(order.getBenepiaId()));
+        req.setCoCd("5555");
 
         // =========================
         // 주문 정보
@@ -79,7 +82,12 @@ public class BenepiaOrderService {
 
         orderInfo.setPtnAccntId("");
 
-        String orderUrl = "https://www.winnticket.store/orders/shop/" + order.getOrderNumber();
+        String originUrl = "/orders/shop/" + order.getOrderNumber();
+        String encrypted = crypto.encrypt(originUrl);
+        String encoded = URLEncoder.encode(encrypted, StandardCharsets.UTF_8);
+        String orderUrl = "https://vacation.benepia.co.kr/frnt/partnersite/partnerSite.do"
+                + "?coopCoCd=" + props.getCustCoCd()
+                + "&returnurl=" + encoded;
 
         orderInfo.setOrdDtlUrl(nvl(orderUrl));
         orderInfo.setOrdDtlUrlTyp("Y");
@@ -148,7 +156,12 @@ public class BenepiaOrderService {
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(0);
 
-            String productUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
+            String originProductUrl = "/product/" + detail.getCode() + "?channel=BENE";
+            String productEncrypted = crypto.encrypt(originProductUrl);
+            String productEncoded = URLEncoder.encode(productEncrypted, StandardCharsets.UTF_8);
+            String productUrl = "https://vacation.benepia.co.kr/frnt/partnersite/partnerSite.do"
+                    + "?coopCoCd=" + props.getCustCoCd()
+                    + "&returnurl=" + productEncoded;
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
@@ -214,17 +227,16 @@ public class BenepiaOrderService {
     // =========================
     public void cancelOrder(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items,
-            BenepiaDecryptedParamDto bene){
+            List<OrderProductListGetResDto> items){
 
-        if(bene == null || items == null || items.isEmpty()) return;
+        if(order.getBenepiaId() == null || items == null || items.isEmpty()) return;
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
-        req.setBenefitId(nvl(bene.getBenefit_id()));
-        req.setCoCd(nvl(bene.getSitecode()));
+        req.setBenefitId(nvl(order.getBenepiaId()));
+        req.setCoCd("5555");
 
         BenepiaCancelRequest.OrderCancel cancel = new BenepiaCancelRequest.OrderCancel();
 

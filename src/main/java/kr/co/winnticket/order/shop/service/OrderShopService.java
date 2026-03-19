@@ -79,8 +79,6 @@ public class OrderShopService {
         log.info(" paymentMethod = {}", reqDto.getPaymentMethod());
         log.info(" pointAmount(raw) = {}", reqDto.getPointAmount());
 
-
-
         Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
         Boolean cardAllowed = (useCard != null && useCard);
 
@@ -107,7 +105,6 @@ public class OrderShopService {
             throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
         }
 
-
         // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
                 reqDto.getChannelId(),
@@ -116,7 +113,8 @@ public class OrderShopService {
                 reqDto.getCustomerEmail(),
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
-                paymentMethod.name()
+                paymentMethod.name(),
+                reqDto.getBenepiaId()
         );
 
         UUID orderId = (UUID) result.get("id");

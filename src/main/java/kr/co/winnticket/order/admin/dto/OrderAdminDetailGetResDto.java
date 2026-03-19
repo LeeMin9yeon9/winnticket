@@ -80,6 +80,10 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "신용카드 승인번호")
     private String tid;
 
+    @Hidden
+    @Schema(description = "베네피아id")
+    private String benepiaId;
+
     @Schema(description = "주문상품")
     private List<OrderProductListGetResDto> products = new ArrayList<>();
 

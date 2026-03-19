@@ -99,7 +99,8 @@
             FINAL_PRICE,
             STATUS,
             PAYMENT_METHOD,
-            PAYMENT_STATUS
+            PAYMENT_STATUS,
+            BENEPIA_ID
         )
         Values
         (
@@ -113,7 +114,8 @@
             0,
             'PENDING_PAYMENT',
             #{paymentMethod}::payment_method,
-            'READY'
+            'READY',
+            #{benepiaId}
         )
         RETURNING id, order_number
     </select>
