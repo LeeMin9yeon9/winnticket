@@ -127,6 +127,7 @@
             a.final_price, -- 결제금액
             a.payment_method, -- 결제수단
             a.paid_at,  -- 결제일시
+            a.canceled_at,  -- 취소일시
             a.total_price, -- 상품총금액
             a.discount_price, -- 할인금액
             a.all_ticket_used,  -- 모든티켓사용여부
