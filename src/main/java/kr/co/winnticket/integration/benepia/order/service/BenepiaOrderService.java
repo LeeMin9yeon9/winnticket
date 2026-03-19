@@ -82,7 +82,7 @@ public class BenepiaOrderService {
 
         orderInfo.setPtnAccntId("");
 
-        String originUrl = "/orders/shop/" + order.getOrderNumber();
+        String originUrl = "https://www.winnticket.store/orders/shop/" + order.getOrderNumber();
         String encrypted = crypto.encrypt(originUrl);
         String encoded = URLEncoder.encode(encrypted, StandardCharsets.UTF_8);
         String orderUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
@@ -148,15 +148,15 @@ public class BenepiaOrderService {
 
             BenepiaOrderRequest.Product product = new BenepiaOrderRequest.Product();
 
-            product.setPrdId(nvl(p.getProductCode()));
-            product.setPrdNm(nvl(p.getProductName()));
+            product.setPrdId(nvl(detail.getCode()));
+            product.setPrdNm(nvl(detail.getName()));
             product.setPrdOptNm(nvl(p.getOptionName()));
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(0);
 
-            String originProductUrl = "/product/" + detail.getCode() + "?channel=BENE";
+            String originProductUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
             String productEncrypted = crypto.encrypt(originProductUrl);
             String productEncoded = URLEncoder.encode(productEncrypted, StandardCharsets.UTF_8);
             String productUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
@@ -308,15 +308,15 @@ public class BenepiaOrderService {
 
             BenepiaCancelRequest.Product product = new BenepiaCancelRequest.Product();
 
-            product.setPrdId(nvl(p.getProductCode()));
-            product.setPrdNm(nvl(p.getProductName()));
+            product.setPrdId(nvl(detail.getCode()));
+            product.setPrdNm(nvl(detail.getName()));
             product.setPrdOptNm(nvl(p.getProductName()));
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(0);
 
-            String originProductUrl = "/product/" + detail.getCode() + "?channel=BENE";
+            String originProductUrl = "https://www.winnticket.store/product/" + detail.getCode() + "?channel=BENE";
             String productEncrypted = crypto.encrypt(originProductUrl);
             String productEncoded = URLEncoder.encode(productEncrypted, StandardCharsets.UTF_8);
             String productUrl = "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
