@@ -9,6 +9,8 @@ import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
+import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
@@ -105,6 +107,8 @@ public class OrderShopService {
             throw new IllegalArgumentException("해당 채널에서는 포인트 결제가 불가능합니다.");
         }
 
+        BenepiaDecryptedParamDto bene = BenepiaContext.get();
+
         // 주문 테이블 생성(입력한 정보들로)
         Map<String, Object> result = mapper.insertOrder(
                 reqDto.getChannelId(),
@@ -114,7 +118,7 @@ public class OrderShopService {
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
                 paymentMethod.name(),
-                reqDto.getBenepiaId()
+                bene.getBenefit_id()
         );
 
         UUID orderId = (UUID) result.get("id");
