@@ -343,6 +343,7 @@ public class BenepiaOrderService {
         req.setProducts(products);
 
         validateCancelPrice(req);
+        createJsonFile(req);
 
         client.cancelOrder(req, order.getOrderNumber());
     }
@@ -360,6 +361,39 @@ public class BenepiaOrderService {
 
             String fileName =
                     props.getKcpCoCd() + "_03_orders_" + date + "_001.json";
+
+            String path = System.getProperty("user.dir") + "/benepia/" + fileName;
+
+            File file = new File(path);
+
+            if(!file.getParentFile().exists()){
+                file.getParentFile().mkdirs();
+            }
+
+            mapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(file, req);
+
+            log.info("[BENEPIA] JSON FILE CREATED = {}", path);
+
+        }catch (Exception e){
+            log.error("[BENEPIA] JSON FILE CREATE FAIL", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    // =========================
+    // JSON 파일 생성
+    // =========================
+    private void createJsonFile(BenepiaCancelRequest req){
+
+        try{
+            ObjectMapper mapper = new ObjectMapper();
+
+            String date = LocalDate.now()
+                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+            String fileName =
+                    props.getKcpCoCd() + "_03_canc_" + date + "_001.json";
 
             String path = System.getProperty("user.dir") + "/benepia/" + fileName;
 
