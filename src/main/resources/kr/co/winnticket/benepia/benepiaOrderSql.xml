@@ -129,7 +129,6 @@
              STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,   -- 옵션명
              a.quantity,
              a.unit_price,
-             b.ordered_at,
              a.total_price
       FROM order_items a
                JOIN orders b
