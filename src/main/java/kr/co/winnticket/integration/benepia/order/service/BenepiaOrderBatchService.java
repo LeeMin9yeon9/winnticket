@@ -145,10 +145,6 @@ public class BenepiaOrderBatchService {
             OrderAdminDetailGetResDto order,
             List<OrderProductListGetResDto> items) {
 
-        if (order == null || items == null || items.isEmpty()) {
-            return null;
-        }
-
         BenepiaOrderRequest req = new BenepiaOrderRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
@@ -299,10 +295,6 @@ public class BenepiaOrderBatchService {
     public BenepiaCancelRequest buildCancelRequest(
             OrderAdminDetailGetResDto order,
             List<OrderProductListGetResDto> items) {
-
-        if (order == null || order.getBenepiaId() == null || items == null || items.isEmpty()) {
-            return null;
-        }
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
