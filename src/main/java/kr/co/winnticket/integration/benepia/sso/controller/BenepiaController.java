@@ -30,27 +30,20 @@ public class BenepiaController {
     public String entry(HttpServletRequest request, HttpSession session) {
 
         String encParam = request.getParameter("encParam");
-        String returnurl = request.getParameter("returnurl");
         String channel = request.getParameter("channel");
 
         log.info("BENEPIA ENTRY channel={}", channel);
-        log.info("BENEPIA RETURNURL={}", returnurl);
 
         if(encParam != null && !encParam.isBlank()){
             entryService.handle(encParam, session);
         }
-
         if(channel == null || channel.isBlank()){
             channel = "BENE";
-        }
-
-        session.setAttribute("CHANNEL_CODE", channel);
+            
+        } session.setAttribute("CHANNEL_CODE", channel);
 
         log.info("SESSION CHANNEL_CODE = {}", channel);
 
-
-
-        // fallback 유지 (기존 기능 보호)
         return "redirect:/shop?channel=" + channel;
     }
 
