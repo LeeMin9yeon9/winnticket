@@ -37,9 +37,7 @@ public class BenepiaController {
 
         log.info("BENEPIA ENTRY channel={}", channel);
 
-        if(encParam != null && !encParam.isBlank()){
-            entryService.handle(encParam, session);
-        }
+
 
         if(channel == null || channel.isBlank()){
             channel = "BENE";
@@ -86,17 +84,20 @@ public class BenepiaController {
     @GetMapping("/session")
     @ResponseBody
     @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
-    public Map<String, Object> getSession(HttpSession session){
+
+    public Map<String, Object> getSession(HttpSession session) {
 
         log.info("[BENEPIA] SESSION CHECK");
 
         String channelCode = (String) session.getAttribute("CHANNEL_CODE");
 
-        if(channelCode == null){
+
+        if (channelCode == null) {
             return Map.of("channelCode", "DEFAULT");
+
+
         }
-
-        return Map.of("channelCode", channelCode);
+        // 없으면 무조건 DEFAULT
+        return Map.of("channelCode", "DEFAULT");
     }
-
 }
