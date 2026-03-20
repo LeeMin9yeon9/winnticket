@@ -27,9 +27,11 @@ public class BenepiaController {
     public String entry(HttpServletRequest request, HttpSession session) {
 
         String encParam = request.getParameter("encParam");
+        String returnurl = request.getParameter("returnurl");
         String channel = request.getParameter("channel");
 
         log.info("BENEPIA ENTRY channel={}", channel);
+        log.info("BENEPIA RETURNURL={}", returnurl);
 
         if(encParam != null && !encParam.isBlank()){
             entryService.handle(encParam, session);
@@ -42,6 +44,15 @@ public class BenepiaController {
         session.setAttribute("CHANNEL_CODE", channel);
 
         log.info("SESSION CHANNEL_CODE = {}", channel);
+
+        if (returnurl != null && !returnurl.isBlank()) {
+
+            if (returnurl.startsWith("/")) {
+                return "redirect:" + returnurl;
+            } else {
+                log.warn("INVALID returnurl = {}", returnurl);
+            }
+        }
 
         return "redirect:/shop?channel=" + channel;
     }

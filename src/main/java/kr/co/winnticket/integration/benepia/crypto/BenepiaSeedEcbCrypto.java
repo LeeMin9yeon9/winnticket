@@ -39,13 +39,13 @@ public class BenepiaSeedEcbCrypto {
             byte[] key = seedKey.getBytes(StandardCharsets.ISO_8859_1);
             byte[] plain = KISA_SEED_ECB.SEED_ECB_Decrypt(key,cipher,0,cipher.length);
 
-            log.info("[BENEPIA][DECRYPT SUCCESS !!!!!!!!!!!!!!!!!]");
+            log.info("[BENEPIA][DECRYPT SUCCESS ]");
             String result = new String(plain, StandardCharsets.UTF_8);
             log.info("[BENEPIA] 복호화 결과 = {}", result);
             return result;
 
         } catch(Exception e){
-            log.error("[BENEPIA][DECRYPT FAIL !!!!!!!!!!!!!!!!!]", e);
+            log.error("[BENEPIA][DECRYPT FAIL]", e);
             throw new IllegalStateException("Benepia SEED-ECB decrypt 실패", e);
         }
     }
@@ -58,10 +58,10 @@ public class BenepiaSeedEcbCrypto {
 
             byte[] cipher = KISA_SEED_ECB.SEED_ECB_Encrypt(key,plain,0,plain.length);
 
-            log.info("[BENEPIA][ENCRYPT SUCCESS !!!!!!!!!!!!!!!!!]");
+            log.info("[BENEPIA]ENCRYPT SUCCESS");
             return Base64.getEncoder().encodeToString(cipher);
         }catch (Exception e){
-            log.error("[BENEPIA] ENCRYPT FAIL !!!!!!!!!!!!!!!!!", e);
+            log.error("[BENEPIA] ENCRYPT FAIL ", e);
             throw new IllegalStateException("Benepia encrypt 실패",e);
         }
     }
