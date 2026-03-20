@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @Tag(name = "주문_쇼핑몰", description = "주문 관리")
 @RequestMapping("/api/orders/shop")
@@ -27,7 +29,7 @@ public class OrderShopController {
     @GetMapping("{channelId}/{orderNumber}")
     @Operation(summary = "주문 조회", description = "전달받은 주문번호의 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderShopGetResDto>> getOrderShop (
-            @Parameter(description = "채널id") @PathVariable("channelId") String channelId,
+            @Parameter(description = "채널id") @PathVariable("channelId") UUID channelId,
             @Parameter(description = "주문번호") @PathVariable("orderNumber") String orderNumber
     ) throws Exception {
         return ResponseEntity.ok(
