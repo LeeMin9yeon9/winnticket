@@ -72,6 +72,7 @@
             a.RETURN_INFO,  -- 반품/교환정보
             a.DETAIL_CONTENT,  -- 상세설명
             a.USAGE_PERIOD,  -- 사용기한
+            a.VISIBLE  -- 활성화여부
             a.IMAGE_URL -- 이미지
         FROM
             PRODUCTS a
@@ -321,6 +322,9 @@
             </if>
             <if test="model.prePurchased != null">
                 PRE_PURCHASED = #{model.prePurchased},
+            </if>
+            <if test="model.visible != null">
+                VISIBLE = #{model.visible},
             </if>
             <if test="model.salesStartDate != null">
                 SALES_START_DATE = #{model.salesStartDate},
