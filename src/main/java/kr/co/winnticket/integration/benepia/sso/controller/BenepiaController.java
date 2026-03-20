@@ -39,23 +39,11 @@ public class BenepiaController {
 
 
 
-//        if (encParam != null && !encParam.isBlank()) {
-//            entryService.handle(encParam, session);
-//            session.setAttribute("CHANNEL_CODE", "BENE");
-//        }
-
-        // 채널
-        if (channel == null || channel.isBlank()) {
-
-            if (encParam != null && !encParam.isBlank()) {
-                // 베네피아 유입
-                channel = "BENE";
-            } else {
-                // 일반 접속
-                channel = "DEFAULT";
-            }
+        if(channel == null || channel.isBlank()){
+            channel = "BENE";
         }
 
+        session.setAttribute("CHANNEL_CODE", channel);
 
         // returnurl 있을 때만 처리
         if (returnurl != null && !returnurl.isBlank()) {
@@ -74,21 +62,18 @@ public class BenepiaController {
             log.info("DECODED returnurl = {}", decodedUrl);
 
             // 내부 경로만 허용
-            if (!decodedUrl.startsWith("/")) {
-                log.warn("외부 redirect 차단: {}", decodedUrl);
-                return "redirect:/shop?channel=" + channel;
-            }
+            if (decodedUrl.startsWith("/")) {
 
-            if (decodedUrl.contains("channel=")) {
-                decodedUrl = decodedUrl.replaceAll("channel=[^&]*", "channel=" + channel);
+                if (!decodedUrl.contains("channel=")) {
+                    decodedUrl += (decodedUrl.contains("?") ? "&" : "?") + "channel=" + channel;
+                }
+
+                log.info("FINAL REDIRECT URL = {}", decodedUrl);
+
+                return "redirect:" + decodedUrl;
             } else {
-                decodedUrl += (decodedUrl.contains("?") ? "&" : "?") + "channel=" + channel;
+                log.warn("INVALID returnurl = {}", decodedUrl);
             }
-
-            log.info("FINAL REDIRECT URL = {}", decodedUrl);
-
-            return "redirect:" + decodedUrl;
-
         }
 
         // fallback 유지 (기존 기능 보호)
@@ -99,8 +84,8 @@ public class BenepiaController {
     @GetMapping("/session")
     @ResponseBody
     @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
-    public Map<String, Object> getSession(HttpServletRequest request,HttpSession session) {
 
+    public Map<String, Object> getSession(HttpServletRequest request,HttpSession session) {
 
         log.info("[BENEPIA] SESSION CHECK");
 
