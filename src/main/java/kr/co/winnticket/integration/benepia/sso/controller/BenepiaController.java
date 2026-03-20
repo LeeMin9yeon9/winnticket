@@ -36,6 +36,11 @@ public class BenepiaController {
         String returnurl = request.getParameter("returnurl");
 
         log.info("BENEPIA ENTRY channel={}", channel);
+        log.info("BENEPIA RETURNURL={}", returnurl);
+
+        if(encParam != null && !encParam.isBlank()){
+            entryService.handle(encParam, session);
+        }
 
 
 
