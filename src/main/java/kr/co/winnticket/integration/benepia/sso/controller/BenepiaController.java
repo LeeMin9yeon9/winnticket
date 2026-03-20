@@ -68,6 +68,13 @@ public class BenepiaController {
 
             // 내부 경로만 허용
             if (decodedUrl.startsWith("/")) {
+
+                if (!decodedUrl.contains("channel=")) {
+                    decodedUrl += (decodedUrl.contains("?") ? "&" : "?") + "channel=" + channel;
+                }
+
+                log.info("FINAL REDIRECT URL = {}", decodedUrl);
+
                 return "redirect:" + decodedUrl;
             } else {
                 log.warn("INVALID returnurl = {}", decodedUrl);

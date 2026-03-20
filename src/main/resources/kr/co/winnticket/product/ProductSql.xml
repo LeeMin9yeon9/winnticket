@@ -1098,4 +1098,13 @@
           AND stock > 0
 
     </update>
+
+
+    <!--메뉴 비활성화 시 해당 상품 비활성화-->
+    <update id="updateProductsVisibleByMenuId">
+        UPDATE products
+        SET visible = #{visible},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE category_id = #{categoryId}
+    </update>
 </mapper>

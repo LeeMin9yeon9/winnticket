@@ -288,4 +288,5 @@
         AND pcov.channel_id = #{channelId}
         WHERE v.OPTION_ID = #{optionId}
     </select>
+
 </mapper>

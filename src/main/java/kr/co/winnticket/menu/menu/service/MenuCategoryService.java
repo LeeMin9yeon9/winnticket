@@ -157,7 +157,18 @@ public class MenuCategoryService {
         if (visible == null){
             throw new IllegalStateException("true 또는 false 여야 합니다.");
         }
+
+        // 메뉴 체크
+        MenuListDto menu = menuMapper.menuFindById(id);
+        if(menu == null){
+            throw new IllegalArgumentException("메뉴를 찾을 수 없습니다.");
+        }
+
+
         menuMapper.menuUpdateVisible(id, visible);
+
+        // 상품도 상태변경
+        productMapper.updateProductsVisibleByMenuId(id, visible);
     }
 
     // 메뉴 up
