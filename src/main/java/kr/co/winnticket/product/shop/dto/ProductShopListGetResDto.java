@@ -34,4 +34,5 @@ public class ProductShopListGetResDto {
 
     @Schema(description = "사용기한")
     private String usagePeriod;
+
 }

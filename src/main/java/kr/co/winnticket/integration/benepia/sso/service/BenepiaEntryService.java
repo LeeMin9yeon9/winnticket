@@ -1,10 +1,9 @@
 package kr.co.winnticket.integration.benepia.sso.service;
 
 import jakarta.servlet.http.HttpSession;
-import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaParamParser;
 import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
-import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
+import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -24,12 +23,13 @@ public class BenepiaEntryService {
 
         log.info("[BENEPIA][ENTRY][SERVICE] START");
         log.info("[BENEPIA][ENTRY][SERVICE] sessionId={}", session.getId());
-        log.info("[BENEPIA][ENTRY][SERVICE] encParam null?={}", encParam == null);
+        log.info("[BENEPIA][ENTRY][SERVICE] encParam ={}", encParam );
+       // log.info("[BENEPIA][ENTRY][SERVICE] encParam null?={}", encParam == null);
 
         try {
             // 복호화
             String decrypted = crypto.decrypt(encParam, properties.getSeedKey());
-            log.info("[베네피아 복호화 성공!!!!] ");
+            log.info("[베네피아 복호화 성공] ");
 
             // 파싱
             BenepiaDecryptedParamDto dto = parser.parse(decrypted);
