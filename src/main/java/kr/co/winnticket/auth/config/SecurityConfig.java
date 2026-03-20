@@ -131,7 +131,8 @@ public class SecurityConfig {
                                 "/api/community/faq/**",
                                 "/api/shop/popups/**",
                                 "/api/shop/banners/**",
-                                "/api/shopCart/**"
+                                "/api/shopCart/**",
+                                "/api/community/common/viewCount/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.PATCH,
