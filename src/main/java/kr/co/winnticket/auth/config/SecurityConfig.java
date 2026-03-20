@@ -147,6 +147,10 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /* ---------- 주문 목록 (ROLE001 + ROLE002 가능) ---------- */
+                        .requestMatchers(HttpMethod.GET, "/api/admin/order/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/menu/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
                         .requestMatchers(HttpMethod.GET, "/api/admin/order/tickets/**")
                         .hasAnyAuthority("ROLE001", "ROLE002")
                         .requestMatchers(HttpMethod.POST, "/api/admin/order/tickets/**")
