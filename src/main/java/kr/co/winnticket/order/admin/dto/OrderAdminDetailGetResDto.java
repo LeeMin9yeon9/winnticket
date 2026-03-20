@@ -28,6 +28,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "주문일시")
     private LocalDateTime orderedAt;
 
+    @Schema(description = "채널Id")
+    private UUID channelId;
+
     @Schema(description = "채널명")
     private String channelName;
 

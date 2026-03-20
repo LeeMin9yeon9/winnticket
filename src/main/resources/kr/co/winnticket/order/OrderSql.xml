@@ -111,6 +111,7 @@
             a.id, -- 주문_ID
             a.order_number, -- 주문번호
             a.ordered_at, -- 주문일시
+            a.channel_id,  -- 채널id
             (
                 Select
                     x.name

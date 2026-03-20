@@ -24,13 +24,14 @@ public class OrderShopController {
     private final OrderShopService service;
 
     // 주문 조회
-    @GetMapping("/{orderNumber}")
+    @GetMapping("{channelId}/{orderNumber}")
     @Operation(summary = "주문 조회", description = "전달받은 주문번호의 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderShopGetResDto>> getOrderShop (
+            @Parameter(description = "채널id") @PathVariable("channelId") String channelId,
             @Parameter(description = "주문번호") @PathVariable("orderNumber") String orderNumber
     ) throws Exception {
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.selectOrderShop(orderNumber))
+                ApiResponse.success("조회 성공", service.selectOrderShop(channelId, orderNumber))
         );
     }
 
