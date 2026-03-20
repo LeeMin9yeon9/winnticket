@@ -13,7 +13,7 @@ import java.util.UUID;
 @Mapper
 public interface OrderShopMapper {
     // 주문정보조회
-    OrderShopGetResDto selectOrderShop(String orderNumber);
+    OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber);
 
     // 주문상품조회
     List<OrderProductListGetResDto> selectOrderProductList(UUID id);

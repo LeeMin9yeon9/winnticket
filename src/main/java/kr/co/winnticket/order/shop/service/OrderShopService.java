@@ -59,8 +59,8 @@ public class OrderShopService {
     private final KcpService kcpService;
     private final OrderService orderService;
     // 주문조회
-    public OrderShopGetResDto selectOrderShop(String orderNumber) {
-        OrderShopGetResDto model = mapper.selectOrderShop(orderNumber);
+    public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
+        OrderShopGetResDto model = mapper.selectOrderShop(channelId, orderNumber);
 
         if (model == null) {
             throw new IllegalArgumentException("주문이 존재하지 않습니다.");
