@@ -19,6 +19,9 @@
         updated_at    AS updatedAt
         FROM admin_menus
         <where>
+            <if test="role != null and role != ''">
+                And (#{role} = 'ROLE001' Or page = 'orders')
+            </if>
             <if test="title != null and title != ''">
                 AND title ILIKE CONCAT('%', #{title}, '%')
             </if>

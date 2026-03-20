@@ -22,13 +22,14 @@ public class AdminMenuController {
 
     private final AdminMenuService adminMenuService;
 
-    @GetMapping
+    @GetMapping("/{role}")
     public ResponseEntity<ApiResponse<List<AdminMenuListDto>>> getAllAdmMenus(
+            @PathVariable String role,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String titleEn,
             @RequestParam(required = false) String page
     ) {
-        List<AdminMenuListDto> menus = adminMenuService.searchAdminMenus(title, titleEn, page);
+        List<AdminMenuListDto> menus = adminMenuService.searchAdminMenus(role, title, titleEn, page);
         return ResponseEntity.ok(ApiResponse.success(menus));
     }
 
