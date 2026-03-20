@@ -64,6 +64,8 @@
             a.DISCOUNT_PRICE,  -- 판매가
             a.PRE_PURCHASED,    -- 선사입티켓여부
             a.SALES_STATUS,  -- 판매상태
+            a.SALES_START_DATE,  -- 판매시작일
+            a.SALES_END_DATE, -- 판매종료일
             a.DESCRIPTION,  -- 설명
             a.SHIPPING_INFO,  -- 배송정보
             a.WARRANTY_INFO,  -- 보증정보
