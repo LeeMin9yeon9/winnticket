@@ -37,9 +37,16 @@ public class BenepiaController {
 
         log.info("BENEPIA ENTRY channel={}", channel);
 
-        // encParam 복호화(세션에는 사용자 정보만 저장)
-        if(encParam != null && !encParam.isBlank()){
+        String referer = request.getHeader("referer");
+        boolean isFromBenepia = referer != null && referer.contains("benepia");
+
+        if (!isFromBenepia) {
+            session.removeAttribute("CHANNEL_CODE");
+        }
+
+        if (encParam != null && !encParam.isBlank()) {
             entryService.handle(encParam, session);
+            session.setAttribute("CHANNEL_CODE", "BENE");
         }
 
         // 채널
@@ -96,18 +103,18 @@ public class BenepiaController {
 
     @GetMapping("/session")
     @ResponseBody
-    @Operation(summary = "베네피아 채널 조회", description = "현재 URL 기준 channel 반환")
-    public Map<String, Object> getSession(HttpServletRequest request){
+    @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
+    public Map<String, Object> getSession(HttpSession session) {
+
 
         log.info("[BENEPIA] SESSION CHECK");
 
-        String channelCode = request.getParameter("channel");
+        String channel = (String) session.getAttribute("CHANNEL_CODE");
 
-        if (channelCode == null || channelCode.isBlank()) {
-            channelCode = "DEFAULT";
+        if (channel == null) {
+            channel = "DEFAULT";
         }
 
-        return Map.of("channelCode", channelCode);
+        return Map.of("channelCode", channel);
     }
-
 }
