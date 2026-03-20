@@ -64,6 +64,9 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "판매종료일")
     private LocalDate salesEndDate;
 
+    @Schema(description = "활성화여부")
+    private boolean visible;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
