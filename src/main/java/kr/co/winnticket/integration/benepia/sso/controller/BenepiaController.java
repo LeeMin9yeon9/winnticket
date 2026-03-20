@@ -37,10 +37,10 @@ public class BenepiaController {
         if(encParam != null && !encParam.isBlank()){
             entryService.handle(encParam, session);
         }
-        if(channel == null || channel.isBlank()){
-            channel = "BENE";
-            
-        } session.setAttribute("CHANNEL_CODE", channel);
+
+        channel = "BENE";
+
+        session.setAttribute("CHANNEL_CODE", channel);
 
         log.info("SESSION CHANNEL_CODE = {}", channel);
 
