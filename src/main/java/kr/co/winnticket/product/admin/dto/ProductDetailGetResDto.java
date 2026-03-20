@@ -68,6 +68,9 @@ public class ProductDetailGetResDto {
     @Schema(description = "보증정보")
     private String warrantyInfo;
 
+    @Schema(description = "활성화여부")
+    private boolean visible;
+
     @Schema(description = "반품/교환정보")
     private String returnInfo;
 
