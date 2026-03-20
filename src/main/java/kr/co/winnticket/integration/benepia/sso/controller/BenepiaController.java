@@ -100,9 +100,8 @@ public class BenepiaController {
         if (channelCode == null) {
             return Map.of("channelCode", "DEFAULT");
 
-
         }
         // 없으면 무조건 DEFAULT
-        return Map.of("channelCode", "DEFAULT");
+        return Map.of("channelCode", channelCode);
     }
 }
