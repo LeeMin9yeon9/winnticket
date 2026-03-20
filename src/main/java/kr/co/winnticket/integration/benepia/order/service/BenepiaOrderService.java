@@ -81,7 +81,7 @@ public class BenepiaOrderService {
 
         orderInfo.setPtnAccntId("");
 
-        String orderReturnUrl = "/orders/shop/" + order.getChannelId() + order.getOrderNumber();
+        String orderReturnUrl = "/order-lookup/" + order.getChannelId() + "/" + order.getOrderNumber();
         String orderUrl =
                 "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
                         + "?coopCoCd=" + props.getCustCoCd()
