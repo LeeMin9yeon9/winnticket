@@ -291,4 +291,9 @@ public interface ProductMapper {
 
     // 입금 완료 시 옵션값 재고 차감
     void decreaseStock(@Param("optionValueId") UUID optionValueId);
+
+    // 메뉴 활비 시 상품 활/비
+    void updateProductsVisibleByMenuId(@Param("categoryId") UUID id,
+                                       @Param("visible") Boolean visible);
 }
+
