@@ -18,8 +18,8 @@ public class AdminMenuService {
     private final AdminMenuMapper adminMapper;
 
     // 관리자 메뉴 전체 + 검색 조회
-    public List<AdminMenuListDto> searchAdminMenus(String title, String titleEn, String page) {
-        return adminMapper.findAdminMenus(title,titleEn,page);
+    public List<AdminMenuListDto> searchAdminMenus(String role, String title, String titleEn, String page) {
+        return adminMapper.findAdminMenus(role, title,titleEn,page);
     }
 
     // 관리자 메뉴 생성

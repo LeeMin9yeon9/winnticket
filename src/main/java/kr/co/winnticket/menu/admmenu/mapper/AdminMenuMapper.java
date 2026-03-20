@@ -15,6 +15,7 @@ public interface AdminMenuMapper {
 
         // 관리자 메뉴 조회 (검색 조건 포함)
         List<AdminMenuListDto> findAdminMenus(
+                @Param("role") String role,
                 @Param("title") String title,
                 @Param("titleEn") String titleEn,
                 @Param("page") String page
