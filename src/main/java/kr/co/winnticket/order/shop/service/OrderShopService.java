@@ -9,7 +9,6 @@ import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
-import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -27,7 +26,7 @@ import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
-import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResponse;
+import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
 import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
 import kr.co.winnticket.sms.service.BizMsgService;
 import kr.co.winnticket.sms.service.SmsTemplateFinder;
@@ -482,14 +481,14 @@ public class OrderShopService {
     // 계좌번호 목록
     private String buildAccountLines() {
 
-        List<BankAccountResponse> accounts =
+        List<BankAccountResDto> accounts =
                 bankAccountService.getVisibleBankAccounts();
 
         if (accounts == null || accounts.isEmpty()) return "";
 
         StringBuilder sb = new StringBuilder();
 
-        for (BankAccountResponse acc : accounts) {
+        for (BankAccountResDto acc : accounts) {
             sb.append(acc.getBankName())
                     .append(" : ")
                     .append(acc.getAccountNumber())

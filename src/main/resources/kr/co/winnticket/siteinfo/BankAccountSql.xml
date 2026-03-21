@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.siteinfo.bankaccount.mapper.BankAccountMapper">
+
+
+    <!-- 전체 조회 -->
+    <select id="findAll" resultType="kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto">
+        SELECT
+            id,
+            bank_name AS bankName,
+            account_number AS accountNumber,
+            account_holder AS accountHolder,
+            visible,
+            display_order AS displayOrder,
+            created_at AS createdAt,
+            updated_at AS updatedAt,
+            created_by AS createdBy,
+            updated_by AS updatedBy
+        FROM bank_account
+        ORDER BY display_order ASC
+    </select>
+
+    <!-- 노출 계좌 -->
+    <select id="findVisible" resultType="kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto">
+        SELECT
+            id,
+            bank_name AS bankName,
+            account_number AS accountNumber,
+            account_holder AS accountHolder,
+            visible,
+            display_order AS displayOrder,
+            created_at AS createdAt,
+            updated_at AS updatedAt,
+            created_by AS createdBy,
+            updated_by AS updatedBy
+        FROM bank_account
+        WHERE visible = true
+        ORDER BY display_order ASC
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="findById" resultType="kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto">
+        SELECT
+            id,
+            bank_name AS bankName,
+            account_number AS accountNumber,
+            account_holder AS accountHolder,
+            visible,
+            display_order AS displayOrder,
+            created_at AS createdAt,
+            updated_at AS updatedAt,
+            created_by AS createdBy,
+            updated_by AS updatedBy
+        FROM bank_account
+        WHERE id = #{id}
+    </select>
+
+    <!-- 등록 -->
+    <insert id="insert">
+        INSERT INTO bank_account (
+        bank_name,
+        account_number,
+        account_holder,
+        visible,
+        display_order,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by
+        ) VALUES (
+        #{req.bankName},
+        #{req.accountNumber},
+        #{req.accountHolder},
+        COALESCE(#{req.visible}, true),
+
+        <!-- display_order 자동 마지막 -->
+        COALESCE(
+        #{req.displayOrder},
+        (SELECT COALESCE(MAX(display_order), 0) + 1 FROM bank_account)
+        ),
+
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        #{createdBy},
+        #{createdBy}
+        )
+    </insert>
+
+    <!-- 수정 -->
+    <update id="update">
+        UPDATE bank_account
+        SET
+            bank_name = #{req.bankName},
+            account_number = #{req.accountNumber},
+            account_holder = #{req.accountHolder},
+            visible = #{req.visible},
+            display_order = #{req.displayOrder},
+            updated_at = CURRENT_TIMESTAMP,
+            updated_by = #{updatedBy}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="delete">
+        DELETE FROM bank_account
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 존재 여부 -->
+    <select id="exists" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM bank_account
+            WHERE id = #{id}
+        )
+    </select>
+
+    <!-- 삭제 후 순서 정리 -->
+    <update id="reorderAfterDelete">
+        UPDATE bank_account
+        SET display_order = sub.new_order
+            FROM (
+            SELECT id,
+                   ROW_NUMBER() OVER (ORDER BY display_order ASC) AS new_order
+            FROM bank_account
+        ) sub
+        WHERE bank_account.id = sub.id
+    </update>
+
+    <!--순서 밀기(앞에 끼어들기)-->
+    <update id="shiftOrder">
+        UPDATE bank_account
+        SET display_order = display_order + 1
+        WHERE display_order >= #{newOrder}
+    </update>
+
+    <!-- 기존 자리 땡기기 -->
+    <update id="decreaseOrderAfter">
+        UPDATE bank_account
+        SET display_order = display_order - 1
+        WHERE display_order > #{oldOrder}
+    </update>
+
+
+</mapper>
