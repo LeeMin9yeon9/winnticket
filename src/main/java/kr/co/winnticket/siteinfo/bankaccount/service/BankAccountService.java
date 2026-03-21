@@ -1,100 +1,91 @@
 package kr.co.winnticket.siteinfo.bankaccount.service;
 
 
-import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountRequest;
-import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResponse;
-import kr.co.winnticket.siteinfo.bankaccount.entity.BankAccount;
-import kr.co.winnticket.siteinfo.bankaccount.repository.BankAccountRepository;
+import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountReqDto;
+import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
+import kr.co.winnticket.siteinfo.bankaccount.mapper.BankAccountMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BankAccountService {
 
-    private final BankAccountRepository bankAccountRepository;
+    private final BankAccountMapper mapper;
 
     // 전체 조회 (관리자용)
-    public List<BankAccountResponse> getAllBankAccounts() {
-        return bankAccountRepository.findAllByOrderByDisplayOrderAsc().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    @Transactional
+    public List<BankAccountResDto> getAllBankAccounts() {
+        return mapper.findAll();
     }
 
     // 노출 계좌만 조회 (공개용)
-    public List<BankAccountResponse> getVisibleBankAccounts() {
-        return bankAccountRepository.findByVisibleTrueOrderByDisplayOrderAsc().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    @Transactional
+    public List<BankAccountResDto> getVisibleBankAccounts() {
+        return mapper.findVisible();
     }
 
+
     // 단일 조회
-    public BankAccountResponse getBankAccount(Long id) {
-        BankAccount bankAccount = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("계좌 정보를 찾을 수 없습니다."));
-        return toResponse(bankAccount);
+    @Transactional
+    public BankAccountResDto getBankAccount(Long id) {
+        BankAccountResDto res = mapper.findById(id);
+        if (res == null) {
+            throw new RuntimeException("계좌 정보를 찾을 수 없습니다.");
+        }
+        return res;
     }
 
     // 등록
     @Transactional
-    public BankAccountResponse createBankAccount(BankAccountRequest request, String username) {
-        BankAccount bankAccount = BankAccount.builder()
-                .bankName(request.getBankName())
-                .accountNumber(request.getAccountNumber())
-                .accountHolder(request.getAccountHolder())
-                .visible(request.getVisible() != null ? request.getVisible() : true)
-                .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0)
-                .createdBy(username)
-                .updatedBy(username)
-                .build();
-
-        BankAccount saved = bankAccountRepository.save(bankAccount);
-        return toResponse(saved);
+    public BankAccountResDto createBankAccount(BankAccountReqDto req, String username) {
+        mapper.insert(req, username);
+        return null;
     }
 
     // 수정
     @Transactional
-    public BankAccountResponse updateBankAccount(Long id, BankAccountRequest request, String username) {
-        BankAccount bankAccount = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("계좌 정보를 찾을 수 없습니다."));
+    public BankAccountResDto updateBankAccount(Long id, BankAccountReqDto req, String username) {
+        if (!mapper.exists(id)) {
+            throw new RuntimeException("계좌 정보를 찾을 수 없습니다.");
+        }
+        // 순서 변경 요청 있을 때만
+        if (req.getDisplayOrder() != null) {
 
-        bankAccount.setBankName(request.getBankName());
-        bankAccount.setAccountNumber(request.getAccountNumber());
-        bankAccount.setAccountHolder(request.getAccountHolder());
-        bankAccount.setVisible(request.getVisible());
-        bankAccount.setDisplayOrder(request.getDisplayOrder());
-        bankAccount.setUpdatedBy(username);
+            // 기존 데이터 조회
+            BankAccountResDto current = mapper.findById(id);
 
-        return toResponse(bankAccount);
+            Integer oldOrder = current.getDisplayOrder();
+            Integer newOrder = req.getDisplayOrder();
+
+            // 같은 위치면 넘기고
+            if (!oldOrder.equals(newOrder)) {
+
+                // 현재 자리 뒤로 당기기
+                mapper.decreaseOrderAfter(oldOrder);
+
+                // 새 자리로 밀기
+                mapper.shiftOrder(newOrder);
+            }
+        }
+
+        mapper.update(id, req, username);
+
+        return mapper.findById(id);
     }
 
     // 삭제
     @Transactional
     public void deleteBankAccount(Long id) {
-        if (!bankAccountRepository.existsById(id)) {
+        if (!mapper.exists(id)) {
             throw new RuntimeException("계좌 정보를 찾을 수 없습니다.");
         }
-        bankAccountRepository.deleteById(id);
-    }
-
-    // Entity -> DTO
-    private BankAccountResponse toResponse(BankAccount entity) {
-        return BankAccountResponse.builder()
-                .id(entity.getId())
-                .bankName(entity.getBankName())
-                .accountNumber(entity.getAccountNumber())
-                .accountHolder(entity.getAccountHolder())
-                .visible(entity.getVisible())
-                .displayOrder(entity.getDisplayOrder())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
+        mapper.delete(id);
+        // 삭제 후 재정렬
+        mapper.reorderAfterDelete();
     }
 }
