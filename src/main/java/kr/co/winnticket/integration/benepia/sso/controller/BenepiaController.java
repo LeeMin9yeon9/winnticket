@@ -38,7 +38,6 @@ public class BenepiaController {
         // encParam 있으면 베네피아 유저 처리
         if (encParam != null && !encParam.isBlank()) {
             entryService.handle(encParam, session);
-
             channel = "BENE";
         } else {
             channel = "DEFAULT";
@@ -101,6 +100,6 @@ public class BenepiaController {
 
         }
         // 없으면 무조건 DEFAULT
-        return Map.of("channelCode", "DEFAULT");
+        return Map.of("channelCode", channelCode);
     }
 }
