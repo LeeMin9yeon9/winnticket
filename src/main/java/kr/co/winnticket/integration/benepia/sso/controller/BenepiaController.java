@@ -36,12 +36,17 @@ public class BenepiaController {
         log.info("BENEPIA RETURNURL={}", returnurl);
 
         // encParam 있으면 베네피아 유저 처리
-        if(encParam != null && !encParam.isBlank()){
+        if (encParam != null && !encParam.isBlank()) {
             entryService.handle(encParam, session);
 
+            channel = "BENE";
+        } else {
+            channel = "DEFAULT";
         }
 
         session.setAttribute("CHANNEL_CODE", channel);
+        log.info("BENEPIA session channel={}", channel);
+
 
         // returnurl 있을 때만 처리
         if (returnurl != null && !returnurl.isBlank()) {
@@ -86,15 +91,23 @@ public class BenepiaController {
     public Map<String, Object> getSession(
             @PathVariable String channelCode, HttpSession session) {
 
-        log.info("[BENEPIA] SESSION CHECK = "  + channelCode );
+        log.info("[BENEPIA] SESSION CHECK = {}", channelCode);
 
+        // 정리
+        channelCode = channelCode == null ? "DEFAULT" : channelCode.trim().toUpperCase();
+
+        if (!"BENE".equals(channelCode) && !"DEFAULT".equals(channelCode)) {
+            channelCode = "DEFAULT";
+        }
+
+        // 채널은 무조건 요청 기준
         session.setAttribute("CHANNEL_CODE", channelCode);
 
         if (!"BENE".equals(channelCode)) {
-            return Map.of("channelCode", "DEFAULT");
+            session.removeAttribute("BENEP_DECRYPTED");
+            session.removeAttribute("BENEP_TKN_KEY");
         }
 
-        // 없으면 무조건 DEFAULT
-        return Map.of("channelCode", "BENE");
+        return Map.of("channelCode", channelCode);
     }
 }
