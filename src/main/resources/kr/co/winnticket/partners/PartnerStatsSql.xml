@@ -8,20 +8,21 @@
     <select id="getSummary" resultType="kr.co.winnticket.partners.partnerstats.dto.PartnerStatsSummaryDto">
 
         SELECT
-            COALESCE(SUM(o.total_price), 0) AS totalRevenue,
-            COUNT(*)                        AS totalOrders,
-            COALESCE(SUM(o.quantity), 0)    AS totalTickets,
-            CASE WHEN COUNT(*) = 0 THEN 0
-                 ELSE SUM(o.total_price) / COUNT(*)
-                END AS averageOrderValue
-        FROM ticket_orders o
-                 JOIN product_option_values pov ON o.option_value_id = pov.id
-                 JOIN product_options po ON pov.option_id = po.id
-                 JOIN products p ON po.product_id = p.id
-        WHERE p.partner_id = #{partnerId}
-          AND o.status IN ('결제완료','티켓발송','사용완료')
-          AND o.payment_date >= #{startDate}
-          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+            COALESCE(SUM(oi.unit_price), 0) AS totalRevenue, <!--티켓 장 당 가격 (총매출)-->
+            COUNT(DISTINCT o.id)            AS totalOrders,  <!--총 주문 수 -->
+            COALESCE(SUM(oi.quantity), 0) AS totalTickets, <!-- 총 티켓 수-->
+            COALESCE(SUM((pov.base_price - oi.unit_price) * oi.quantity), 0) AS Revenue  <!--마진 -->
+
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN order_item_options oio ON oi.id = oio.order_item_id
+        JOIN product_option_values pov ON oio.option_value_id = pov.id
+        JOIN products p ON oi.product_id = p.id
+
+        WHERE p.partner_id = #{partnerId}::uuid
+            AND o.payment_status = 'PAID'
+            AND o.paid_at >= #{startDate}
+            AND o.paid_at &lt; #{endDate} + INTERVAL '1 day'
 
     </select>
 
@@ -29,16 +30,17 @@
     <!--파트너 일별 매출-->
     <select id="getDailySales" resultType="kr.co.winnticket.partners.partnerstats.dto.PartnerDailySalesDto">
         SELECT
-            TO_CHAR(o.payment_date, 'YYYY-MM-DD') AS date,
-            COALESCE(SUM(o.total_price), 0) AS revenue
-        FROM ticket_orders o
-            JOIN product_option_values pov ON o.option_value_id = pov.id
-            JOIN product_options po ON pov.option_id = po.id
-            JOIN products p ON po.product_id = p.id
-        WHERE p.partner_id = #{partnerId}
-          AND o.status IN ('결제완료','티켓발송','사용완료')
-          AND o.payment_date >= #{startDate}
-          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+            DATE(o.paid_at) AS date,   <!--날짜-->
+            COALESCE(SUM(oi.total_price), 0) AS revenue <!--일별 매출-->
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+
+        WHERE p.partner_id = #{partnerId}::uuid
+        AND o.payment_status = 'PAID'
+        AND o.paid_at >= #{startDate}
+        AND o.paid_at &lt; #{endDate} + INTERVAL '1 day'
+
         GROUP BY date
         ORDER BY date ASC
     </select>
@@ -49,15 +51,16 @@
         SELECT
             c.name AS category,
             COALESCE(SUM(o.total_price), 0) AS revenue
-        FROM ticket_orders o
-                 JOIN product_option_values pov ON o.option_value_id = pov.id
-                 JOIN product_options po ON pov.option_id = po.id
-                 JOIN products p ON po.product_id = p.id
-                 JOIN menu_categories c ON c.id = p.category_id
-        WHERE p.partner_id = #{partnerId}
-          AND o.status IN ('결제완료','티켓발송','사용완료')
-          AND o.payment_date >= #{startDate}
-          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        JOIN menu_categories c ON c.id = p.category_id
+
+        WHERE p.partner_id = #{partnerId}::uuid
+          AND o.payment_status = 'PAID'
+          AND o.paid_at >= #{startDate}
+          AND o.paid_at &lt; #{endDate} + INTERVAL '1 day'
+
         GROUP BY c.name
         ORDER BY revenue DESC
     </select>
@@ -70,19 +73,22 @@
             p.id AS productId,
             p.code AS productCode,
             p.name AS productName,
-            COALESCE(SUM(o.total_price), 0) AS revenue,
-            COALESCE(SUM(o.quantity), 0) AS tickets
-        FROM ticket_orders o
-                 JOIN product_option_values pov ON o.option_value_id = pov.id
-                 JOIN product_options po ON pov.option_id = po.id
-                 JOIN products p ON po.product_id = p.id
-        WHERE p.partner_id = #{partnerId}
-          AND o.status IN ('결제완료','티켓발송','사용완료')
-          AND o.payment_date >= #{startDate}
-          AND o.payment_date &lt; #{endDate} + INTERVAL '1 day'
+            COALESCE(SUM(oi.total_price), 0) AS revenue,  <!--상품별 매출-->
+            COALESCE(SUM(oi.quantity), 0) AS tickets      <!--판매 수량(티켓 수)-->
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+
+        WHERE p.partner_id = #{partnerId}::uuid
+        AND o.payment_status = 'PAID'
+        AND o.paid_at >= #{startDate}
+        AND o.paid_at &lt; #{endDate} + INTERVAL '1 day'
+
         GROUP BY p.id, p.code, p.name
+
+        <!--판매량 기준 TOP3 -->
         ORDER BY tickets DESC
-            LIMIT 3
+        LIMIT 3
     </select>
 
 </mapper>

@@ -8,10 +8,9 @@ import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
-import kr.co.winnticket.integration.benepia.sso.context.BenepiaContext;
-import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
@@ -127,13 +126,44 @@ public class OrderService {
             throw new IllegalArgumentException("주문이 존재하지 않습니다.");
         }
 
-        // 결제 상태 / 결제일시 업데이트
-        int updated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
-
-        if (updated == 0) {
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
             log.info("이미 결제 완료 skip orderId={}", auId);
             return;
         }
+
+        // 포인트 차감 (무통장 + 포인트)
+        // 포인트 남아있으면
+        if (order.getPointAmount() > 0 ) {
+
+            log.info("[POINT] 무통장 입금완료 → 포인트 차감 시작 orderId={}", auId);
+
+            List<OrderProductListGetResDto> items =
+                    mapper.selectOrderProductList(auId);
+
+            KcpPointPayReqDto dto = new KcpPointPayReqDto();
+
+            dto.setOrderNo(order.getOrderNumber());
+            dto.setAmount(order.getPointAmount());
+
+            dto.setProductName(items.get(0).getProductName());
+            dto.setProductCode(items.get(0).getProductCode());
+
+            dto.setBuyerName(order.getCustomerName());
+            dto.setBuyerEmail(order.getCustomerEmail());
+            dto.setBuyerPhone(order.getCustomerPhone());
+
+            try {
+                kcpService.pointPayAndUpdate(dto);
+                log.info("[POINT] 무통장 포인트 차감 완료 orderId={}", auId);
+            } catch (Exception e) {
+                log.error("[POINT ERROR] 무통장 포인트 차감 실패 orderId={}", auId, e);
+                throw new RuntimeException("포인트 차감 실패");
+            }
+        }
+
+        // 결제 상태 / 결제일시 업데이트
+        mapper.updatePaymentComplete(auId, LocalDateTime.now());
+
 
         // 주문 상품 목록 조회
         List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
@@ -606,7 +636,21 @@ public class OrderService {
         Object cancelResult = null;
 
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
-            // 가상계좌는 보통 취소 없음
+            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+
+                    String tno = mapper.selectPointTno(order.getOrderNumber());
+
+                    if (tno != null) {
+                        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                        dto.setTno(tno);
+                        dto.setCancelReason("무통장 취소");
+
+                        kcpService.cancelPoint(dto);
+
+                        log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
+                    }
+                }
+
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
 
             cancelResult = payletterService.cancel(orderId);
