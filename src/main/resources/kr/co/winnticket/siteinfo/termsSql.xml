@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.siteinfo.terms.mapper.TermsMapper">
+
+    <!-- 전체 조회 -->
+    <select id="findAll" resultType="kr.co.winnticket.siteinfo.terms.dto.TermsResDto">
+        SELECT *
+        FROM terms
+        ORDER BY display_order ASC
+    </select>
+
+    <!-- 노출 -->
+    <select id="findVisible" resultType="kr.co.winnticket.siteinfo.terms.dto.TermsResDto">
+        SELECT *
+        FROM terms
+        WHERE visible = true
+        ORDER BY display_order ASC
+    </select>
+
+    <!-- 필수 -->
+    <select id="findRequired" resultType="kr.co.winnticket.siteinfo.terms.dto.TermsResDto">
+        SELECT *
+        FROM terms
+        WHERE required = true
+          AND visible = true
+        ORDER BY display_order ASC
+    </select>
+
+    <!-- 단건 -->
+    <select id="findById" resultType="kr.co.winnticket.siteinfo.terms.dto.TermsResDto">
+        SELECT *
+        FROM terms
+        WHERE id = #{id}
+    </select>
+
+    <!-- 표시순서 밀기 -->
+    <update id="increaseDisplayOrder">
+        UPDATE terms
+        SET display_order = display_order + 1
+        WHERE display_order >= #{displayOrder}
+    </update>
+
+    <!-- 등록 -->
+    <insert id="insert">
+        INSERT INTO terms (
+            title,
+            content,
+            required,
+            display_order,
+            visible,
+            created_at,
+            updated_at,
+            created_by,
+            updated_by
+        ) VALUES (
+                     #{req.title},
+                     #{req.content},
+                     #{req.required},
+                     #{req.displayOrder},
+                     #{req.visible},
+                     CURRENT_TIMESTAMP,
+                     CURRENT_TIMESTAMP,
+                     #{createdBy},
+                     #{createdBy}
+                 )
+    </insert>
+
+    <!-- 🔥 부분 수정 + 공백 방지 -->
+    <update id="update">
+        UPDATE terms
+        <set>
+            <if test="req.title != null and req.title != ''">
+                title = #{req.title},
+            </if>
+
+            <if test="req.content != null and req.content != ''">
+                content = #{req.content},
+            </if>
+
+            <if test="req.required != null">
+                required = #{req.required},
+            </if>
+
+            <if test="req.displayOrder != null">
+                display_order = #{req.displayOrder},
+            </if>
+
+            <if test="req.visible != null">
+                visible = #{req.visible},
+            </if>
+
+            updated_at = CURRENT_TIMESTAMP,
+            updated_by = #{updatedBy}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="delete">
+        DELETE FROM terms WHERE id = #{id}
+    </delete>
+
+    <!-- 존재 확인 -->
+    <select id="exists" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM terms WHERE id = #{id}
+    </select>
+
+    <!-- 삭제 후 순서 당기기 -->
+    <update id="decreaseDisplayOrder">
+        UPDATE terms
+        SET display_order = display_order - 1
+        WHERE display_order > #{displayOrder}
+    </update>
+
+
+</mapper>

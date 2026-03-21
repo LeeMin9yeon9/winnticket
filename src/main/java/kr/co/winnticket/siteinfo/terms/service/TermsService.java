@@ -1,107 +1,89 @@
 package kr.co.winnticket.siteinfo.terms.service;
 
 
-import kr.co.winnticket.siteinfo.terms.dto.TermsRequest;
-import kr.co.winnticket.siteinfo.terms.dto.TermsResponse;
-import kr.co.winnticket.siteinfo.terms.entity.Terms;
-import kr.co.winnticket.siteinfo.terms.repository.TermsRepository;
+import kr.co.winnticket.siteinfo.terms.dto.TermsReqDto;
+import kr.co.winnticket.siteinfo.terms.dto.TermsResDto;
+import kr.co.winnticket.siteinfo.terms.mapper.TermsMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TermsService {
 
-    private final TermsRepository termsRepository;
+    private final TermsMapper mapper;
 
     // 전체 조회 (관리자용)
-    public List<TermsResponse> getAllTerms() {
-        return termsRepository.findAllByOrderByDisplayOrderAsc().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public List<TermsResDto> getAllTerms() {
+        return mapper.findAll();
     }
 
+
     // 노출 약관 (공개용)
-    public List<TermsResponse> getVisibleTerms() {
-        return termsRepository.findByVisibleTrueOrderByDisplayOrderAsc().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public List<TermsResDto> getVisibleTerms() {
+        return mapper.findVisible();
     }
 
     // 필수 약관 (회원가입용)
-    public List<TermsResponse> getRequiredTerms() {
-        return termsRepository.findByRequiredTrueAndVisibleTrueOrderByDisplayOrderAsc().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public List<TermsResDto> getRequiredTerms() {
+        return mapper.findRequired();
     }
 
     // 단일 조회
-    public TermsResponse getTerms(Long id) {
-        Terms terms = termsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("약관을 찾을 수 없습니다."));
-        return toResponse(terms);
+    public TermsResDto getTerms(Long id) {
+        TermsResDto res = mapper.findById(id);
+        if (res == null) throw new RuntimeException("약관을 찾을 수 없습니다.");
+        return res;
     }
+
 
     // 등록
     @Transactional
-    public TermsResponse createTerms(TermsRequest request, String username) {
-        Terms terms = Terms.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .required(request.getRequired() != null ? request.getRequired() : true)
-                .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0)
-                .visible(request.getVisible() != null ? request.getVisible() : true)
-                .createdBy(username)
-                .updatedBy(username)
-                .build();
+    public TermsResDto createTerms(TermsReqDto req, String username) {
 
-        Terms saved = termsRepository.save(terms);
-        return toResponse(saved);
+        if (req.getDisplayOrder() != null) {
+            mapper.increaseDisplayOrder(req.getDisplayOrder());
+        }
+
+        mapper.insert(req, username);
+
+        return mapper.findAll().get(0); // 필요시 selectKey로 변경 가능
     }
 
     // 수정
     @Transactional
-    public TermsResponse updateTerms(Long id, TermsRequest request, String username) {
-        Terms terms = termsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("약관을 찾을 수 없습니다."));
+    public TermsResDto updateTerms(Long id, TermsReqDto req, String username) {
 
-        terms.setTitle(request.getTitle());
-        terms.setContent(request.getContent());
-        terms.setRequired(request.getRequired());
-        terms.setDisplayOrder(request.getDisplayOrder());
-        terms.setVisible(request.getVisible());
-        terms.setUpdatedBy(username);
+        if (!mapper.exists(id)) {
+            throw new RuntimeException("약관을 찾을 수 없습니다.");
+        }
 
-        return toResponse(terms);
+        // displayOrder 변경 시 밀기
+        if (req.getDisplayOrder() != null) {
+            mapper.increaseDisplayOrder(req.getDisplayOrder());
+        }
+
+        mapper.update(id, req, username);
+
+        return mapper.findById(id);
     }
 
     // 삭제
     @Transactional
     public void deleteTerms(Long id) {
-        if (!termsRepository.existsById(id)) {
+        TermsResDto terms = mapper.findById(id);
+        if (terms == null) {
             throw new RuntimeException("약관을 찾을 수 없습니다.");
         }
-        termsRepository.deleteById(id);
-    }
+        mapper.delete(id);
 
-    // Entity -> DTO
-    private TermsResponse toResponse(Terms entity) {
-        return TermsResponse.builder()
-                .id(entity.getId())
-                .title(entity.getTitle())
-                .content(entity.getContent())
-                .required(entity.getRequired())
-                .displayOrder(entity.getDisplayOrder())
-                .visible(entity.getVisible())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
+        //
+        if (terms.getDisplayOrder() != null) {
+            mapper.decreaseDisplayOrder(terms.getDisplayOrder());
+        }
     }
 }
