@@ -39,19 +39,9 @@ public class BenepiaController {
         if(encParam != null && !encParam.isBlank()){
             entryService.handle(encParam, session);
 
-            // 베네피아 채널 세팅
-            session.setAttribute("CHANNEL_CODE", "BENE");
-            session.setAttribute("BENEPIA_ENTRY", true);
-
-        }else{
-            log.info("[BENEPIA] 일반 접근 → 세션 초기화");
-
-            session.removeAttribute("BENEP_DECRYPTED");
-            session.removeAttribute("BENEP_TKN_KEY");
-            session.removeAttribute("BENEPIA_ENTRY");
-
-            session.setAttribute("CHANNEL_CODE", "DEFAULT");
         }
+
+        session.setAttribute("CHANNEL_CODE", channel);
 
         // returnurl 있을 때만 처리
         if (returnurl != null && !returnurl.isBlank()) {
@@ -73,7 +63,7 @@ public class BenepiaController {
             if (decodedUrl.startsWith("/")) {
 
                 if (!decodedUrl.contains("channel=")) {
-                    decodedUrl += (decodedUrl.contains("?") ? "&" : "?") + "channel=" +  session.getAttribute("CHANNEL_CODE");
+                    decodedUrl += (decodedUrl.contains("?") ? "&" : "?") + "channel=" + channel;
                 }
 
                 log.info("FINAL REDIRECT URL = {}", decodedUrl);
@@ -85,7 +75,7 @@ public class BenepiaController {
         }
 
         // fallback 유지 (기존 기능 보호)
-        return "redirect:/shop?channel=" + session.getAttribute("CHANNEL_CODE");
+        return "redirect:/shop?channel=" + channel;
     }
 
 
@@ -96,15 +86,15 @@ public class BenepiaController {
     public Map<String, Object> getSession(
             @PathVariable String channelCode, HttpSession session) {
 
-        log.info("[BENEPIA] SESSION CHECK");
+        log.info("[BENEPIA] SESSION CHECK = "  + channelCode );
 
         session.setAttribute("CHANNEL_CODE", channelCode);
 
         if (!"BENE".equals(channelCode)) {
-            session.removeAttribute("BENEP_DECRYPTED");
-            session.removeAttribute("BENEP_TKN_KEY");
+            return Map.of("channelCode", "DEFAULT");
         }
 
-        return Map.of("channelCode", channelCode);
+        // 없으면 무조건 DEFAULT
+        return Map.of("channelCode", "BENE");
     }
 }
