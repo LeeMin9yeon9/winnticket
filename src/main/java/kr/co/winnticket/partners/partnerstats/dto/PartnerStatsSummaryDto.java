@@ -17,7 +17,7 @@ public class PartnerStatsSummaryDto {
     private Integer totalTickets;
 
     @Schema(description = "평균 주문 금액")
-    private Integer averageOrderValue;
+    private Integer Revenue;
 
 
 }

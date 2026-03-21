@@ -83,6 +83,8 @@ public class OrderShopService {
         Boolean usePoint = channelMapper.selectUsePointById(reqDto.getChannelId());
         log.info("usePoint(DB) = {}", usePoint);
 
+
+
         // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
         PaymentMethod paymentMethod = reqDto.getPaymentMethod();
         // 카드 미허용 채널이면 카드 -> 무통장
@@ -192,8 +194,8 @@ public class OrderShopService {
         // 최종결제금액 업데이트 총 금액 - 할인금액
         int finalPrice = orderTotalPrice - reqDto.getDiscountPrice();
 
-        log.info("====토탈가격 - orderTotalPrice={}", orderTotalPrice);
-        log.info("====최종가격 - finalPrice={}", finalPrice);
+        log.info("==== 토탈가격 - orderTotalPrice={}", orderTotalPrice);
+        log.info("==== 최종가격 - finalPrice={}", finalPrice);
 
         // 최종 결제금액 - 포인트 금액
         int pgAmount = finalPrice - pointAmount;
