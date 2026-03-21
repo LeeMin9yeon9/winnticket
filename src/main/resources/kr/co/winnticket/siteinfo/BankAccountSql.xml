@@ -90,14 +90,34 @@
     <!-- 수정 -->
     <update id="update">
         UPDATE bank_account
-        SET
-            bank_name = #{req.bankName},
-            account_number = #{req.accountNumber},
-            account_holder = #{req.accountHolder},
-            visible = #{req.visible},
-            display_order = #{req.displayOrder},
+        <set>
+
+            <if test="req.bankName != null and req.bankName != ''">
+                bank_name = #{req.bankName},
+            </if>
+
+            <if test="req.accountNumber != null and req.accountNumber != ''">
+                account_number = #{req.accountNumber},
+            </if>
+
+            <if test="req.accountHolder != null and req.accountHolder != ''">
+                account_holder = #{req.accountHolder},
+            </if>
+
+            <!-- Boolean은 null 체크만 -->
+            <if test="req.visible != null">
+                visible = #{req.visible},
+            </if>
+
+            <!-- 숫자도 null 체크 -->
+            <if test="req.displayOrder != null">
+                display_order = #{req.displayOrder},
+            </if>
+
             updated_at = CURRENT_TIMESTAMP,
             updated_by = #{updatedBy}
+
+        </set>
         WHERE id = #{id}
     </update>
 
