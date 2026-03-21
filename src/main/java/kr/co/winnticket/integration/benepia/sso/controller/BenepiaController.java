@@ -84,30 +84,23 @@ public class BenepiaController {
     }
 
 
-    @GetMapping("/session/{channelCode}")
+    @GetMapping("/session")
     @ResponseBody
     @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
 
-    public Map<String, Object> getSession(
-            @PathVariable String channelCode, HttpSession session) {
+    public Map<String, Object> getSession(HttpSession session) {
 
-        log.info("[BENEPIA] SESSION CHECK = {}", channelCode);
+        log.info("[BENEPIA] SESSION CHECK");
 
-        // 정리
-        channelCode = channelCode == null ? "DEFAULT" : channelCode.trim().toUpperCase();
+        String channelCode = (String) session.getAttribute("CHANNEL_CODE");
 
-        if (!"BENE".equals(channelCode) && !"DEFAULT".equals(channelCode)) {
-            channelCode = "DEFAULT";
+
+        if (channelCode == null) {
+            return Map.of("channelCode", "DEFAULT");
+
+
         }
-
-        // 채널은 무조건 요청 기준
-        session.setAttribute("CHANNEL_CODE", channelCode);
-
-        if (!"BENE".equals(channelCode)) {
-            session.removeAttribute("BENEP_DECRYPTED");
-            session.removeAttribute("BENEP_TKN_KEY");
-        }
-
-        return Map.of("channelCode", channelCode);
+        // 없으면 무조건 DEFAULT
+        return Map.of("channelCode", "DEFAULT");
     }
 }
