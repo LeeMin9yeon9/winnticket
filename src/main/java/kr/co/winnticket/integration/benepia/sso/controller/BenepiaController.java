@@ -29,8 +29,10 @@ public class BenepiaController {
     public String entry(HttpServletRequest request, HttpSession session) {
 
         String encParam = request.getParameter("encParam");
+        String channel = request.getParameter("channel");
         String returnurl = request.getParameter("returnurl");
 
+        log.info("BENEPIA ENTRY channel={}", channel);
         log.info("BENEPIA RETURNURL={}", returnurl);
 
         // encParam 있으면 베네피아 유저 처리
@@ -87,22 +89,22 @@ public class BenepiaController {
     }
 
 
-    @GetMapping("/session/{channel}")
+    @GetMapping("/session/{channelCode}")
     @ResponseBody
     @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
 
     public Map<String, Object> getSession(
-            @PathVariable String channel, HttpSession session) {
+            @PathVariable String channelCode, HttpSession session) {
 
         log.info("[BENEPIA] SESSION CHECK");
 
-        session.setAttribute("CHANNEL_CODE", channel);
+        session.setAttribute("CHANNEL_CODE", channelCode);
 
-        if (!"BENE".equals(channel)) {
+        if (!"BENE".equals(channelCode)) {
             session.removeAttribute("BENEP_DECRYPTED");
             session.removeAttribute("BENEP_TKN_KEY");
         }
 
-        return Map.of("channelCode", channel);
+        return Map.of("channelCode", channelCode);
     }
 }
