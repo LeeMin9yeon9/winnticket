@@ -1,10 +1,11 @@
 package kr.co.winnticket.siteinfo.terms.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
-import kr.co.winnticket.siteinfo.terms.dto.TermsRequest;
-import kr.co.winnticket.siteinfo.terms.dto.TermsResponse;
+import kr.co.winnticket.siteinfo.terms.dto.TermsReqDto;
+import kr.co.winnticket.siteinfo.terms.dto.TermsResDto;
 import kr.co.winnticket.siteinfo.terms.service.TermsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,59 +18,51 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TermsController {
 
-    private final TermsService termsService;
+    private final TermsService service;
 
-    // 전체 조회 (관리자용)
+    @Operation(summary = "전체 조회")
     @GetMapping
-    public ApiResponse<List<TermsResponse>> getAllTerms() {
-        List<TermsResponse> terms = termsService.getAllTerms();
-        return ApiResponse.success("약관 목록 조회 성공", terms);
+    public ApiResponse<List<TermsResDto>> getAllTerms() {
+        return ApiResponse.success("조회 성공", service.getAllTerms());
     }
 
-    // 노출 약관 (공개용)
+    @Operation(summary = "노출 약관")
     @GetMapping("/visible")
-    public ApiResponse<List<TermsResponse>> getVisibleTerms() {
-        List<TermsResponse> terms = termsService.getVisibleTerms();
-        return ApiResponse.success("노출 약관 목록 조회 성공", terms);
+    public ApiResponse<List<TermsResDto>> getVisibleTerms() {
+        return ApiResponse.success("조회 성공", service.getVisibleTerms());
     }
 
-    // 필수 약관 (회원가입용)
+    @Operation(summary = "필수 약관")
     @GetMapping("/required")
-    public ApiResponse<List<TermsResponse>> getRequiredTerms() {
-        List<TermsResponse> terms = termsService.getRequiredTerms();
-        return ApiResponse.success("필수 약관 목록 조회 성공", terms);
+    public ApiResponse<List<TermsResDto>> getRequiredTerms() {
+        return ApiResponse.success("조회 성공", service.getRequiredTerms());
     }
 
-    // 단일 조회
+    @Operation(summary = "단건 조회")
     @GetMapping("/{id}")
-    public ApiResponse<TermsResponse> getTerms(@PathVariable Long id) {
-        TermsResponse terms = termsService.getTerms(id);
-        return ApiResponse.success("약관 조회 성공", terms);
+    public ApiResponse<TermsResDto> getTerms(@PathVariable Long id) {
+        return ApiResponse.success("조회 성공", service.getTerms(id));
     }
 
-    // 등록
+    @Operation(summary = "등록")
     @PostMapping
-    public ApiResponse<TermsResponse> createTerms(@RequestBody TermsRequest request) {
-        String username = "system";
-        TermsResponse terms = termsService.createTerms(request, username);
-        return ApiResponse.success("약관 등록 성공", terms);
+    public ApiResponse<?> create(@RequestBody TermsReqDto req) {
+        return ApiResponse.success("등록 성공",
+                service.createTerms(req, "system"));
     }
 
-    // 수정
+    @Operation(summary = "수정")
     @PutMapping("/{id}")
-    public ApiResponse<TermsResponse> updateTerms(
-            @PathVariable Long id,
-            @RequestBody TermsRequest request
-    ) {
-        String username = "system";
-        TermsResponse terms = termsService.updateTerms(id, request, username);
-        return ApiResponse.success("약관 수정 성공", terms);
+    public ApiResponse<?> update(@PathVariable Long id,
+                                 @RequestBody TermsReqDto req) {
+        return ApiResponse.success("수정 성공",
+                service.updateTerms(id, req, "system"));
     }
 
-    // 삭제
+    @Operation(summary = "삭제")
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteTerms(@PathVariable Long id) {
-        termsService.deleteTerms(id);
-        return ApiResponse.success("약관 삭제 성공", null);
+    public ApiResponse<?> delete(@PathVariable Long id) {
+        service.deleteTerms(id);
+        return ApiResponse.success("삭제 성공", null);
     }
 }
