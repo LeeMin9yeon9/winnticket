@@ -8,10 +8,7 @@ import kr.co.winnticket.integration.benepia.sso.service.BenepiaEntryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +40,7 @@ public class BenepiaController {
             // 베네피아 채널 세팅
             session.setAttribute("CHANNEL_CODE", "BENE");
             session.setAttribute("BENEPIA_ENTRY", true);
+
         }else{
             log.info("[BENEPIA] 일반 접근 → 세션 초기화");
 
@@ -52,8 +50,6 @@ public class BenepiaController {
 
             session.setAttribute("CHANNEL_CODE", "DEFAULT");
         }
-
-        //session.setAttribute("CHANNEL_CODE", channel);
 
         // returnurl 있을 때만 처리
         if (returnurl != null && !returnurl.isBlank()) {
@@ -91,36 +87,22 @@ public class BenepiaController {
     }
 
 
-    @GetMapping("/session")
+    @GetMapping("/session/{channel}")
     @ResponseBody
     @Operation(summary = "베네피아 세션 조회", description = "프론트에서 channelCode 조회")
 
-    public Map<String, Object> getSession(HttpSession session) {
+    public Map<String, Object> getSession(
+            @PathVariable String channel, HttpSession session) {
 
         log.info("[BENEPIA] SESSION CHECK");
 
-        String channelCode = (String) session.getAttribute("CHANNEL_CODE");
-        Object benepiaUser = session.getAttribute("BENEP_DECRYPTED");
-        Boolean isBenepia = (Boolean) session.getAttribute("BENEPIA_ENTRY");
+        session.setAttribute("CHANNEL_CODE", channel);
 
-        log.info("channelCode={}, benepiaUser={}, isBenepia={}", channelCode, benepiaUser, isBenepia);
-
-        //  베네피아 세션 있으면 유지
-        if (Boolean.TRUE.equals(isBenepia) && benepiaUser != null) {
-            return Map.of("channelCode", "BENE");
+        if (!"BENE".equals(channel)) {
+            session.removeAttribute("BENEP_DECRYPTED");
+            session.removeAttribute("BENEP_TKN_KEY");
         }
 
-        // 일반 유저 → DEFAULT 강제
-        log.info("DEFAULT MALL → RESET");
-
-        log.info("[BENEPIA] DEFAULT 전환");
-
-        session.removeAttribute("BENEP_DECRYPTED");
-        session.removeAttribute("BENEP_TKN_KEY");
-        session.removeAttribute("BENEPIA_ENTRY");
-
-        session.setAttribute("CHANNEL_CODE", "DEFAULT");
-
-        return Map.of("channelCode", "DEFAULT");
+        return Map.of("channelCode", channel);
     }
 }
