@@ -38,17 +38,17 @@ public class BenepiaController {
         log.info("BENEPIA ENTRY channel={}", channel);
         log.info("BENEPIA RETURNURL={}", returnurl);
 
+        // encParam 있으면 베네피아 유저 처리
         if(encParam != null && !encParam.isBlank()){
             entryService.handle(encParam, session);
         }
 
-
-
-        if(channel == null || channel.isBlank()){
-            channel = "BENE";
+        // channel 파라미터 있으면 반영
+        if (channel != null && !channel.isBlank()) {
+            session.setAttribute("CHANNEL_CODE", channel);
         }
 
-        session.setAttribute("CHANNEL_CODE", channel);
+        //session.setAttribute("CHANNEL_CODE", channel);
 
         // returnurl 있을 때만 처리
         if (returnurl != null && !returnurl.isBlank()) {
@@ -95,13 +95,28 @@ public class BenepiaController {
         log.info("[BENEPIA] SESSION CHECK");
 
         String channelCode = (String) session.getAttribute("CHANNEL_CODE");
+        Object benepiaUser = session.getAttribute("BENEP_DECRYPTED");
+
+        log.info("channelCode={}, benepiaUser={}", channelCode, benepiaUser);
 
 
-        if (channelCode == null) {
-            return Map.of("channelCode", "DEFAULT");
-
+        //  베네피아 세션 있으면 유지
+        if (benepiaUser != null) {
+            return Map.of(
+                    "channelCode",
+                    channelCode != null ? channelCode : "BENE"
+            );
         }
-        // 없으면 무조건 DEFAULT
+
+        // 일반 유저 → DEFAULT 강제
+        log.info("DEFAULT MALL → RESET");
+
+        channelCode = "DEFAULT";
+        session.setAttribute("CHANNEL_CODE", channelCode);
+
+        session.removeAttribute("BENEP_DECRYPTED");
+        session.removeAttribute("BENEP_TKN_KEY");
+
         return Map.of("channelCode", channelCode);
     }
 }
