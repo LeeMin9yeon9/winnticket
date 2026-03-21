@@ -50,6 +50,7 @@
                   And x.ticket_used = true
             ) USED_TICKET_CNT,  -- 사용티켓수
             a.benepia_id,  -- 베네피아id
+            a.point_amount,
             a.memo -- 요청사항
         FROM
             orders a
@@ -106,6 +107,7 @@
                   And x.ticket_used = true
             ) USED_TICKET_CNT,  -- 사용티켓수
             a.benepia_id,  -- 베네피아id
+            a.point_amount,
             a.memo -- 요청사항
         FROM
             orders a
