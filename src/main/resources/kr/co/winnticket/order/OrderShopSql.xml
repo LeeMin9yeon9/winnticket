@@ -65,9 +65,9 @@
                      ON b.id = a.order_id
                 LEFT JOIN channels ch
                      ON ch.id = b.channel_id
-                JOIN products c
+                LEFT JOIN products c
                      ON c.id = a.product_id
-                JOIN partners d
+                LEFT JOIN partners d
                      ON d.id = c.partner_id
                 LEFT JOIN order_item_options e
                           ON e.order_item_id = a.id

@@ -20,6 +20,7 @@ public interface OrderMapper {
             @Param("srchWord") String asSrchWord,
             @Param("begDate") LocalDate asBegDate,
             @Param("endDate") LocalDate asEndDate,
+            @Param("partnerId") UUID partnerId,
             @Param("status") String status
     );
 
