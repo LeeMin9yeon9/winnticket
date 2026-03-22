@@ -6,6 +6,7 @@ import kr.co.winnticket.common.service.FileStorageService;
 import kr.co.winnticket.product.admin.dto.*;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,17 +57,17 @@ public class ProductService {
     }
 
     // 상품 기본정보 수정
-    public void updateProductBasic(UUID auId, ProductBasicPatchReqDto model) {
+    public void updateProductBasic(UUID auId, ProductBasicPatchReqDto model) throws Exception {
         mapper.updateProductBasic(auId, model);
     }
 
     // 상품 배송정보 수정
-    public void updateProductShipping(UUID auId, ProductShippingPatchReqDto model) {
+    public void updateProductShipping(UUID auId, ProductShippingPatchReqDto model) throws Exception {
         mapper.updateProductShipping(auId, model);
     }
 
     // 상품 섹션정보 수정
-    public void updateProductSection(UUID auId, ProductSectionPatchReqDto model) {
+    public void updateProductSection(UUID auId, ProductSectionPatchReqDto model) throws Exception {
         mapper.updateProductSection(auId, model.getSectionId(), model.isVisible());
     }
 
