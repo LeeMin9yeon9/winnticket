@@ -154,22 +154,25 @@
     <update id="updatePartner">
         UPDATE PARTNERS
         <set>
-            <if test="model.code != null">CODE = #{model.code},</if>
-            <if test="model.name != null">NAME = #{model.name},</if>
-            <if test="model.type != null">TYPE = #{model.type},</if>
-            <if test="model.ticketCodeType != null">TICKET_CODE_TYPE = #{model.ticketCodeType},</if>
-            <if test="model.status != null">STATUS = #{model.status},</if>
-            <if test="model.businessNumber != null">BUSINESS_NUMBER = #{model.businessNumber},</if>
-            <if test="model.address != null">ADDRESS = #{model.address},</if>
-            <if test="model.managerName != null">MANAGER_NAME = #{model.managerName},</if>
-            <if test="model.managerEmail != null">MANAGER_EMAIL = #{model.managerEmail},</if>
-            <if test="model.managerPhone != null">MANAGER_PHONE = #{model.managerPhone},</if>
+            <if test="model.code != null and model.code != ''">CODE = #{model.code},</if>
+            <if test="model.name != null and model.name != ''">NAME = #{model.name},</if>
+            <if test="model.type != null and model.type != ''">TYPE = #{model.type},</if>
+            <if test="model.ticketCodeType != null and model.ticketCodeType != ''">TICKET_CODE_TYPE = #{model.ticketCodeType},</if>
+            <if test="model.status != null and model.status != ''">STATUS = #{model.status},</if>
+            <if test="model.businessNumber != null and model.businessNumber != ''">BUSINESS_NUMBER = #{model.businessNumber},</if>
+            <if test="model.address != null and model.address != ''">ADDRESS = #{model.address},</if>
+            <if test="model.managerName != null and model.managerName != ''">MANAGER_NAME = #{model.managerName},</if>
+            <if test="model.managerEmail != null and model.managerEmail != ''">MANAGER_EMAIL = #{model.managerEmail},</if>
+            <if test="model.managerPhone != null and model.managerPhone != ''">MANAGER_PHONE = #{model.managerPhone},</if>
+
             <if test="model.contractStartDate != null">CONTRACT_START_DATE = #{model.contractStartDate},</if>
             <if test="model.contractEndDate != null">CONTRACT_END_DATE = #{model.contractEndDate},</if>
+
             <if test="model.commissionRate != null">COMMISSION_RATE = #{model.commissionRate},</if>
-            <if test="model.logoUrl != null">LOGO_URL = #{model.logoUrl},</if>
-            <if test="model.description != null">DESCRIPTION = #{model.description},</if>
+            <if test="model.logoUrl != null and model.logoUrl != ''">LOGO_URL = #{model.logoUrl},</if>
+            <if test="model.description != null and model.description != ''">DESCRIPTION = #{model.description},</if>
             <if test="model.couponCode != null">COUPON_CODE = #{model.couponCode},</if>
+
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
