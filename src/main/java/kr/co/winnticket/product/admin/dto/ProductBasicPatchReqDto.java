@@ -56,7 +56,7 @@ public class ProductBasicPatchReqDto {
     private String ticketType;
 
     @Schema(description = "선사입형 여부")
-    private Boolean prePurchased;
+    private boolean prePurchased;
 
     @Schema(description = "판매시작일")
     private LocalDate salesStartDate;
