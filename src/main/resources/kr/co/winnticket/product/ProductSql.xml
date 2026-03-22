@@ -18,6 +18,14 @@
             a.PRICE,  -- 정가
             a.DISCOUNT_PRICE,  -- 판매가
             a.SALES_STATUS,  -- 판매상태
+            (
+                select
+                    x.name
+                from
+                    partners x
+                where 1 = 1
+                and x.id = a.partner_id
+            ) partner_name, -- 파트너명
             a.PRE_PURCHASED, -- 선사입티켓여부
             a.VISIBLE  -- 활성화여부
         FROM
