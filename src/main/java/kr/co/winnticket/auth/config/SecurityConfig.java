@@ -192,7 +192,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "https://*.ngrok-free.dev",
                 "https://*.benepia.co.kr",
-                "http://127.0.0.1:3000",
+                "http://localhost:3000",
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
