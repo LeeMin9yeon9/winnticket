@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SalesStatus;
 import lombok.Data;
 import lombok.ToString;
@@ -23,6 +24,9 @@ public class ProductBasicPatchReqDto {
     @NotEmpty
     @Schema(description = "상품코드")
     private String code;
+
+    @Schema(description = "상품타입")
+    private ProductType type;
 
     @Schema(description = "카테고리_ID")
     private UUID categoryId;
