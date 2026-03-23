@@ -147,6 +147,12 @@ public class SecurityConfig {
                                 "/api/shopCart/**"
                         ).permitAll()
 
+                        /* ---------- 현장관리자 전용 주문관리 (ROLE002만 허용) ---------- */
+                        .requestMatchers(HttpMethod.GET, "/api/admin/field-order/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/field-order/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+
                         /* ---------- 주문 목록 (ROLE001 + ROLE002 가능) ---------- */
                         .requestMatchers(HttpMethod.GET, "/api/admin/order/**")
                         .hasAnyAuthority("ROLE001", "ROLE002")

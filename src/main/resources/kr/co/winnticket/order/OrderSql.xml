@@ -60,7 +60,7 @@
                 ON b.order_id = a.id
             JOIN products c
                 ON c.id = b.product_id
-                AND (#{partnerId} IS NULL OR c.partner_id = #{partnerId})
+                AND (CAST(#{partnerId} AS uuid) IS NULL OR c.partner_id = CAST(#{partnerId} AS uuid))
             LEFT JOIN partners d
                 ON d.id = c.partner_id
             LEFT JOIN channels e
