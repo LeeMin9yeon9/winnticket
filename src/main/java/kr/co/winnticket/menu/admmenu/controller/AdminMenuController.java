@@ -1,5 +1,6 @@
 package kr.co.winnticket.menu.admmenu.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.menu.admmenu.dto.AdminMenuCreateDto;
@@ -7,8 +8,6 @@ import kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto;
 import kr.co.winnticket.menu.admmenu.dto.AdminMenuUpdateDto;
 import kr.co.winnticket.menu.admmenu.service.AdminMenuService;
 import lombok.RequiredArgsConstructor;
-import org.apache.ibatis.javassist.NotFoundException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,59 +19,59 @@ import java.util.UUID;
 @RequestMapping("/api/admin/menu")
 public class AdminMenuController {
 
-    private final AdminMenuService adminMenuService;
+    private final AdminMenuService service;
 
-    @GetMapping("/{role}")
-    public ResponseEntity<ApiResponse<List<AdminMenuListDto>>> getAllAdmMenus(
-            @PathVariable String role,
+    @GetMapping
+    @Operation(summary = "관리자 메뉴 조회")
+    public ApiResponse<List<AdminMenuListDto>> getMenus(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String titleEn,
             @RequestParam(required = false) String page
     ) {
-        List<AdminMenuListDto> menus = adminMenuService.searchAdminMenus(role, title, titleEn, page);
-        return ResponseEntity.ok(ApiResponse.success(menus));
+        return ApiResponse.success("조회 성공",
+                service.searchAdminMenus(title, titleEn, page));
     }
-
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createAdmMenu(
-            @RequestBody AdminMenuCreateDto createDto
-    ) {
-        adminMenuService.createAdmMenu(createDto);
-        return ResponseEntity.ok(ApiResponse.success("관리자 메뉴가 생성되었습니다.", null));
+    @Operation(summary = "관리자 메뉴 생성")
+    public ApiResponse<Void> create(@RequestBody AdminMenuCreateDto dto) {
+        service.createAdmMenu(dto);
+        return ApiResponse.success("생성 완료", null);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateAdmMenu(
+    @Operation(summary = "관리자 메뉴 수정")
+    public ApiResponse<Void> update(
             @PathVariable UUID id,
-            @RequestBody AdminMenuUpdateDto updateDto
-    ) throws NotFoundException {
-        adminMenuService.updateAdmMenu(id, updateDto);
-        return ResponseEntity.ok(ApiResponse.success("관리자 메뉴가 수정되었습니다.", null));
+            @RequestBody AdminMenuUpdateDto dto
+    ) {
+        service.updateAdmMenu(id, dto);
+        return ApiResponse.success("수정 완료", null);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteAdmMenu(
-            @PathVariable UUID id
-    ) throws NotFoundException {
-        adminMenuService.deleteAdmMenu(id);
-        return ResponseEntity.ok(ApiResponse.success("관리자 메뉴가 삭제되었습니다.", null));
+    @Operation(summary = "관리자 메뉴 삭제")
+    public ApiResponse<Void> delete(@PathVariable UUID id) {
+        service.deleteAdmMenu(id);
+        return ApiResponse.success("삭제 완료", null);
     }
 
-    @PatchMapping("/displayOrder/{id}/{newOrder}")
-    public ResponseEntity<ApiResponse<Void>> changeAdmOrder(
+    @PatchMapping("/{id}/order")
+    @Operation(summary = "메뉴 순서 변경")
+    public ApiResponse<Void> changeOrder(
             @PathVariable UUID id,
-            @PathVariable Integer newOrder
-    ) throws NotFoundException {
-        adminMenuService.changeAdmMenu(id, newOrder);
-        return ResponseEntity.ok(ApiResponse.success("순서가 변경되었습니다.", null));
-    }
-
-    @PatchMapping("/visible/{id}/{visible}")
-    public ResponseEntity<ApiResponse<Void>> changeAdmVisible(
-            @PathVariable UUID id,
-            @PathVariable Boolean visible
+            @RequestParam Integer newOrder
     ) {
-        adminMenuService.changeVisible(id, visible);
-        return ResponseEntity.ok(ApiResponse.success("노출 상태가 변경되었습니다.", null));
+        service.changeAdmMenu(id, newOrder);
+        return ApiResponse.success("순서 변경 완료", null);
+    }
+
+    @PatchMapping("/{id}/visible")
+    @Operation(summary = "노출 여부 변경")
+    public ApiResponse<Void> changeVisible(
+            @PathVariable UUID id,
+            @RequestParam Boolean visible
+    ) {
+        service.changeVisible(id, visible);
+        return ApiResponse.success("노출 변경 완료", null);
     }
 }

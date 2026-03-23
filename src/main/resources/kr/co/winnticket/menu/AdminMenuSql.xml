@@ -10,18 +10,15 @@
         SELECT
         id,
         title,
-        title_en      AS titleEn,
+        title_en AS titleEn,
         icon,
         page,
         display_order AS displayOrder,
         visible,
-        created_at    AS createdAt,
-        updated_at    AS updatedAt
+        created_at AS createdAt,
+        updated_at AS updatedAt
         FROM admin_menus
         <where>
-            <if test="role != null and role != ''">
-                And (#{role} = 'ROLE001' Or page = 'field-orders')
-            </if>
             <if test="title != null and title != ''">
                 AND title ILIKE CONCAT('%', #{title}, '%')
             </if>
@@ -32,7 +29,7 @@
                 AND page ILIKE CONCAT('%', #{page}, '%')
             </if>
         </where>
-        ORDER BY display_order ASC;
+        ORDER BY display_order ASC
     </select>
 
     <!-- ID로 단건 조회 -->

@@ -48,14 +48,14 @@ public class PartnerInfoGetResDto {
     @Schema(description = "담당자 전화번호")
     private String managerPhone;
 
-    @Schema(description = "로고URL")
-    private String logoUrl;
-
     @Schema(description = "계약 시작일")
     private LocalDate contractStartDate;
 
     @Schema(description = "계약 종료일")
     private LocalDate contractEndDate;
+
+    @Schema(description = "쿠폰코드 생성 여부")
+    private boolean couponCode;
 
 
 }
