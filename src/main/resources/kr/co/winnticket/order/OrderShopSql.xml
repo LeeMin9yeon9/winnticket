@@ -26,9 +26,9 @@
             a.final_price, -- 결제금액
             a.point_amount,  -- 포인트결제금액
             CASE
-            WHEN a.point_amount IS NOT NULL AND a.point_amount > 0
-            THEN a.payment_method || ', POINT'
-            ELSE a.payment_method
+                WHEN a.point_amount IS NOT NULL AND a.point_amount > 0
+                    THEN a.payment_method::text || ', POINT'
+                ELSE a.payment_method::text
             END AS payment_method, -- 결제수단
             a.paid_at,  -- 결제일시
             a.total_price, -- 상품총금액
