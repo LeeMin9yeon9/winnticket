@@ -15,7 +15,6 @@ public interface AdminMenuMapper {
 
         // 관리자 메뉴 조회 (검색 조건 포함)
         List<AdminMenuListDto> findAdminMenus(
-                @Param("role") String role,
                 @Param("title") String title,
                 @Param("titleEn") String titleEn,
                 @Param("page") String page
@@ -25,21 +24,22 @@ public interface AdminMenuMapper {
         AdminMenuListDto admMenuFindById(@Param("id") UUID id);
 
         // 관리자 메뉴 추가
-        void admMenuInsert(AdminMenuCreateDto adminMenuCreateDto);
+        void admMenuInsert(AdminMenuCreateDto dto);
 
         // 관리자 메뉴 수정
-        void admMenuUpdate(
-                @Param("id") UUID id,
-                @Param("adminMenuUpdate") AdminMenuUpdateDto adminMenuUpdateDto);
+        void admMenuUpdate(@Param("id") UUID id,
+                           @Param("adminMenuUpdate") AdminMenuUpdateDto dto);
 
         // 관리자 메뉴 삭제
         void admMenuDelete(@Param("id") UUID id);
 
         // 관리자 메뉴 노출 순서 변경
-        void admMenuUpdateOrder(@Param("id") UUID id, @Param("order") Integer order);
+        void admMenuUpdateOrder(@Param("id") UUID id,
+                                @Param("order") Integer order);
 
         // 관리자 메뉴 활성/비활성화
-        void admMenuUpdateVisible(@Param("id") UUID id, @Param("visible") Boolean visible);
+        void admMenuUpdateVisible(@Param("id") UUID id,
+                                  @Param("visible") Boolean visible);
 
 
         // 신규 메뉴 생성 시 순번 자동 계산용

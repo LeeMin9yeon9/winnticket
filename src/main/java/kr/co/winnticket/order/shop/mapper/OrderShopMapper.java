@@ -6,6 +6,7 @@ import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -112,6 +113,15 @@ public interface OrderShopMapper {
 
     // 문자 QR
     List<OrderQrCouponGetResDto.Ticket> selectTicketsByOrderNumber(@Param("orderNumber") String orderNumber);
+
+    // 입금기한 설정
+    void updateDepositDeadline(
+            @Param("orderId") UUID orderId,
+            @Param("deadline") LocalDateTime deadline
+    );
+
+    // 만료 주문 조회(스케줄러용)
+    List<String> findExpiredOrderNumbers();
 
 
 
