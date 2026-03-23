@@ -31,7 +31,7 @@ public class PlusNUsedScheduler {
     // =========================
     // 5분마다 오늘 사용 조회
     // =========================
-    @Scheduled(cron = "0 */5 * * * *")
+    //@Scheduled(cron = "0 */5 * * * *")
     public void syncToday() {
         sync(LocalDate.now());
     }
@@ -39,7 +39,7 @@ public class PlusNUsedScheduler {
     // =========================
     // 새벽 3시 어제 재조회
     // =========================
-    @Scheduled(cron = "0 0 3 * * *")
+    //@Scheduled(cron = "0 0 3 * * *")
     public void syncYesterday() {
         sync(LocalDate.now().minusDays(1));
     }
