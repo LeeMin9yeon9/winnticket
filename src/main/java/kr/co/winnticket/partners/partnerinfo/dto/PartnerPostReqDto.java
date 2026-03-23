@@ -58,9 +58,6 @@ public class PartnerPostReqDto {
     @Schema(description = "수수료율")
     private Integer commissionRate;
 
-    @Schema(description = "로고URL")
-    private String logoUrl;
-
     @Schema(description = "쿠폰코드 생성 여부")
     private boolean couponCode;
 

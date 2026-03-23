@@ -30,7 +30,7 @@ public class PartnerPatchResDto {
     @Schema(description = "파트너타입")
     private PartnerType type;
 
-    @Schema(description = "티켓타입")
+    @Schema(description = "티켓코드 타입")
     private TicketCodeType ticketCodeType;
 
     @Schema(description = "상태")
@@ -59,9 +59,6 @@ public class PartnerPatchResDto {
 
     @Schema(description = "수수료율")
     private Integer commissionRate;
-
-    @Schema(description = "로고URL")
-    private String logoUrl;
 
     @Schema(description = "쿠폰코드 생성 여부")
     private boolean couponCode;

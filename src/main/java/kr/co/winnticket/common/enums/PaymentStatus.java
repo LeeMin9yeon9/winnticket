@@ -6,7 +6,8 @@ public enum PaymentStatus {
     FAILED("결제실패"),
     CANCELED("취소완료"),
     REQUESTED("PG에 결제 요청함"),
-    REFUNDED("환불완료");
+    REFUNDED("환불완료"),
+    EXPIRED("무통장 입금기한 만료");
 
     private final String displayName;
 
