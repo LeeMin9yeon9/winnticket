@@ -50,13 +50,13 @@ public interface DashboardMapper {
     int selectThisMonthCancelOrderCount();
 
     // 파트너별 매출 현황
-    List<DashboardPartnerSalesDto> selectPartnerSales();
+    List<DashboardPartnerSalesDto> selectPartnerSales(String period);
 
     // 카테고리별상품
     List<DashboardCategoryDto> selectCategoryProducts();
 
     // 상위 판매 상품
-    List<DashboardTopProductDto> selectTopProducts();
+    List<DashboardTopProductDto> selectTopProducts(String period);
 
     // 일별 판매 추이
     List<DashboardDailySalesDto> selectDailySales(String period);
