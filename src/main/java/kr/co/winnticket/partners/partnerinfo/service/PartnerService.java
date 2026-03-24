@@ -45,7 +45,10 @@ public class PartnerService {
     // 파트너 수정
     public void updatePartner(UUID id , PartnerPatchResDto model){
         if(model.getCode() != null && !model.getCode().isEmpty()){
-            throw new IllegalArgumentException("이미 다른 파트너가 사용 중인 코드입니다.");
+            // 본인 제외 중복 체크
+            if(mapper.existsCode(id, model.getCode()) > 0){
+                throw new IllegalArgumentException("이미 다른 파트너가 사용 중인 코드입니다.");
+            }
         }
         mapper.updatePartner(id,model);
     }
