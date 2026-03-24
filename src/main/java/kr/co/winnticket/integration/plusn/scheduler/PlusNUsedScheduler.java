@@ -8,6 +8,7 @@ import kr.co.winnticket.integration.plusn.dto.PlusNUsedDateResponse.UsedOrder;
 import kr.co.winnticket.ticket.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -26,7 +27,7 @@ public class PlusNUsedScheduler {
 
 
     // 5분마다 오늘 사용 조회
-    //@Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(fixedDelay = 300000)
     public void syncToday() {
         sync(LocalDate.now());
     }
