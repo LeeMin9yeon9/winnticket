@@ -21,7 +21,7 @@ public class OrderExpireScheduler {
     private final KcpService kcpService;
 
     // 5분마다 실행
-    @Scheduled(fixedDelay = 30000) // 300000
+    @Scheduled(fixedDelay = 300000)
     public void expireOrders() {
 
         log.info("입금기한 체크 시작");

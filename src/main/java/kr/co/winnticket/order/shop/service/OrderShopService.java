@@ -278,7 +278,9 @@ public class OrderShopService {
 
             resDto.setPaymentStatus("READY");
 
-            LocalDateTime deadline = LocalDateTime.now().plusHours(1); // 테스트 후 24로 변경해야함
+            // 입금 기한 24시간
+            LocalDateTime deadline = LocalDateTime.now().plusHours(24);
+
 
             mapper.updateDepositDeadline(orderId, deadline);
 

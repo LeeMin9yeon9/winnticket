@@ -6,10 +6,17 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper
 public interface MairOrderMapper {
+
+    // 발급 시 TRNO(주문번호 -1) 저장
+    void updatePartnerOrderNumber(
+            @Param("orderItemId") UUID orderItemId,
+            @Param("trno") String trno
+    );
 
     // 주문 조회
     MairOrderInfoDto selectOrderInfo(
@@ -29,6 +36,15 @@ public interface MairOrderMapper {
 
     // 남은 티켓 개수 확인( 여러개 주문 시)
     int countRemainTickets(@Param("orderItemId") UUID orderItemId);
+
+    //티켓조회
+    List<Map<String, String>> selectTicketsByOrderNumber(String orderNumber);
+
+    // 티켓사용처리
+    void updateTicketUsedIfNotUsed(String tno);
+
+    //스케줄러
+    List<String> selectMairPendingOrders();
 
 
 

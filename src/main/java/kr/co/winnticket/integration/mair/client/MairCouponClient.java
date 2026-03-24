@@ -74,7 +74,7 @@ public class MairCouponClient {
                 throw new IllegalStateException("MAIR response is empty");
             }
 
-            // ✅ JSONP 형태면 callback 제거
+            //  JSONP 형태면 callback 제거
             String json = raw.trim();
             if (json.contains("(") && json.endsWith(")")) {
                 json = json.replaceAll("^[^(]*\\(", "").replaceAll("\\);?$", "");

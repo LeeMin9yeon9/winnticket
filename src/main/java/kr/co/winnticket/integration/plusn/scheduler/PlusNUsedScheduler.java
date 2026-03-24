@@ -6,16 +6,12 @@ import kr.co.winnticket.integration.plusn.dto.PlusNUsedDateResponse;
 import kr.co.winnticket.integration.plusn.dto.PlusNUsedDateResponse.Coupon;
 import kr.co.winnticket.integration.plusn.dto.PlusNUsedDateResponse.UsedOrder;
 import kr.co.winnticket.ticket.mapper.TicketMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -28,25 +24,21 @@ public class PlusNUsedScheduler {
     private static final DateTimeFormatter FORMAT =
             DateTimeFormatter.BASIC_ISO_DATE;
 
-    // =========================
+
     // 5분마다 오늘 사용 조회
-    // =========================
     //@Scheduled(cron = "0 */5 * * * *")
     public void syncToday() {
         sync(LocalDate.now());
     }
 
-    // =========================
     // 새벽 3시 어제 재조회
-    // =========================
     //@Scheduled(cron = "0 0 3 * * *")
     public void syncYesterday() {
         sync(LocalDate.now().minusDays(1));
     }
 
-    // =========================
+
     // 실제 동기화 로직
-    // =========================
     private void sync(LocalDate date) {
 
         String orderDate = date.format(FORMAT);

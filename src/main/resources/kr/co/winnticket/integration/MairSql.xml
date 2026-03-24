@@ -47,12 +47,65 @@
             )
     </update>
 
+    <!--엠에어 쿠폰 발급 시 주문번호(trno) 저장 -->
+    <update id="updatePartnerOrderNumber">
+        UPDATE order_tickets
+        SET partner_order_number = #{trno}
+        WHERE id = (
+            SELECT id
+            FROM order_tickets
+            WHERE order_item_id = #{orderItemId}
+              AND partner_order_number IS NULL
+            ORDER BY created_at
+            LIMIT 1
+            )
+    </update>
+
+
+
     <!-- 여러개 티켓 주문 시 남은 티켓 개수 조회 -->
     <select id="countRemainTickets" resultType="int">
         SELECT COUNT(*)
         FROM order_tickets
         WHERE order_item_id = #{orderItemId}
           AND partner_order_code IS NULL
+    </select>
+
+    <!--티켓조회 후 업데이트 -->
+    <select id="selectTicketsByOrderNumber" resultType="map">
+        SELECT
+            ot.partner_order_number AS trno,
+            (
+                SELECT pov.code
+                FROM order_item_options oio
+                         JOIN product_option_values pov ON pov.id = oio.option_value_id
+                WHERE oio.order_item_id = oi.id
+                                       LIMIT 1
+            ) AS productcode
+        FROM order_tickets ot
+            JOIN order_items oi ON oi.id = ot.order_item_id
+            JOIN orders o ON o.id = oi.order_id
+        WHERE o.order_number = #{orderNumber}
+          AND ot.partner_order_number IS NOT NULL
+    </select>
+
+    <!--사용처리-->
+    <update id="updateTicketUsedIfNotUsed">
+        UPDATE order_tickets
+        SET ticket_used = true,
+            ticket_used_date = NOW()
+        WHERE partner_order_number = #{trno}
+          AND ticket_used = false
+    </update>
+
+    <!--스케줄러-->
+    <select id="selectMairPendingOrders" resultType="string">
+        SELECT DISTINCT o.order_number
+        FROM orders o
+                 JOIN order_items oi ON oi.order_id = o.id
+                 JOIN order_tickets ot ON ot.order_item_id = oi.id
+        WHERE ot.partner_order_number IS NOT NULL
+          AND ot.ticket_used = false
     </select>
 
 
