@@ -20,7 +20,7 @@ public class PlaystoryScheduler {
     private final TicketMapper mapper;
     private final PlaystoryService playstoryService;
 
-    //@Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(fixedDelay = 300000)
     public void playstoryCheckScheduler() {
 
         log.info("[Playstory Scheduler Start]");
