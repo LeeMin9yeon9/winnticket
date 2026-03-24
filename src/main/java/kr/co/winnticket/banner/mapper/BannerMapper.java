@@ -15,6 +15,9 @@ public interface BannerMapper {
     List<BannerDto>selectAdminList(BannerFilter filter);
 
 
+    // 배너 최대 displayOrder 조회
+    Integer selectMaxDisplayOrder();
+
     // 배너 생성
     void insertBanner(BannerCreateDto dto);
 

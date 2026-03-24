@@ -54,55 +54,61 @@
     </select>
 
 
-    <!-- 전체 주문 -->
+    <!-- 전체 주문 (기간 필터) -->
     <select id="selectTotalOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
+        WHERE 1=1
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 
-    <!-- 주문 완료 -->
+    <!-- 주문 완료 (기간 필터) -->
     <select id="selectOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE status = 'COMPLETED'
           AND payment_status = 'PAID'
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 
-    <!-- 주문 취소 -->
+    <!-- 주문 취소 (기간 필터) -->
     <select id="selectCancelOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
-        WHERE status = 'CANCELED'
-           OR payment_status = 'CANCELED'
-    </select>
-
-
-    <!-- 이번달 전체 주문 -->
-    <select id="selectThisMonthTotalOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE created_at >= DATE_TRUNC('month', NOW())
-    </select>
-
-
-    <!-- 이번달 완료 주문 -->
-    <select id="selectThisMonthOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE status = 'COMPLETED'
-          AND payment_status = 'PAID'
-          AND created_at >= DATE_TRUNC('month', NOW())
-    </select>
-
-
-    <!-- 이번달 취소 주문 -->
-    <select id="selectThisMonthCancelOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE status = 'CANCELED'
-          AND created_at >= DATE_TRUNC('month', NOW())
+        WHERE (status = 'CANCELED' OR payment_status = 'CANCELED')
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 

@@ -39,24 +39,19 @@ public class DashboardService {
         res.setInactivePartnerCount(mapper.selectInactivePartnerCount());
 
 
-        // 전체 주문 수
-        res.setTotalOrderCount(mapper.selectTotalOrderCount());
+        // 전체 주문 수 (기간 필터)
+        res.setTotalOrderCount(mapper.selectTotalOrderCount(period));
 
-        // 주문 완료 수
-        res.setOrderCount(mapper.selectOrderCount());
+        // 주문 완료 수 (기간 필터)
+        res.setOrderCount(mapper.selectOrderCount(period));
 
-        // 주문 취소 수
-        res.setCancelOrderCount(mapper.selectCancelOrderCount());
+        // 주문 취소 수 (기간 필터)
+        res.setCancelOrderCount(mapper.selectCancelOrderCount(period));
 
-
-        // 이번달 주문 수
-        res.setThisMonthTotalOrderCount(mapper.selectThisMonthTotalOrderCount());
-
-        // 이번달 주문 완료 수
-        res.setThisMonthOrderCount(mapper.selectThisMonthOrderCount());
-
-        // 이번달 주문 취소 수
-        res.setThisMonthCancelOrderCount(mapper.selectThisMonthCancelOrderCount());
+        // 이번달 주문 수 → 기간 필터와 동일하게
+        res.setThisMonthTotalOrderCount(mapper.selectTotalOrderCount(period));
+        res.setThisMonthOrderCount(mapper.selectOrderCount(period));
+        res.setThisMonthCancelOrderCount(mapper.selectCancelOrderCount(period));
 
 
         // 파트너 별 매출 현황
