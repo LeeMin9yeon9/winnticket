@@ -22,15 +22,11 @@
         WHERE c.status = 'ACTIVE'
 
         <if test="code != null and code != ''">
-            AND c.code ILIKE CONCAT('%', #{code}, '%')
-        </if>
-
-        <if test="name != null and name != ''">
-            AND c.name ILIKE CONCAT('%', #{name}, '%')
-        </if>
-
-        <if test="companyName != null and companyName != ''">
-            AND c.company_name ILIKE CONCAT('%', #{companyName}, '%')
+            AND (
+                c.code ILIKE CONCAT('%', #{code}, '%')
+                OR c.name ILIKE CONCAT('%', #{code}, '%')
+                OR c.company_name ILIKE CONCAT('%', #{code}, '%')
+            )
         </if>
 
         ORDER BY c.created_at DESC
