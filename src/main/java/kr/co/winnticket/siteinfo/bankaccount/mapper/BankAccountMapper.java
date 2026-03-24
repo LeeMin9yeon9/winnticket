@@ -43,5 +43,9 @@ public interface BankAccountMapper {
     // 기존 자리 당기기
     void decreaseOrderAfter(@Param("oldOrder") Integer oldOrder);
 
+    // 해당 표시순서에 항목 존재 확인
+    boolean existsByDisplayOrder(@Param("displayOrder") Integer displayOrder);
 
+    // 해당 표시순서에 항목 존재 확인 (자기 자신 제외)
+    boolean existsByDisplayOrderExcluding(@Param("displayOrder") Integer displayOrder, @Param("excludeId") Long excludeId);
 }

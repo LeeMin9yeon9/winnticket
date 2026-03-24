@@ -40,4 +40,10 @@ public interface TermsMapper {
 
     // 삭제 시 순서 당기기
     void decreaseDisplayOrder(@Param("displayOrder") Integer displayOrder);
+
+    // 해당 표시순서에 항목 존재 확인
+    boolean existsByDisplayOrder(@Param("displayOrder") Integer displayOrder);
+
+    // 해당 표시순서에 항목 존재 확인 (자기 자신 제외)
+    boolean existsByDisplayOrderExcluding(@Param("displayOrder") Integer displayOrder, @Param("excludeId") Long excludeId);
 }
