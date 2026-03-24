@@ -42,6 +42,9 @@ public interface AdminMenuMapper {
                                   @Param("visible") Boolean visible);
 
 
+        // 데드락 방지: 전체 행 잠금 (ORDER BY로 일관된 순서)
+        void lockAllForUpdate();
+
         // 신규 메뉴 생성 시 순번 자동 계산용
         Integer admMenuGetMaxOrder();
 

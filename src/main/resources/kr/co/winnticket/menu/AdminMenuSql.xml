@@ -110,6 +110,11 @@
         WHERE id = #{id}::uuid;
     </update>
 
+    <!-- 데드락 방지: 전체 행 잠금 (일관된 순서) -->
+    <select id="lockAllForUpdate" resultType="kr.co.winnticket.menu.admmenu.dto.AdminMenuListDto">
+        SELECT * FROM admin_menus ORDER BY display_order FOR UPDATE
+    </select>
+
     <!-- 신규 메뉴 생성 시 순서 번호 조회 -->
     <select id="admMenuGetMaxOrder" resultType="int">
         SELECT COALESCE(MAX(display_order), 0)
