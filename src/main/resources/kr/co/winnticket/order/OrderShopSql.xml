@@ -346,9 +346,12 @@
     <select id="findExpiredOrderNumbers" resultType="string">
         SELECT order_number
         FROM orders
-        WHERE payment_status = 'READY'
-        AND deposit_deadline IS NOT NULL
-          AND deposit_deadline &lt; NOW()
+        WHERE status = 'PENDING_PAYMENT'
+          AND payment_status = 'READY'
+          AND payment_method = 'VIRTUAL_ACCOUNT'
+          AND deposit_deadline IS NOT NULL
+        AND deposit_deadline &lt; NOW()
+
     </select>
 
 

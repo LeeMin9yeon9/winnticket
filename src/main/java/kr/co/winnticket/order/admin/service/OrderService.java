@@ -130,35 +130,6 @@ public class OrderService {
             return;
         }
 
-        // 포인트 차감 (무통장 + 포인트)
-        // 포인트 남아있으면
-//        if (order.getPointAmount() > 0 ) {
-//
-//            log.info("[POINT] 무통장 입금완료 → 포인트 차감 시작 orderId={}", auId);
-//
-//            List<OrderProductListGetResDto> items =
-//                    mapper.selectOrderProductList(auId);
-//
-//            KcpPointPayReqDto dto = new KcpPointPayReqDto();
-//
-//            dto.setOrderNo(order.getOrderNumber());
-//            dto.setAmount(order.getPointAmount());
-//
-//            dto.setProductName(items.get(0).getProductName());
-//            dto.setProductCode(items.get(0).getProductCode());
-//
-//            dto.setBuyerName(order.getCustomerName());
-//            dto.setBuyerEmail(order.getCustomerEmail());
-//            dto.setBuyerPhone(order.getCustomerPhone());
-//
-//            try {
-//                kcpService.pointPayAndUpdate(dto);
-//                log.info("[POINT] 무통장 포인트 차감 완료 orderId={}", auId);
-//            } catch (Exception e) {
-//                log.error("[POINT ERROR] 무통장 포인트 차감 실패 orderId={}", auId, e);
-//                throw new RuntimeException("포인트 차감 실패");
-//            }
-//        }
 
         // 결제 상태 / 결제일시 업데이트
         mapper.updatePaymentComplete(auId, LocalDateTime.now());
