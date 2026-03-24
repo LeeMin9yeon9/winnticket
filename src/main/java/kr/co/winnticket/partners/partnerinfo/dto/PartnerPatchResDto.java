@@ -7,14 +7,20 @@ import jakarta.validation.constraints.NotEmpty;
 import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import kr.co.winnticket.common.enums.TicketCodeType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "[파트너 > 파트너 수정 DTO ] PartnerPatchResDto")
 public class PartnerPatchResDto {
+
+    @Schema(description = "로고 URL")
+    private String logoUrl;
+
 
     @Hidden
     @Schema(description = "파트너 ID")
