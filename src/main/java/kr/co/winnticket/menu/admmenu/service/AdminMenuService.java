@@ -67,12 +67,9 @@ public class AdminMenuService {
         mapper.admMenuDelete(id);
     }
 
-    // 노출 순서 변경 (데드락 방지: 테이블 락 선점)
-    @Transactional
+    // 노출 순서 변경
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.SERIALIZABLE)
     public void changeAdmMenu(UUID id, Integer newOrder) {
-
-        // 데드락 방지: 모든 행을 일관된 순서로 잠금
-        mapper.lockAllForUpdate();
 
         AdminMenuListDto menu = mapper.admMenuFindById(id);
 
