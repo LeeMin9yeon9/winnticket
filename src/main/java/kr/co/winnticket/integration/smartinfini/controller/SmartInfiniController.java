@@ -5,6 +5,7 @@ import kr.co.winnticket.integration.smartinfini.dto.*;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class SmartInfiniController {
      * SmartInfini 사용처리 콜백 (문서상 POST JSON)
      */
     @PostMapping(value = "/use/callback", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public SIUseCallbackResponse useCallback(@RequestBody SIUseCallbackRequest req) {
-        return service.onUseCallback(req);
+    public ResponseEntity<SIUseCallbackResponse> use(@RequestBody SIUseCallbackRequest req) {
+        return ResponseEntity.ok(service.use(req));
     }
 
     /**
@@ -30,8 +31,8 @@ public class SmartInfiniController {
      * 예: /api/smartinfini/use/callback?order_div=...&ticket_code=...&result_date=...
      */
     @GetMapping(value = "/use/callback", produces = MediaType.APPLICATION_JSON_VALUE)
-    public SIUseCallbackResponse useCallbackGet(SIUseCallbackRequest req) {
-        return service.onUseCallback(req);
+    public ResponseEntity<SIUseCallbackResponse> useGet(SIUseCallbackRequest req) {
+        return ResponseEntity.ok(service.use(req));
     }
 
     /**

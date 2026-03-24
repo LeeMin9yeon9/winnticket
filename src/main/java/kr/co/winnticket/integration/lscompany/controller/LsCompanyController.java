@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
+import kr.co.winnticket.integration.smartinfini.dto.SIUseCallbackRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,6 +64,14 @@ public class LsCompanyController {
             @PathVariable UUID orderId
     ) {
         return ApiResponse.success(service.resendTicket(orderId));
+    }
+
+    @Operation(summary = "LS 티켓사용처리")
+    @PostMapping("/ticket/used")
+    public ApiResponse<LsTicketUseResDto> ticketUse(
+            @RequestBody LsTicketUseReqDto req
+    ) {
+        return ApiResponse.success(service.ticketUse(req));
     }
 
 

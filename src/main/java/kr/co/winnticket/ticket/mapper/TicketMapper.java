@@ -1,8 +1,12 @@
 package kr.co.winnticket.ticket.mapper;
 
+import kr.co.winnticket.integration.lscompany.dto.LsOrderTicket;
+import kr.co.winnticket.integration.smartinfini.dto.SmartInfiniOrderTicket;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,4 +43,27 @@ public interface TicketMapper {
     void updateWoongjinTicketUsed(
             @Param("couponNo") String couponNo
     );
+
+    // 스마트인피니 쿠폰 조회
+    SmartInfiniOrderTicket findByTicketCodeSmartInfini(
+            @Param("ticketCode") String ticketCode
+    );
+
+    // 스마트인피니 쿠폰 사용처리
+    int useTicketSmartInfini(
+            @Param("orderDiv") String orderDiv,
+            @Param("ticketCode") String ticketCode,
+            @Param("resultDate") String resultDate
+    );
+
+    // LS 컴퍼니 쿠폰 조회
+    LsOrderTicket findByTicketCodeLs(
+            @Param("ticketCode") String transactionId
+    );
+
+    // LS 컴퍼니 쿠폰 사용처리
+    int useTicketLs(
+            @Param("ticketCode") String transactionId,
+            @Param("orderDiv") String code,
+            @Param("resultDate") String date);
 }

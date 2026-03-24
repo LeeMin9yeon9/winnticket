@@ -90,4 +90,72 @@
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
     </update>
+
+    <!-- 스마트인피니 주문조회 -->
+    <select id="findByTicketCodeSmartInfini" resultType="kr.co.winnticket.integration.smartinfini.dto.SmartInfiniOrderTicket">
+        select
+            o.order_number,
+            ot.ticket_number,
+            ot.ticket_used
+        from
+            order_tickets ot
+        join order_items oi
+        on oi.id = ot.order_item_id
+        join orders o
+        on o.id = oi.order_id
+        where 1 = 1
+        and ot.ticket_number  = #{ticketCode}
+    </select>
+
+    <!-- 스마트인피니 사용처리 -->
+    <update id="useTicketSmartInfini">
+        UPDATE order_tickets
+        SET
+            ticket_used = CASE
+                          WHEN #{orderDiv} = '51' THEN true
+                          ELSE false
+            END,
+            ticket_used_date = CASE
+                                   WHEN #{orderDiv} = '51' THEN
+                                       TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+                                   ELSE
+                                        null
+            End
+        WHERE 1 = 1
+        AND ticket_number = #{ticketCode}
+    </update>
+
+    <!-- LS 주문조회 -->
+    <select id="findByTicketCodeLs" resultType="kr.co.winnticket.integration.lscompany.dto.LsOrderTicket">
+        select
+            o.order_number,
+            ot.ticket_number,
+            ot.ticket_used
+        from
+            order_tickets ot
+                join order_items oi
+                     on oi.id = ot.order_item_id
+                join orders o
+                     on o.id = oi.order_id
+        where 1 = 1
+          and ot.ticket_number  = #{ticketCode}
+    </select>
+
+    <!-- LS 사용처리 -->
+    <update id="useTicketLs">
+        UPDATE order_tickets
+        SET
+            ticket_used = CASE
+                  WHEN #{orderDiv} = 'use' THEN true
+                  ELSE false
+                END,
+            ticket_used_date = CASE
+               WHEN #{orderDiv} = 'use' THEN
+                   TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+               ELSE
+                   null
+                End
+        WHERE 1 = 1
+          AND ticket_number = #{ticketCode}
+    </update>
 </mapper>

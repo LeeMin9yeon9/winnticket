@@ -5,14 +5,21 @@ import kr.co.winnticket.integration.smartinfini.dto.*;
 import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniMapper;
 import kr.co.winnticket.integration.smartinfini.mapper.SmartInfiniResponseMapper;
 import kr.co.winnticket.integration.smartinfini.props.SmartInfiniProperties;
+import kr.co.winnticket.order.admin.dto.OrderTicketDetailGetResDto;
+import kr.co.winnticket.ticket.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+
+import static kr.co.winnticket.common.dto.ApiResponse.success;
+import static kr.co.winnticket.integration.common.IntegrationResult.fail;
+import static org.apache.poi.ss.util.DateParser.parseDate;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +28,7 @@ public class SmartInfiniService {
 
     private final SmartInfiniClient client;
     private final SmartInfiniMapper mapper;
+    private final TicketMapper ticketMapper;
     private final SmartInfiniProperties props;
     private final SmartInfiniResponseMapper responseMapper;
 
@@ -168,19 +176,51 @@ public class SmartInfiniService {
         return res;
     }
 
-    // =========================
-    // 내부 사용 콜백 처리
-    // =========================
-    public SIUseCallbackResponse onUseCallback(SIUseCallbackRequest req) {
+    // 티켓사용처리
+    @Transactional
+    public SIUseCallbackResponse use(SIUseCallbackRequest req) {
+        // 1. 티켓 조회
+        SmartInfiniOrderTicket ticket = ticketMapper.findByTicketCodeSmartInfini(req.getTicketCode());
 
-        // TODO:
-        // 1. 중복 사용 체크
-        // 2. 주문 상태 업데이트
-        // 3. 사용 로그 기록
+        if (ticket == null) {
+            return fail("티켓 없음");
+        }
 
-        String orderNo =
-                req.getOrderNo() != null ? req.getOrderNo() : "";
+        // 2. 이미 사용됐는데 사용으로 들어오거나 이미 사용취소인데 사용취소로 들어올경우
+        if (ticket.isTicketUsed() && req.getOrderDiv().equals("51")) {
+            return fail("이미 사용된 티켓");
+        }
 
-        return SIUseCallbackResponse.ok(orderNo);
+        if (!ticket.isTicketUsed() && req.getOrderDiv().equals("50")) {
+            return fail("이미 취소된 티켓");
+        }
+
+        // 3. 사용 처리
+        int updated = ticketMapper.useTicketSmartInfini(
+                req.getOrderDiv(),
+                req.getTicketCode(),
+                req.getResultDate()
+        );
+
+        if (updated == 0) {
+            return fail("사용 처리 실패");
+        }
+
+        return success(ticket.getOrderNumber());
+    }
+
+    private SIUseCallbackResponse success(String orderNo) {
+        return SIUseCallbackResponse.builder()
+                .orderNo(orderNo)
+                .returnDiv("S")
+                .returnMsg("성공")
+                .build();
+    }
+
+    private SIUseCallbackResponse fail(String msg) {
+        return SIUseCallbackResponse.builder()
+                .returnDiv("F")
+                .returnMsg(msg)
+                .build();
     }
 }
