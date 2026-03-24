@@ -43,6 +43,10 @@ public class BankAccountService {
     // 등록
     @Transactional
     public BankAccountResDto createBankAccount(BankAccountReqDto req, String username) {
+        // displayOrder가 지정된 경우 해당 위치 이후를 밀어낸다
+        if (req.getDisplayOrder() != null) {
+            mapper.shiftOrder(req.getDisplayOrder());
+        }
         mapper.insert(req, username);
         return null;
     }
