@@ -8,6 +8,8 @@ import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointResDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
@@ -38,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -223,9 +226,65 @@ public class OrderShopService {
 
         // 무통장(일반/베네피아 가능)
         if (paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT) {
+
+            boolean pointDeducted = false;
+
+            // 포인트 사용 시
+            if (pointAmount > 0) {
+
+                String benepiaId = reqDto.getBenepiaId();
+                String benepiaPwd = reqDto.getBenepiaPwd();
+
+                if (benepiaId == null || benepiaPwd == null) {
+                    throw new IllegalArgumentException("베네피아 ID/PW 필요");
+                }
+
+                // 포인트 조회
+                KcpPointReqDto pointReq = new KcpPointReqDto();
+                pointReq.setBenepiaId(benepiaId);
+                pointReq.setBenepiaPwd(benepiaPwd);
+                pointReq.setAmount(pointAmount);
+
+                KcpPointResDto pointRes = kcpService.getPoint(pointReq);
+
+                if (pointRes.getRsv_pnt()< pointAmount) {
+                    throw new IllegalArgumentException("포인트가 부족합니다.");
+                }
+
+                // 포인트 차감
+                List<OrderProductListGetResDto> items =
+                        orderMapper.selectOrderProductList(orderId);
+
+                KcpPointPayReqDto dto = new KcpPointPayReqDto();
+
+                dto.setOrderNo(orderNumber);
+                dto.setAmount(pointAmount);
+                dto.setProductName(items.get(0).getProductName());
+                dto.setProductCode(items.get(0).getProductCode());
+                dto.setBuyerName(reqDto.getCustomerName());
+                dto.setBuyerEmail(reqDto.getCustomerEmail());
+                dto.setBuyerPhone(reqDto.getCustomerPhone());
+                dto.setBenepiaId(benepiaId);
+                dto.setBenepiaPwd(benepiaPwd);
+
+                kcpService.pointPayAndUpdate(dto);
+
+                pointDeducted = true;
+
+                log.info("무통장 + 포인트 선차감 완료 orderId={}", orderId);
+            }
+
+
             resDto.setPaymentStatus("READY");
-            OrderAdminDetailGetResDto orderDetail =
-                    orderMapper.selectOrderAdminDetail(orderId);
+
+            LocalDateTime deadline = LocalDateTime.now().plusHours(1); // 테스트 후 24로 변경해야함
+
+            mapper.updateDepositDeadline(orderId, deadline);
+
+            log.info("입금기한 설정 orderId={}, deadline={}", orderId, deadline);
+
+
+            OrderAdminDetailGetResDto orderDetail = orderMapper.selectOrderAdminDetail(orderId);
 
             List<OrderProductListGetResDto> items =
                     orderMapper.selectOrderProductList(orderId);
@@ -295,9 +354,7 @@ public class OrderShopService {
         }
         // POINT
         // 혼합결제 포인트 먼저 차감
-
         boolean pointDeducted = false;
-
         if (pointAmount > 0) {
 
             String benepiaId = reqDto.getBenepiaId();
@@ -341,9 +398,8 @@ public class OrderShopService {
 
         //CARD
         if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
+
             try {
-
-
                 // PG 결제 요청
                 PayletterPaymentResDto payRes = paymentService.paymentRequest(
                         orderId,

@@ -521,4 +521,12 @@
         FROM orders
         WHERE order_number = #{orderNumber}
     </select>
+
+    <!-- 입금 완료 시 입금 기한 제거 -->
+    <update id="clearDepositDeadline">
+        UPDATE orders
+        SET deposit_deadline = NULL,
+            updated_at = NOW()
+        WHERE id = #{orderId}
+    </update>
 </mapper>

@@ -8,7 +8,6 @@ import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
@@ -133,36 +132,41 @@ public class OrderService {
 
         // 포인트 차감 (무통장 + 포인트)
         // 포인트 남아있으면
-        if (order.getPointAmount() > 0 ) {
-
-            log.info("[POINT] 무통장 입금완료 → 포인트 차감 시작 orderId={}", auId);
-
-            List<OrderProductListGetResDto> items =
-                    mapper.selectOrderProductList(auId);
-
-            KcpPointPayReqDto dto = new KcpPointPayReqDto();
-
-            dto.setOrderNo(order.getOrderNumber());
-            dto.setAmount(order.getPointAmount());
-
-            dto.setProductName(items.get(0).getProductName());
-            dto.setProductCode(items.get(0).getProductCode());
-
-            dto.setBuyerName(order.getCustomerName());
-            dto.setBuyerEmail(order.getCustomerEmail());
-            dto.setBuyerPhone(order.getCustomerPhone());
-
-            try {
-                kcpService.pointPayAndUpdate(dto);
-                log.info("[POINT] 무통장 포인트 차감 완료 orderId={}", auId);
-            } catch (Exception e) {
-                log.error("[POINT ERROR] 무통장 포인트 차감 실패 orderId={}", auId, e);
-                throw new RuntimeException("포인트 차감 실패");
-            }
-        }
+//        if (order.getPointAmount() > 0 ) {
+//
+//            log.info("[POINT] 무통장 입금완료 → 포인트 차감 시작 orderId={}", auId);
+//
+//            List<OrderProductListGetResDto> items =
+//                    mapper.selectOrderProductList(auId);
+//
+//            KcpPointPayReqDto dto = new KcpPointPayReqDto();
+//
+//            dto.setOrderNo(order.getOrderNumber());
+//            dto.setAmount(order.getPointAmount());
+//
+//            dto.setProductName(items.get(0).getProductName());
+//            dto.setProductCode(items.get(0).getProductCode());
+//
+//            dto.setBuyerName(order.getCustomerName());
+//            dto.setBuyerEmail(order.getCustomerEmail());
+//            dto.setBuyerPhone(order.getCustomerPhone());
+//
+//            try {
+//                kcpService.pointPayAndUpdate(dto);
+//                log.info("[POINT] 무통장 포인트 차감 완료 orderId={}", auId);
+//            } catch (Exception e) {
+//                log.error("[POINT ERROR] 무통장 포인트 차감 실패 orderId={}", auId, e);
+//                throw new RuntimeException("포인트 차감 실패");
+//            }
+//        }
 
         // 결제 상태 / 결제일시 업데이트
         mapper.updatePaymentComplete(auId, LocalDateTime.now());
+
+        // 입금 완료 → 입금기한 제거
+        mapper.clearDepositDeadline(auId);
+
+        log.info("입금 완료 → deadline 제거 orderId={}", auId);
 
 
         // 주문 상품 목록 조회

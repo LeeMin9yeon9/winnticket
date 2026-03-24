@@ -4,28 +4,28 @@
 
 <mapper namespace="kr.co.winnticket.partners.partnerinfo.mapper.PartnerMapper">
 
-    <resultMap id="partnerInfoMap"
-               type="kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto">
+<!--    <resultMap id="partnerInfoMap"-->
+<!--               type="kr.co.winnticket.partners.partnerinfo.dto.PartnerInfoGetResDto">-->
 
-        <id property="id" column="id"/>
-        <result property="code" column="code"/>
-        <result property="name" column="name"/>
-        <result property="type" column="type" javaType="kr.co.winnticket.common.enums.PartnerType"/>
-        <result property="ticketCodeType" column="ticket_code_type" javaType="kr.co.winnticket.common.enums.TicketCodeType"/>
-        <result property="commissionRate" column="commissionRate"/>
-        <result property="businessNumber" column="businessNumber"/>
-        <result property="address" column="address"/>
-        <result property="managerName" column="managerName"/>
-        <result property="managerEmail" column="managerEmail"/>
-        <result property="managerPhone" column="managerPhone"/>
-        <result property="logoUrl" column="logoUrl"/>
-        <result property="contractStartDate" column="contractStartDate"/>
-        <result property="contractEndDate" column="contractEndDate"/>
+<!--        <id property="id" column="id"/>-->
+<!--        <result property="code" column="code"/>-->
+<!--        <result property="name" column="name"/>-->
+<!--        <result property="type" column="type" javaType="kr.co.winnticket.common.enums.PartnerType"/>-->
+<!--        <result property="ticketCodeType" column="ticket_code_type" javaType="kr.co.winnticket.common.enums.TicketCodeType"/>-->
+<!--        <result property="commissionRate" column="commission_rate"/>-->
+<!--        <result property="businessNumber" column="business_number"/>-->
+<!--        <result property="address" column="address"/>-->
+<!--        <result property="managerName" column="manage_name"/>-->
+<!--        <result property="managerEmail" column="manager_email"/>-->
+<!--        <result property="managerPhone" column="manager_phone"/>-->
+<!--        <result property="contractStartDate" column="contract_start_date"/>-->
+<!--        <result property="contractEndDate" column="contract_end_date"/>-->
 
-    </resultMap>
+<!--    </resultMap>-->
 
     <!-- 파트너 목록 / 검색 -->
-    <select id="selectPartnerList" resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
+    <select id="selectPartnerList"
+            resultType="kr.co.winnticket.partners.partnerinfo.dto.PartnerListGetResDto">
 
         SELECT
         p.ID AS id,
@@ -33,46 +33,45 @@
         p.NAME AS name,
         p.TYPE AS type,
         p.TICKET_CODE_TYPE AS ticketCodeType,
+        p.MANAGER_NAME AS managerName,
         p.STATUS AS status,
-        p.CREATED_AT AS createdAt,
-        p.UPDATED_AT AS updatedAt
+        p.CONTRACT_START_DATE AS contractStartDate,
+        p.CONTRACT_END_DATE AS contractEndDate,
+        p.COMMISSION_RATE AS commissionRate,
+        p.VISIBLE AS visible
         FROM PARTNERS p
         WHERE 1=1
 
-        <!-- 키워드 검색 -->
+        <!-- 검색 -->
         <if test="keyword != null and keyword != ''">
             AND (
-            NAME ILIKE '%' || #{keyword} || '%'
-            OR CODE ILIKE '%' || #{keyword} || '%'
+            p.NAME ILIKE '%' || #{keyword} || '%'
+            OR p.CODE ILIKE '%' || #{keyword} || '%'
             )
         </if>
 
-        <!-- 상태 필터 -->
+        <!-- 상태 -->
         <choose>
-            <!-- 상태를 명시적으로 선택한 경우 -->
             <when test="AllStatus != null">
-                AND STATUS = #{AllStatus}
+                AND p.STATUS = #{AllStatus}
             </when>
-
-            <!-- 기본값: ACTIVE, INACTIVE만 -->
             <otherwise>
-                AND STATUS IN ('ACTIVE', 'INACTIVE')
+                AND p.STATUS IN ('ACTIVE','INACTIVE')
             </otherwise>
         </choose>
 
-        <!-- 타입 필터 -->
+        <!-- 타입 -->
         <if test="AllType != null">
-            AND TYPE = #{AllType}
+            AND p.TYPE = #{AllType}
         </if>
 
-        <!-- 정렬 우선순위 -->
         ORDER BY
-        CASE STATUS
+        CASE p.STATUS
         WHEN 'ACTIVE' THEN 1
         WHEN 'INACTIVE' THEN 2
         WHEN 'DELETED' THEN 3
         END,
-        CREATED_AT DESC
+        p.CREATED_AT DESC
 
     </select>
 
@@ -96,15 +95,17 @@
             p.MANAGER_PHONE AS managerPhone,
             p.CONTRACT_START_DATE AS contractStartDate,
             p.CONTRACT_END_DATE AS contractEndDate,
-            P.LOGO_URL AS logoUrl
-
+            p.COUPON_CODE AS couponCode
         FROM PARTNERS p
         WHERE p.ID = #{id}
+
     </select>
 
 
     <!-- 파트너 등록 -->
-    <insert id="insertPartner" parameterType="kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto">
+    <insert id="insertPartner"
+            parameterType="kr.co.winnticket.partners.partnerinfo.dto.PartnerPostReqDto">
+
         INSERT INTO PARTNERS (
             ID,
             CODE,
@@ -120,62 +121,108 @@
             CONTRACT_START_DATE,
             CONTRACT_END_DATE,
             COMMISSION_RATE,
-            LOGO_URL,
             DESCRIPTION,
             COUPON_CODE,
             CREATED_AT,
             UPDATED_AT
         )
-        VALUES(
-                  gen_random_uuid(),
-                  #{code},
-                  #{name},
-                  #{type},
-                  #{ticketCodeType},
-                  #{status},
-                  #{businessNumber},
-                  #{address},
-                  #{managerName},
-                  #{managerEmail},
-                  #{managerPhone},
-                  #{contractStartDate},
-                  #{contractEndDate},
-                  #{commissionRate},
-                  #{logoUrl},
-                  #{description},
-                  #{couponCode},
-                  NOW(),
-                  NOW()
-              )
+        VALUES (
+                   gen_random_uuid(),
+                   #{code},
+                   #{name},
+                   #{type},
+                   #{ticketCodeType},
+                   #{status},
+                   #{businessNumber},
+                   #{address},
+                   #{managerName},
+                   #{managerEmail},
+                   #{managerPhone},
+                   #{contractStartDate},
+                   #{contractEndDate},
+                   #{commissionRate},
+                   #{description},
+                   #{couponCode},
+                   NOW(),
+                   NOW()
+               )
+
     </insert>
 
 
     <!-- 파트너 수정 -->
     <update id="updatePartner">
+
         UPDATE PARTNERS
         <set>
-            <if test="model.code != null and model.code != ''">CODE = #{model.code},</if>
-            <if test="model.name != null and model.name != ''">NAME = #{model.name},</if>
-            <if test="model.type != null and model.type != ''">TYPE = #{model.type},</if>
-            <if test="model.ticketCodeType != null and model.ticketCodeType != ''">TICKET_CODE_TYPE = #{model.ticketCodeType},</if>
-            <if test="model.status != null and model.status != ''">STATUS = #{model.status},</if>
-            <if test="model.businessNumber != null and model.businessNumber != ''">BUSINESS_NUMBER = #{model.businessNumber},</if>
-            <if test="model.address != null and model.address != ''">ADDRESS = #{model.address},</if>
-            <if test="model.managerName != null and model.managerName != ''">MANAGER_NAME = #{model.managerName},</if>
-            <if test="model.managerEmail != null and model.managerEmail != ''">MANAGER_EMAIL = #{model.managerEmail},</if>
-            <if test="model.managerPhone != null and model.managerPhone != ''">MANAGER_PHONE = #{model.managerPhone},</if>
 
-            <if test="model.contractStartDate != null">CONTRACT_START_DATE = #{model.contractStartDate},</if>
-            <if test="model.contractEndDate != null">CONTRACT_END_DATE = #{model.contractEndDate},</if>
+            <if test="model.code != null and model.code != ''">
+                CODE = #{model.code},
+            </if>
 
-            <if test="model.commissionRate != null">COMMISSION_RATE = #{model.commissionRate},</if>
-            <if test="model.logoUrl != null and model.logoUrl != ''">LOGO_URL = #{model.logoUrl},</if>
-            <if test="model.description != null and model.description != ''">DESCRIPTION = #{model.description},</if>
-            <if test="model.couponCode != null">COUPON_CODE = #{model.couponCode},</if>
+            <if test="model.name != null and model.name != ''">
+                NAME = #{model.name},
+            </if>
+
+            <if test="model.type != null">
+                TYPE = #{model.type},
+            </if>
+
+            <if test="model.ticketCodeType != null">
+                TICKET_CODE_TYPE = #{model.ticketCodeType},
+            </if>
+
+            <if test="model.status != null">
+                STATUS = #{model.status},
+            </if>
+
+            <if test="model.businessNumber != null and model.businessNumber != ''">
+                BUSINESS_NUMBER = #{model.businessNumber},
+            </if>
+
+            <if test="model.address != null and model.address != ''">
+                ADDRESS = #{model.address},
+            </if>
+
+            <if test="model.managerName != null and model.managerName != ''">
+                MANAGER_NAME = #{model.managerName},
+            </if>
+
+            <if test="model.managerEmail != null and model.managerEmail != ''">
+                MANAGER_EMAIL = #{model.managerEmail},
+            </if>
+
+            <if test="model.managerPhone != null and model.managerPhone != ''">
+                MANAGER_PHONE = #{model.managerPhone},
+            </if>
+
+            <if test="model.contractStartDate != null">
+                CONTRACT_START_DATE = #{model.contractStartDate},
+            </if>
+
+            <if test="model.contractEndDate != null">
+                CONTRACT_END_DATE = #{model.contractEndDate},
+            </if>
+
+            <if test="model.commissionRate != null">
+                COMMISSION_RATE = #{model.commissionRate},
+            </if>
+
+            <if test="model.description != null and model.description != ''">
+                DESCRIPTION = #{model.description},
+            </if>
+
+
+            <if test="model.couponCode != null">
+                COUPON_CODE = #{model.couponCode},
+            </if>
 
             UPDATED_AT = NOW()
+
         </set>
+
         WHERE ID = #{id}
+
     </update>
 
 
@@ -218,19 +265,20 @@
 
 
     <update id="updatePartnerStatus">
-        UPDATE partners
-        SET status = #{status}, updated_at = NOW()
-        WHERE id = #{id}
+        UPDATE PARTNERS
+        SET STATUS = #{status},
+            UPDATED_AT = NOW()
+        WHERE ID = #{id}
     </update>
 
     <!--파트너 코드 중복 체크-->
     <select id="existsCode" resultType="int">
         SELECT COUNT(*)
-        FROM partners
+        FROM PARTNERS
         WHERE CODE = #{code}
         AND VISIBLE = TRUE
         <if test="id != null">
-            AND ID != #{id}   <!-- 수정일 때만 본인 제외 -->
+            AND ID != #{id}
         </if>
     </select>
 

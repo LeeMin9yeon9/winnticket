@@ -126,6 +126,15 @@ public class SwaggerConfig {
     }
 
     @Bean
+    public GroupedOpenApi fieldOrderApi() {
+        return GroupedOpenApi.builder()
+                .group("현장관리자 주문관리")
+                .packagesToScan("kr.co.winnticket.order.field")
+                .pathsToMatch("/api/admin/field-order/**")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
                 .group("인증 및 로그인")

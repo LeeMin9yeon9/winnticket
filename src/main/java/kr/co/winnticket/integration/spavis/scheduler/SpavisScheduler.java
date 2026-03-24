@@ -25,7 +25,7 @@ public class SpavisScheduler {
     private final TicketMapper ticketMapper;
     private final SpavisClient spavisClient;
 
-    @Scheduled(cron = "0 */5 * * * *")
+    //@Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void syncSpavisUsed() {
 

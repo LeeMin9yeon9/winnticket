@@ -51,10 +51,13 @@ public class OrderShopGetResDto {
     private int finalPrice;
 
     @Schema(description = "결제수단")
-    private PaymentMethod paymentMethod;
+    private String paymentMethod;
 
     @Schema(description = "결제일시")
     private LocalDateTime paidAt;
+
+    @Schema(description = "포인트결제금액")
+    private int pointAmount;
 
     @Schema(description = "상품총금액")
     private int totalPrice;
