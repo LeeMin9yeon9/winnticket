@@ -27,9 +27,9 @@ public class TicketCouponService {
     private final OrderMapper orderMapper;
 
 
-    // 선사입형 쿠폰 생성
+    // 선사입형 쿠폰 생성 - 결과 메시지 반환
     @Transactional
-    public void createCoupons(TicketCouponCreateReqDto dto) {
+    public String createCoupons(TicketCouponCreateReqDto dto) {
 
         Boolean prePurchased = productMapper.selectPrePurchasedByProductId(dto.getProductId());
 
@@ -73,7 +73,7 @@ public class TicketCouponService {
             );
         }
 
-        createCouponsByRange(
+        return createCouponsByRange(
                 groupId,
                 dto.getStartNumber(),
                 dto.getEndNumber(),
@@ -82,8 +82,8 @@ public class TicketCouponService {
         );
     }
 
-    // [이슈1] 쿠폰번호 범위 생성 - 중복 시 skip하고 결과 알려주기
-    private void createCouponsByRange(UUID groupId, String start, String end, LocalDate validFrom, LocalDate validUntil) {
+    // [이슈1] 쿠폰번호 범위 생성 - 중복 시 skip하고 결과 메시지 반환
+    private String createCouponsByRange(UUID groupId, String start, String end, LocalDate validFrom, LocalDate validUntil) {
 
         RangeParts s = RangeParts.parse(start);
         RangeParts e = RangeParts.parse(end);
@@ -117,10 +117,10 @@ public class TicketCouponService {
         }
 
         if (!duplicatedCoupons.isEmpty()) {
-            throw new RuntimeException(
-                    createdCount + "건 생성 완료. 중복으로 건너뛴 번호: " + String.join(", ", duplicatedCoupons)
-            );
+            return createdCount + "건 생성 완료. 중복으로 건너뛴 번호: " + String.join(", ", duplicatedCoupons);
         }
+
+        return createdCount + "건 생성 완료";
     }
 
     private static class RangeParts {
