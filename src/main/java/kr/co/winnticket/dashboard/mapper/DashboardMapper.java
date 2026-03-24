@@ -5,6 +5,7 @@ import kr.co.winnticket.dashboard.dto.DashboardDailySalesDto;
 import kr.co.winnticket.dashboard.dto.DashboardPartnerSalesDto;
 import kr.co.winnticket.dashboard.dto.DashboardTopProductDto;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -50,16 +51,16 @@ public interface DashboardMapper {
     int selectThisMonthCancelOrderCount();
 
     // 파트너별 매출 현황
-    List<DashboardPartnerSalesDto> selectPartnerSales(String period);
+    List<DashboardPartnerSalesDto> selectPartnerSales(@Param("period") String period);
 
     // 카테고리별상품
     List<DashboardCategoryDto> selectCategoryProducts();
 
     // 상위 판매 상품
-    List<DashboardTopProductDto> selectTopProducts(String period);
+    List<DashboardTopProductDto> selectTopProducts(@Param("period") String period);
 
     // 일별 판매 추이
-    List<DashboardDailySalesDto> selectDailySales(String period);
+    List<DashboardDailySalesDto> selectDailySales(@Param("period") String period);
 
 }
 
