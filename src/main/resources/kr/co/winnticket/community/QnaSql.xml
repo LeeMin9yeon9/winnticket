@@ -37,7 +37,9 @@
             a.AUTHOR_NAME,  -- 작성자
             a.CREATED_AT,  -- 작성일자
             a.VIEWS,  -- 조회수
-            a.IS_BLOCKED  -- 차단여부
+            a.IS_BLOCKED,  -- 차단여부
+            a.BLOCKED_REASON,  -- 차단사유
+            a.BLOCKED_AT  -- 차단일시
         FROM
             POSTS a
         Where 1 = 1
@@ -46,6 +48,13 @@
             <![CDATA[
             And Upper(a.TITLE) Like '%' || Upper(#{title}) || '%'
         ]]>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            And (
+                Upper(a.TITLE) Like '%' || Upper(#{keyword}) || '%'
+                Or Upper(a.CONTENT) Like '%' || Upper(#{keyword}) || '%'
+                Or Upper(a.AUTHOR_NAME) Like '%' || Upper(#{keyword}) || '%'
+            )
         </if>
 
         <if test="begDate != null">

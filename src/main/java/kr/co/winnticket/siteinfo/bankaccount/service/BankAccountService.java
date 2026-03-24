@@ -43,8 +43,8 @@ public class BankAccountService {
     // 등록
     @Transactional
     public BankAccountResDto createBankAccount(BankAccountReqDto req, String username) {
-        // displayOrder가 지정된 경우 해당 위치 이후를 밀어낸다
-        if (req.getDisplayOrder() != null) {
+        // 해당 순서에 이미 항목이 있을 때만 밀기 (빈 자리면 그냥 삽입)
+        if (req.getDisplayOrder() != null && mapper.existsByDisplayOrder(req.getDisplayOrder())) {
             mapper.shiftOrder(req.getDisplayOrder());
         }
         mapper.insert(req, username);
@@ -72,8 +72,10 @@ public class BankAccountService {
                 // 현재 자리 뒤로 당기기
                 mapper.decreaseOrderAfter(oldOrder);
 
-                // 새 자리로 밀기
-                mapper.shiftOrder(newOrder);
+                // 새 자리가 차 있으면 밀기
+                if (mapper.existsByDisplayOrderExcluding(newOrder, id)) {
+                    mapper.shiftOrder(newOrder);
+                }
             }
         }
 

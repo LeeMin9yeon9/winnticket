@@ -106,6 +106,16 @@
         SELECT COUNT(1) > 0 FROM terms WHERE id = #{id}
     </select>
 
+    <!-- 해당 표시순서에 항목 존재 확인 -->
+    <select id="existsByDisplayOrder" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM terms WHERE display_order = #{displayOrder}
+    </select>
+
+    <!-- 해당 표시순서에 항목 존재 확인 (자기 자신 제외) -->
+    <select id="existsByDisplayOrderExcluding" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM terms WHERE display_order = #{displayOrder} AND id != #{excludeId}
+    </select>
+
     <!-- 삭제 후 순서 당기기 -->
     <update id="decreaseDisplayOrder">
         UPDATE terms

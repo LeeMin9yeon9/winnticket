@@ -62,6 +62,9 @@ public class FaqService {
 
     // 카테고리 삭제
     public void deleteFaqCategory(UUID auId) {
+        // 삭제 전 해당 카테고리를 참조하는 FAQ의 카테고리 비우기
+        mapper.clearFaqCategoryRef(auId);
+
         int deleted = mapper.deleteFaqCategory(auId);
 
         if(deleted > 0) {
