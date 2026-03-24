@@ -62,9 +62,18 @@ public class TermsService {
             throw new RuntimeException("약관을 찾을 수 없습니다.");
         }
 
-        // displayOrder 변경 시 밀기
+        // displayOrder 변경 시: 기존 자리 빼고 → 새 자리 밀기
         if (req.getDisplayOrder() != null) {
-            mapper.increaseDisplayOrder(req.getDisplayOrder());
+            TermsResDto current = mapper.findById(id);
+            Integer oldOrder = current.getDisplayOrder();
+            Integer newOrder = req.getDisplayOrder();
+
+            if (oldOrder != null && !oldOrder.equals(newOrder)) {
+                // 1) 기존 자리 뒤쪽 당기기
+                mapper.decreaseDisplayOrder(oldOrder);
+                // 2) 새 자리로 밀기
+                mapper.increaseDisplayOrder(newOrder);
+            }
         }
 
         mapper.update(id, req, username);
