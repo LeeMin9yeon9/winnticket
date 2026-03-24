@@ -99,13 +99,18 @@
     </update>
 
     <!--스케줄러-->
-    <select id="selectMairPendingOrders" resultType="string">
-        SELECT DISTINCT o.order_number
-        FROM orders o
-                 JOIN order_items oi ON oi.order_id = o.id
-                 JOIN order_tickets ot ON ot.order_item_id = oi.id
-        WHERE ot.partner_order_number IS NOT NULL
-          AND ot.ticket_used = false
+    <select id="selectPendingTickets" resultType="map">
+        SELECT
+            ot.partner_order_number AS trno,
+            pov.code AS productcode
+        FROM order_tickets ot
+                 JOIN order_items oi ON oi.id = ot.order_item_id
+                 JOIN order_item_options oio ON oio.order_item_id = oi.id
+                 JOIN product_option_values pov ON pov.id = oio.option_value_id
+        WHERE oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'  <!--  엠에어 -->
+          AND ot.partner_order_number IS NOT NULL                      <!--  TRNO 있음 (발급됨) -->
+          AND ot.partner_order_code IS NOT NULL                        <!--  TNO 있음 (진짜 발급됨) -->
+          AND ot.ticket_used = false                                  <!--  미사용 -->
     </select>
 
 

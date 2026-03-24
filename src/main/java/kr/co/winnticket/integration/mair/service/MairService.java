@@ -238,4 +238,18 @@ public class MairService {
     private String normalizeHp(String hp) {
         return hp == null ? null : hp.replaceAll("[^0-9]", "");
     }
+
+    // 스케줄러
+    public void useCheckSingle(String trno, String itcd) {
+
+        MairCouponResDto res = client.useCheck(itcd, trno);
+
+        String code = res.getResult();
+
+        log.info("[MAIR][RESULT] TRNO={}, code={}", trno, code);
+
+        if (MairResultCode.isUsed(code)) {
+            mapper.updateTicketUsedIfNotUsed(trno);
+        }
+    }
 }

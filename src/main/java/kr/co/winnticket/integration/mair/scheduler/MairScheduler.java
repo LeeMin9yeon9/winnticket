@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -23,17 +24,20 @@ public class MairScheduler {
 
         log.info("[MAIR-SCHEDULER] START");
 
-        List<String> orderNumbers = mapper.selectMairPendingOrders();
+        List<Map<String, String>> tickets = mapper.selectPendingTickets();
 
-        for (String orderNumber : orderNumbers) {
+        log.info("[MAIR-SCHEDULER] target tickets size={}", tickets.size());
+
+        for (Map<String, String> t : tickets) {
+
+            String trno = t.get("trno");
+            String itcd = t.get("productcode");
 
             try {
-                log.info("[MAIR-SCHEDULER] checking order={}", orderNumber);
-
-                mairService.useCheckByOrderNumber(orderNumber);
+                mairService.useCheckSingle(trno, itcd);
 
             } catch (Exception e) {
-                log.error("[MAIR-SCHEDULER] fail order={}", orderNumber, e);
+                log.error("[MAIR-SCHEDULER] fail TRNO={}", trno, e);
             }
         }
 
