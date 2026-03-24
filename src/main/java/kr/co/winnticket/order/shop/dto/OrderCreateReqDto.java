@@ -32,6 +32,9 @@ public class OrderCreateReqDto {
     @Schema(description = "주문자 이메일")
     private String customerEmail;
 
+    @Schema(description = "메모")
+    private String memo;
+
     @Min(0)
     @Schema(description = "총금액")
     private int totalPrice;
