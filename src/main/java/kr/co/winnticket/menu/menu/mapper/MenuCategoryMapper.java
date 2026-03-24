@@ -33,6 +33,18 @@ public interface MenuCategoryMapper {
             @Param("displayOrder") Integer displayOrder
     );
 
+    // 바로 위 항목 찾기 (비연속 순서 지원)
+    MenuListDto findPrevMenu(
+            @Param("parentId") UUID parentId,
+            @Param("displayOrder") Integer displayOrder
+    );
+
+    // 바로 아래 항목 찾기 (비연속 순서 지원)
+    MenuListDto findNextMenu(
+            @Param("parentId") UUID parentId,
+            @Param("displayOrder") Integer displayOrder
+    );
+
     // 메뉴 추가
     void menuInsert(CreateMenuDto createMenuDto);
 
