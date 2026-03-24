@@ -67,7 +67,7 @@ public class AdminMenuService {
         mapper.admMenuDelete(id);
     }
 
-    // 노출 순서 변경
+    // 노출 순서 변경 (데드락 방지: 단일 UPDATE로 처리)
     @Transactional
     public void changeAdmMenu(UUID id, Integer newOrder) {
 
@@ -86,12 +86,17 @@ public class AdminMenuService {
 
         if (newOrder > max) newOrder = max;
 
+        // 1) 자기 자신을 임시값(-1)으로 빼기
+        mapper.admMenuUpdateOrder(id, -1);
+
+        // 2) 범위 밀기
         if (newOrder < oldOrder) {
             mapper.shiftUp(newOrder, oldOrder);
         } else {
             mapper.shiftDown(oldOrder, newOrder);
         }
 
+        // 3) 자기 자신을 새 위치에 넣기
         mapper.admMenuUpdateOrder(id, newOrder);
     }
 
