@@ -29,6 +29,10 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <select id="selectMaxDisplayOrder" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(display_order), 0) FROM banners
+    </select>
+
     <insert id="insertBanner">
         INSERT INTO banners (
             id,

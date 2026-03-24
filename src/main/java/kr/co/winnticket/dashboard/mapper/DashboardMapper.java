@@ -33,22 +33,18 @@ public interface DashboardMapper {
     int selectInactivePartnerCount();
 
     // 전체 주문 수
-    int selectTotalOrderCount();
+    int selectTotalOrderCount(@Param("period") String period);
 
     // 전체 주문 완료 수
-    int selectOrderCount();
+    int selectOrderCount(@Param("period") String period);
 
     // 취소 주문 수
-    int selectCancelOrderCount();
+    int selectCancelOrderCount(@Param("period") String period);
 
-    // 이번달 주문 수
-    int selectThisMonthTotalOrderCount();
-
-    // 이번달 주문완료 수
-    int selectThisMonthOrderCount();
-
-    // 이번달 취소 주문
-    int selectThisMonthCancelOrderCount();
+    // 이번달 주문 (하위호환용 - period로 대체)
+    default int selectThisMonthTotalOrderCount() { return 0; }
+    default int selectThisMonthOrderCount() { return 0; }
+    default int selectThisMonthCancelOrderCount() { return 0; }
 
     // 파트너별 매출 현황
     List<DashboardPartnerSalesDto> selectPartnerSales(@Param("period") String period);

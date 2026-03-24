@@ -25,6 +25,10 @@ public class BannerService {
     // ADMIN
     @Transactional
     public void create(BannerCreateDto dto) {
+        if (dto.getDisplayOrder() == null || dto.getDisplayOrder() <= 0) {
+            Integer maxOrder = bannerMapper.selectMaxDisplayOrder();
+            dto.setDisplayOrder(maxOrder != null ? maxOrder + 1 : 1);
+        }
         bannerMapper.insertBanner(dto);
     }
 
