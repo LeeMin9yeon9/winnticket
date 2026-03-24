@@ -29,7 +29,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${cors.extra-origins:}")
-    private List<String> corsExtraOrigins;
+    private String corsExtraOriginsRaw;
 
     //베네피아 SSO용
     @Bean
@@ -207,8 +207,11 @@ public class SecurityConfig {
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
-        if (corsExtraOrigins != null) {
-            origins.addAll(corsExtraOrigins);
+        if (corsExtraOriginsRaw != null && !corsExtraOriginsRaw.isBlank()) {
+            for (String o : corsExtraOriginsRaw.split(",")) {
+                String trimmed = o.trim();
+                if (!trimmed.isEmpty()) origins.add(trimmed);
+            }
         }
         config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
