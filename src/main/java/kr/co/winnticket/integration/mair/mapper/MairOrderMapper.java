@@ -44,7 +44,7 @@ public interface MairOrderMapper {
     void updateTicketUsedIfNotUsed(String tno);
 
     //스케줄러
-    List<String> selectMairPendingOrders();
+    List<Map<String, String>> selectPendingTickets();
 
 
 
