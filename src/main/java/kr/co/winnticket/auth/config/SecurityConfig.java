@@ -2,6 +2,7 @@ package kr.co.winnticket.auth.config;
 
 import kr.co.winnticket.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -25,6 +27,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${cors.extra-origins:}")
+    private List<String> corsExtraOrigins;
 
     //베네피아 SSO용
     @Bean
@@ -195,13 +200,16 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
+        List<String> origins = new ArrayList<>(List.of(
                 "https://*.ngrok-free.dev",
                 "https://*.benepia.co.kr",
-                "http://localhost:3000",
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
+        if (corsExtraOrigins != null) {
+            origins.addAll(corsExtraOrigins);
+        }
+        config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
