@@ -41,7 +41,7 @@ public class BannerService {
 
     @Transactional
     public void delete(String id) {
-        bannerMapper.softDelete(id);
+        bannerMapper.hardDelete(id);
     }
 
     @Transactional(readOnly = true)
