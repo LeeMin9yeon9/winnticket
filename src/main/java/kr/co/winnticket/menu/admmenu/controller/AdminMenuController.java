@@ -67,6 +67,19 @@ public class AdminMenuController {
         return ResponseEntity.ok(ApiResponse.success("순서가 변경되었습니다.", null));
     }
 
+    @PatchMapping("/{id}/order")
+    public ResponseEntity<ApiResponse<Void>> changeAdmOrderByBody(
+            @PathVariable UUID id,
+            @RequestBody java.util.Map<String, Integer> body
+    ) throws NotFoundException {
+        Integer displayOrder = body.get("displayOrder");
+        if (displayOrder == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("displayOrder는 필수입니다.", "MISSING_PARAM"));
+        }
+        adminMenuService.changeAdmMenu(id, displayOrder);
+        return ResponseEntity.ok(ApiResponse.success("순서가 변경되었습니다.", null));
+    }
+
     @PatchMapping("/visible/{id}/{visible}")
     public ResponseEntity<ApiResponse<Void>> changeAdmVisible(
             @PathVariable UUID id,
