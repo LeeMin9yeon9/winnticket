@@ -162,5 +162,14 @@
         WHERE display_order > #{oldOrder}
     </update>
 
+    <!-- 해당 표시순서에 항목 존재 확인 -->
+    <select id="existsByDisplayOrder" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM bank_account WHERE display_order = #{displayOrder})
+    </select>
+
+    <!-- 해당 표시순서에 항목 존재 확인 (자기 자신 제외) -->
+    <select id="existsByDisplayOrderExcluding" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM bank_account WHERE display_order = #{displayOrder} AND id != #{excludeId})
+    </select>
 
 </mapper>

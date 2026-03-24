@@ -32,11 +32,12 @@ public class QnaController {
     @Operation(summary = "QNA 목록 조회", description = "QNA 목록을 조회합니다.")
     public List<QnaListGetResDto> getQnaList (
         @Parameter(description = "제목") @RequestParam(value = "title", required = false, defaultValue="") String asTitle,
+        @Parameter(description = "키워드 (제목+내용+작성자)") @RequestParam(value = "keyword", required = false, defaultValue="") String asKeyword,
         @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) LocalDate asBegDate,
         @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate,
         @Parameter(description = "QNA상태 [ALL:전체, PENDING:답변대기, ANSWERED:답변완료, BLOCKED:차단]") @RequestParam(value = "status") String aqStatus
     ) throws Exception {
-        return service.selectQnaList(asTitle, asBegDate, asEndDate, aqStatus);
+        return service.selectQnaList(asTitle, asKeyword, asBegDate, asEndDate, aqStatus);
     }
 
     // QNA 상세조회

@@ -105,10 +105,8 @@
             <if test="content != null and content != ''">
                 CONTENT = #{content},
             </if>
-            <if test="category != null">
-                CATEGORY = #{category},
-            </if>
-                UPDATED_AT = CURRENT_TIMESTAMP
+            CATEGORY = #{category},
+            UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
         And TYPE = 'FAQ'
@@ -171,6 +169,15 @@
         </set>
         Where 1 = 1
         And ID = #{id}
+    </update>
+
+    <!--
+    - FAQ 카테고리 삭제 전 해당 카테고리 참조 해제
+    -->
+    <update id="clearFaqCategoryRef">
+        Update POSTS
+        Set CATEGORY = Null, UPDATED_AT = CURRENT_TIMESTAMP
+        Where TYPE = 'FAQ' And CATEGORY = #{categoryId}
     </update>
 
     <!--

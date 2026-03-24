@@ -141,7 +141,8 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.PATCH,
-                                "/api/shopCart/**"
+                                "/api/shopCart/**",
+                                "/api/community/common/viewCount/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.DELETE,
