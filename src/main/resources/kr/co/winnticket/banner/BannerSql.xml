@@ -121,6 +121,11 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 실제 삭제 -->
+    <delete id="hardDelete">
+        DELETE FROM banners WHERE id = #{id}
+    </delete>
+
     <select id="selectBannerById" resultMap="bannerMap">
         SELECT *
         FROM banners
