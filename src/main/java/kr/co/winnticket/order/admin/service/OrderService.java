@@ -579,7 +579,6 @@ public class OrderService {
             aquaplanetService.cancelOrder(orderId);
         }
 
-        /*
         if (split.isHasWoongin()) {
             log.info("[웅진 취소 시작]");
             woongjinService.cancel(orderId);
@@ -592,14 +591,13 @@ public class OrderService {
 
         if (split.isHasMair()) {
             log.info("[엠에어 취소 시작]");
-            // mairService.cancelByOrder(order.getOrderNumber());
+            mairService.cancelByOrder(order.getOrderNumber());
         }
 
         if (split.isHasCoreworks()) {
             log.info("[코어웍스 취소 시작]");
             coreWorksService.cancel(orderId);
         }
-         */
 
         /*
          * =========================
