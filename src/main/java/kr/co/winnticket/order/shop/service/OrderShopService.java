@@ -120,6 +120,7 @@ public class OrderShopService {
                 reqDto.getCustomerName(),
                 reqDto.getCustomerPhone(),
                 reqDto.getCustomerEmail(),
+                reqDto.getMemo(),
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
                 paymentMethod.name(),
