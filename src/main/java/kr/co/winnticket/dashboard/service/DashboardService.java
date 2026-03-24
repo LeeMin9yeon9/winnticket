@@ -60,13 +60,13 @@ public class DashboardService {
 
 
         // 파트너 별 매출 현황
-        res.setPartnerSales(mapper.selectPartnerSales());
+        res.setPartnerSales(mapper.selectPartnerSales(period));
 
         // 카테고리 별 상품
         res.setCategoryProducts(mapper.selectCategoryProducts());
 
         // 상위 판매 상품
-        res.setTopProducts(mapper.selectTopProducts());
+        res.setTopProducts(mapper.selectTopProducts(period));
 
         // 일별 판매 추이
         res.setDailySales(mapper.selectDailySales(period));

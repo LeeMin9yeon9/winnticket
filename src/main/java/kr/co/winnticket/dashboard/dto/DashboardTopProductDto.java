@@ -8,6 +8,9 @@ import lombok.Data;
 @Schema(title = "[대시보드 > 상위 판매 상품 Dto] DashboardResDto")
 public class DashboardTopProductDto {
 
+    @Schema(description="상품 ID")
+    private String productId;
+
     @Schema(description="상품명")
     private String productName;
 
