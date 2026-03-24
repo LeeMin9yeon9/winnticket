@@ -174,7 +174,7 @@ public class TicketCouponService {
         if (dto.getCouponNumber() != null && !dto.getCouponNumber().isBlank()) {
             UUID existsId = mapper.findCouponIdByCouponNumber(dto.getCouponNumber());
             if (existsId != null && !existsId.equals(couponId)) {
-                throw new RuntimeException("이미 존재하는 쿠폰번호입니다: " + dto.getCouponNumber());
+                throw new IllegalArgumentException("이미 존재하는 쿠폰번호입니다: " + dto.getCouponNumber());
             }
         }
 
