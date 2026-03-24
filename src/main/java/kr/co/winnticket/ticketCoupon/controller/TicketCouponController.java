@@ -28,8 +28,8 @@ public class TicketCouponController {
     @Operation(summary = "쿠폰 생성(선사입형)", description = "옵션값 기준 그룹 생성 후 쿠폰번호 범위 생성")
     @PostMapping("/groups/coupons")
     public ResponseEntity<ApiResponse<TicketCouponCreateReqDto>> create(@RequestBody TicketCouponCreateReqDto dto) {
-        service.createCoupons(dto);
-        return ResponseEntity.ok(ApiResponse.success("생성 성공", dto));
+        String resultMessage = service.createCoupons(dto);
+        return ResponseEntity.ok(ApiResponse.success(resultMessage, dto));
     }
 
     @Operation(summary = "쿠폰그룹 목록", description = "그룹 목록 + ACTIVE/USED 카운트")
