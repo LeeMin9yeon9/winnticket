@@ -73,6 +73,7 @@ public class PopupService {
         popup.setHeight(dto.getHeight());
         popup.setPositionTop(dto.getPositionTop());
         popup.setPositionLeft(dto.getPositionLeft());
+        popup.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
 
         popup = popupRepository.save(popup);
 
@@ -117,6 +118,7 @@ public class PopupService {
         if (dto.getHeight() != null) popup.setHeight(dto.getHeight());
         if (dto.getPositionTop() != null) popup.setPositionTop(dto.getPositionTop());
         if (dto.getPositionLeft() != null) popup.setPositionLeft(dto.getPositionLeft());
+        if (dto.getDisplayOrder() != null) popup.setDisplayOrder(dto.getDisplayOrder());
 
         // 채널 매핑 갱신
         if (dto.getChannelIds() != null) {
@@ -307,6 +309,7 @@ public class PopupService {
         dto.setHeight(popup.getHeight());
         dto.setPositionTop(popup.getPositionTop());
         dto.setPositionLeft(popup.getPositionLeft());
+        dto.setDisplayOrder(popup.getDisplayOrder());
         dto.setViewCount(popup.getViewCount());
         dto.setClickCount(popup.getClickCount());
         dto.setStatus(popup.getStatus());

@@ -29,6 +29,7 @@ public class PopupDto {
     private Integer height;
     private Integer positionTop;
     private Integer positionLeft;
+    private Integer displayOrder;
 
     private Long viewCount;
     private Long clickCount;
