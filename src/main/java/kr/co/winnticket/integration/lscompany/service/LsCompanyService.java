@@ -4,6 +4,9 @@ import kr.co.winnticket.integration.lscompany.client.LsCompanyClient;
 import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.mapper.LsCompanyMapper;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
+import kr.co.winnticket.integration.smartinfini.dto.SIUseCallbackResponse;
+import kr.co.winnticket.integration.smartinfini.dto.SmartInfiniOrderTicket;
+import kr.co.winnticket.ticket.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class LsCompanyService {
     private final LsCompanyClient client;
     private final LsCompanyProperties properties;
     private final LsCompanyMapper mapper;
+    private final TicketMapper ticketMapper;
 
     // 시설 조회
     public LsPlaceResDto getPlaces() {
@@ -303,8 +307,55 @@ public class LsCompanyService {
             return results;
         }
 
+    // 티켓사용처리
+    @Transactional
+    public LsTicketUseResDto ticketUse(LsTicketUseReqDto req) {
+        // 1. 티켓 조회
+        LsOrderTicket ticket = ticketMapper.findByTicketCodeLs(req.getTransactionId());
 
+        if (ticket == null) {
+            return fail("티켓 없음");
+        }
+
+        // 2. 이미 사용됐는데 사용으로 들어오거나 이미 사용취소인데 사용취소로 들어올경우
+        if (ticket.isTicketUsed() && req.getCode().equals("use")){
+            return fail("이미 사용된 티켓");
+        }
+
+        if (!ticket.isTicketUsed() && req.getCode().equals("useCancle")) {
+            return fail("이미 취소된 티켓");
+        }
+
+        // 3. 사용 처리
+        int updated = ticketMapper.useTicketLs(
+                req.getTransactionId(),
+                req.getCode(),
+                req.getDate()
+        );
+
+        if (updated == 0) {
+            return fail("사용 처리 실패");
+        }
+
+        return success();
     }
+
+    private LsTicketUseResDto success() {
+        return LsTicketUseResDto.builder()
+                .status("success")
+                .resultCode("0000")
+                .resultMessage("성공")
+                .build();
+    }
+
+    private LsTicketUseResDto fail(String msg) {
+        return LsTicketUseResDto.builder()
+                .status("error")
+                .resultCode("9999")
+                .resultMessage(msg)
+                .build();
+    }
+}
 
 
 
