@@ -67,7 +67,7 @@ benepia:
   order-base-url: https://partners.benepia.co.kr
   prdgb-file: ticket
   kcp-co-cd: A8MCD
-  api-key: "6ec5212a76b7e632c9da50ef2e778166c425e602ee6f3c60ce79511866013fd8b29d3d61"
+  api-key: ${BENEPIA_KCP_API_KEY}
   kcp:
     site-cd: A8MCD
     pt-memcorp-cd: A8MCD
@@ -157,5 +157,5 @@ aquaplanet:
 lscompany:
   base-url: "https://unity-dev.lscompany-api.com/Api_v3"
   agent-no: "CH2603091"
-  token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXBlIjoic2VsbGVyIiwicGFyYW1zIjp7ImNvZGUiOiJDSDI2MDMwOTEifX0.DCPJ-iJwpeew-UYPRuscjr4MBJRp4MooNFgsn8m-9es"
+  token: ${LSCOMPANY_TOKEN}
 
