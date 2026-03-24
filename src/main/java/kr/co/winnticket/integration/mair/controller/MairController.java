@@ -43,7 +43,7 @@ public class MairController {
         return ResponseEntity.ok(ApiResDto.success("엠에어 쿠폰 취소 성공", result));
     }
 
-    //
+
     @GetMapping("/use-check/{orderNumber}")
     @Operation(summary = "엠에어 사용여부 확인", description = "엠에어 쿠폰사용여부 확인")
     public ResponseEntity<ApiResDto<IntegrationResult>> useCheck(@PathVariable String orderNumber) {
