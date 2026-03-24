@@ -27,53 +27,62 @@ public class TicketCouponService {
     private final OrderMapper orderMapper;
 
 
-     //선사입형 쿠폰 생성
-     @Transactional
-     public void createCoupons(TicketCouponCreateReqDto dto){
+    // 선사입형 쿠폰 생성
+    @Transactional
+    public void createCoupons(TicketCouponCreateReqDto dto) {
 
-         Boolean prePurchased = productMapper.selectPrePurchasedByProductId(dto.getProductId());
+        Boolean prePurchased = productMapper.selectPrePurchasedByProductId(dto.getProductId());
 
+        if (prePurchased == null) {
+            throw new RuntimeException("상품이 존재하지 않습니다.");
+        }
 
-         if(prePurchased == null){
-             throw new RuntimeException("상품이 존재하지 않습니다.");
-         }
+        if (!prePurchased) {
+            throw new RuntimeException("선사입형 상품만 쿠폰 생성 가능");
+        }
 
+        // [이슈6] 날짜 검증
+        validateDates(dto.getValidFrom(), dto.getValidUntil());
 
-         if(!prePurchased){
-             throw new RuntimeException("선사입형 상품만 쿠폰 생성 가능");
-         }
+        // [이슈2] 겹치는 날짜 그룹 체크
+        int overlapCount = mapper.countOverlappingGroups(
+                dto.getProductOptionValueId(),
+                dto.getValidFrom(),
+                dto.getValidUntil()
+        );
+        if (overlapCount > 0) {
+            throw new RuntimeException("해당 옵션에 겹치는 유효기간의 쿠폰그룹이 이미 존재합니다.");
+        }
 
-         UUID groupId = mapper.findGroupByOptionValueAndDate(
-                 dto.getProductOptionValueId(),
-                 dto.getValidFrom(),
-                 dto.getValidUntil()
-         );
+        UUID groupId = mapper.findGroupByOptionValueAndDate(
+                dto.getProductOptionValueId(),
+                dto.getValidFrom(),
+                dto.getValidUntil()
+        );
 
+        if (groupId == null) {
+            groupId = UUID.randomUUID();
 
-         if(groupId == null){
-             groupId = UUID.randomUUID();
+            mapper.insertGroup(
+                    groupId,
+                    dto.getProductId(),
+                    dto.getProductOptionId(),
+                    dto.getProductOptionValueId(),
+                    dto.getValidFrom(),
+                    dto.getValidUntil()
+            );
+        }
 
-             mapper.insertGroup(
-                     groupId,
-                     dto.getProductId(),
-                     dto.getProductOptionId(),
-                     dto.getProductOptionValueId(),
-                     dto.getValidFrom(),
-                     dto.getValidUntil()
-             );
-         }
+        createCouponsByRange(
+                groupId,
+                dto.getStartNumber(),
+                dto.getEndNumber(),
+                dto.getValidFrom(),
+                dto.getValidUntil()
+        );
+    }
 
-         createCouponsByRange(
-                 groupId,
-                 dto.getStartNumber(),
-                 dto.getEndNumber(),
-                 dto.getValidFrom(),
-                 dto.getValidUntil()
-
-         );
-     }
-
-    // 쿠폰번호 범위 생성
+    // [이슈1] 쿠폰번호 범위 생성 - 중복 시 skip하고 결과 알려주기
     private void createCouponsByRange(UUID groupId, String start, String end, LocalDate validFrom, LocalDate validUntil) {
 
         RangeParts s = RangeParts.parse(start);
@@ -84,8 +93,6 @@ public class TicketCouponService {
         if (s.width != e.width) throw new RuntimeException("시작/끝 쿠폰 숫자자리수가 다릅니다.");
 
         List<String> duplicatedCoupons = new ArrayList<>();
-
-
         int createdCount = 0;
 
         for (long i = s.number; i <= e.number; i++) {
@@ -95,19 +102,23 @@ public class TicketCouponService {
 
             if (exists != null) {
                 duplicatedCoupons.add(couponNumber);
-                log.error("[쿠폰생성 실패] 중복 쿠폰번호 발견: {}", couponNumber);
-
-                throw new RuntimeException(
-                        "이미 존재하는 쿠폰번호: " + couponNumber
-                );
+                log.warn("[쿠폰생성] 중복 쿠폰번호 건너뜀: {}", couponNumber);
+                continue; // 중복은 건너뛰고 계속 생성
             }
 
             mapper.insertCoupon(groupId, couponNumber, validFrom, validUntil);
-
-            // 쿠폰 생성 성공 시 증가
             createdCount++;
+        }
 
-            log.info("[쿠폰생성 완료] groupId={}, 생성개수={}", groupId, createdCount
+        log.info("[쿠폰생성 완료] groupId={}, 생성={}건, 중복건너뜀={}건", groupId, createdCount, duplicatedCoupons.size());
+
+        if (createdCount == 0 && !duplicatedCoupons.isEmpty()) {
+            throw new RuntimeException("모든 쿠폰번호가 이미 존재합니다. 중복: " + String.join(", ", duplicatedCoupons));
+        }
+
+        if (!duplicatedCoupons.isEmpty()) {
+            throw new RuntimeException(
+                    createdCount + "건 생성 완료. 중복으로 건너뛴 번호: " + String.join(", ", duplicatedCoupons)
             );
         }
     }
@@ -132,7 +143,7 @@ public class TicketCouponService {
     }
 
 
-     // 그룹 목록
+    // 그룹 목록
     @Transactional(readOnly = true)
     public List<TicketCouponGroupResDto> getGroups() {
         return mapper.selectGroups();
@@ -156,15 +167,20 @@ public class TicketCouponService {
         return mapper.selectCoupon(couponId);
     }
 
-    // 쿠폰 수정(번호/상태/사용일자/유효기간)
+    // [이슈5] 쿠폰 수정 - 에러 메시지 개선
     @Transactional
     public void updateCoupon(UUID couponId, TicketCouponUpdateReqDto dto) {
 
         if (dto.getCouponNumber() != null && !dto.getCouponNumber().isBlank()) {
             UUID existsId = mapper.findCouponIdByCouponNumber(dto.getCouponNumber());
             if (existsId != null && !existsId.equals(couponId)) {
-                throw new RuntimeException("이미 존재하는 쿠폰번호입니다.");
+                throw new RuntimeException("이미 존재하는 쿠폰번호입니다: " + dto.getCouponNumber());
             }
+        }
+
+        // [이슈6] 날짜 검증
+        if (dto.getValidFrom() != null && dto.getValidUntil() != null) {
+            validateDates(dto.getValidFrom(), dto.getValidUntil());
         }
 
         mapper.updateCoupon(
@@ -178,21 +194,25 @@ public class TicketCouponService {
     }
 
 
-     // 쿠폰 삭제
+    // 쿠폰 삭제
     @Transactional
     public void deleteCoupon(UUID couponId) {
         mapper.deleteCoupon(couponId);
     }
 
-    // 그룹 수정(유효기간)
+    // [이슈6] 그룹 수정 - 날짜 검증 추가
     @Transactional
     public void updateGroup(UUID groupId, LocalDate validFrom, LocalDate validUntil) {
+        if (validFrom != null && validUntil != null) {
+            validateDates(validFrom, validUntil);
+        }
         mapper.updateGroup(groupId, validFrom, validUntil);
     }
 
-    // 그룹 삭제
+    // [이슈3] 그룹 삭제 - 하위 쿠폰 먼저 삭제
     @Transactional
     public void deleteGroup(UUID groupId) {
+        mapper.deleteCouponsByGroupId(groupId); // 하위 쿠폰 먼저 삭제
         mapper.deleteGroup(groupId);
     }
 
@@ -201,27 +221,18 @@ public class TicketCouponService {
     public String issueCoupon(UUID orderItemId) {
 
         UUID orderId = orderMapper.findOrderIdByOrderItemId(orderItemId);
-
-        // 상품ID 조회 추가
         UUID productId = orderMapper.findProductIdByOrderItemId(orderItemId);
-
-        // 옵션값 조회
         UUID optionValueId = orderMapper.findOptionValueIdByOrderItem(orderItemId);
 
-        // 유효기간 빠른 순 쿠폰 조회
         TicketCouponListResDto coupon = mapper.findActiveCouponByOptionValueId(optionValueId);
 
         if (coupon == null) {
             throw new RuntimeException("쿠폰 재고 없음");
         }
 
-        // SOLD 처리
         mapper.markCouponSold(coupon.getId());
-
-        // 재고 차감
         productMapper.decreaseStock(optionValueId);
 
-        // 주문 쿠폰 연결
         orderMapper.insertOrderItemCoupon(
                 orderId,
                 orderItemId,
@@ -231,7 +242,6 @@ public class TicketCouponService {
                 coupon.getCouponNumber()
         );
 
-        // 티켓 생성
         orderMapper.insertOrderTicket(
                 orderItemId,
                 coupon.getCouponNumber()
@@ -242,27 +252,33 @@ public class TicketCouponService {
 
     // 판매된 티켓 조회 후 미사용 시 복구
     @Transactional
-    public void cancelCoupon(UUID couponId){
+    public void cancelCoupon(UUID couponId) {
 
         String status = mapper.findCouponStatus(couponId);
 
-        if(status.equals("USED")){
+        if (status.equals("USED")) {
             throw new RuntimeException("이미 사용된 쿠폰은 취소 불가");
         }
 
-        if(status.equals("SOLD")){
+        if (status.equals("SOLD")) {
             mapper.restoreCoupon(couponId);
         }
     }
 
-    // 쿠폰 그룹 날짜 일괄 변경
+    // [이슈6] 쿠폰 그룹 날짜 일괄 변경 - 날짜 검증 추가
     @Transactional
-    public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil){
-        mapper.updateGroupDate(
-                groupId,
-                validFrom,
-                validUntil
-        );
+    public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil) {
+        validateDates(validFrom, validUntil);
+        mapper.updateGroupDate(groupId, validFrom, validUntil);
+    }
 
+    // [이슈6] 공통 날짜 검증
+    private void validateDates(LocalDate validFrom, LocalDate validUntil) {
+        if (validFrom == null || validUntil == null) {
+            throw new RuntimeException("유효기간 시작일과 종료일은 필수입니다.");
+        }
+        if (validFrom.isAfter(validUntil)) {
+            throw new RuntimeException("유효기간 시작일이 종료일보다 늦을 수 없습니다.");
+        }
     }
 }
