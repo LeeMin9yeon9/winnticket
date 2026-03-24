@@ -82,6 +82,38 @@
         AND display_order = #{displayOrder}
     </select>
 
+    <!-- 바로 위 항목 (비연속 순서 지원) -->
+    <select id="findPrevMenu" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT *
+        FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order &lt; #{displayOrder}
+        ORDER BY display_order DESC
+        LIMIT 1
+    </select>
+
+    <!-- 바로 아래 항목 (비연속 순서 지원) -->
+    <select id="findNextMenu" resultType="kr.co.winnticket.menu.menu.dto.MenuListDto">
+        SELECT *
+        FROM menu_categories
+        WHERE
+        <if test="parentId == null">
+            parent_id IS NULL
+        </if>
+        <if test="parentId != null">
+            parent_id = #{parentId}
+        </if>
+        AND display_order &gt; #{displayOrder}
+        ORDER BY display_order ASC
+        LIMIT 1
+    </select>
+
 
     <!-- =============================
          상위 메뉴 생성

@@ -171,48 +171,40 @@ public class MenuCategoryService {
         productMapper.updateProductsVisibleByMenuId(id, visible);
     }
 
-    // 메뉴 up
+    // 메뉴 up (비연속 순서 지원)
     public void moveUp(UUID id) throws NotFoundException{
-        MenuListDto findId = menuMapper.menuFindById(id);
-        if(findId == null)
+        MenuListDto current = menuMapper.menuFindById(id);
+        if(current == null)
             throw new NotFoundException("메뉴를 찾을 수 없습니다.");
 
-        if(findId.getDisplayOrder() == 1) // 1번이면 이동 불가
-            return;
+        // 바로 위 항목 찾기 (displayOrder < current, 가장 가까운 것)
+        MenuListDto prev = menuMapper.findPrevMenu(current.getParentId(), current.getDisplayOrder());
+        if(prev == null) return; // 이미 최상위
 
-        // 현재 위에 있는 메뉴찾기
-        MenuListDto upId = menuMapper.findByOrder(findId.getParentId(), findId.getDisplayOrder()-1);
-        if(upId == null) return;
+        int currentOrder = current.getDisplayOrder();
+        int prevOrder = prev.getDisplayOrder();
 
-        int findIdOrder = findId.getDisplayOrder();
-        int upIdOrder = upId.getDisplayOrder();
-
-        // 메뉴 위로 올리고
-        menuMapper.menuUpdateOrder(findId.getId(), upIdOrder);
-        // 기존 메뉴
-        menuMapper.menuUpdateOrder(upId.getId(),findIdOrder);
+        // 서로 순서 교환
+        menuMapper.menuUpdateOrder(current.getId(), prevOrder);
+        menuMapper.menuUpdateOrder(prev.getId(), currentOrder);
     }
 
-    // 메뉴 down
+    // 메뉴 down (비연속 순서 지원)
     public void moveDown(UUID id) throws NotFoundException{
-        MenuListDto findId = menuMapper.menuFindById(id);
-
-        if(findId.getDisplayOrder() == null)
+        MenuListDto current = menuMapper.menuFindById(id);
+        if(current == null || current.getDisplayOrder() == null)
             throw new NotFoundException("메뉴를 찾을 수 없습니다.");
 
-        Integer maxOrder = menuMapper.findMaxOrder(findId.getParentId());
-        if(findId.getDisplayOrder().equals(maxOrder))
-            return;
+        // 바로 아래 항목 찾기 (displayOrder > current, 가장 가까운 것)
+        MenuListDto next = menuMapper.findNextMenu(current.getParentId(), current.getDisplayOrder());
+        if(next == null) return; // 이미 최하위
 
-        //현재 아래에 있는 메뉴 찾기
-        MenuListDto lowId = menuMapper.findByOrder(findId.getParentId(),findId.getDisplayOrder()+1);
-        if(lowId == null) return;
+        int currentOrder = current.getDisplayOrder();
+        int nextOrder = next.getDisplayOrder();
 
-        int findIdOrder = findId.getDisplayOrder();
-        int lowIdOrder = lowId.getDisplayOrder();
-
-        menuMapper.menuUpdateOrder(findId.getId(), lowIdOrder);
-        menuMapper.menuUpdateOrder(lowId.getId(),findIdOrder);
+        // 서로 순서 교환
+        menuMapper.menuUpdateOrder(current.getId(), nextOrder);
+        menuMapper.menuUpdateOrder(next.getId(), currentOrder);
     }
 
     // 공통 메뉴 순서 자동정렬
