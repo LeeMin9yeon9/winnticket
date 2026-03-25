@@ -210,7 +210,7 @@ public class OrderService {
                 }
 
             } catch (Exception e) {
-                log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
+                throw new RuntimeException("[BENEPIA 주문 전송 실패]", e);
             }
 
             PartnerSplitResult split = splitByPartner(items);
@@ -221,7 +221,7 @@ public class OrderService {
                     log.info("[Woonjin Products]");
                     woongjinService.order(auId);
                 }catch (Exception e){
-                    log.error("Woonjin 발권 실패 orderId={}", auId, e);
+                    throw new RuntimeException("Woonjin 발권 실패", e);
                 }
             }
 
@@ -230,7 +230,7 @@ public class OrderService {
                     log.info("[Playstory Products]");
                     playstoryService.order(auId);
                 }catch (Exception e){
-                    log.error("Playstory 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("Playstory 발권 실패", e);
                 }
             }
 
@@ -239,7 +239,7 @@ public class OrderService {
                     log.info("[Mair Products]");
                     mairService.issueTickets(order.getOrderNumber());
                 }catch (Exception e){
-                    log.error("Mair 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("Mair 발권 실패", e);
                 }
             }
 
@@ -248,7 +248,7 @@ public class OrderService {
                     log.info("[Coreworks Products]");
                     coreWorksService.order(auId);
                 }catch (Exception e){
-                    log.error("Coreworks 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("Coreworks 발권 실패", e);
                 }
             }
 
@@ -257,7 +257,7 @@ public class OrderService {
                     log.info("[SmartInfini Products]");
                     smartInfiniService.order(auId);
                 }catch (Exception e){
-                    log.error("SmartInfini 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("SmartInfini 발권 실패", e);
                 }
 
             }
@@ -267,7 +267,7 @@ public class OrderService {
                     log.info("[PlusN Products]");
                     plusNService.order(auId);
                 }catch (Exception e){
-                    log.error("PlusN 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("PlusN 발권 실패", e);
                 }
             }
 
@@ -286,7 +286,7 @@ public class OrderService {
                     log.info("[Aquaplanet Products]");
                     aquaplanetService.issueOrder(auId);
                 }catch (Exception e){
-                    log.error("Aquaplanet 발권 실패 orderId={}",auId,e);
+                    throw new RuntimeException("Aquaplanet 발권 실패", e);
                 }
             }
 
@@ -560,43 +560,75 @@ public class OrderService {
          */
 
         if (split.isHasPlusN()) {
-            log.info("[플러스앤 orderCancel start]");
-            plusNService.cancel(orderId);
+            try {
+                log.info("[플러스앤 orderCancel start]");
+                plusNService.cancel(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("플러스앤 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasSmartInfini()) {
-            log.info("[스마트인피니 orderCancel start]");
-            smartInfiniService.cancelMulti(orderId);
+            try {
+                log.info("[스마트인피니 orderCancel start]");
+                smartInfiniService.cancelMulti(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("스마트인피니 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasLsCompany()){
-            log.info("[LS컴퍼니 orderCancel start]");
-            lsCompanyService.cancelTicket(orderId);
+            try {
+                log.info("[LS컴퍼니 orderCancel start]");
+                lsCompanyService.cancelTicket(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("LS컴퍼니 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasAquaplanet()) {
-            log.info("[아쿠아플라넷 orderCancel start]");
-            aquaplanetService.cancelOrder(orderId);
+            try {
+                log.info("[아쿠아플라넷 orderCancel start]");
+                aquaplanetService.cancelOrder(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("아쿠아플라넷 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasWoongin()) {
-            log.info("[웅진 취소 시작]");
-            woongjinService.cancel(orderId);
+            try {
+                log.info("[웅진 취소 시작]");
+                woongjinService.cancel(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("웅진 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasPlaystory()) {
-            log.info("[플레이스토리 취소 시작]");
-            playstoryService.cancel(orderId);
+            try {
+                log.info("[플레이스토리 취소 시작]");
+                playstoryService.cancel(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("플레이스토리 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasMair()) {
-            log.info("[엠에어 취소 시작]");
-            mairService.cancelByOrder(order.getOrderNumber());
+            try {
+                log.info("[엠에어 취소 시작]");
+                mairService.cancelByOrder(order.getOrderNumber());
+            } catch (Exception e) {
+                throw new IllegalStateException("엠에어 주문 취소 실패", e);
+            }
         }
 
         if (split.isHasCoreworks()) {
-            log.info("[코어웍스 취소 시작]");
-            coreWorksService.cancel(orderId);
+            try {
+                log.info("[코어웍스 취소 시작]");
+                coreWorksService.cancel(orderId);
+            } catch (Exception e) {
+                throw new IllegalStateException("코어웍스 주문 취소 실패", e);
+            }
         }
 
         /*
@@ -683,7 +715,7 @@ public class OrderService {
                     benepiaOrderService.cancelOrder(order, items);
                 }
             } catch (Exception e) {
-                log.error("[BENEPIA 주문 전송 실패] orderId={}", order.getId(), e);
+                throw new IllegalArgumentException("[BENEPIA 주문 취소 전송 실패]", e);
             }
         }
 
