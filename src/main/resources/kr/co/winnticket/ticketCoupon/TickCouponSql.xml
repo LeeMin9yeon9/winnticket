@@ -115,7 +115,14 @@
             updated_at AS updatedAt
         FROM ticket_coupons
         WHERE group_id = #{groupId}
-        ORDER BY created_at DESC
+        ORDER BY
+            CASE status
+                WHEN 'ACTIVE' THEN 1
+                WHEN 'SOLD' THEN 2
+                WHEN 'USED' THEN 3
+                ELSE 4
+            END ASC,
+            coupon_number ASC
     </select>
 
     <!-- 쿠폰 단건 조회 -->
@@ -182,11 +189,26 @@
         WHERE id = #{groupId}
     </update>
 
+    <!-- 그룹 내 쿠폰 전체 삭제 -->
+    <delete id="deleteCouponsByGroupId">
+        DELETE FROM ticket_coupons
+        WHERE group_id = #{groupId}
+    </delete>
+
     <!-- 그룹 삭제 -->
     <delete id="deleteGroup">
         DELETE FROM ticket_coupon_groups
         WHERE id = #{groupId}
     </delete>
+
+    <!-- 겹치는 날짜 그룹 체크 -->
+    <select id="countOverlappingGroups" resultType="int">
+        SELECT COUNT(*)
+        FROM ticket_coupon_groups
+        WHERE product_option_value_id = #{productOptionValueId}
+          AND valid_from &lt;= #{validUntil}
+          AND valid_until &gt;= #{validFrom}
+    </select>
 
     <!-- 쿠폰번호 중복 체크 -->
     <select id="findCouponIdByCouponNumber" resultType="java.util.UUID">

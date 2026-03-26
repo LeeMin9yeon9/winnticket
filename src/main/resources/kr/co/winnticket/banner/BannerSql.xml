@@ -29,6 +29,10 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <select id="selectMaxDisplayOrder" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(display_order), 0) FROM banners
+    </select>
+
     <insert id="insertBanner">
         INSERT INTO banners (
             id,
@@ -121,6 +125,11 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 실제 삭제 -->
+    <delete id="hardDelete">
+        DELETE FROM banners WHERE id = #{id}
+    </delete>
+
     <select id="selectBannerById" resultMap="bannerMap">
         SELECT *
         FROM banners
@@ -160,7 +169,7 @@
             </if>
 
         </where>
-        ORDER BY created_at DESC
+        ORDER BY display_order ASC, created_at DESC
     </select>
 
 

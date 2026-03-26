@@ -45,13 +45,14 @@ public class TermsService {
     @Transactional
     public TermsResDto createTerms(TermsReqDto req, String username) {
 
-        if (req.getDisplayOrder() != null) {
+        // 해당 순서에 이미 항목이 있을 때만 밀기 (빈 자리면 그냥 삽입)
+        if (req.getDisplayOrder() != null && mapper.existsByDisplayOrder(req.getDisplayOrder())) {
             mapper.increaseDisplayOrder(req.getDisplayOrder());
         }
 
         mapper.insert(req, username);
 
-        return mapper.findAll().get(0); // 필요시 selectKey로 변경 가능
+        return mapper.findAll().get(0);
     }
 
     // 수정
@@ -62,9 +63,20 @@ public class TermsService {
             throw new RuntimeException("약관을 찾을 수 없습니다.");
         }
 
-        // displayOrder 변경 시 밀기
+        // displayOrder 변경 시: 기존 자리 빼고 → 새 자리가 차 있으면 밀기
         if (req.getDisplayOrder() != null) {
-            mapper.increaseDisplayOrder(req.getDisplayOrder());
+            TermsResDto current = mapper.findById(id);
+            Integer oldOrder = current.getDisplayOrder();
+            Integer newOrder = req.getDisplayOrder();
+
+            if (oldOrder != null && !oldOrder.equals(newOrder)) {
+                // 1) 기존 자리 뒤쪽 당기기
+                mapper.decreaseDisplayOrder(oldOrder);
+                // 2) 새 자리가 차 있으면 밀기
+                if (mapper.existsByDisplayOrderExcluding(newOrder, id)) {
+                    mapper.increaseDisplayOrder(newOrder);
+                }
+            }
         }
 
         mapper.update(id, req, username);

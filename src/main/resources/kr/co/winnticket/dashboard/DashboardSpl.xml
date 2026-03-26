@@ -54,55 +54,61 @@
     </select>
 
 
-    <!-- 전체 주문 -->
+    <!-- 전체 주문 (기간 필터) -->
     <select id="selectTotalOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
+        WHERE 1=1
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 
-    <!-- 주문 완료 -->
+    <!-- 주문 완료 (기간 필터) -->
     <select id="selectOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
         WHERE status = 'COMPLETED'
           AND payment_status = 'PAID'
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 
-    <!-- 주문 취소 -->
+    <!-- 주문 취소 (기간 필터) -->
     <select id="selectCancelOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
-        WHERE status = 'CANCELED'
-           OR payment_status = 'CANCELED'
-    </select>
-
-
-    <!-- 이번달 전체 주문 -->
-    <select id="selectThisMonthTotalOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE created_at >= DATE_TRUNC('month', NOW())
-    </select>
-
-
-    <!-- 이번달 완료 주문 -->
-    <select id="selectThisMonthOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE status = 'COMPLETED'
-          AND payment_status = 'PAID'
-          AND created_at >= DATE_TRUNC('month', NOW())
-    </select>
-
-
-    <!-- 이번달 취소 주문 -->
-    <select id="selectThisMonthCancelOrderCount" resultType="int">
-        SELECT COUNT(*)
-        FROM orders
-        WHERE status = 'CANCELED'
-          AND created_at >= DATE_TRUNC('month', NOW())
+        WHERE (status = 'CANCELED' OR payment_status = 'CANCELED')
+        <choose>
+            <when test="period == 'week'">
+                AND created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
     </select>
 
 
@@ -114,9 +120,9 @@
         SELECT
             p.name AS partnerName,
             COUNT(DISTINCT pr.id) AS productCount,
-            COALESCE(SUM(oi.quantity),0) AS orderCount,   -- 판매티켓 수
-            COALESCE(SUM(oi.total_price), 0) AS salesAmount,  -- 매출
-            COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit  -- 순이켓
+            COALESCE(SUM(oi.quantity),0) AS orderCount,
+            COALESCE(SUM(oi.total_price), 0) AS salesAmount,
+            COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit
 
         FROM partners p
                  LEFT JOIN products pr
@@ -132,6 +138,18 @@
 
         WHERE o.status = 'COMPLETED'
           AND o.payment_status = 'PAID'
+
+        <choose>
+            <when test="period == 'week'">
+                AND o.created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND o.created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND o.created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
 
         GROUP BY p.id, p.name
         ORDER BY salesAmount DESC
@@ -165,6 +183,7 @@
             resultType="kr.co.winnticket.dashboard.dto.DashboardTopProductDto">
 
         SELECT
+            CAST(p.id AS VARCHAR) AS productId,
             p.name AS productName,
             SUM(oi.quantity) AS orderCount
 
@@ -177,6 +196,19 @@
 
                  JOIN products p
                       ON oi.product_id = p.id
+
+        WHERE 1=1
+        <choose>
+            <when test="period == 'week'">
+                AND o.created_at >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period == 'month'">
+                AND o.created_at >= DATE_TRUNC('month', NOW())
+            </when>
+            <when test="period == 'year'">
+                AND o.created_at >= DATE_TRUNC('year', NOW())
+            </when>
+        </choose>
 
         GROUP BY p.id, p.name
         ORDER BY orderCount DESC

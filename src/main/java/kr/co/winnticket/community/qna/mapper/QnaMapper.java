@@ -18,6 +18,7 @@ public interface QnaMapper {
     // QNA 목록 조회
     List<QnaListGetResDto> selectQnaList(
             @Param("title") String asTitle,
+            @Param("keyword") String asKeyword,
             @Param("begDate") LocalDate asBegDate,
             @Param("endDate") LocalDate asEndDate,
             @Param("status") String aqStatus

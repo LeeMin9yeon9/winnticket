@@ -60,6 +60,9 @@ public class Popup extends BaseEntity {
     private Integer positionTop;    // px
     private Integer positionLeft;   // px
 
+    @Column(nullable = false)
+    private Integer displayOrder = 0;   // 정렬 순서
+
     // 통계용
     @Column(nullable = false)
     private Long viewCount = 0L;

@@ -49,11 +49,13 @@
                 a.customer_phone, -- 주문자 연락처
                 STRING_AGG(b.product_name, ', ') AS product_name,
                 SUM(b.quantity) AS product_cnt,
+                a.total_price, -- 상품총금액
                 a.discount_price, -- 할인금액
                 a.status, -- 주문상태
                 a.payment_status, -- 결제상태
                 a.final_price, -- 결제금액
-                a.payment_method -- 결제수단
+                a.payment_method, -- 결제수단
+                a.point_amount -- 포인트결제금액
             FROM
                 orders a
             JOIN order_items b

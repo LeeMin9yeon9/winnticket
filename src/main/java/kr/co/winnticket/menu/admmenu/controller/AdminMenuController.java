@@ -31,6 +31,7 @@ public class AdminMenuController {
         return ApiResponse.success("조회 성공",
                 service.searchAdminMenus(title, titleEn, page));
     }
+
     @PostMapping
     @Operation(summary = "관리자 메뉴 생성")
     public ApiResponse<Void> create(@RequestBody AdminMenuCreateDto dto) {
@@ -59,8 +60,13 @@ public class AdminMenuController {
     @Operation(summary = "메뉴 순서 변경")
     public ApiResponse<Void> changeOrder(
             @PathVariable UUID id,
-            @RequestParam Integer newOrder
+            @RequestBody java.util.Map<String, Integer> body
     ) {
+        Integer newOrder = body.get("displayOrder");
+        if (newOrder == null) newOrder = body.get("newOrder");
+        if (newOrder == null) {
+            return ApiResponse.error("displayOrder 또는 newOrder는 필수입니다.", "MISSING_PARAM");
+        }
         service.changeAdmMenu(id, newOrder);
         return ApiResponse.success("순서 변경 완료", null);
     }
