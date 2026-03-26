@@ -195,14 +195,15 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
+        config.setAllowedOrigins(List.of(
                 "https://*.ngrok-free.dev",
                 "https://*.benepia.co.kr",
                 "http://localhost:3000",
+                "https://winnticket.co.kr",
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONSx"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
