@@ -127,7 +127,7 @@ bankda:
 aquaplanet:
   url: https://exgatedev.hanwharesort.co.kr:443/iGate/SIF/json.jdo
   system-name: SIF99999
-  stn-tmsg-ip: 13.109.91.167
+  stn-tmsg-ip: 13.209.91.167
   wrkr-no: l1711019
 
 # 파트너 연동(LS컴퍼니)
