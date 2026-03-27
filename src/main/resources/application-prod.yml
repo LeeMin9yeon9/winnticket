@@ -148,9 +148,9 @@ smartinfini:
 
 # 파트너 연동 (아쿠아플라넷)
 aquaplanet:
-  url: "https://exgate.hanhwaresort.co.kr:443/iGate/SIF/json.jdo" # 운영
+  url: "https://exgate.hanwharesort.co.kr:443/iGate/SIF/json.jdo" # 운영
   system-name: SIF99999
-  stn-tmsg-ip: 13.109.91.167
+  stn-tmsg-ip: 54.180.35.99
   wrkr-no: l1711019
 
 # 파트너 연동(LS컴퍼니 아직 개발서버꺼 )
