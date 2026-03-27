@@ -26,6 +26,9 @@ public class ProductOptionValuePatchReqDto {
     @Schema(description = "원가")
     private int basePrice;
 
+    @Schema(description = "파트너별도코드")
+    private String partnerSubCode;
+
     @Hidden
     @Schema(description = "옵션값_ID")
     private UUID optionValueId;
