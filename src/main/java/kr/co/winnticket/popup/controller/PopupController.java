@@ -54,6 +54,15 @@ public class PopupController {
         return popupService.updatePopup(id, dto, userId);
     }
 
+    @PatchMapping("/{id}/visible")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PopupDto> changeVisible(
+            @PathVariable String id,
+            @RequestParam Boolean visible
+    ) {
+        return popupService.changeVisible(id, visible);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deletePopup(@PathVariable String id) {

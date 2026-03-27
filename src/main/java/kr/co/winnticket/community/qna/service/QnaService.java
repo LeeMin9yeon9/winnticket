@@ -22,8 +22,8 @@ public class QnaService {
     }
 
     // QNA 목록조회
-    public List<QnaListGetResDto> selectQnaList(String asTitle, LocalDate asBegDate, LocalDate asEndDate, String aqStatus) {
-        List<QnaListGetResDto> lModel = mapper.selectQnaList(asTitle, asBegDate, asEndDate, aqStatus);
+    public List<QnaListGetResDto> selectQnaList(String asTitle, String asKeyword, LocalDate asBegDate, LocalDate asEndDate, String aqStatus) {
+        List<QnaListGetResDto> lModel = mapper.selectQnaList(asTitle, asKeyword, asBegDate, asEndDate, aqStatus);
 
         return lModel;
     }

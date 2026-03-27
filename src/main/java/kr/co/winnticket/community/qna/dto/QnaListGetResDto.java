@@ -37,4 +37,10 @@ public class QnaListGetResDto {
 
     @Schema(description = "차단여부")
     private boolean isBlocked;
+
+    @Schema(description = "차단사유")
+    private String blockedReason;
+
+    @Schema(description = "차단일시")
+    private String blockedAt;
 }

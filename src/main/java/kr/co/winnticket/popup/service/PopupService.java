@@ -43,6 +43,17 @@ public class PopupService {
     // ===== 관리자용 목록 조회 =====
     public ApiResponse<Page<PopupDto>> getPopups(PopupFilter filter, Pageable pageable) {
         String keyword = filter.getKeyword() != null ? filter.getKeyword() : "";
+
+        // displayOrder 정렬이 없으면 기본 정렬 추가
+        if (pageable.getSort().isUnsorted()) {
+            pageable = org.springframework.data.domain.PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    org.springframework.data.domain.Sort.by("displayOrder").ascending()
+                            .and(org.springframework.data.domain.Sort.by("createdAt").descending())
+            );
+        }
+
         Page<Popup> result = popupRepository
                 .findByNameContainingOrTitleContaining(keyword, keyword, pageable);
 
@@ -73,6 +84,7 @@ public class PopupService {
         popup.setHeight(dto.getHeight());
         popup.setPositionTop(dto.getPositionTop());
         popup.setPositionLeft(dto.getPositionLeft());
+        popup.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
 
         popup = popupRepository.save(popup);
 
@@ -117,6 +129,7 @@ public class PopupService {
         if (dto.getHeight() != null) popup.setHeight(dto.getHeight());
         if (dto.getPositionTop() != null) popup.setPositionTop(dto.getPositionTop());
         if (dto.getPositionLeft() != null) popup.setPositionLeft(dto.getPositionLeft());
+        if (dto.getDisplayOrder() != null) popup.setDisplayOrder(dto.getDisplayOrder());
 
         // 채널 매핑 갱신
         if (dto.getChannelIds() != null) {
@@ -141,6 +154,14 @@ public class PopupService {
         }
 
         return ApiResponse.success("팝업이 수정되었습니다.",convertToDto(popup));
+    }
+
+    @Transactional
+    public ApiResponse<PopupDto> changeVisible(String id, Boolean visible) {
+        Popup popup = popupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("팝업을 찾을 수 없습니다."));
+        popup.setVisible(visible);
+        return ApiResponse.success("노출 상태가 변경되었습니다.", convertToDto(popup));
     }
 
     @Transactional
@@ -307,6 +328,7 @@ public class PopupService {
         dto.setHeight(popup.getHeight());
         dto.setPositionTop(popup.getPositionTop());
         dto.setPositionLeft(popup.getPositionLeft());
+        dto.setDisplayOrder(popup.getDisplayOrder());
         dto.setViewCount(popup.getViewCount());
         dto.setClickCount(popup.getClickCount());
         dto.setStatus(popup.getStatus());

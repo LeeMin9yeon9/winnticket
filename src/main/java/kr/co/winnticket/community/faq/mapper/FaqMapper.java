@@ -50,6 +50,9 @@ public interface FaqMapper {
             @Param("name") String name
     );
 
+    // 카테고리 참조 해제 (삭제 전)
+    void clearFaqCategoryRef(@Param("categoryId") UUID categoryId);
+
     // 카테고리 삭제
     int deleteFaqCategory(
             @Param("id") UUID auId

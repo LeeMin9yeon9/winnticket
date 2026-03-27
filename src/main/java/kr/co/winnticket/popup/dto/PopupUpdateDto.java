@@ -25,6 +25,7 @@ public class PopupUpdateDto {
     private Integer height;
     private Integer positionTop;
     private Integer positionLeft;
+    private Integer displayOrder;
 
     private List<String> channelIds;
     private List<String> pagePatterns;

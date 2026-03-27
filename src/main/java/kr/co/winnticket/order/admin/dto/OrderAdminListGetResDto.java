@@ -64,4 +64,7 @@ public class OrderAdminListGetResDto {
     @Schema(description = "결제수단")
     private PaymentMethod paymentMethod;
 
+    @Schema(description = "포인트 결제 금액")
+    private Integer pointAmount;
+
 }

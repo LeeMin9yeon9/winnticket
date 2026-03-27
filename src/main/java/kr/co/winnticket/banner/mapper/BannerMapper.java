@@ -15,6 +15,9 @@ public interface BannerMapper {
     List<BannerDto>selectAdminList(BannerFilter filter);
 
 
+    // 배너 최대 displayOrder 조회
+    Integer selectMaxDisplayOrder();
+
     // 배너 생성
     void insertBanner(BannerCreateDto dto);
 
@@ -25,8 +28,11 @@ public interface BannerMapper {
     void updateVisible(@Param("id") String id,
                        @Param("visible") Boolean visible);
 
-    // 배너 삭제
+    // 배너 소프트 삭제
     void softDelete(String id);
+
+    // 배너 실제 삭제
+    void hardDelete(String id);
 
 
     // 배너 상세

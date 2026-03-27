@@ -63,8 +63,18 @@ public interface TicketCouponMapper {
             @Param("validUntil") LocalDate validUntil
     );
 
-    // 그룹 삭제(그룹 삭제하면 쿠폰도 CASCADE 라면 같이 삭제됨)
+    // 그룹 내 쿠폰 전체 삭제 (그룹 삭제 전 호출)
+    void deleteCouponsByGroupId(@Param("groupId") UUID groupId);
+
+    // 그룹 삭제
     void deleteGroup(@Param("groupId") UUID groupId);
+
+    // 겹치는 날짜 그룹 체크
+    int countOverlappingGroups(
+            @Param("productOptionValueId") UUID productOptionValueId,
+            @Param("validFrom") LocalDate validFrom,
+            @Param("validUntil") LocalDate validUntil
+    );
 
     //  쿠폰번호 중복 체크용
     UUID findCouponIdByCouponNumber(@Param("couponNumber") String couponNumber);
