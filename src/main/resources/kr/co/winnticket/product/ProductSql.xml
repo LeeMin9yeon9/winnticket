@@ -147,7 +147,8 @@
             a.VALUE,  -- 옵션별가격명
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
-            a.BASE_PRICE  -- 원가
+            a.BASE_PRICE,  -- 원가
+            a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -164,7 +165,8 @@
             a.VALUE,  -- 옵션별가격명
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
-            a.BASE_PRICE  -- 원가
+            a.BASE_PRICE,  -- 원가
+            a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -496,7 +498,8 @@
             CODE,
             STOCK,
             ADDITIONAL_PRICE,
-            BASE_PRICE
+            BASE_PRICE,
+            PARTNER_SUB_CODE
         )
         Values
         (
@@ -505,7 +508,8 @@
             #{model.code},
             #{model.stock},
             #{model.additionalPrice},
-            #{model.basePrice}
+            #{model.basePrice},
+            #{model.partnerSubCode}
         )
     </insert>
 
@@ -530,6 +534,7 @@
             <if test="model.basePrice != null">
                 BASE_PRICE = #{model.basePrice},
             </if>
+            PARTNER_SUB_CODE = #{model.partnerSubCode},
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
