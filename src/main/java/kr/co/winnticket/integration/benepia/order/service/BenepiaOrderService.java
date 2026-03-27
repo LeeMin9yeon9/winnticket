@@ -81,11 +81,7 @@ public class BenepiaOrderService {
 
         orderInfo.setPtnAccntId("");
 
-        String orderReturnUrl = "/order-lookup/" + order.getChannelId() + "/" + order.getOrderNumber();
-        String orderUrl =
-                "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
-                        + "?coopCoCd=" + props.getCustCoCd()
-                        + "&returnurl=" + orderReturnUrl;
+        String orderUrl = "/order-lookup/" + order.getChannelId() + "/" + order.getOrderNumber();
 
         orderInfo.setOrdDtlUrl(nvl(orderUrl));
         orderInfo.setOrdDtlUrlTyp("Y");
@@ -154,11 +150,7 @@ public class BenepiaOrderService {
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
 
-            String productReturnUrl = "/product/" + detail.getCode() + "?channel=BENE";
-            String productUrl =
-                    "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
-                            + "?coopCoCd=" + props.getCustCoCd()
-                            + "&returnurl=" + productReturnUrl;
+            String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
@@ -313,11 +305,7 @@ public class BenepiaOrderService {
             product.setPrdPrc(nvl(p.getTotalPrice()));
             product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
 
-            String productReturnUrl = "/product/" + detail.getCode() + "?channel=BENE";
-            String productUrl =
-                    "https://newfront.benepia.co.kr/frnt/partnersite/partnerSite.do"
-                            + "?coopCoCd=" + props.getCustCoCd()
-                            + "&returnurl=" + productReturnUrl;
+            String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 
             product.setPrdDtlUrl(nvl(productUrl));
             product.setPrdDtlUrlTyp("Y");
