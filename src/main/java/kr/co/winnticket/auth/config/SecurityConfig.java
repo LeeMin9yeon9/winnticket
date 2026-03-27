@@ -209,7 +209,7 @@ public class SecurityConfig {
                 "https://winnticket.store",
                 "https://*.winnticket.co.kr",
                 "https://*.winnticket.store"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONSx"))
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONSx"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
