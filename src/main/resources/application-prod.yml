@@ -133,7 +133,7 @@ spavis:
 # 파트너 연동 (플레이스토리)
 playstory:
   base-url: "https://storeapi.pscms.co.kr"
-  chn-id: "P240076"
+  chn-id: "hyundaiplanandtour"
 
 # 뱅크다 연동
 bankda:
