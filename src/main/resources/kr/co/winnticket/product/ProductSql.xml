@@ -1107,18 +1107,6 @@
         WHERE id = #{productId}
     </select>
 
-    <!-- 옵션값 재고 차감 -->
-    <update id="decreaseStock">
-
-        UPDATE product_option_values
-        SET stock = stock - 1,
-            updated_at = NOW()
-        WHERE id = #{optionValueId}
-          AND stock > 0
-
-    </update>
-
-
     <!--메뉴 비활성화 시 해당 상품 비활성화-->
     <update id="updateProductsVisibleByMenuId">
         UPDATE products

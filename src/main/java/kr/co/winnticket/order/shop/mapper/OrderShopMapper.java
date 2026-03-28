@@ -124,6 +124,6 @@ public interface OrderShopMapper {
     // 만료 주문 조회(스케줄러용)
     List<String> findExpiredOrderNumbers();
 
-
-
+    // 주문 후 재고 차감
+    int updateOptionValueStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") int quantity);
 }

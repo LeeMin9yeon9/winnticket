@@ -181,7 +181,12 @@ public class OrderShopService {
 
                     if (!ProductType.STAY.equals(product.getType())
                             && optionValue.getStock() < item.getQuantity()) {
-                        throw new IllegalArgumentException("재고가 부족합니다.");
+
+                        int updated = mapper.updateOptionValueStock(opt.getOptionValueId(), item.getQuantity());
+
+                        if (updated == 0) {
+                            throw new IllegalArgumentException("재고가 부족합니다.");
+                        }
                     }
 
                     mapper.insertOrderItemOption(

@@ -126,5 +126,9 @@ public interface OrderMapper {
     // 입금 완료 시 deadline 제거
     void clearDepositDeadline(@Param("orderId") UUID orderId);
 
+    // 주문취소후 재고 원복을 위한 정보 조회
+    List<OrderItemOptionDto> selectOrderItemOptions(@Param("orderId") UUID orderId);
 
+    // 재고 원복
+    void increaseStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") Integer quantity);
 }
