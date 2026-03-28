@@ -231,7 +231,6 @@ public class TicketCouponService {
         }
 
         mapper.markCouponSold(coupon.getId());
-        productMapper.decreaseStock(optionValueId);
 
         orderMapper.insertOrderItemCoupon(
                 orderId,
