@@ -2,10 +2,7 @@ package kr.co.winnticket.order.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import kr.co.winnticket.common.enums.OrderStatus;
-import kr.co.winnticket.common.enums.PaymentMethod;
-import kr.co.winnticket.common.enums.PaymentStatus;
-import kr.co.winnticket.common.enums.SmsTemplateCode;
+import kr.co.winnticket.common.enums.*;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
@@ -707,17 +704,27 @@ public class OrderService {
 
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
-        } else {
-            // 베네피아 주문 취소 전송
-            try {
-                if (order.getBenepiaId() != null) {
-                    log.info("[BENEPIA 주문 취소 전송] benefitId={}", order.getBenepiaId());
-                    benepiaOrderService.cancelOrder(order, items);
-                }
-            } catch (Exception e) {
-                throw new IllegalArgumentException("[BENEPIA 주문 취소 전송 실패]", e);
+        }
+        // 베네피아 주문 취소 전송
+        try {
+            if (order.getBenepiaId() != null) {
+                log.info("[BENEPIA 주문 취소 전송] benefitId={}", order.getBenepiaId());
+                benepiaOrderService.cancelOrder(order, items);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("[BENEPIA 주문 취소 전송 실패]", e);
+        }
+
+        // 재고 복구
+        List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
+
+        for (OrderItemOptionDto opt : options) {
+            if (!ProductType.STAY.equals(opt.getProductType())) {
+                mapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
             }
         }
+
+        log.info("[STOCK RESTORE] 완료 orderId={}", orderId);
 
         /*
          * =========================

@@ -351,8 +351,14 @@
           AND payment_method = 'VIRTUAL_ACCOUNT'
           AND deposit_deadline IS NOT NULL
         AND deposit_deadline &lt; NOW()
-
     </select>
 
-
+    <!-- 주문 후 재고 차감 -->
+    <update id="updateOptionValueStock">
+        UPDATE product_option_values
+        SET stock = stock - #{quantity},
+            updated_at = NOW()
+        WHERE id = #{optionValueId}
+        AND stock >= #{quantity}
+    </update>
 </mapper>

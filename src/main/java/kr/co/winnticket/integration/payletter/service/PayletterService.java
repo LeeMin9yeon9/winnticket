@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -296,11 +298,26 @@ public class PayletterService {
         log.info("[PAYLETTER] cancel start orderId={}, orderNumber={}, tid={}, pgCode={}, ip={}",
                 orderId, orderNumber, tid, pgCode, ipAddr);
 
+        LocalDateTime orderedAt = (LocalDateTime) orderInfo.get("ordered_at");
+        LocalDateTime now = LocalDateTime.now();
+        long days = ChronoUnit.DAYS.between(orderedAt, now);
+
+        int cancelFee;
+
+        if (days <= 7) {
+            cancelFee = 1000;
+        } else {
+            cancelFee = (int) ((int)orderInfo.get("final_price") * 0.1);
+        }
+
+        int cancelAmount = (int)orderInfo.get("final_price") - cancelFee;
+
         PayletterCancelReqDto req = PayletterCancelReqDto.builder()
                 .pgCode(pgCode) // creditcard
                 .clientId(properties.getClientId())
                 .userId(userId)
                 .tid(tid)
+                .amount(cancelAmount)
                 .ipAddr(ipAddr)
                 .build();
 
