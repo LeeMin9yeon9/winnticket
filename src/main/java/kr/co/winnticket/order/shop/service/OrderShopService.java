@@ -179,11 +179,10 @@ public class OrderShopService {
                         throw new IllegalArgumentException("유효하지 않은 옵션입니다.");
                     }
 
-                    if (!ProductType.STAY.equals(product.getType())
-                            && optionValue.getStock() < item.getQuantity()) {
-
+                    if (!ProductType.STAY.equals(product.getType())) {
+                        log.info("==== dddddd - ProductType={}", product.getType());
                         int updated = mapper.updateOptionValueStock(opt.getOptionValueId(), item.getQuantity());
-
+                        log.info("==== dddddd - updated={}", updated);
                         if (updated == 0) {
                             throw new IllegalArgumentException("재고가 부족합니다.");
                         }
