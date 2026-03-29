@@ -13,6 +13,7 @@
             o.customer_phone AS customerPhone
         FROM orders o
         WHERE o.order_number = #{orderNumber}
+
     </select>
 
         <!-- 주문 조회-->
@@ -98,19 +99,40 @@
           AND ticket_used = false
     </update>
 
-    <!--스케줄러-->
-    <select id="selectPendingTickets" resultType="map">
+<!--    &lt;!&ndash;스케줄러&ndash;&gt;-->
+<!--    <select id="selectPendingTickets" resultType="map">-->
+<!--        SELECT-->
+<!--            ot.partner_order_number AS trno,-->
+<!--            pov.code AS productcode-->
+<!--        FROM order_tickets ot-->
+<!--                 JOIN order_items oi ON oi.id = ot.order_item_id-->
+<!--                 JOIN order_item_options oio ON oio.order_item_id = oi.id-->
+<!--                 JOIN product_option_values pov ON pov.id = oio.option_value_id-->
+<!--        WHERE oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'  &lt;!&ndash;  엠에어 &ndash;&gt;-->
+<!--          AND ot.partner_order_number IS NOT NULL                      &lt;!&ndash;  TRNO 있음 (발급됨) &ndash;&gt;-->
+<!--          AND ot.partner_order_code IS NOT NULL                        &lt;!&ndash;  TNO 있음 (진짜 발급됨) &ndash;&gt;-->
+<!--          AND ot.ticket_used = false                                  &lt;!&ndash;  미사용 &ndash;&gt;-->
+<!--    </select>-->
+
+    <!--취소 테스트용-->
+    <select id="selectCancelableTickets" resultType="map">
         SELECT
             ot.partner_order_number AS trno,
-            pov.code AS productcode
+            (
+                SELECT pov.code
+                FROM order_item_options oio
+                         JOIN product_option_values pov ON pov.id = oio.option_value_id
+                WHERE oio.order_item_id = oi.id
+                                       LIMIT 1
+            ) AS productcode
         FROM order_tickets ot
-                 JOIN order_items oi ON oi.id = ot.order_item_id
-                 JOIN order_item_options oio ON oio.order_item_id = oi.id
-                 JOIN product_option_values pov ON pov.id = oio.option_value_id
-        WHERE oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'  <!--  엠에어 -->
-          AND ot.partner_order_number IS NOT NULL                      <!--  TRNO 있음 (발급됨) -->
-          AND ot.partner_order_code IS NOT NULL                        <!--  TNO 있음 (진짜 발급됨) -->
-          AND ot.ticket_used = false                                  <!--  미사용 -->
+            JOIN order_items oi ON oi.id = ot.order_item_id
+            JOIN orders o ON o.id = oi.order_id
+        WHERE o.order_number = #{orderNumber}
+          AND oi.partner_id = '15f283a9-fd6c-47ba-862d-0af9697a3e1b'
+          AND ot.partner_order_number IS NOT NULL   -- TRNO 있음
+          AND ot.partner_order_code IS NOT NULL     -- 발급됨
+          AND ot.ticket_used = false                -- 미사용만
     </select>
 
 

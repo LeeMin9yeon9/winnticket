@@ -304,9 +304,12 @@ public class PayletterService {
 
         int cancelFee;
 
+
+        // 7일 이내 취소 시
         if (days <= 7) {
             cancelFee = 1000;
         } else {
+            // 7일 초과 시 10%
             cancelFee = (int) ((int)orderInfo.get("final_price") * 0.1);
         }
 

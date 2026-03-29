@@ -102,48 +102,63 @@ public class MairService {
     // 취소
     public List<IntegrationResult> cancelByOrder(String orderNumber) {
 
+
+        log.info("[MAIR][CANCEL] START orderNumber={}", orderNumber);
+
         MairOrderInfoDto order = mapper.selectOrderInfo(orderNumber);
 
         if (order == null) {
             throw new IllegalArgumentException("주문이 없습니다.");
         }
 
-        List<MairOrderItemInfoDto> items = mapper.selectOrderItemInfos(order.getOrderId());
+        // 취소 대상 티켓 조회
+        List<Map<String, String>> tickets =
+                mapper.selectCancelableTickets(orderNumber);
+
+        if (tickets == null || tickets.isEmpty()) {
+            log.warn("[MAIR][CANCEL] 취소 대상 없음 orderNumber={}", orderNumber);
+            return List.of();
+        }
 
         List<IntegrationResult> results = new ArrayList<>();
 
-        for (MairOrderItemInfoDto item : items) {
+        for (Map<String, String> t : tickets) {
 
-            if (item.getProductCode() == null) {
-                continue;
-            }
-
-            String trno = orderNumber;
+            String trno = t.get("trno");
+            String productCode = t.get("productcode");
 
             log.info("[MAIR][CANCEL] REQUEST ITCD={}, TRNO={}",
-                    item.getProductCode(),
-                    trno);
+                    productCode, trno);
 
-            MairCouponResDto res = client.cancel(item.getProductCode(), trno);
+            try {
+                MairCouponResDto res = client.cancel(productCode, trno);
 
-            log.info("[MAIR][CANCEL] RESPONSE={}", res);
+                log.info("[MAIR][CANCEL] RESPONSE={}", res);
 
-            IntegrationResult result = responseMapper.mapCancel(res);
+                IntegrationResult result = responseMapper.mapCancel(res);
 
-            log.info("[MAIR][CANCEL] RESULT code={}, message={}",
-                    result.getCode(),
-                    result.getMessage());
+                log.info("[MAIR][CANCEL] RESULT code={}, message={}",
+                        result.getCode(),
+                        result.getMessage());
 
-            results.add(result);
+                if (!result.isSuccess()) {
+                    throw new RuntimeException(
+                            "엠에어 취소 실패 code="
+                                    + result.getCode()
+                                    + " message="
+                                    + result.getMessage());
+                }
 
-            if(!result.isSuccess()){
-                throw new RuntimeException(
-                        "엠에어 취소 실패 code="
-                                + result.getCode()
-                                + " message="
-                                + result.getMessage());
+                results.add(result);
+
+            } catch (Exception e) {
+                log.error("[MAIR][CANCEL] ERROR TRNO={}", trno, e);
+                throw e;
             }
         }
+
+        log.info("[MAIR][CANCEL] END orderNumber={}", orderNumber);
+
         return results;
     }
 
