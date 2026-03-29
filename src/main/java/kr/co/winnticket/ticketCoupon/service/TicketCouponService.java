@@ -41,10 +41,10 @@ public class TicketCouponService {
             throw new RuntimeException("선사입형 상품만 쿠폰 생성 가능");
         }
 
-        // [이슈6] 날짜 검증
+        //  날짜 검증
         validateDates(dto.getValidFrom(), dto.getValidUntil());
 
-        // [이슈2] 겹치는 날짜 그룹 체크
+        //  겹치는 날짜 그룹 체크
         int overlapCount = mapper.countOverlappingGroups(
                 dto.getProductOptionValueId(),
                 dto.getValidFrom(),
@@ -80,9 +80,10 @@ public class TicketCouponService {
                 dto.getValidFrom(),
                 dto.getValidUntil()
         );
+
     }
 
-    // [이슈1] 쿠폰번호 범위 생성 - 중복 시 skip하고 결과 메시지 반환
+    //  쿠폰번호 범위 생성 - 중복 시 skip하고 결과 메시지 반환
     private String createCouponsByRange(UUID groupId, String start, String end, LocalDate validFrom, LocalDate validUntil) {
 
         RangeParts s = RangeParts.parse(start);
@@ -145,8 +146,8 @@ public class TicketCouponService {
 
     // 그룹 목록
     @Transactional(readOnly = true)
-    public List<TicketCouponGroupResDto> getGroups() {
-        return mapper.selectGroups();
+    public List<TicketCouponGroupResDto> getGroups(UUID productId) {
+        return mapper.selectGroups(productId);
     }
 
     // 그룹 단건
@@ -167,7 +168,7 @@ public class TicketCouponService {
         return mapper.selectCoupon(couponId);
     }
 
-    // [이슈5] 쿠폰 수정 - 에러 메시지 개선
+    //  쿠폰 수정 - 에러 메시지 개선
     @Transactional
     public void updateCoupon(UUID couponId, TicketCouponUpdateReqDto dto) {
 
@@ -220,6 +221,8 @@ public class TicketCouponService {
     @Transactional
     public String issueCoupon(UUID orderItemId) {
 
+        log.info("[쿠폰발급 시작] orderItemId={}", orderItemId);
+
         UUID orderId = orderMapper.findOrderIdByOrderItemId(orderItemId);
         UUID productId = orderMapper.findProductIdByOrderItemId(orderItemId);
         UUID optionValueId = orderMapper.findOptionValueIdByOrderItem(orderItemId);
@@ -230,6 +233,10 @@ public class TicketCouponService {
             throw new RuntimeException("쿠폰 재고 없음");
         }
 
+<<<<<<< HEAD
+        productMapper.decreaseStock(optionValueId);
+=======
+>>>>>>> 6ad90a5e470b846ddeb090d359d5bae2cd573feb
         mapper.markCouponSold(coupon.getId());
 
         orderMapper.insertOrderItemCoupon(
@@ -246,6 +253,8 @@ public class TicketCouponService {
                 coupon.getCouponNumber()
         );
 
+        log.info("[쿠폰발급] orderId={}, orderItemId={}, productId={}, optionValueId={}, coupon={}",
+                orderId, orderItemId, productId, optionValueId, coupon.getCouponNumber());
         return coupon.getCouponNumber();
     }
 

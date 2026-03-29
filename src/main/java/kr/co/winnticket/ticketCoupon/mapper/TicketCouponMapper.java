@@ -32,7 +32,7 @@ public interface TicketCouponMapper {
     );
 
     // 그룹 목록 조회
-    List<TicketCouponGroupResDto> selectGroups();
+    List<TicketCouponGroupResDto> selectGroups(@Param("productId") UUID productId);
 
     // 그룹 단건 조회
     TicketCouponGroupResDto selectGroup(@Param("groupId") UUID groupId);
