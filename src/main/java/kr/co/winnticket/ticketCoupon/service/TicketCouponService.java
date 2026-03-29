@@ -233,10 +233,6 @@ public class TicketCouponService {
             throw new RuntimeException("쿠폰 재고 없음");
         }
 
-<<<<<<< HEAD
-        productMapper.decreaseStock(optionValueId);
-=======
->>>>>>> 6ad90a5e470b846ddeb090d359d5bae2cd573feb
         mapper.markCouponSold(coupon.getId());
 
         orderMapper.insertOrderItemCoupon(
