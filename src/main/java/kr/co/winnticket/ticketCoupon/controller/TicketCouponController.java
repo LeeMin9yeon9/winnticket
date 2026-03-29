@@ -34,8 +34,9 @@ public class TicketCouponController {
 
     @Operation(summary = "쿠폰그룹 목록", description = "그룹 목록 + ACTIVE/USED 카운트")
     @GetMapping("/groups")
-    public ResponseEntity<ApiResponse<List<TicketCouponGroupResDto>>> groups() {
-        return ResponseEntity.ok(ApiResponse.success("조회 성공", service.getGroups()));
+    public ResponseEntity<ApiResponse<List<TicketCouponGroupResDto>>> groups(@RequestParam UUID productId) {
+
+        return ResponseEntity.ok(ApiResponse.success("조회 성공", service.getGroups(productId)));
     }
 
     @Operation(summary = "쿠폰그룹 단건", description = "그룹 단건 + ACTIVE/USED 카운트")

@@ -73,6 +73,7 @@
             COALESCE(SUM(CASE WHEN c.status = 'USED' THEN 1 ELSE 0 END), 0) AS usedCount
         FROM ticket_coupon_groups g
                  LEFT JOIN ticket_coupons c ON c.group_id = g.id
+        WHERE g.product_id = #{productId}
         GROUP BY
             g.id, g.product_id, g.product_option_id, g.product_option_value_id,
             g.group_name, g.valid_from, g.valid_until, g.created_at, g.updated_at
