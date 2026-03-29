@@ -44,7 +44,10 @@ public interface MairOrderMapper {
     void updateTicketUsedIfNotUsed(String tno);
 
     //스케줄러
-    List<Map<String, String>> selectPendingTickets();
+    //List<Map<String, String>> selectPendingTickets();
+
+    // 티켓취소
+    List<Map<String, String>> selectCancelableTickets(String orderNumber);
 
 
 

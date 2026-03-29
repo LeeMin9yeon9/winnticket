@@ -12,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -298,15 +299,19 @@ public class PayletterService {
         log.info("[PAYLETTER] cancel start orderId={}, orderNumber={}, tid={}, pgCode={}, ip={}",
                 orderId, orderNumber, tid, pgCode, ipAddr);
 
-        LocalDateTime orderedAt = (LocalDateTime) orderInfo.get("ordered_at");
+        Timestamp ts = (Timestamp) orderInfo.get("ordered_at");
+        LocalDateTime orderedAt = ts.toLocalDateTime();
         LocalDateTime now = LocalDateTime.now();
         long days = ChronoUnit.DAYS.between(orderedAt, now);
 
         int cancelFee;
 
+
+        // 7일 이내 취소 시
         if (days <= 7) {
             cancelFee = 1000;
         } else {
+            // 7일 초과 시 10%
             cancelFee = (int) ((int)orderInfo.get("final_price") * 0.1);
         }
 
