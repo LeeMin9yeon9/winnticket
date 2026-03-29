@@ -300,10 +300,18 @@ public class PayletterService {
                 orderId, orderNumber, tid, pgCode, ipAddr);
 
         Timestamp ts = (Timestamp) orderInfo.get("ordered_at");
+
+        if (ts == null) {
+            throw new IllegalStateException("ordered_at 없음");
+        }
+
         LocalDateTime orderedAt = ts.toLocalDateTime();
         LocalDateTime now = LocalDateTime.now();
-        long days = ChronoUnit.DAYS.between(orderedAt, now);
+        long days = ChronoUnit.DAYS.between(
+                orderedAt.toLocalDate(),
+                now.toLocalDate());
 
+        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
         int cancelFee;
 
 
@@ -312,10 +320,10 @@ public class PayletterService {
             cancelFee = 1000;
         } else {
             // 7일 초과 시 10%
-            cancelFee = (int) ((int)orderInfo.get("final_price") * 0.1);
+            cancelFee = (int) Math.floor(finalPrice * 0.1);
         }
 
-        int cancelAmount = (int)orderInfo.get("final_price") - cancelFee;
+        int cancelAmount = Math.max(finalPrice - cancelFee, 0);
 
         PayletterCancelReqDto req = PayletterCancelReqDto.builder()
                 .pgCode(pgCode) // creditcard
