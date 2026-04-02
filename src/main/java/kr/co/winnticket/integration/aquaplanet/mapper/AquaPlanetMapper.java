@@ -21,4 +21,15 @@ public interface AquaPlanetMapper {
             @Param("reprCponIndictNo") String reprCponIndictNo,
             @Param("reprCponSeq") String reprCponSeq
     );
+
+    // 쿠폰 사용 처리
+    int updateAquaPlanetTicketUsed(
+            @Param("reprCponIndictNo") String reprCponIndictNo,
+            @Param("usedDate") String usedDate
+    );
+
+    // 쿠폰 사용 취소 처리
+    int updateAquaPlanetTicketUnused(
+            @Param("reprCponIndictNo") String reprCponIndictNo
+    );
 }
