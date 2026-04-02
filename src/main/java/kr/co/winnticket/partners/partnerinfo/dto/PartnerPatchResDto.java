@@ -37,7 +37,7 @@ public class PartnerPatchResDto {
     private PartnerType type;
 
     @Schema(description = "티켓코드 타입")
-    private TicketCodeType ticketCodeType;
+    private String ticketCodeType;
 
     @Schema(description = "상태")
     private PartnerStatus status;
