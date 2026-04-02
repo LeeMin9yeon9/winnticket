@@ -30,16 +30,15 @@ public class LsCompanyClient {
             req.setData(data);
 
             HttpHeaders headers = new HttpHeaders();
-            //headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
-            ObjectMapper mapper = new ObjectMapper();
             String json = "";
 
             try {
-                json = mapper.writeValueAsString(req);
+                json = objectMapper.writeValueAsString(req);
                 log.info("LS REQUEST JSON = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
@@ -82,11 +81,10 @@ public class LsCompanyClient {
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
-            ObjectMapper mapper = new ObjectMapper();
             String json = "";
 
             try {
-                json = mapper.writeValueAsString(req);
+                json = objectMapper.writeValueAsString(req);
                 log.info("LS REQUEST JSON = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
@@ -114,16 +112,15 @@ public class LsCompanyClient {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-           // headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
 
-            ObjectMapper mapper = new ObjectMapper();
             String json = "";
 
             try {
-                json = mapper.writeValueAsString(req);
+                json = objectMapper.writeValueAsString(req);
                 log.info("LS ISSUE REQUEST JSON = {}", json);
             } catch (Exception e) {
                 log.error("JSON 변환 실패", e);
@@ -159,7 +156,7 @@ public class LsCompanyClient {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-           // headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -172,7 +169,7 @@ public class LsCompanyClient {
                 log.error("JSON 변환 실패", e);
             }
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
-//            HttpEntity<LsStatusReqDto> entity = new HttpEntity<>(req, headers);
+
 
             ResponseEntity<LsStatusResDto> response =
                     restTemplate.exchange(
@@ -202,7 +199,7 @@ public class LsCompanyClient {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //headers.setContentType(new MediaType("application", "json", java.nio.charset.StandardCharsets.UTF_8));
+
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             headers.add("Authorization", properties.getToken());
 
@@ -215,7 +212,6 @@ public class LsCompanyClient {
                 log.error("JSON 변환 실패", e);
             }
 
-            //HttpEntity<LsCancelReqDto> entity = new HttpEntity<>(req, headers);
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
             ResponseEntity<LsCancelResDto> response =
                     restTemplate.exchange(
@@ -257,7 +253,6 @@ public class LsCompanyClient {
                 log.error("JSON 변환 실패", e);
             }
 
-            //HttpEntity<LsResendReqDto> entity = new HttpEntity<>(req, headers);
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
             ResponseEntity<LsResendResDto> response =
