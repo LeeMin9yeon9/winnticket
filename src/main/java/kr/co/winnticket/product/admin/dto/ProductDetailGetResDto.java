@@ -83,6 +83,9 @@ public class ProductDetailGetResDto {
     @Schema(description = "상품이미지")
     private List<String> imageUrl;
 
+    @Schema(description = "예약상품여부")
+    private boolean isReservation;
+
     @Schema(description = "섹션 관리")
     private List<ProductSectionGetResDto> sections = new ArrayList<>();
 
