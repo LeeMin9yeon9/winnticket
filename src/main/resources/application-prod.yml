@@ -9,8 +9,10 @@ spring:
     username: winnticket
     password: ${DB_PASSWORD}
 
-  Jpa:
+  jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: validate
 
   data:
     redis:
@@ -26,10 +28,10 @@ spring:
 
 logging:
   level:
-    kr.co.winnticket: debug
-    org.springframework: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
+    root: WARN
+    kr.co.winnticket: INFO
+    org.springframework: WARN
+    org.hibernate.SQL: WARN
 
 springdoc:
   api-docs:
