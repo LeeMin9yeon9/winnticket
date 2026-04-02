@@ -161,7 +161,13 @@
             ) USED_TICKET_CNT,  -- 사용티켓수
             a.benepia_id,  -- 베네피아id
             a.point_amount,  -- 포인트결제금액
-            a.memo -- 요청사항
+            a.memo, -- 요청사항
+            (
+                SELECT p.name FROM partners p
+                JOIN products pr ON pr.partner_id = p.id
+                JOIN order_items oi ON oi.product_id = pr.id AND oi.order_id = a.id
+                LIMIT 1
+            ) AS partner_name
         FROM
             orders a
         Where 1 = 1
