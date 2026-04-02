@@ -34,6 +34,9 @@ public interface TicketCouponMapper {
     // 그룹 목록 조회
     List<TicketCouponGroupResDto> selectGroups(@Param("productId") UUID productId);
 
+    // 상품별 그룹 목록 조회
+    List<TicketCouponGroupResDto> selectGroupsByProductId(@Param("productId") UUID productId);
+
     // 그룹 단건 조회
     TicketCouponGroupResDto selectGroup(@Param("groupId") UUID groupId);
 
@@ -103,5 +106,8 @@ public interface TicketCouponMapper {
 
     // 유효기간 빠른 쿠폰 먼저 사용
     TicketCouponListResDto findActiveCouponByOptionValueId(UUID optionValueId);
+
+    // 옵션값별 활성 쿠폰 수량 조회
+    int countActiveCouponsByOptionValueId(@Param("optionValueId") UUID optionValueId);
 
 }

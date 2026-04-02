@@ -28,6 +28,7 @@ import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
+import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
 import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
 import kr.co.winnticket.sms.service.BizMsgService;
@@ -60,6 +61,7 @@ public class OrderShopService {
     private final PriceService priceService;
     private final KcpService kcpService;
     private final OrderService orderService;
+    private final TicketCouponMapper ticketCouponMapper;
     // 주문조회
     public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(channelId, orderNumber);
@@ -185,6 +187,15 @@ public class OrderShopService {
                         log.info("==== dddddd - updated={}", updated);
                         if (updated == 0) {
                             throw new IllegalArgumentException("재고가 부족합니다.");
+                        }
+                    }
+
+                    // 선사입형 상품 쿠폰 재고 체크
+                    Boolean prePurchased = productMapper.selectPrePurchasedByProductId(item.getProductId());
+                    if (Boolean.TRUE.equals(prePurchased)) {
+                        int activeCoupons = ticketCouponMapper.countActiveCouponsByOptionValueId(opt.getOptionValueId());
+                        if (activeCoupons < item.getQuantity()) {
+                            throw new IllegalArgumentException("선사입 쿠폰 재고가 부족합니다. (남은 쿠폰: " + activeCoupons + "개)");
                         }
                     }
 
