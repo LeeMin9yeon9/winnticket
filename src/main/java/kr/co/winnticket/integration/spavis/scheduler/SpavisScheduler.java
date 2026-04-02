@@ -25,7 +25,7 @@ public class SpavisScheduler {
     private final TicketMapper ticketMapper;
     private final SpavisClient spavisClient;
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 3600000)
     @Transactional
     public void syncSpavisUsed() {
 
