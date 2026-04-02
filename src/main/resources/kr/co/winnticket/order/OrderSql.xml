@@ -101,6 +101,11 @@
             AND a.STATUS = #{status}::order_status
             ]]>
         </if>
+
+        <if test="channelId != null">
+            AND a.channel_id = #{channelId}
+        </if>
+
         Order By
             a.ordered_at Desc
     </select>
@@ -156,7 +161,13 @@
             ) USED_TICKET_CNT,  -- 사용티켓수
             a.benepia_id,  -- 베네피아id
             a.point_amount,  -- 포인트결제금액
-            a.memo -- 요청사항
+            a.memo, -- 요청사항
+            (
+                SELECT p.name FROM partners p
+                JOIN products pr ON pr.partner_id = p.id
+                JOIN order_items oi ON oi.product_id = pr.id AND oi.order_id = a.id
+                LIMIT 1
+            ) AS partner_name
         FROM
             orders a
         Where 1 = 1
@@ -378,6 +389,7 @@
             id,
             order_number,
             final_price,
+            cancel_amount,
             payment_status,
             pg_provider,
             pg_tid,
@@ -399,8 +411,12 @@
         UPDATE orders
         SET
             status = 'CANCELED'::order_status,
-            payment_status = 'CANCELED'::payment_status,
-            canceled_at = CURRENT_TIMESTAMP,
+        payment_status = 'CANCELED'::payment_status,
+        canceled_at = CURRENT_TIMESTAMP,
+
+        cancel_amount = #{cancelAmount},
+            cancel_fee = #{cancelFee},
+
             pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
@@ -503,6 +519,13 @@
     WHERE id = #{orderItemId}
     </select>
 
+    <!-- 주문ID로 주문번호 조회 -->
+    <select id="findOrderNumberById" resultType="String">
+        SELECT order_number
+        FROM orders
+        WHERE id = #{orderId}
+    </select>
+
     <!-- 주문번호로 주문ID 조회 -->
     <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
         SELECT id
@@ -551,4 +574,23 @@
         SET stock = stock + #{quantity}
         WHERE id = #{optionValueId}
     </update>
+
+    <!--환불전용 kcp 부분취소-->
+<!--    <update id="updateOrderCancelPartial">-->
+<!--        UPDATE orders-->
+<!--        SET-->
+<!--            cancel_amount = COALESCE(cancel_amount, 0) + #{cancelAmount},-->
+<!--            payment_status = CASE-->
+<!--            WHEN (COALESCE(cancel_amount,0) + #{cancelAmount}) >= final_price-->
+<!--            THEN 'CANCELED'-->
+<!--            ELSE payment_status-->
+<!--            END,-->
+
+<!--            canceled_at = CASE-->
+<!--            WHEN (COALESCE(cancel_amount,0) + #{cancelAmount}) >= final_price-->
+<!--            THEN NOW()-->
+<!--            ELSE canceled_at-->
+<!--            END-->
+<!--        WHERE id = #{orderId}-->
+<!--    </update>-->
 </mapper>

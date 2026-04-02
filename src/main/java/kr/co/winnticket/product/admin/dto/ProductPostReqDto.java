@@ -60,6 +60,9 @@ public class ProductPostReqDto {
     @Schema(description = "선사입형 여부")
     private Boolean prePurchased;
 
+    @Schema(description = "예약상품 여부")
+    private Boolean isReservation;
+
     @Schema(description = "표시순서", example = "1")
     private String displayOrder;
 

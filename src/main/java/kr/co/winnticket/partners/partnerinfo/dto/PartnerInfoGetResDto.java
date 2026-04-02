@@ -28,7 +28,7 @@ public class PartnerInfoGetResDto {
     private PartnerType type;
 
     @Schema(description = "티켓타입")
-    private TicketCodeType ticketCodeType;
+    private String ticketCodeType;
 
     @Schema(description = "수수료율")
     private Integer commissionRate;

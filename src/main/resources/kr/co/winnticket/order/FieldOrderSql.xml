@@ -18,12 +18,12 @@
             oi.unit_price           AS unitPrice,
             CAST(oi.unit_price * (100 - COALESCE(p.commission_rate, 0)) / 100.0 AS INTEGER) AS supplyPrice,
             oic.coupon_number       AS couponNumber,
-            TO_CHAR(pr.sales_start_date, 'YYYY-MM-DD') AS validFrom,
-            TO_CHAR(pr.sales_end_date, 'YYYY-MM-DD')   AS validTo,
+            COALESCE(TO_CHAR(tcg.valid_from, 'YYYY-MM-DD'), TO_CHAR(pr.sales_start_date, 'YYYY-MM-DD')) AS validFrom,
+            COALESCE(TO_CHAR(tcg.valid_until, 'YYYY-MM-DD'), TO_CHAR(pr.sales_end_date, 'YYYY-MM-DD'))  AS validTo,
             p.name                  AS partnerName,
             o.customer_name         AS customerName,
             o.customer_phone        AS customerPhone,
-            oi.ticket_sent_date     AS ticketSentDate,
+            o.paid_at               AS ticketSentDate,
             t.ticket_used_date      AS ticketUsedDate,
             o.canceled_at           AS canceledAt,
             CASE
@@ -48,6 +48,10 @@
             ON p.id = pr.partner_id
         LEFT JOIN order_item_coupons oic
             ON oic.order_item_id = oi.id
+        LEFT JOIN ticket_coupons tc
+            ON tc.id = oic.coupon_id
+        LEFT JOIN ticket_coupon_groups tcg
+            ON tcg.id = tc.group_id
         WHERE 1 = 1
           AND pr.partner_id = #{partnerId}
           AND o.status != 'PENDING_PAYMENT'

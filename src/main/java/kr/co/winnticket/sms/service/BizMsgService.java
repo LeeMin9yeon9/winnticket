@@ -1,15 +1,24 @@
 package kr.co.winnticket.sms.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BizMsgService {
 
     private final JdbcTemplate jdbcTemplate;
 
+    /**
+     * SMS 발송 (비동기)
+     * - BIZ_MSG 테이블에 INSERT → 외부 SMS 게이트웨이가 폴링하여 발송
+     * - 실패해도 주문/결제에 영향 없음 (fire-and-forget)
+     */
+    @Async("taskExecutor")
     public void sendSms(String cmid,
                         String destPhone,
                         String destName,
@@ -17,31 +26,37 @@ public class BizMsgService {
                         String sendName,
                         String message) {
 
-        // (선택) 중복 방지: cmid가 이미 있으면 스킵
-        if (existsCmid(cmid)) return;
+        try {
+            // 중복 방지: cmid가 이미 있으면 스킵
+            if (existsCmid(cmid)) return;
 
-        int msgType = decideMsgType(message); // 0=SMS, 1=LMS 같은 규칙(환경에 맞게)
+            int msgType = decideMsgType(message);
 
-        String sql = """
-            INSERT INTO BIZ_MSG (
-                CMID, MSG_TYPE, STATUS,
-                REQUEST_TIME, SEND_TIME,
-                DEST_PHONE, DEST_NAME,
-                SEND_PHONE, SEND_NAME,
-                MSG_BODY
-            )
-            VALUES (?, ?, 0, NOW(), NOW(), ?, ?, ?, ?, ?)
-        """;
+            String sql = """
+                INSERT INTO BIZ_MSG (
+                    CMID, MSG_TYPE, STATUS,
+                    REQUEST_TIME, SEND_TIME,
+                    DEST_PHONE, DEST_NAME,
+                    SEND_PHONE, SEND_NAME,
+                    MSG_BODY
+                )
+                VALUES (?, ?, 0, NOW(), NOW(), ?, ?, ?, ?, ?)
+            """;
 
-        jdbcTemplate.update(sql,
-                cmid,
-                msgType,
-                destPhone,
-                safe(destName),
-                sendPhone,
-                sendName,
-                message
-        );
+            jdbcTemplate.update(sql,
+                    cmid,
+                    msgType,
+                    destPhone,
+                    safe(destName),
+                    sendPhone,
+                    sendName,
+                    message
+            );
+        } catch (Exception e) {
+            // @Async 메서드의 예외는 호출자에게 전파되지 않음
+            // 로그만 남기고 종료 (SMS 실패가 시스템 장애로 이어지지 않도록)
+            log.error("[SMS 발송 실패] cmid={}, destPhone={}", cmid, destPhone, e);
+        }
     }
 
     private boolean existsCmid(String cmid) {

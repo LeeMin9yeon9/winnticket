@@ -80,6 +80,29 @@
         ORDER BY g.created_at DESC
     </select>
 
+    <!-- 상품별 그룹 목록 조회 -->
+    <select id="selectGroupsByProductId" resultType="kr.co.winnticket.ticketCoupon.dto.TicketCouponGroupResDto">
+        SELECT
+            g.id,
+            g.product_id AS productId,
+            g.product_option_id AS productOptionId,
+            g.product_option_value_id AS productOptionValueId,
+            g.group_name AS groupName,
+            g.valid_from AS validFrom,
+            g.valid_until AS validUntil,
+            g.created_at AS createdAt,
+            g.updated_at AS updatedAt,
+            COALESCE(SUM(CASE WHEN c.status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS activeCount,
+            COALESCE(SUM(CASE WHEN c.status = 'USED' THEN 1 ELSE 0 END), 0) AS usedCount
+        FROM ticket_coupon_groups g
+                 LEFT JOIN ticket_coupons c ON c.group_id = g.id
+        WHERE g.product_id = #{productId}
+        GROUP BY
+            g.id, g.product_id, g.product_option_id, g.product_option_value_id,
+            g.group_name, g.valid_from, g.valid_until, g.created_at, g.updated_at
+        ORDER BY g.created_at DESC
+    </select>
+
     <!-- 그룹 단건 조회(+ ACTIVE/USED 카운트) -->
     <select id="selectGroup" resultType="kr.co.winnticket.ticketCoupon.dto.TicketCouponGroupResDto">
         SELECT
@@ -289,5 +312,15 @@
     </select>
 
 
+    <!-- 옵션값별 활성 쿠폰 수량 조회 -->
+    <select id="countActiveCouponsByOptionValueId" resultType="int">
+        SELECT COUNT(*)
+        FROM ticket_coupons tc
+        JOIN ticket_coupon_groups tg ON tc.group_id = tg.id
+        WHERE tg.product_option_value_id = #{optionValueId}
+          AND tc.status = 'ACTIVE'
+          AND tc.valid_from <![CDATA[ <= ]]> CURRENT_DATE
+          AND tc.valid_until <![CDATA[ >= ]]> CURRENT_DATE
+    </select>
 
 </mapper>

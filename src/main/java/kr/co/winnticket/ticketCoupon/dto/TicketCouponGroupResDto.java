@@ -18,6 +18,9 @@ public class TicketCouponGroupResDto {
     @Schema(description="상품ID")
     private UUID productId;
 
+    @Schema(description="그룹이름")
+    private String groupName;
+
     @Schema(description="상품옵션ID")
     private UUID productOptionId;
 

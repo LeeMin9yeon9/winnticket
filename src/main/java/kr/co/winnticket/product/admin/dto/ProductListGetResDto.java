@@ -52,4 +52,7 @@ public class ProductListGetResDto {
 
     @Schema(description = "활성화여부")
     private boolean visible;
+
+    @Schema(description = "예약상품 여부")
+    private Boolean isReservation;
 }

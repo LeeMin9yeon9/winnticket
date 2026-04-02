@@ -16,6 +16,10 @@ spring:
     username: admin
     password: winnticket!@#$
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+
   redis:
     data:
       host: localhost
@@ -29,7 +33,7 @@ jwt:
   secret: ${JWT_SECRET:winnticket-local-dev-secret-key-must-be-at-least-256bit-long}
 
 cors:
-  extra-origins: "http://localhost:[*]"
+  extra-origins: "http://localhost:*"
 
 # 채널 연동 (베네피아)
 benepia:

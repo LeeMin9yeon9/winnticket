@@ -31,6 +31,9 @@ public class PopupDto {
     private Integer positionLeft;
     private Integer displayOrder;
 
+    private String linkUrl;
+    private String linkTarget;
+
     private Long viewCount;
     private Long clickCount;
 

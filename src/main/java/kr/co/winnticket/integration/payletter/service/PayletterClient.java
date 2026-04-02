@@ -155,5 +155,29 @@ public class PayletterClient {
             throw new IllegalStateException("Payletter getPaymentStatus error", e);
         }
     }
+
+    // 부분취소
+    public PayletterCancelResDto partialCancel(PayletterPartialCancelReqDto reqDto){
+
+        try {
+            return WebClient.builder()
+                    .baseUrl(props.getBaseUrl())
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "PLKEY " + props.getPaymentApiKey())
+                    .build()
+                    .post()
+                    .uri("v1.0/payments/cancel/partial")
+                    .bodyValue(reqDto)
+                    .retrieve()
+                    .bodyToMono(PayletterCancelResDto.class)
+                    .block();
+
+        } catch (WebClientResponseException e){
+            PayletterCancelResDto fail = new PayletterCancelResDto();
+            fail.setCode(e.getStatusCode().value());
+            fail.setMessage(e.getResponseBodyAsString());
+            return fail;
+        }
+    }
 }
 
