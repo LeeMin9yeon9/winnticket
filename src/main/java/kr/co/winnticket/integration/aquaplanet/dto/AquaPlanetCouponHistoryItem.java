@@ -8,6 +8,30 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AquaPlanetCouponHistoryItem {
 
+    @JsonProperty("CORP_CD")
+    private String corpCd;
+
+    @JsonProperty("CONT_NO")
+    private String contNo;
+
+    @JsonProperty("ISSUE_DATE")
+    private String issueDate;
+
+    @JsonProperty("BSN_DATE")
+    private String bsnDate;
+
+    @JsonProperty("CLLT_BRCH_CD")
+    private String clltBrchCd;
+
+    @JsonProperty("CLLT_BRCH_NM")
+    private String clltBrchNm;
+
+    @JsonProperty("CLLT_LOC_CD")
+    private String clltLocCd;
+
+    @JsonProperty("CLLT_LOC_NM")
+    private String clltLocNm;
+
     @JsonProperty("REPR_CPON_SEQ")
     private String reprCponSeq;
 
@@ -37,6 +61,9 @@ public class AquaPlanetCouponHistoryItem {
 
     @JsonProperty("CPON_USE_STAT_NM")
     private String cponUseStatNm;
+
+    @JsonProperty("CPON_NO_OLD")
+    private String cponNoOld;
 
     @JsonProperty("CLLT_DS")
     private String clltDs;

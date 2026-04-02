@@ -35,8 +35,8 @@ public class AquaPlanetScheduler {
             new String[]{"6000", "20000467"}
     );
 
-    // 5분마다 오늘 사용 이력 동기화
-    @Scheduled(fixedDelay = 300000)
+    // 1시간마다 오늘 사용 이력 동기화
+    @Scheduled(fixedDelay = 3600000)
     public void syncToday() {
         sync(LocalDate.now());
     }
