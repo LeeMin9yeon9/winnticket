@@ -11,11 +11,13 @@ import kr.co.winnticket.cart.dto.responseDto.ShopCartResDto;
 import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @Tag(name = "쇼핑몰 장바구니")
 @RestController
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class ShopCartController {
     @GetMapping
     @Operation(summary = "장바구니 조회")
     public ResponseEntity<ApiResponse<ShopCartResDto>> getCart(HttpSession session){
-        System.out.println("SESSION CART = " + session.getAttribute("SHOP_CART"));
+        log.debug("SESSION CART = {}", session.getAttribute("SHOP_CART"));
         return ResponseEntity.ok(
                 ApiResponse.success(service.getCartView(session))
         );

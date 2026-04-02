@@ -3,6 +3,7 @@ package kr.co.winnticket.integration.plusn.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.plusn.dto.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -10,11 +11,13 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PlusNClient {
 
     private final RestTemplate plusNRestTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${plusn.base-url}")
     private String baseUrl;
@@ -36,17 +39,11 @@ public class PlusNClient {
         ResponseEntity<String> response =
                 plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-        // RAW 로그 출력
-        System.out.println("\n==============================");
-        System.out.println("PLUSN URL = " + url);
-        System.out.println("PLUSN REQUEST = " + req);
-        System.out.println("PLUSN RAW RESPONSE BODY = " + response.getBody());
-        System.out.println("==============================\n");
+        log.info("[PLUSN] url={}, request={}", url, req);
+        log.debug("[PLUSN] response={}", response.getBody());
 
-        // 직접 DTO 변환
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(response.getBody(), responseType);
+            return objectMapper.readValue(response.getBody(), responseType);
         } catch (Exception e) {
             throw new RuntimeException("PLUSN JSON PARSE ERROR", e);
         }

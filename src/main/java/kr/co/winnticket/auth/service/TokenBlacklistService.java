@@ -39,16 +39,18 @@ public class TokenBlacklistService {
         }
     }
 
-    // 블랙리스트 여부 확인
+    // 블랙리스트 여부 확인 (access token만 체크 - 성능 최적화)
     public boolean isBlacklisted(String token){
-
         if(token == null) return false;
-
         String accessKey = ACCESS_BLACKLIST_PREFIX + token;
-        String refreshKey = REFRESH_BLACKLIST_PREFIX + token;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(accessKey));
+    }
 
-        return Boolean.TRUE.equals(redisTemplate.hasKey(accessKey))
-                || Boolean.TRUE.equals(redisTemplate.hasKey(refreshKey));
+    // refresh token 블랙리스트 확인
+    public boolean isRefreshBlacklisted(String token){
+        if(token == null) return false;
+        String refreshKey = REFRESH_BLACKLIST_PREFIX + token;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(refreshKey));
     }
 
     // jwt 남은 TTL 계산
