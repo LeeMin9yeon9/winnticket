@@ -39,13 +39,11 @@
             )
             ]]>
         </if>
-
         <if test="categoryId != null">
             <![CDATA[
             AND a.CATEGORY_ID = #{categoryId}
             ]]>
         </if>
-
         <if test="salesStatus != null and salesStatus != '' and salesStatus != 'ALL'">
             <![CDATA[
             AND a.SALES_STATUS = #{salesStatus}::sales_status
@@ -72,8 +70,6 @@
             a.DISCOUNT_PRICE,  -- 판매가
             a.PRE_PURCHASED,    -- 선사입티켓여부
             a.SALES_STATUS,  -- 판매상태
-            a.SALES_START_DATE,  -- 판매시작일
-            a.SALES_END_DATE, -- 판매종료일
             a.DESCRIPTION,  -- 설명
             a.SHIPPING_INFO,  -- 배송정보
             a.WARRANTY_INFO,  -- 보증정보
@@ -262,8 +258,6 @@
             DISCOUNT_PRICE,
             SALES_STATUS,
             PRE_PURCHASED,
-            SALES_START_DATE,
-            SALES_END_DATE,
             REGION_CODE,
             TICKET_TYPE,
             DISPLAY_ORDER,
@@ -283,8 +277,6 @@
             #{discountPrice},
             #{salesStatus}::sales_status,
             #{prePurchased},
-            #{salesStartDate},
-            #{salesEndDate},
             #{regionCode},
             #{ticketType},
             COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
@@ -338,12 +330,6 @@
             </if>
             <if test="model.visible != null">
                 VISIBLE = #{model.visible},
-            </if>
-            <if test="model.salesStartDate != null">
-                SALES_START_DATE = #{model.salesStartDate},
-            </if>
-            <if test="model.salesEndDate != null">
-                SALES_END_DATE = #{model.salesEndDate},
             </if>
             <if test="model.isReservation != null">
                 IS_RESERVATION = #{model.isReservation},

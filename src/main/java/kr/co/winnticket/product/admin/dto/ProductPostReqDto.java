@@ -48,12 +48,6 @@ public class ProductPostReqDto {
     @Schema(description = "판매상태", example = "READY")
     private SalesStatus salesStatus;
 
-    @Schema(description = "판매시작일", example = "2025-01-01")
-    private LocalDate salesStartDate;
-
-    @Schema(description = "판매종료일", example = "2025-12-31")
-    private LocalDate salesEndDate;
-
     @Schema(description = "활성화여부", example = "true")
     private boolean visible;
 
