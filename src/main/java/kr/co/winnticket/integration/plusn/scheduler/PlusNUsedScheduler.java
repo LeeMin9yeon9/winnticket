@@ -27,7 +27,7 @@ public class PlusNUsedScheduler {
 
 
     // 1시간마다 오늘 사용 조회
-    //@Scheduled(fixedDelay = 3600000)
+    @Scheduled(fixedDelay = 60000)
     public void syncToday() {
         sync(LocalDate.now());
     }
