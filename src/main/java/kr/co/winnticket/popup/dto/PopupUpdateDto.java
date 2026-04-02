@@ -1,5 +1,6 @@
 package kr.co.winnticket.popup.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import kr.co.winnticket.popup.enums.PopupShowCondition;
 import kr.co.winnticket.popup.enums.PopupType;
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PopupUpdateDto {
 
     private String name;
@@ -26,6 +28,9 @@ public class PopupUpdateDto {
     private Integer positionTop;
     private Integer positionLeft;
     private Integer displayOrder;
+
+    private String linkUrl;
+    private String linkTarget;
 
     private List<String> channelIds;
     private List<String> pagePatterns;

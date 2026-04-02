@@ -90,6 +90,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "베네피아id")
     private String benepiaId;
 
+    @Schema(description = "파트너명")
+    private String partnerName;
+
     @Schema(description = "주문상품")
     private List<OrderProductListGetResDto> products = new ArrayList<>();
 

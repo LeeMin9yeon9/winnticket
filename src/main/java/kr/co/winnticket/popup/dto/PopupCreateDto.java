@@ -1,5 +1,6 @@
 package kr.co.winnticket.popup.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import kr.co.winnticket.popup.enums.PopupShowCondition;
 import kr.co.winnticket.popup.enums.PopupType;
 import jakarta.validation.constraints.NotBlank;
@@ -11,12 +12,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PopupCreateDto {
 
     @NotBlank
     private String name;
 
-    @NotBlank
     private String title;
 
     private String contentHtml;
@@ -25,13 +26,10 @@ public class PopupCreateDto {
     @NotNull
     private PopupType type;
 
-    @NotNull
     private PopupShowCondition showCondition = PopupShowCondition.ALWAYS;
 
-    @NotNull
     private LocalDateTime startDate;
 
-    @NotNull
     private LocalDateTime endDate;
 
     private Boolean visible = true;
@@ -41,6 +39,9 @@ public class PopupCreateDto {
     private Integer positionTop;
     private Integer positionLeft;
     private Integer displayOrder = 0;
+
+    private String linkUrl;
+    private String linkTarget;
 
     private List<String> channelIds;
     private List<String> pagePatterns;

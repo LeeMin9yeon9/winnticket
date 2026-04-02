@@ -187,7 +187,9 @@ public class PayletterService {
             String payloadJson = null;
             try {
                 payloadJson = objectMapper.writeValueAsString(payload);
-            } catch (Exception ignore) {}
+            } catch (Exception e) {
+                log.warn("[PAYLETTER] payload JSON 변환 실패", e);
+            }
 
             // 중복 콜백 방지 DB업데이트
             int updated = orderShopMapper.updatePayletterCallbackSuccessIfNotPaid(

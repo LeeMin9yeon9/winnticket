@@ -25,7 +25,7 @@ public class PartnerListGetResDto {
     private String type;
 
     @Schema(description = "티켓타입")
-    private TicketCodeType ticketCodeType;
+    private String ticketCodeType;
 
     @Schema(description = "담당자명")
     private String managerName;

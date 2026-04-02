@@ -21,7 +21,8 @@ public interface OrderMapper {
             @Param("begDate") LocalDate asBegDate,
             @Param("endDate") LocalDate asEndDate,
             @Param("partnerId") UUID partnerId,
-            @Param("status") String status
+            @Param("status") String status,
+            @Param("channelId") UUID channelId
     );
 
     // 주문 상세 조회(관리자)
@@ -118,6 +119,9 @@ public interface OrderMapper {
 
     // orderNumber로 orderId 조회
     UUID findOrderIdByOrderNumber(@Param("orderNumber") String orderNumber);
+
+    // orderId로 orderNumber 조회
+    String findOrderNumberById(@Param("orderId") UUID orderId);
 
     // 파트너 티켓코드타입 조회
     String selectTicketCodeType(UUID partnerId);

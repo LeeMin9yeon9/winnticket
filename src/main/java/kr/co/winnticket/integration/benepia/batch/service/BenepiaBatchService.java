@@ -26,7 +26,7 @@ public class BenepiaBatchService {
 
     private final BenepiaBatchMapper mapper;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Value("${benepia.batch-base-url}")
     private String batchBaseUrl;

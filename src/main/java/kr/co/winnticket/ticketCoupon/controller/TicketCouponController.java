@@ -33,8 +33,9 @@ public class TicketCouponController {
     }
 
     @Operation(summary = "쿠폰그룹 목록", description = "그룹 목록 + ACTIVE/USED 카운트")
-    @GetMapping("/groups")
-    public ResponseEntity<ApiResponse<List<TicketCouponGroupResDto>>> groups(@RequestParam UUID productId) {
+    @GetMapping("/products/{productId}/groups")
+    public ResponseEntity<ApiResponse<List<TicketCouponGroupResDto>>> groups(
+            @Parameter(description = "상품ID") @PathVariable UUID productId) {
 
         return ResponseEntity.ok(ApiResponse.success("조회 성공", service.getGroups(productId)));
     }

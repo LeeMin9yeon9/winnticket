@@ -147,7 +147,17 @@ public class TicketCouponService {
     // 그룹 목록
     @Transactional(readOnly = true)
     public List<TicketCouponGroupResDto> getGroups(UUID productId) {
-        return mapper.selectGroups(productId);
+
+        List<TicketCouponGroupResDto> groups = mapper.selectGroups(productId);
+
+        for (TicketCouponGroupResDto group : groups) {
+            List<TicketCouponListResDto> coupons =
+                    mapper.selectCouponsByGroup(group.getId());
+
+            group.setCoupons(coupons);
+        }
+
+        return groups;
     }
 
     // 그룹 단건

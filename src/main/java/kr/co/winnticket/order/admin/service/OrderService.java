@@ -1,7 +1,9 @@
 package kr.co.winnticket.order.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import kr.co.winnticket.common.enums.*;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
@@ -20,19 +22,12 @@ import kr.co.winnticket.integration.spavis.service.SpavisService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
-import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
-import kr.co.winnticket.product.admin.mapper.ProductMapper;
-import kr.co.winnticket.sms.service.BizMsgService;
-import kr.co.winnticket.sms.service.SmsTemplateFinder;
-import kr.co.winnticket.sms.service.TemplateRenderService;
-import kr.co.winnticket.ticketCoupon.service.TicketCouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -41,17 +36,12 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderMapper mapper;
-    private final SmsTemplateFinder smsTemplateFinder;
-    private final TemplateRenderService templateRenderService;
-    private final BizMsgService bizMsgService;
     private final PayletterService payletterService;
     private final ObjectMapper objectMapper;
-    private final TicketCouponService ticketCouponService;
-    private final ProductMapper productMapper;
     private final BenepiaOrderService benepiaOrderService;
+    private final OrderPostPaymentService orderPostPaymentService;
 
-
-    // 파트너 연동
+    // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
     private final PlaystoryService playstoryService;
     private final MairService mairService;
@@ -63,8 +53,6 @@ public class OrderService {
     private final KcpService kcpService;
     private final LsCompanyService lsCompanyService;
 
-    private static final String QR_URL = "https://www.winnticket.store/qr?orderNumber=";
-    private static final String BARCODE_URL = "https://www.winnticket.store/barcode?orderNumber=";
     private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
     private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
     private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
@@ -75,19 +63,19 @@ public class OrderService {
     private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
     private static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
 
-    // 주문 상태 조회
+    @Transactional(readOnly = true)
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
         OrderAdminStatusGetResDto model = mapper.selectOrderAdminStatus();
         return model;
     }
 
-    // 주문 목록 조회 (관리자)
-    public List<OrderAdminListGetResDto> selectOrderAdminList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, UUID partnerId, String status) {
-        List<OrderAdminListGetResDto> lModel = mapper.selectOrderAdminList(asSrchWord, asBegDate, asEndDate, partnerId, status);
+    @Transactional(readOnly = true)
+    public List<OrderAdminListGetResDto> selectOrderAdminList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, UUID partnerId, String status, UUID channelId) {
+        List<OrderAdminListGetResDto> lModel = mapper.selectOrderAdminList(asSrchWord, asBegDate, asEndDate, partnerId, status, channelId);
         return lModel;
     }
 
-    // 주문 상세 조회 (관리자)
+    @Transactional(readOnly = true)
     public OrderAdminDetailGetResDto selectOrderAdminDetail(UUID auId) {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));
@@ -95,7 +83,7 @@ public class OrderService {
         return model;
     }
 
-    // 티켓조회(현장관리자)
+    @Transactional(readOnly = true)
     public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId) {
         OrderAdminTicketCheckGetResDto model = mapper.selectOrderTicketHeader(auId);
         List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId);
@@ -114,7 +102,13 @@ public class OrderService {
         return model;
     }
 
-    // 결제 완료 처리
+    /**
+     * 결제 완료 처리 — 단일 트랜잭션
+     * 티켓 발급 / 파트너 연동 / 결제 확정이 하나의 트랜잭션으로 묶임
+     * → 파트너 발권 실패 시 결제(PAID)도 함께 롤백되어 소비자 보호
+     *
+     * SMS는 트랜잭션 커밋 확정 후 비동기 발송 (afterCommit)
+     */
     @Transactional
     public void completePayment(UUID auId) {
         // 주문 조회
@@ -129,7 +123,6 @@ public class OrderService {
             return;
         }
 
-
         // 결제 상태 / 결제일시 업데이트
         mapper.updatePaymentComplete(auId, LocalDateTime.now());
 
@@ -138,370 +131,85 @@ public class OrderService {
 
         log.info("입금 완료 → deadline 제거 orderId={}", auId);
 
-
         // 주문 상품 목록 조회
         List<OrderProductListGetResDto> items = mapper.selectOrderProductList(auId);
 
-            try {
-                log.info("[입금완료 문자 발송 시작!]");
-                sendPaymentConfirmedSms(order, items);
-                log.info("[입금완료 문자 발송 종료!]");
-
-            } catch (Exception e) {
-
-                log.error("[입금완료 문자 발송 실패] orderId={}", auId, e);
-
-            }
-
-            // 티켓 발행
-            Map<UUID, List<String>> ticketMap = new HashMap<>();
-
-            for (OrderProductListGetResDto item : items) {
-                UUID productId = item.getProductId();
-
-                log.info("productId = {}", productId);
-
-                Boolean prePurchased = productMapper.selectPrePurchasedByProductId(productId);
-
-                log.info("[선사입이야?] = {}", prePurchased);
-
-                List<String> ticketNumbers = new ArrayList<>();
-                for (int i = 0; i < item.getQuantity(); i++) {
-                    String ticketNumber;
-                    // 선사입쿠폰
-                    if(Boolean.TRUE.equals(prePurchased)){
-                        log.info("[선사입]");
-                        try {
-                            ticketNumber = ticketCouponService.issueCoupon(item.getId());
-                        }catch (Exception e){
-                            log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
-                            throw new RuntimeException("쿠폰 재고 없음");
-                        }
-                    } else {
-                        log.info("[선사입 아님]");
-                        ticketNumber = generateTicketNumber();
-
-                        mapper.insertOrderTicket(
-                                item.getId(),   // orderItemId
-                                ticketNumber
-                        );
-                    }
-
-                    ticketNumbers.add(ticketNumber);
-                }
-
-                ticketMap.put(item.getId(), ticketNumbers);
-            }
-
-            log.info("[티켓] = {}", ticketMap);
-
-            // 주문 상태 변경
-            log.info("[주문상태 변경 시작!]");
-            mapper.updateOrderStatus(auId);
-            log.info("[주문상태 변경 종료!]");
-
-            // 베네피아 주문 전송
-            try {
-                if (order.getBenepiaId() != null) {
-                    log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
-
-                    benepiaOrderService.sendOrder(order, items);
-                }
-
-            } catch (Exception e) {
-                throw new RuntimeException("[BENEPIA 주문 전송 실패]", e);
-            }
-
-            PartnerSplitResult split = splitByPartner(items);
-
-            log.info("split = {}", split);
-            if (split.isHasWoongin()) {
-                try {
-                    log.info("[Woonjin Products]");
-                    woongjinService.order(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("Woonjin 발권 실패", e);
-                }
-            }
-
-            if (split.isHasPlaystory()) {
-                try {
-                    log.info("[Playstory Products]");
-                    playstoryService.order(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("Playstory 발권 실패", e);
-                }
-            }
-
-            if (split.isHasMair()) {
-                try {
-                    log.info("[Mair Products]");
-                    mairService.issueTickets(order.getOrderNumber());
-                }catch (Exception e){
-                    throw new RuntimeException("Mair 발권 실패", e);
-                }
-            }
-
-            if (split.isHasCoreworks()) {
-                try {
-                    log.info("[Coreworks Products]");
-                    coreWorksService.order(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("Coreworks 발권 실패", e);
-                }
-            }
-
-            if (split.isHasSmartInfini()) {
-                try {
-                    log.info("[SmartInfini Products]");
-                    smartInfiniService.order(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("SmartInfini 발권 실패", e);
-                }
-
-            }
-
-            if (split.isHasPlusN()) {
-                try {
-                    log.info("[PlusN Products]");
-                    plusNService.order(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("PlusN 발권 실패", e);
-                }
-            }
-
-            if (split.isHasLsCompany()){
-                try {
-                    log.info("[LSCompany Products]");
-                    lsCompanyService.issueTicket(order.getId());
-                }catch (Exception e){
-                    log.error("LSCompany 발권 실패 orderId={}",auId,e);
-                    throw new RuntimeException("LS 발권 실패 → 주문 롤백 필요");
-                }
-            }
-
-            if (split.isHasAquaplanet()) {
-                try {
-                    log.info("[Aquaplanet Products]");
-                    aquaplanetService.issueOrder(auId);
-                }catch (Exception e){
-                    throw new RuntimeException("Aquaplanet 발권 실패", e);
-                }
-            }
-
-            if (split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini() || split.isHasAquaplanet() || split.isHasLsCompany()) {
-                try {
-                    log.info("[Main Products]");
-                    List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
-                    log.info("[발권 문자 발송 시작]");
-                    sendTicketIssuedSms(order, normalItems, ticketMap);
-                    log.info("[발권 문자 발송 종료]");
-                } catch (Exception e) {
-                    log.error("[발권 문자 발송 실패] orderId={}", auId, e);
-
-                }
-            }
-        }
-
-    // 상품 분기 처리
-    private PartnerSplitResult splitByPartner(List<OrderProductListGetResDto> items) {
-        boolean hasWoongin = false;
-        boolean hasPlaystory = false;
-        boolean hasMair = false;
-        boolean hasCoreworks = false;
-        boolean hasSmartInfini = false;
-        boolean hasPlusN = false;
-        boolean hasAquaplanet = false;
-        boolean hasSpavis = false;
-        boolean hasLsCompany = false;
-        boolean hasNormalProduct = false;
+        // 티켓 발행
+        Map<UUID, List<String>> ticketMap = new HashMap<>();
 
         for (OrderProductListGetResDto item : items) {
-            String partnerId = String.valueOf(item.getPartnerId());
-
-            log.info("partnerId = {}", partnerId);
-
-            // 파트너별 상품이 있는지 체크
-            if (WOOGJIN.equals(partnerId)) { // 웅진컴퍼스
-                hasWoongin = true;
-            } else if(PLAYSTORY.equals(partnerId)) { // 플레이스토리
-                hasPlaystory = true;
-            } else if(MAIR.equals(partnerId)) {// 엠에어
-                hasMair = true;
-            } else if(COREWORKS.equals(partnerId)) { // 코어웍스
-                hasCoreworks = true;
-            } else if(SMARTINFINI.equals(partnerId)) { // 스마트인피니
-                hasSmartInfini = true;
-            } else if(PLUSN.equals(partnerId)) { // 플러스앤
-                hasPlusN = true;
-            } else if(AQUAPLANET.equals(partnerId)) { // 아쿠아플래닛
-                hasAquaplanet = true;
-            } else if(SPAVIS.equals(partnerId)) { // 스파비스
-                hasSpavis = true;
-            } else if(LSCOMPANY.equals(partnerId)){ // LS컴퍼니
-                hasLsCompany = true;
-            }
-            else { // 일반상품
-                hasNormalProduct = true;
-            }
-        }
-
-        return new PartnerSplitResult(
-                hasWoongin,
-                hasPlaystory,
-                hasMair,
-                hasCoreworks,
-                hasSmartInfini,
-                hasPlusN,
-                hasAquaplanet,
-                hasSpavis,
-                hasLsCompany,
-                hasNormalProduct
-        );
-    }
-
-    // 발권 문자 발송 대상 뽑기 (자체 문자 발송하는 경우만 추출)
-    private List<OrderProductListGetResDto> extractNormalProducts(List<OrderProductListGetResDto> items
-    ) {
-        return items.stream()
-                .filter(item -> {
-                    String partnerId = String.valueOf(item.getPartnerId());
-
-                    return partnerId == null
-                            || (!WOOGJIN.equals(partnerId)
-                            && !PLAYSTORY.equals(partnerId)
-                            && !MAIR.equals(partnerId)
-                            && !COREWORKS.equals(partnerId)
-                            && !PLUSN.equals(partnerId)
-                            && !LSCOMPANY.equals(partnerId));
-                })
-                .toList();
-    }
-
-    // 입금완료 문자 발송
-    private void sendPaymentConfirmedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items) {
-        if (items == null || items.isEmpty()) return;
-
-        // 입금완료는 주문당 1번만 발송
-        UUID productId = items.get(0).getProductId();
-
-        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.PAYMENT_CONFIRMED);
-
-        if (template == null || template.getContent() == null) return;
-
-        String message =
-                templateRenderService.render(template.getContent(), Map.of(
-                        "주문자명", order.getCustomerName(),
-                        "주문번호", order.getOrderNumber()
-                ));
-
-        sendSms(order, message);
-    }
-
-    // 발권완료 문자 발송
-    private void sendTicketIssuedSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items, Map<UUID, List<String>> ticketMap) {
-
-        Set<String> sentProducts = new HashSet<>();
-
-        for (OrderProductListGetResDto item : items) {
-
             UUID productId = item.getProductId();
+            Boolean prePurchased = orderPostPaymentService.selectPrePurchased(productId);
 
-            ProductSmsTemplateDto template =
-                    smsTemplateFinder.findTemplate(
-                            productId,
-                            SmsTemplateCode.TICKET_ISSUED
-                    );
-
-            if (template == null || template.getContent() == null) {
-                continue;
-            }
-
-            Map<String, String> vars = new HashMap<>();
-
-            vars.put("주문자명", order.getCustomerName());
-            vars.put("상품명", item.getProductName());
-            List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
-           // vars.put("티켓번호", String.join("\n", tickets));
-            String couponText;
-
-            String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
-
-            if ("QR".equals(ticketCodeType)) {
-                if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
-                    continue;
+            List<String> ticketNumbers = new ArrayList<>();
+            for (int i = 0; i < item.getQuantity(); i++) {
+                String ticketNumber;
+                if (Boolean.TRUE.equals(prePurchased)) {
+                    log.info("[선사입]");
+                    try {
+                        ticketNumber = orderPostPaymentService.issueCoupon(item.getId());
+                    } catch (Exception e) {
+                        log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
+                        throw new RuntimeException("쿠폰 재고 없음");
+                    }
+                } else {
+                    log.info("[선사입 아님]");
+                    ticketNumber = orderPostPaymentService.generateTicketNumber();
+                    mapper.insertOrderTicket(item.getId(), ticketNumber);
                 }
-
-                sentProducts.add(String.valueOf(item.getPartnerId()));
-
-                couponText = QR_URL + order.getOrderNumber();
-            } else if ("BARCODE".equals(ticketCodeType)) {
-                if(sentProducts.contains(String.valueOf(item.getPartnerId()))){
-                    continue;
-                }
-
-                sentProducts.add(String.valueOf(item.getPartnerId()));
-
-                couponText = BARCODE_URL + order.getOrderNumber();
-            } else {
-                couponText = String.join("\n", tickets);
+                ticketNumbers.add(ticketNumber);
             }
-
-            vars.put("티켓번호", couponText);
-            vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
-            vars.put("수량", String.valueOf(item.getQuantity()));
-
-            String message =
-                    templateRenderService.render(
-                            template.getContent(),
-                            vars
-                    );
-
-            sendSms(order, message);
-        }
-    }
-
-    // 주문취소 문자 발송
-    private void sendOrderCancelledSms(OrderAdminDetailGetResDto order) {
-        if (order == null) {
-            return;
+            ticketMap.put(item.getId(), ticketNumbers);
         }
 
-        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(null, SmsTemplateCode.ORDER_CANCELLED);
+        log.info("[티켓] = {}", ticketMap);
 
-        if (template == null || template.getContent() == null) return;
+        // 주문 상태 변경
+        mapper.updateOrderStatus(auId);
 
-        String message =
-                templateRenderService.render(template.getContent(), Map.of(
-                        "주문자명", order.getCustomerName()
-                ));
+        // 베네피아 주문 전송
+        try {
+            if (order.getBenepiaId() != null) {
+                log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
+                benepiaOrderService.sendOrder(order, items);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("[BENEPIA 주문 전송 실패]", e);
+        }
 
-        sendSms(order, message);
-    }
+        // 파트너 발권 (실패 시 RuntimeException → 트랜잭션 전체 롤백 → 결제도 취소)
+        PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
+        orderPostPaymentService.callPartnerApis(auId, order, split);
 
-    // 문자 발송 공통부
-    private void sendSms(OrderAdminDetailGetResDto order, String message) {
+        // SMS는 커밋 확정 후 비동기 발송 (트랜잭션 롤백 시 SMS 발송 방지)
+        final OrderAdminDetailGetResDto orderSnap = order;
+        final Map<UUID, List<String>> ticketMapSnap = ticketMap;
+        final List<OrderProductListGetResDto> itemsSnap = items;
 
-        String cmid = UUID.randomUUID()
-                .toString()
-                .replace("-", "")
-                .substring(0, 20);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    log.info("[입금완료 SMS 발송] orderId={}", auId);
+                    orderPostPaymentService.sendPaymentConfirmedSms(orderSnap, itemsSnap);
+                } catch (Exception e) {
+                    log.error("[입금완료 SMS 실패] orderId={}", auId, e);
+                }
 
-        bizMsgService.sendSms(
-                cmid,
-                order.getCustomerPhone(),
-                order.getCustomerName(),
-                "025118691",
-                "윈앤티켓",
-                message
-        );
-    }
-
-    // 티켓번호 생성
-    private String generateTicketNumber() {
-        return "T"
-                + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                + UUID.randomUUID().toString().substring(0, 4);
+                try {
+                    if (split.isHasSpavis() || split.isHasNormalProduct()
+                            || split.isHasSmartInfini() || split.isHasAquaplanet()
+                            || split.isHasLsCompany()) {
+                        List<OrderProductListGetResDto> normalItems =
+                                orderPostPaymentService.extractNormalProducts(itemsSnap);
+                        log.info("[발권완료 SMS 발송] orderId={}", auId);
+                        orderPostPaymentService.sendTicketIssuedSms(orderSnap, normalItems, ticketMapSnap);
+                    }
+                } catch (Exception e) {
+                    log.error("[발권완료 SMS 실패] orderId={}", auId, e);
+                }
+            }
+        });
     }
 
     // 티켓 사용 처리
@@ -550,7 +258,7 @@ public class OrderService {
         // 상품 조회
         List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
 
-        PartnerSplitResult split = splitByPartner(items);
+        PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
 
         /*
          * =========================
@@ -741,11 +449,22 @@ public class OrderService {
 
         /*
          * =========================
-         * 4. 문자 발송
+         * 4. 문자 발송 (트랜잭션 커밋 후 비동기)
          * =========================
+         * 취소 트랜잭션이 확실히 커밋된 후 SMS를 발송해야
+         * 롤백 시 "취소완료" 문자가 잘못 발송되는 것을 방지
          */
-
-        sendOrderCancelledSms(order);
+        final OrderAdminDetailGetResDto orderForSms = order;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    orderPostPaymentService.sendOrderCancelledSms(orderForSms);
+                } catch (Exception e) {
+                    log.error("[취소 SMS 발송 실패] orderId={}", orderId, e);
+                }
+            }
+        });
 
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
     }
@@ -771,7 +490,7 @@ public class OrderService {
      */
 
     // 문자 재전송
-    @Transactional
+    @Transactional(readOnly = true)
     public void resendTicketSms(UUID orderId) {
         // 주문 조회
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
@@ -789,31 +508,21 @@ public class OrderService {
         // 상품 조회
         List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
 
-        PartnerSplitResult split = splitByPartner(items);
+        // 티켓 조회
+        List<OrderTicketListGetResDto> tickets = mapper.selectOrderTicketList(orderId);
 
-        log.info("[SMS RESEND] orderId={}, split={}", orderId, split);
-
-        if(split.isHasSpavis() || split.isHasNormalProduct() || split.isHasSmartInfini() || split.isHasAquaplanet() || split.isHasLsCompany()){
-            // 티켓 조회
-            List<OrderTicketListGetResDto> tickets = mapper.selectOrderTicketList(orderId);
-
-            // ticketMap 생성
-            Map<UUID, List<String>> ticketMap = new HashMap<>();
-
-            for (OrderTicketListGetResDto ticket : tickets) {
-                ticketMap
-                        .computeIfAbsent(ticket.getOrderItemId(), k -> new ArrayList<>())
-                        .add(ticket.getTicketNumber());
-            }
-
-            // 일반상품만 추출
-            List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
-
-            // 발권 문자 재전송
-            sendTicketIssuedSms(order, normalItems, ticketMap);
-
-            log.info("[TICKET_SMS_RESEND] orderId={}", orderId);
+        // ticketMap 생성
+        Map<UUID, List<String>> ticketMap = new HashMap<>();
+        for (OrderTicketListGetResDto ticket : tickets) {
+            ticketMap
+                    .computeIfAbsent(ticket.getOrderItemId(), k -> new ArrayList<>())
+                    .add(ticket.getTicketNumber());
         }
+
+        // OrderPostPaymentService로 위임 (SMS는 비동기)
+        orderPostPaymentService.resendTicketSms(orderId, order, items, ticketMap);
+
+        log.info("[TICKET_SMS_RESEND] orderId={}", orderId);
     }
 }
 

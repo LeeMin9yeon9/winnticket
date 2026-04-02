@@ -217,6 +217,10 @@
                 COUPON_CODE = #{model.couponCode},
             </if>
 
+            <if test="model.logoUrl != null">
+                LOGO_URL = #{model.logoUrl},
+            </if>
+
             UPDATED_AT = NOW()
 
         </set>

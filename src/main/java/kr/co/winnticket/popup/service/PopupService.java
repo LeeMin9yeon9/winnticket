@@ -72,11 +72,12 @@ public class PopupService {
     public ApiResponse<PopupDto> createPopup(PopupCreateDto dto, String userId) {
         Popup popup = new Popup();
         popup.setName(dto.getName());
-        popup.setTitle(dto.getTitle());
+        popup.setTitle(dto.getTitle() != null ? dto.getTitle() : dto.getName());
+        popup.setPosition("CENTER");
         popup.setContentHtml(dto.getContentHtml());
         popup.setImageUrl(dto.getImageUrl());
         popup.setType(dto.getType());
-        popup.setShowCondition(dto.getShowCondition());
+        popup.setShowCondition(dto.getShowCondition() != null ? dto.getShowCondition() : PopupShowCondition.ALWAYS);
         popup.setStartDate(dto.getStartDate());
         popup.setEndDate(dto.getEndDate());
         popup.setVisible(dto.getVisible());
@@ -85,6 +86,8 @@ public class PopupService {
         popup.setPositionTop(dto.getPositionTop());
         popup.setPositionLeft(dto.getPositionLeft());
         popup.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
+        popup.setLinkUrl(dto.getLinkUrl());
+        popup.setLinkTarget(dto.getLinkTarget());
 
         popup = popupRepository.save(popup);
 
@@ -130,26 +133,30 @@ public class PopupService {
         if (dto.getPositionTop() != null) popup.setPositionTop(dto.getPositionTop());
         if (dto.getPositionLeft() != null) popup.setPositionLeft(dto.getPositionLeft());
         if (dto.getDisplayOrder() != null) popup.setDisplayOrder(dto.getDisplayOrder());
+        if (dto.getLinkUrl() != null) popup.setLinkUrl(dto.getLinkUrl());
+        if (dto.getLinkTarget() != null) popup.setLinkTarget(dto.getLinkTarget());
 
         // 채널 매핑 갱신
         if (dto.getChannelIds() != null) {
-            popupChannelRepository.deleteByPopupId(id);
+            popup.getChannels().clear();
+            popupRepository.flush();
             for (String channelId : dto.getChannelIds()) {
                 PopupChannel ch = new PopupChannel();
                 ch.setPopup(popup);
                 ch.setChannelId(UUID.fromString(channelId));
-                popupChannelRepository.save(ch);
+                popup.getChannels().add(ch);
             }
         }
 
         // 페이지 매핑 갱신
         if (dto.getPagePatterns() != null) {
-            popupPageRepository.deleteByPopupId(id);
+            popup.getPages().clear();
+            popupRepository.flush();
             for (String path : dto.getPagePatterns()) {
                 PopupPage pg = new PopupPage();
                 pg.setPopup(popup);
                 pg.setPathPattern(path);
-                popupPageRepository.save(pg);
+                popup.getPages().add(pg);
             }
         }
 
@@ -329,6 +336,8 @@ public class PopupService {
         dto.setPositionTop(popup.getPositionTop());
         dto.setPositionLeft(popup.getPositionLeft());
         dto.setDisplayOrder(popup.getDisplayOrder());
+        dto.setLinkUrl(popup.getLinkUrl());
+        dto.setLinkTarget(popup.getLinkTarget());
         dto.setViewCount(popup.getViewCount());
         dto.setClickCount(popup.getClickCount());
         dto.setStatus(popup.getStatus());

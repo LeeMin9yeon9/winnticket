@@ -29,7 +29,7 @@ public class PartnerPostReqDto {
     private PartnerType type;
 
     @Schema(description = "티켓타입")
-    private TicketCodeType ticketCodeType;
+    private String ticketCodeType;
 
     @Schema(description = "상태")
     private PartnerStatus status;
@@ -64,6 +64,7 @@ public class PartnerPostReqDto {
     @Schema(description = "파트너 설명")
     private String description;
 
-
+    @Schema(description = "로고 URL")
+    private String logoUrl;
 
 }
