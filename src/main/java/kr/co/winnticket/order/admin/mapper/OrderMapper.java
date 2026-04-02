@@ -83,6 +83,8 @@ public interface OrderMapper {
     // 페이레터 취소 성공
     int updateOrderCancelSuccess(
             @Param("orderId") UUID orderId,
+            @Param("cancelAmount") int cancelAmount,
+            @Param("cancelFee") int cancelFee,
             @Param("payloadJson") String payloadJson
     );
 
@@ -135,4 +137,6 @@ public interface OrderMapper {
 
     // 재고 원복
     void increaseStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") Integer quantity);
+
+
 }

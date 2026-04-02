@@ -389,6 +389,7 @@
             id,
             order_number,
             final_price,
+            cancel_amount,
             payment_status,
             pg_provider,
             pg_tid,
@@ -410,8 +411,12 @@
         UPDATE orders
         SET
             status = 'CANCELED'::order_status,
-            payment_status = 'CANCELED'::payment_status,
-            canceled_at = CURRENT_TIMESTAMP,
+        payment_status = 'CANCELED'::payment_status,
+        canceled_at = CURRENT_TIMESTAMP,
+
+        cancel_amount = #{cancelAmount},
+            cancel_fee = #{cancelFee},
+
             pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
@@ -569,4 +574,23 @@
         SET stock = stock + #{quantity}
         WHERE id = #{optionValueId}
     </update>
+
+    <!--환불전용 kcp 부분취소-->
+<!--    <update id="updateOrderCancelPartial">-->
+<!--        UPDATE orders-->
+<!--        SET-->
+<!--            cancel_amount = COALESCE(cancel_amount, 0) + #{cancelAmount},-->
+<!--            payment_status = CASE-->
+<!--            WHEN (COALESCE(cancel_amount,0) + #{cancelAmount}) >= final_price-->
+<!--            THEN 'CANCELED'-->
+<!--            ELSE payment_status-->
+<!--            END,-->
+
+<!--            canceled_at = CASE-->
+<!--            WHEN (COALESCE(cancel_amount,0) + #{cancelAmount}) >= final_price-->
+<!--            THEN NOW()-->
+<!--            ELSE canceled_at-->
+<!--            END-->
+<!--        WHERE id = #{orderId}-->
+<!--    </update>-->
 </mapper>

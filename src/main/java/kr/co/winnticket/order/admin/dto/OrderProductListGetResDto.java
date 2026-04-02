@@ -46,4 +46,7 @@ public class OrderProductListGetResDto {
 
     @Schema(description = "소계")
     private Integer totalPrice;
+
+    @Schema(description = "예약상품여부")
+    private Boolean isReservation;
 }

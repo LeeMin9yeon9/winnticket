@@ -5,6 +5,7 @@ import kr.co.winnticket.common.util.ClientIpProvider;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.*;
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import lombok.RequiredArgsConstructor;
@@ -213,139 +214,166 @@ public class PayletterService {
         }
     }
 
-    // 주문 취소
-    @Transactional
-    public PayletterCancelResDto cancel(String userId, String tid, String pgCode, String ipAddr) {
-
-        PayletterCancelReqDto req = PayletterCancelReqDto.builder()
-                .clientId(properties.getClientId())
-                .userId(userId)
-                .tid(tid)
-                .pgCode(pgCode)
-                .ipAddr(ipAddr)
-                .build();
-
-        return payletterClient.cancelPayment(req);
-    }
+    // 내부용 주문 취소
+//    @Transactional
+//    public PayletterCancelResDto cancel(String userId, String tid, String pgCode, String ipAddr) {
+//
+//        PayletterCancelReqDto req = PayletterCancelReqDto.builder()
+//                .clientId(properties.getClientId())
+//                .userId(userId)
+//                .tid(tid)
+//                .pgCode(pgCode)
+//                .ipAddr(ipAddr)
+//                .build();
+//
+//        return payletterClient.cancelPayment(req);
+//    }
 
     // order 취소 호출
+//    @Transactional
+//    public PayletterCancelResDto cancel(UUID orderId) {
+//        if (orderId == null) throw new IllegalArgumentException("orderId is null");
+//
+//        String ipAddr = clientIpProvider.getClientIp();
+//        if (ipAddr == null || ipAddr.isBlank()) {
+//            throw new IllegalArgumentException("ipAddr is null");
+//        }
+//
+//        return cancel(orderId, ipAddr);
+//    }
+    // 결제 취소(payletter)
     @Transactional
-    public PayletterCancelResDto cancel(UUID orderId) {
+    public PayletterCancelResult cancel(UUID orderId){
+
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
 
         String ipAddr = clientIpProvider.getClientIp();
-        if (ipAddr == null || ipAddr.isBlank()) {
-            throw new IllegalArgumentException("ipAddr is null");
-        }
-
-        return cancel(orderId, ipAddr);
-    }
-    // 결제 취소(payletter)
-    @Transactional
-    public PayletterCancelResDto cancel(UUID orderId,String ipAddr){
-
-        if (orderId == null) throw new IllegalArgumentException("orderId is null");
         if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
 
         Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
         if(orderInfo == null) throw new IllegalStateException("주문 없음 orderId="+orderId);
 
-        String pgProvider = orderInfo.get("pg_provider") != null ? String.valueOf(orderInfo.get("pg_provider")) : null;
-        if(pgProvider == null || !"PAYLETTER".equalsIgnoreCase(pgProvider)){
-            throw new IllegalStateException("PAYLETTER 주문이 아닙니다. pgProvider=" + pgProvider);
+        String pgProvider = (String) orderInfo.get("pg_provider");
+        if(!"PAYLETTER".equalsIgnoreCase(pgProvider)){
+            throw new IllegalStateException("PAYLETTER 주문 아님");
         }
 
-        String orderNumber = orderInfo.get("order_number") != null ? String.valueOf(orderInfo.get("order_number")) : null;
-        if (orderNumber == null || orderNumber.isBlank()) {
-            throw new IllegalStateException("order_number 없음");
+        String orderNumber = (String) orderInfo.get("order_number");
+
+        // userId 생성
+        String phone = (String) orderInfo.get("customer_phone");
+        String email = (String) orderInfo.get("customer_email");
+
+        String userId = (phone != null && !phone.isBlank())
+                ? phone.replaceAll("[^0-9]", "")
+                : (email != null && !email.isBlank() ? email : orderNumber);
+
+        // ===== 1. 금액 계산 =====
+        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
+
+        int alreadyCanceled = orderInfo.get("cancel_amount") != null
+                ? ((Number) orderInfo.get("cancel_amount")).intValue()
+                : 0;
+
+        int remainAmount = finalPrice - alreadyCanceled;
+
+        if (remainAmount <= 0) {
+            throw new IllegalStateException("이미 전액 취소된 주문");
         }
 
+        // ===== 2. 예약상품 여부 =====
+        List<OrderProductListGetResDto> items = orderAdminMapper.selectOrderProductList(orderId);
 
-        String phone = orderInfo.get("customer_phone") != null ? String.valueOf(orderInfo.get("customer_phone")) : null;
-        String email = orderInfo.get("customer_email") != null ? String.valueOf(orderInfo.get("customer_email")) : null;
+        boolean isReservation = items.stream()
+                .anyMatch(item -> Boolean.TRUE.equals(item.getIsReservation()));
 
+        int cancelAmount;
+        int cancelFee = 0;
 
-        String userId;
-        if (phone != null && !phone.isBlank()) userId = phone.replaceAll("[^0-9]", "");
-        else if (email != null && !email.isBlank()) userId = email;
-        else userId = orderNumber;
+        if (isReservation) {
+            cancelAmount = remainAmount;
+            log.info("[예약상품] 전액환불 orderId={}, amount={}", orderId, cancelAmount);
 
-        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String dateType = "transaction";
+        } else {
+            Timestamp ts = (Timestamp) orderInfo.get("ordered_at");
+            LocalDateTime orderedAt = ts.toLocalDateTime();
 
-        PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
-                properties.getClientId(),
-                date,
-                dateType,
-                null,        // pgcode 모르면 null로(필터 X)
-                orderNumber  // order_no
+            long days = ChronoUnit.DAYS.between(
+                    orderedAt.toLocalDate(),
+                    LocalDate.now()
             );
 
-        if (txRes == null) throw new IllegalStateException("[PAYLETTER] transaction/list 응답 null");
-        if (!Boolean.TRUE.equals(txRes.isSuccess())) {
-            throw new IllegalStateException("[PAYLETTER] transaction/list 실패 code=" + txRes.getCode() + ", message=" + txRes.getMessage());
-        }
-        List<PayletterTransactionItemDto> list = txRes.getList();
-        if (list == null || list.isEmpty()) {
-            throw new IllegalStateException("[PAYLETTER] 거래내역 없음 orderNumber=" + orderNumber);
-        }
+            cancelFee = (days <= 7)
+                    ? 1000
+                    : (int) Math.floor(remainAmount * 0.1);
 
-        PayletterTransactionItemDto item = list.get(0);
+            cancelAmount = Math.max(remainAmount - cancelFee, 0);
 
-        String tid = item.getTid();
-        String pgCode = item.getPgCode();
-
-        if (tid == null || tid.isBlank()) throw new IllegalStateException("[PAYLETTER] tid 없음");
-        if (pgCode == null || pgCode.isBlank()) throw new IllegalStateException("[PAYLETTER] pgcode 없음");
-
-        log.info("[PAYLETTER] cancel start orderId={}, orderNumber={}, tid={}, pgCode={}, ip={}",
-                orderId, orderNumber, tid, pgCode, ipAddr);
-
-        Timestamp ts = (Timestamp) orderInfo.get("ordered_at");
-
-        if (ts == null) {
-            throw new IllegalStateException("ordered_at 없음");
+            log.info("[일반상품] orderId={}, days={}, fee={}, refund={}",
+                    orderId, days, cancelFee, cancelAmount);
         }
 
-        LocalDateTime orderedAt = ts.toLocalDateTime();
-        LocalDateTime now = LocalDateTime.now();
-        long days = ChronoUnit.DAYS.between(
-                orderedAt.toLocalDate(),
-                now.toLocalDate());
+        // ===== 3. 거래조회 (당일 포함) =====
+        PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
+                properties.getClientId(),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+                "transaction",
+                null,
+                orderNumber
+        );
 
-        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
-        int cancelFee;
-
-
-        // 7일 이내 취소 시
-        if (days <= 7) {
-            cancelFee = 1000;
-        } else {
-            // 7일 초과 시 10%
-            cancelFee = (int) Math.floor(finalPrice * 0.1);
+        if (txRes == null || !Boolean.TRUE.equals(txRes.isSuccess())) {
+            throw new IllegalStateException("transaction 조회 실패");
         }
 
-        int cancelAmount = Math.max(finalPrice - cancelFee, 0);
+        PayletterTransactionItemDto txItem = txRes.getList().stream()
+                .filter(tx -> tx.getTid() != null)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("유효한 거래 없음"));
 
-        PayletterCancelReqDto req = PayletterCancelReqDto.builder()
-                .pgCode(pgCode) // creditcard
+        String tid = txItem.getTid();
+        String pgCode = txItem.getPgCode();
+
+        // ===== 4. 부분취소 요청 =====
+        PayletterPartialCancelReqDto req = PayletterPartialCancelReqDto.builder()
+                .pgCode(pgCode)
                 .clientId(properties.getClientId())
                 .userId(userId)
                 .tid(tid)
                 .amount(cancelAmount)
+                .taxfreeAmount(0)
+                .taxAmount(0)
                 .ipAddr(ipAddr)
                 .build();
 
-        PayletterCancelResDto res = payletterClient.cancelPayment(req);
+        PayletterCancelResDto res = payletterClient.partialCancel(req);
 
-        if (res == null) throw new IllegalStateException("[Payletter] 취소 실패: 응답 null");
-        if (!res.isCanceled()) {
-            throw new IllegalStateException("[Payletter] 취소 실패 code=" + res.getCode() + ", message=" + res.getMessage());
+        if (res == null || !res.isCanceled()) {
+            throw new IllegalStateException("PG 취소 실패");
         }
 
-        log.info("[PAYLETTER] cancel success orderId={}, tid={}", orderId, tid);
-        return res;
+        // ===== 5. DB 업데이트 =====
+        try {
+            Map<String, Object> payload = Map.of(
+                    "cancelAmount", cancelAmount,
+                    "cancelFee", cancelFee,
+                    "tid", tid
+            );
 
+            String payloadJson = objectMapper.writeValueAsString(payload);
+
+            orderAdminMapper.updateOrderCancelSuccess(orderId,
+                    cancelAmount,
+                    cancelFee,
+                    payloadJson);
+
+        } catch (Exception e) {
+            log.error("cancel payload 저장 실패", e);
+        }
+
+        log.info("[PAYLETTER CANCEL SUCCESS] orderId={}, refund={}", orderId, cancelAmount);
+
+        return new PayletterCancelResult(cancelAmount, cancelFee, res);
     }
 
     // 결제내역 조회

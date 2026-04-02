@@ -96,6 +96,7 @@ public class PayletterController {
         return "redirect:https://www.winnticket.store/order";
     }
 
+
     @GetMapping("/transaction/list")
     @Operation(summary = "Payletter 결제내역조회", description = "Payletter 거래내역 조회(transaction/list)")
     public PayletterTransactionListResDto transactionList(
@@ -119,5 +120,6 @@ public class PayletterController {
     public PayletterPaymentStatusResDto paymentStatus(@PathVariable String orderNumber) {
         return service.getPaymentStatus(orderNumber);
     }
+
 
 }
