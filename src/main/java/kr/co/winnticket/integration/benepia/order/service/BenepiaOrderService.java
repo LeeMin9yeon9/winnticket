@@ -30,6 +30,7 @@ public class BenepiaOrderService {
     private final BenepiaClient client;
     private final BenepiaProperties props;
     private final ProductMapper productMapper;
+    private final ObjectMapper objectMapper;
 
     // =========================
     // null 방어 유틸
@@ -341,8 +342,6 @@ public class BenepiaOrderService {
     private void createJsonFile(BenepiaOrderRequest req){
 
         try{
-            ObjectMapper mapper = new ObjectMapper();
-
             String date = LocalDate.now()
                     .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -357,7 +356,7 @@ public class BenepiaOrderService {
                 file.getParentFile().mkdirs();
             }
 
-            mapper.writerWithDefaultPrettyPrinter()
+            objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValue(file, req);
 
             log.info("[BENEPIA] JSON FILE CREATED = {}", path);
@@ -374,8 +373,6 @@ public class BenepiaOrderService {
     private void createJsonFile(BenepiaCancelRequest req){
 
         try{
-            ObjectMapper mapper = new ObjectMapper();
-
             String date = LocalDate.now()
                     .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -390,7 +387,7 @@ public class BenepiaOrderService {
                 file.getParentFile().mkdirs();
             }
 
-            mapper.writerWithDefaultPrettyPrinter()
+            objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValue(file, req);
 
             log.info("[BENEPIA] JSON FILE CREATED = {}", path);

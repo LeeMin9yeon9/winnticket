@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class ShopCartService {
 
     private final ShopCartMapper mapper;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private static final String CART_SESSION_KEY = "SHOP_CART";
 
 
