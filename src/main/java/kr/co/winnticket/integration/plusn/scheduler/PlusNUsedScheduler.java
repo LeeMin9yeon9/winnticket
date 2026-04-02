@@ -26,18 +26,11 @@ public class PlusNUsedScheduler {
             DateTimeFormatter.BASIC_ISO_DATE;
 
 
-    // 5분마다 오늘 사용 조회
-    @Scheduled(fixedDelay = 300000)
+    // 1시간마다 오늘 사용 조회
+    //@Scheduled(fixedDelay = 3600000)
     public void syncToday() {
         sync(LocalDate.now());
     }
-
-    // 새벽 3시 어제 재조회
-    //@Scheduled(cron = "0 0 3 * * *")
-    public void syncYesterday() {
-        sync(LocalDate.now().minusDays(1));
-    }
-
 
     // 실제 동기화 로직
     private void sync(LocalDate date) {
@@ -47,7 +40,6 @@ public class PlusNUsedScheduler {
         log.info("[PlusN] used sync start date={}", orderDate);
 
         try {
-
             PlusNUsedDateRequest req = new PlusNUsedDateRequest();
             req.setOrder_date(orderDate);
 

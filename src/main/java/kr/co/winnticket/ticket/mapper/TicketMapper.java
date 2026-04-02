@@ -13,6 +13,7 @@ import java.util.UUID;
 @Mapper
 public interface TicketMapper {
 
+    // 플러스앤 쿠폰 사용처리
     int updateTicketUsed(
             @Param("orderSales") String orderSales,
             @Param("resultDate") String resultDate

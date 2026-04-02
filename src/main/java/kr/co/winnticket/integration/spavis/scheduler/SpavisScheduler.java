@@ -25,7 +25,7 @@ public class SpavisScheduler {
     private final TicketMapper ticketMapper;
     private final SpavisClient spavisClient;
 
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 60000)
     @Transactional
     public void syncSpavisUsed() {
 
@@ -53,7 +53,6 @@ public class SpavisScheduler {
 
                         // 사용된 쿠폰
                         if ("I".equals(coupon.getStatusDiv())) {
-
                             ticketMapper.updateSpavisTicketUsed(
                                     coupon.getCouponNo(),
                                     coupon.getResultDate()
