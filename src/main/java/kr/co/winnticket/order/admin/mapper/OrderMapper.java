@@ -118,6 +118,9 @@ public interface OrderMapper {
     // orderNumber로 orderId 조회
     UUID findOrderIdByOrderNumber(@Param("orderNumber") String orderNumber);
 
+    // orderId로 orderNumber 조회
+    String findOrderNumberById(@Param("orderId") UUID orderId);
+
     // 파트너 티켓코드타입 조회
     String selectTicketCodeType(UUID partnerId);
 
