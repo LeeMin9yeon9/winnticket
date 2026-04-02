@@ -80,8 +80,8 @@ public class OrderService {
     }
 
     // 주문 목록 조회 (관리자)
-    public List<OrderAdminListGetResDto> selectOrderAdminList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, UUID partnerId, String status) {
-        List<OrderAdminListGetResDto> lModel = mapper.selectOrderAdminList(asSrchWord, asBegDate, asEndDate, partnerId, status);
+    public List<OrderAdminListGetResDto> selectOrderAdminList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, UUID partnerId, String status, UUID channelId) {
+        List<OrderAdminListGetResDto> lModel = mapper.selectOrderAdminList(asSrchWord, asBegDate, asEndDate, partnerId, status, channelId);
         return lModel;
     }
 

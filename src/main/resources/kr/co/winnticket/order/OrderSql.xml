@@ -101,6 +101,11 @@
             AND a.STATUS = #{status}::order_status
             ]]>
         </if>
+
+        <if test="channelId != null">
+            AND a.channel_id = #{channelId}
+        </if>
+
         Order By
             a.ordered_at Desc
     </select>
