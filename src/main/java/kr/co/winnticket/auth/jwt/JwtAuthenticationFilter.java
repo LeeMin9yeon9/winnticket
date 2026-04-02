@@ -146,7 +146,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/woongjin/test")
                 || path.startsWith("/api/spavis/test")
                 || path.startsWith("/api/playstory/test")
-                || path.startsWith("/api/smartinfini/test")
+                || path.startsWith("/api/smartinfini")
                 || path.startsWith("/api/bankda/test")
                 || path.startsWith("/api/bankda")
                 || path.startsWith("/api/aquaplanet/test")

@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/smartInfini/test")
+@RequestMapping("/api/smartInfini")
 public class SmartInfiniController {
 
     private final SmartInfiniService service;

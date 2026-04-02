@@ -81,7 +81,8 @@
             a.DETAIL_CONTENT,  -- 상세설명
             a.USAGE_PERIOD,  -- 사용기한
             a.VISIBLE,  -- 활성화여부
-            a.IMAGE_URL -- 이미지
+            a.IMAGE_URL, -- 이미지
+            a.IS_RESERVATION  -- 예약상품여부
         FROM
             PRODUCTS a
         Where 1 = 1
@@ -266,7 +267,8 @@
             REGION_CODE,
             TICKET_TYPE,
             DISPLAY_ORDER,
-            VISIBLE
+            VISIBLE,
+            IS_RESERVATION
         )
         Values
         (
@@ -286,7 +288,8 @@
             #{regionCode},
             #{ticketType},
             COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
-            #{visible}
+            #{visible},
+            #{isReservation}
         )
         ]]>
     </insert>
@@ -341,6 +344,9 @@
             </if>
             <if test="model.salesEndDate != null">
                 SALES_END_DATE = #{model.salesEndDate},
+            </if>
+            <if test="model.isReservation != null">
+                IS_RESERVATION = #{model.isReservation},
             </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>

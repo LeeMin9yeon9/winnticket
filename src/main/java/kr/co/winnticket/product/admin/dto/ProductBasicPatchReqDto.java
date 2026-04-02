@@ -71,6 +71,9 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "활성화여부")
     private boolean visible;
 
+    @Schema(description = "예약상품여부")
+    private boolean isReservation;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;
