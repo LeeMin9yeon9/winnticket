@@ -8,6 +8,7 @@ import kr.co.winnticket.product.shop.dto.*;
 import kr.co.winnticket.product.shop.mapper.ProductShopMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,18 +18,15 @@ import java.util.UUID;
 public class ProductShopService {
     private final ProductShopMapper mapper;
 
-    // 상품 목록 검색
+    @Transactional(readOnly = true)
     public List<ProductShopListGetResDto> selectProductListSearch(String name, UUID channelId) {
-        List<ProductShopListGetResDto> lModel = mapper.selectProductListSearch(name, channelId);
-        return lModel;
+        return mapper.selectProductListSearch(name, channelId);
     }
 
-    // 상품 목록 조회
+    @Transactional(readOnly = true)
     public ShopMainResDto selectProductList(String mainCategory, String subCategory, UUID channelId) {
 
-        // 카테고리 없는 경우 → 메인 페이지
         if (mainCategory == null && subCategory == null) {
-
             List<ProductSectionListGetResDto> sections = mapper.selectSection(channelId);
 
             for (ProductSectionListGetResDto section : sections) {
@@ -43,14 +41,13 @@ public class ProductShopService {
             return new ShopMainResDto(sections, allProducts);
         }
 
-        // 카테고리 있는 경우 → 상품 목록만
         List<ProductShopListGetResDto> products =
                 mapper.selectProductList(mainCategory, subCategory, channelId);
 
         return new ShopMainResDto(List.of(), products);
     }
 
-    // 상품 상세 조회
+    @Transactional(readOnly = true)
     public ProductShopDetailGetResDto selectProductDetail(String code, UUID channelId) {
         ProductShopDetailGetResDto model = mapper.selectProductDetail(code, channelId);
 
@@ -64,17 +61,15 @@ public class ProductShopService {
                 mapper.selectShopOptions(productId);
 
         for (ProductShopOptionGetResDto option : options) {
-
             List<ProductShopOptionValueGetResDto> values =
                     mapper.selectShopOptionValues(channelId, option.getId());
-
             option.setValues(values);
         }
 
         model.setOptions(options);
 
         if (model.getType() == ProductType.STAY) {
-            List<ProductDatePriceGetResDto> datePrice =  mapper.selectStayDatePrices(code);
+            List<ProductDatePriceGetResDto> datePrice = mapper.selectStayDatePrices(code);
             model.setDatePrices(datePrice);
         }
 

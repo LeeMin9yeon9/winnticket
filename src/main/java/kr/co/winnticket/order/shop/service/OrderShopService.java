@@ -62,7 +62,7 @@ public class OrderShopService {
     private final KcpService kcpService;
     private final OrderService orderService;
     private final TicketCouponMapper ticketCouponMapper;
-    // 주문조회
+    @Transactional(readOnly = true)
     public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(channelId, orderNumber);
 
@@ -576,7 +576,7 @@ public class OrderShopService {
         return sb.toString();
     }
 
-    // QR 생성
+    @Transactional(readOnly = true)
     public OrderQrCouponGetResDto getQrCoupon(String orderNumber) {
 
         // 주문 기본 정보

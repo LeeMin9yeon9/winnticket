@@ -1,7 +1,7 @@
 package kr.co.winnticket.order.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import kr.co.winnticket.common.enums.*;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
@@ -73,19 +73,19 @@ public class OrderService {
     private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
     private static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
 
-    // 주문 상태 조회
+    @Transactional(readOnly = true)
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
         OrderAdminStatusGetResDto model = mapper.selectOrderAdminStatus();
         return model;
     }
 
-    // 주문 목록 조회 (관리자)
+    @Transactional(readOnly = true)
     public List<OrderAdminListGetResDto> selectOrderAdminList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, UUID partnerId, String status, UUID channelId) {
         List<OrderAdminListGetResDto> lModel = mapper.selectOrderAdminList(asSrchWord, asBegDate, asEndDate, partnerId, status, channelId);
         return lModel;
     }
 
-    // 주문 상세 조회 (관리자)
+    @Transactional(readOnly = true)
     public OrderAdminDetailGetResDto selectOrderAdminDetail(UUID auId) {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));
@@ -93,7 +93,7 @@ public class OrderService {
         return model;
     }
 
-    // 티켓조회(현장관리자)
+    @Transactional(readOnly = true)
     public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId) {
         OrderAdminTicketCheckGetResDto model = mapper.selectOrderTicketHeader(auId);
         List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId);
