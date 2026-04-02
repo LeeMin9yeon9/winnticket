@@ -50,12 +50,6 @@ public class ProductDetailGetResDto {
     @Schema(description = "판매상태")
     private SalesStatus salesStatus;
 
-    @Schema(description = "판매시작일")
-    private LocalDate salesStartDate;
-
-    @Schema(description = "판매종료일")
-    private LocalDate salesEndDate;
-
     @Schema(description = "선사입형 여부")
     private Boolean prePurchased;
 

@@ -18,7 +18,7 @@ public class WoongjinScheduler {
     private final WoongjinService woongjinService;
     private final TicketMapper mapper;
 
-    @Scheduled(fixedDelay = 300000)
+    //@Scheduled(fixedDelay = 3600000)
     public void woongjinCheckScheduler() {
 
         log.info("[Woongjin Scheduler Start]");
