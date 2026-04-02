@@ -514,6 +514,13 @@
     WHERE id = #{orderItemId}
     </select>
 
+    <!-- 주문ID로 주문번호 조회 -->
+    <select id="findOrderNumberById" resultType="String">
+        SELECT order_number
+        FROM orders
+        WHERE id = #{orderId}
+    </select>
+
     <!-- 주문번호로 주문ID 조회 -->
     <select id="findOrderIdByOrderNumber" resultType="java.util.UUID">
         SELECT id

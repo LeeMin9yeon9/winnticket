@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,6 +27,7 @@ public class PayletterController {
 
     private final PayletterService service;
     private final OrderService orderService;
+    private final OrderMapper orderMapper;
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
@@ -68,8 +70,19 @@ public class PayletterController {
 
         log.info("[PAYLETTER] return custom_parameter={}", custom_parameter);
 
+        String orderNumber = custom_parameter;
+        try {
+            UUID orderId = UUID.fromString(custom_parameter);
+            String found = orderMapper.findOrderNumberById(orderId);
+            if (found != null) {
+                orderNumber = found;
+            }
+        } catch (Exception e) {
+            log.warn("[PAYLETTER] custom_parameter is not UUID, using as-is: {}", custom_parameter);
+        }
+
         response.sendRedirect(
-                "https://www.winnticket.store/payment-success?orderNumber=" + custom_parameter
+                "https://www.winnticket.store/payment-success?orderNumber=" + orderNumber
         );
     }
 
