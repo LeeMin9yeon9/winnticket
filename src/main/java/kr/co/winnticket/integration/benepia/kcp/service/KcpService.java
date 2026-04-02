@@ -29,6 +29,10 @@ import java.util.UUID;
 @Log4j2
 public class KcpService {
 
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(5))
+            .build();
+
     private final BenepiaProperties properties;
     private final ObjectMapper objectMapper;
     private final OrderShopMapper orderShopMapper;
@@ -76,7 +80,7 @@ public class KcpService {
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            HttpResponse<String> response = HttpClient.newHttpClient()
+            HttpResponse<String> response = HTTP_CLIENT
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
             log.info("[KCP POINT RES] {}", response.body());
@@ -139,7 +143,7 @@ public class KcpService {
                     .build();
 
             HttpResponse<String> response =
-                    HttpClient.newHttpClient().send(request,
+                    HTTP_CLIENT.send(request,
                                     HttpResponse.BodyHandlers.ofString());
 
             log.info("[KCP POINTPAY RES] {}", response.body());
@@ -244,7 +248,7 @@ public class KcpService {
                     .build();
 
             HttpResponse<String> response =
-                    HttpClient.newHttpClient()
+                    HTTP_CLIENT
                             .send(request,
                                     HttpResponse.BodyHandlers.ofString());
 
