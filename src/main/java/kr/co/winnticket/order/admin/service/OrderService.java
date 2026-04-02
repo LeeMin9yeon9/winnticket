@@ -10,6 +10,8 @@ import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
+import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
@@ -635,7 +637,9 @@ public class OrderService {
          */
 
         PaymentMethod method = order.getPaymentMethod();
-        Object cancelResult = null;
+        PayletterCancelResDto cancel = null;
+        int cancelAmount = 0;
+        int cancelFee = 0;
 
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
@@ -655,7 +659,13 @@ public class OrderService {
 
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
 
-            cancelResult = payletterService.cancel(orderId);
+            PayletterCancelResult result = payletterService.cancel(orderId);
+
+            cancel = result.getPgResult();
+            cancelAmount = result.getCancelAmount();
+            cancelFee = result.getCancelFee();
+
+            log.info("[PG CANCEL RESULT] {}", cancel);
 
             // 혼합결제 포인트 반환
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
@@ -686,8 +696,6 @@ public class OrderService {
             dto.setTno((String) payInfo.get("pg_tid"));
             dto.setCancelReason("관리자 취소");
 
-            cancelResult = kcpService.cancelPoint(dto);
-
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
@@ -698,9 +706,14 @@ public class OrderService {
          * =========================
          */
 
-        String payloadJson = objectMapper.writeValueAsString(cancelResult);
+        String payloadJson = cancel != null ? objectMapper.writeValueAsString(cancel) : null;
 
-        int updated = mapper.updateOrderCancelSuccess(orderId, payloadJson);
+        int updated = mapper.updateOrderCancelSuccess(
+                orderId,
+                cancelAmount,
+                cancelFee,
+                payloadJson
+        );
 
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
