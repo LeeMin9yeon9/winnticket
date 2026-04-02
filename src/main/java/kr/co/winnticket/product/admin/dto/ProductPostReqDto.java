@@ -58,16 +58,13 @@ public class ProductPostReqDto {
     private String ticketType;
 
     @Schema(description = "선사입형 여부")
-    private Boolean prePurchased;
+    private boolean prePurchased;
 
     @Schema(description = "예약상품 여부")
-    private Boolean isReservation;
+    private boolean isReservation;
 
     @Schema(description = "표시순서", example = "1")
     private String displayOrder;
-
-    @Schema(description = "예약상품여부", example = "true")
-    private boolean isReservation;
 
     @Hidden
     private UUID id;
