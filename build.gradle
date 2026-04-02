@@ -100,3 +100,7 @@ tasks.withType(ProcessResources) {
         include '**/*.xml'
     }
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
