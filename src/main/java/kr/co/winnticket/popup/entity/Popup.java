@@ -32,7 +32,7 @@ public class Popup extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String contentHtml;   // 팝업 내용 (HTML)
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;      // 이미지 팝업인 경우
 
     @Enumerated(EnumType.STRING)
@@ -53,12 +53,21 @@ public class Popup extends BaseEntity {
     @Column(nullable = false)
     private Boolean visible = true;
 
+    @Column(length = 20)
+    private String position = "CENTER";
+
     // 사이즈/위치
     private Integer width;
     private Integer height;
 
     private Integer positionTop;    // px
     private Integer positionLeft;   // px
+
+    @Column(columnDefinition = "TEXT")
+    private String linkUrl;
+
+    @Column(length = 10)
+    private String linkTarget;
 
     @Column(nullable = false)
     private Integer displayOrder = 0;   // 정렬 순서
