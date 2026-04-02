@@ -28,7 +28,6 @@ public class PlusNTestController {
     }
 
     // 날짜별 사용조회
-    @Hidden
     @GetMapping("/useddate")
     public PlusNUsedDateResponse usedDate(
             @RequestParam String date) {
