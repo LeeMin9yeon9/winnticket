@@ -149,7 +149,8 @@
             ELSE 0
             END AS DISCOUNT_RATE,
             a.SALES_STATUS,
-            a.USAGE_PERIOD
+            a.USAGE_PERIOD,
+            a.DISPLAY_ORDER
         FROM PRODUCTS a
         JOIN MENU_CATEGORIES b
         ON a.CATEGORY_ID = b.ID
@@ -185,6 +186,7 @@
         WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
         WHEN a.SALES_STATUS = 'READY' THEN 2
         END,
+        a.DISPLAY_ORDER ASC NULLS LAST,
         a.CREATED_AT DESC
     </select>
 
