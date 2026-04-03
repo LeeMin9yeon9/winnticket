@@ -1,5 +1,6 @@
 package kr.co.winnticket.community.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,6 +28,7 @@ public class EventPostReqDto {
     private String authorName;
 
     @NotNull
+    @JsonProperty("isActive")
     @Schema(description = "활성화여부")
     private boolean isActive;
 

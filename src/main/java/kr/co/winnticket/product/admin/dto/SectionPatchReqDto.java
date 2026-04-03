@@ -1,5 +1,6 @@
 package kr.co.winnticket.product.admin.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class SectionPatchReqDto {
     @Schema(description = "설명")
     private String description;
 
+    @JsonProperty("isActive")
     @Schema(description = "활성화여부")
     private boolean isActive;
 
