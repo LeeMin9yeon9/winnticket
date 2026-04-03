@@ -34,6 +34,48 @@
     </select>
 
     <!--
+    - 인기상품 조회 (판매량 기준 상위 10개)
+    -->
+    <select id="selectPopularProducts" resultType="kr.co.winnticket.product.shop.dto.ProductSectionProductGetResDto">
+        SELECT
+            b.CODE,
+            b.NAME,
+            COALESCE(pcp.base_price, b.PRICE) AS PRICE,
+            b.IMAGE_URL->>0 AS IMAGE,
+            COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) AS DISCOUNT_PRICE,
+            CASE
+            WHEN COALESCE(pcp.discount_price, b.DISCOUNT_PRICE) IS NOT NULL
+            AND COALESCE(pcp.base_price, b.PRICE) > 0
+            THEN FLOOR(
+                (
+                    COALESCE(pcp.base_price, b.PRICE)
+                    - COALESCE(pcp.discount_price, b.DISCOUNT_PRICE)
+                )
+                / COALESCE(pcp.base_price, b.PRICE)::float * 100
+            )
+            ELSE 0
+            END AS DISCOUNT_RATE,
+            b.SALES_STATUS,
+            b.USAGE_PERIOD,
+            COALESCE(SUM(oi.QUANTITY), 0) AS SOLD_COUNT
+        FROM PRODUCTS b
+        LEFT JOIN ORDER_ITEMS oi ON oi.PRODUCT_ID = b.ID
+        LEFT JOIN ORDERS o ON o.ID = oi.ORDER_ID AND o.PAYMENT_STATUS = 'PAID'
+        LEFT JOIN product_channel_prices pcp
+            ON pcp.product_id = b.ID AND pcp.channel_id = #{channelId}
+        LEFT JOIN CHANNEL_PRODUCTS cp
+            ON cp.PRODUCT_ID = b.ID AND cp.CHANNEL_ID = #{channelId}
+        WHERE b.VISIBLE = true
+        AND cp.PRODUCT_ID IS NULL
+        GROUP BY
+            b.ID, b.CODE, b.NAME, b.PRICE, b.IMAGE_URL, b.DISCOUNT_PRICE,
+            b.SALES_STATUS, b.USAGE_PERIOD, b.DISPLAY_ORDER,
+            pcp.base_price, pcp.discount_price
+        ORDER BY SOLD_COUNT DESC, b.DISPLAY_ORDER ASC NULLS LAST
+        LIMIT 10
+    </select>
+
+    <!--
     - 섹션별상품 조회
     -->
     <select id="selectSectionProduct" resultType="kr.co.winnticket.product.shop.dto.ProductSectionProductGetResDto">

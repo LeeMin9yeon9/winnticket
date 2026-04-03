@@ -19,6 +19,11 @@ public interface ProductShopMapper {
             @Param("channelId") UUID channelId
     );
 
+    // 인기상품 조회 (판매량 기준 상위 10개)
+    List<ProductSectionProductGetResDto> selectPopularProducts(
+            @Param("channelId") UUID channelId
+    );
+
     // 섹션별 상품 조회
     List<ProductSectionProductGetResDto> selectSectionProduct(
             @Param("sectionId") UUID sectionId,
