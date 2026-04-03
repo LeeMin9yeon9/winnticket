@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +34,23 @@ public class ProductShopService {
                 List<ProductSectionProductGetResDto> sectionProducts =
                         mapper.selectSectionProduct(section.getSectionId(), channelId);
                 section.setProducts(sectionProducts);
+            }
+
+            // 인기상품 섹션 (판매량 기준 상위 10개) - 항상 첫 번째 섹션으로 표시
+            List<ProductSectionProductGetResDto> popularProducts =
+                    mapper.selectPopularProducts(channelId);
+
+            if (!popularProducts.isEmpty()) {
+                ProductSectionListGetResDto popularSection = new ProductSectionListGetResDto();
+                popularSection.setSectionId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+                popularSection.setSectionCode("POPULAR");
+                popularSection.setSectionName("실시간 베스트 상품");
+                popularSection.setProducts(popularProducts);
+
+                List<ProductSectionListGetResDto> allSections = new ArrayList<>();
+                allSections.add(popularSection);
+                allSections.addAll(sections);
+                sections = allSections;
             }
 
             List<ProductShopListGetResDto> allProducts =
