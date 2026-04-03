@@ -35,4 +35,7 @@ public class ProductShopListGetResDto {
     @Schema(description = "사용기한")
     private String usagePeriod;
 
+    @Schema(description = "표시순서")
+    private Integer displayOrder;
+
 }
