@@ -1,5 +1,6 @@
 package kr.co.winnticket.product.admin.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -65,6 +66,7 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "활성화여부")
     private boolean visible;
 
+    @JsonProperty("isReservation")
     @Schema(description = "예약상품여부")
     private boolean isReservation;
 
