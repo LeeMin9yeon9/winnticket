@@ -271,6 +271,10 @@ public class TicketCouponService {
 
         String status = mapper.findCouponStatus(couponId);
 
+        if (status == null) {
+            throw new RuntimeException("존재하지 않는 쿠폰입니다.");
+        }
+
         if (status.equals("USED")) {
             throw new RuntimeException("이미 사용된 쿠폰은 취소 불가");
         }

@@ -42,6 +42,9 @@ public class TicketCouponGroupResDto {
     @Schema(description = "사용가능 쿠폰 수")
     private Integer activeCount;
 
+    @Schema(description = "판매된 쿠폰 수")
+    private Integer soldCount;
+
     @Schema(description = "사용된 쿠폰 수")
     private Integer usedCount;
 

@@ -57,7 +57,7 @@
                 )
         </insert>
 
-    <!-- 그룹 목록 조회(+ ACTIVE/USED 카운트) -->
+    <!-- 그룹 목록 조회(+ ACTIVE/SOLD/USED 카운트) -->
     <select id="selectGroups" resultType="kr.co.winnticket.ticketCoupon.dto.TicketCouponGroupResDto">
         SELECT
             g.id,
@@ -70,6 +70,7 @@
             g.created_at AS createdAt,
             g.updated_at AS updatedAt,
             COALESCE(SUM(CASE WHEN c.status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS activeCount,
+            COALESCE(SUM(CASE WHEN c.status = 'SOLD' THEN 1 ELSE 0 END), 0) AS soldCount,
             COALESCE(SUM(CASE WHEN c.status = 'USED' THEN 1 ELSE 0 END), 0) AS usedCount
         FROM ticket_coupon_groups g
                  LEFT JOIN ticket_coupons c ON c.group_id = g.id
@@ -93,6 +94,7 @@
             g.created_at AS createdAt,
             g.updated_at AS updatedAt,
             COALESCE(SUM(CASE WHEN c.status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS activeCount,
+            COALESCE(SUM(CASE WHEN c.status = 'SOLD' THEN 1 ELSE 0 END), 0) AS soldCount,
             COALESCE(SUM(CASE WHEN c.status = 'USED' THEN 1 ELSE 0 END), 0) AS usedCount
         FROM ticket_coupon_groups g
                  LEFT JOIN ticket_coupons c ON c.group_id = g.id
@@ -103,7 +105,7 @@
         ORDER BY g.created_at DESC
     </select>
 
-    <!-- 그룹 단건 조회(+ ACTIVE/USED 카운트) -->
+    <!-- 그룹 단건 조회(+ ACTIVE/SOLD/USED 카운트) -->
     <select id="selectGroup" resultType="kr.co.winnticket.ticketCoupon.dto.TicketCouponGroupResDto">
         SELECT
             g.id,
@@ -116,6 +118,7 @@
             g.created_at AS createdAt,
             g.updated_at AS updatedAt,
             COALESCE(SUM(CASE WHEN c.status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS activeCount,
+            COALESCE(SUM(CASE WHEN c.status = 'SOLD' THEN 1 ELSE 0 END), 0) AS soldCount,
             COALESCE(SUM(CASE WHEN c.status = 'USED' THEN 1 ELSE 0 END), 0) AS usedCount
         FROM ticket_coupon_groups g
                  LEFT JOIN ticket_coupons c ON c.group_id = g.id
