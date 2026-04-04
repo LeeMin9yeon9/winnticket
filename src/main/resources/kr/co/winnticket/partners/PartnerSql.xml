@@ -95,7 +95,10 @@
             p.MANAGER_PHONE AS managerPhone,
             p.CONTRACT_START_DATE AS contractStartDate,
             p.CONTRACT_END_DATE AS contractEndDate,
-            p.COUPON_CODE AS couponCode
+            p.COUPON_CODE AS couponCode,
+            p.STATUS AS status,
+            p.LOGO_URL AS logoUrl,
+            p.DESCRIPTION AS description
         FROM PARTNERS p
         WHERE p.ID = #{id}
 

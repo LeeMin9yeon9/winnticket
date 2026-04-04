@@ -50,7 +50,7 @@
 
                  LEFT JOIN order_item_options oio
                            ON oio.order_item_id = oi.id
-                               AND oio.option_value = pov.value
+                               AND oio.option_value_id = pov.id
 
         WHERE p.partner_id = #{partnerId}
           AND p.visible = true
