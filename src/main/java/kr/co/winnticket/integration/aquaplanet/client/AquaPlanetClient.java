@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCancelRequest;
 import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCancelResponse;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCouponHistoryItem;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCouponHistoryRequest;
+import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetCouponHistoryResponse;
 import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetIssueRequest;
 import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetIssueResponse;
 import kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetRecallRequest;
@@ -40,6 +43,9 @@ public class AquaPlanetClient {
 
     @Value("${aquaplanet.wrkr-no}")
     private String wrkrNo;
+
+    @Value("${aquaplanet.envr-dv-cd}")
+    private String envrDvCd;
 
     public AquaPlanetIssueResponse issue(AquaPlanetIssueRequest req) {
         try {
@@ -144,13 +150,13 @@ public class AquaPlanetClient {
 
         Map<String, Object> header = new HashMap<>();
         header.put("TMSG_VER_DV_CD", "01");
-        header.put("ENVR_INFO_DV_CD", "D");
+        header.put("ENVR_INFO_DV_CD", envrDvCd); // D(개발) / R(운영) 구분되어있음. aquaplanet.envr-dv-cd 같은 값으로 주입
         header.put("STN_MSG_ENCP_CD", "0");
         header.put("STN_MSG_COMP_CD", "0");
         header.put("LANG_CD", "KO");
         header.put("TMSG_WRTG_DT", now.substring(0, 8));
         header.put("TMSG_CRE_SYS_NM", systemName);
-        header.put("STD_TMSG_SEQ_NO", String.valueOf(System.currentTimeMillis()));
+        header.put("STD_TMSG_SEQ_NO", (char)('A' + (int)(Math.random() * 26)) + String.valueOf(System.currentTimeMillis())); //Random(1) + unix time(13) = 14자리 | 앞에 랜덤 1 자리 추가
         header.put("STD_TMSG_PRGR_NO", "00");
         header.put("STN_TMSG_IP", stnTmsgIp);
         header.put("STN_TMSG_MAC", "00-00-00-00-00-00");
@@ -233,6 +239,59 @@ public class AquaPlanetClient {
                         .readValue(resultNode);
 
         response.setDsResult(results);
+        return response;
+    }
+
+    public AquaPlanetCouponHistoryResponse collectCouponHistory(AquaPlanetCouponHistoryRequest req) {
+        try {
+            Map<String, Object> body = createBody(
+                    "HBSSAMCPN1103",
+                    "SIF00HBSSAMCPN1103",
+                    "ds_input",
+                    req
+            );
+
+            log.info("[AquaPlanet][HISTORY][REQ] corpCd={}, contNo={}, bsnDate={}", req.getCorpCd(), req.getContNo(), req.getBsnDate());
+
+            String responseBody = send(body);
+
+            log.info("[AquaPlanet][HISTORY][RES] corpCd={}, contNo={}, body={}", req.getCorpCd(), req.getContNo(), responseBody);
+
+            return parseCouponHistoryResponse(responseBody);
+
+        } catch (Exception e) {
+            log.error("[AquaPlanet][HISTORY][ERR] corpCd={}, contNo={}, bsnDate={}, message={}", req.getCorpCd(), req.getContNo(), req.getBsnDate(), e.getMessage(), e);
+            throw new RuntimeException("아쿠아플라넷 쿠폰회수이력 조회 실패", e);
+        }
+    }
+
+    private AquaPlanetCouponHistoryResponse parseCouponHistoryResponse(String json) throws Exception {
+        JsonNode root = aquaPlanetObjectMapper.readTree(json);
+
+        String msgPrcsRsltCd = root.path("MessageHeader").path("MSG_PRCS_RSLT_CD").asText();
+
+        if ("-1".equals(msgPrcsRsltCd)) {
+            AquaPlanetCouponHistoryResponse empty = new AquaPlanetCouponHistoryResponse();
+            empty.setDsResult(List.of());
+            return empty;
+        }
+
+        if (!"0".equals(msgPrcsRsltCd)) {
+            throw new RuntimeException(extractMessage(root));
+        }
+
+        JsonNode resultNode = root.path("Data").path("ds_result");
+        AquaPlanetCouponHistoryResponse response = new AquaPlanetCouponHistoryResponse();
+        if (resultNode == null || resultNode.isMissingNode()) {
+            response.setDsResult(List.of());
+            return response;
+        }
+
+        List<AquaPlanetCouponHistoryItem> items =
+                aquaPlanetObjectMapper.readerForListOf(AquaPlanetCouponHistoryItem.class)
+                        .readValue(resultNode);
+
+        response.setDsResult(items);
         return response;
     }
 

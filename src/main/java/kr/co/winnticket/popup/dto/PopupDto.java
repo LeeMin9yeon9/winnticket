@@ -27,6 +27,7 @@ public class PopupDto {
 
     private Integer width;
     private Integer height;
+    private String position;
     private Integer positionTop;
     private Integer positionLeft;
     private Integer displayOrder;

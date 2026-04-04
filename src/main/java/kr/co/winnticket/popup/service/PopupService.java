@@ -73,7 +73,7 @@ public class PopupService {
         Popup popup = new Popup();
         popup.setName(dto.getName());
         popup.setTitle(dto.getTitle() != null ? dto.getTitle() : dto.getName());
-        popup.setPosition("CENTER");
+        popup.setPosition(dto.getPosition() != null ? dto.getPosition() : "CENTER");
         popup.setContentHtml(dto.getContentHtml());
         popup.setImageUrl(dto.getImageUrl());
         popup.setType(dto.getType());
@@ -130,6 +130,7 @@ public class PopupService {
         if (dto.getVisible() != null) popup.setVisible(dto.getVisible());
         if (dto.getWidth() != null) popup.setWidth(dto.getWidth());
         if (dto.getHeight() != null) popup.setHeight(dto.getHeight());
+        if (dto.getPosition() != null) popup.setPosition(dto.getPosition());
         if (dto.getPositionTop() != null) popup.setPositionTop(dto.getPositionTop());
         if (dto.getPositionLeft() != null) popup.setPositionLeft(dto.getPositionLeft());
         if (dto.getDisplayOrder() != null) popup.setDisplayOrder(dto.getDisplayOrder());
@@ -333,6 +334,7 @@ public class PopupService {
         dto.setVisible(popup.getVisible());
         dto.setWidth(popup.getWidth());
         dto.setHeight(popup.getHeight());
+        dto.setPosition(popup.getPosition());
         dto.setPositionTop(popup.getPositionTop());
         dto.setPositionLeft(popup.getPositionLeft());
         dto.setDisplayOrder(popup.getDisplayOrder());

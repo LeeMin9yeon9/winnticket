@@ -129,6 +129,7 @@ aquaplanet:
   system-name: SIF99999
   stn-tmsg-ip: 13.209.91.167
   wrkr-no: l1711019
+  envr-dv-cd: D
 
 # 파트너 연동(LS컴퍼니)
 lscompany:

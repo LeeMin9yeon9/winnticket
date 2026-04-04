@@ -36,6 +36,7 @@ public class PopupCreateDto {
 
     private Integer width;
     private Integer height;
+    private String position = "CENTER";
     private Integer positionTop;
     private Integer positionLeft;
     private Integer displayOrder = 0;
