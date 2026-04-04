@@ -44,16 +44,7 @@ public class TicketCouponService {
         //  날짜 검증
         validateDates(dto.getValidFrom(), dto.getValidUntil());
 
-        //  겹치는 날짜 그룹 체크
-        int overlapCount = mapper.countOverlappingGroups(
-                dto.getProductOptionValueId(),
-                dto.getValidFrom(),
-                dto.getValidUntil()
-        );
-        if (overlapCount > 0) {
-            throw new RuntimeException("해당 옵션에 겹치는 유효기간의 쿠폰그룹이 이미 존재합니다.");
-        }
-
+        //  동일 날짜 그룹 먼저 확인 (있으면 재사용)
         UUID groupId = mapper.findGroupByOptionValueAndDate(
                 dto.getProductOptionValueId(),
                 dto.getValidFrom(),
@@ -61,6 +52,16 @@ public class TicketCouponService {
         );
 
         if (groupId == null) {
+            //  겹치는 날짜 그룹 체크 (다른 날짜 범위와 겹치는 경우만)
+            int overlapCount = mapper.countOverlappingGroups(
+                    dto.getProductOptionValueId(),
+                    dto.getValidFrom(),
+                    dto.getValidUntil()
+            );
+            if (overlapCount > 0) {
+                throw new RuntimeException("해당 옵션에 겹치는 유효기간의 쿠폰그룹이 이미 존재합니다.");
+            }
+
             groupId = UUID.randomUUID();
 
             mapper.insertGroup(
