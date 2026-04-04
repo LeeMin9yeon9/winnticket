@@ -93,7 +93,7 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**"
                         ).permitAll()
-                        
+
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
