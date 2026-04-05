@@ -465,6 +465,10 @@ public class OrderService {
 
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
 
+        mapper.deleteOrderTicketsByOrderId(orderId);
+
+        log.info("[ORDER_TICKETS DELETE] 완료 orderId={}", orderId);
+
 
 
         /*
