@@ -25,6 +25,15 @@ public interface OrderMapper {
             @Param("channelId") UUID channelId
     );
 
+    // 주문 내보내기 목록 조회
+    List<OrderExportResDto> selectOrderExportList(
+            @Param("srchWord") String asSrchWord,
+            @Param("begDate") LocalDate asBegDate,
+            @Param("endDate") LocalDate asEndDate,
+            @Param("status") String status,
+            @Param("channelId") UUID channelId
+    );
+
     // 주문 상세 조회(관리자)
     OrderAdminDetailGetResDto selectOrderAdminDetail(
             @Param("id") UUID auId
