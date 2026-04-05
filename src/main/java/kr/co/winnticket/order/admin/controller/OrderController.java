@@ -90,10 +90,10 @@ public class OrderController {
 
         String[] headers = {
                 "채널명", "주문일", "주문번호", "회사명", "부서명",
-                "주문자 이름", "주문자 전화번호", "주문자 이메일", "주문자 우편번호", "주문자 주소",
-                "수령자 이름", "수령자 우편번호", "수령자 주소", "수령자 전화번호",
+                "주문자 이름", "주문자 전화번호", "주문자 이메일",
+                "수령자 이름", "수령자 전화번호",
                 "상품번호", "주문상품", "예약일자", "상품종류", "티켓종류",
-                "수량", "단가", "공급가", "배송비", "총 주문금액",
+                "수량", "단가", "공급가", "총 주문금액",
                 "결제상태", "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
                 "무통장 결제금액", "신용카드 결제금액", "이용권"
@@ -118,42 +118,37 @@ public class OrderController {
             row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");
             row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");
             row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");
-            row.createCell(8).setCellValue("");
-            row.createCell(9).setCellValue("");
-            row.createCell(10).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");
-            row.createCell(11).setCellValue("");
+            row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");
+            row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : "");
+            row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");
+            row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
             row.createCell(12).setCellValue("");
-            row.createCell(13).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : "");
-            row.createCell(14).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");
-            row.createCell(15).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
-            row.createCell(16).setCellValue("");
-            row.createCell(17).setCellValue("");
-            row.createCell(18).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");
-            row.createCell(19).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
-            row.createCell(20).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
-            row.createCell(21).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);
-            row.createCell(22).setCellValue(0);
-            row.createCell(23).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0);
+            row.createCell(13).setCellValue("");
+            row.createCell(14).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");
+            row.createCell(15).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
+            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
+            row.createCell(17).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);
+            row.createCell(18).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0);
             // 결제상태 한글 변환
             String psDisplay = "";
             if (r.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(r.getPaymentStatus()).getDisplayName(); }
                 catch (Exception e) { psDisplay = r.getPaymentStatus(); }
             }
-            row.createCell(24).setCellValue(psDisplay);
-            row.createCell(25).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(19).setCellValue(psDisplay);
+            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
             // 결제수단 한글 변환
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(r.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
             }
-            row.createCell(26).setCellValue(pmDisplay);
-            row.createCell(27).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-            row.createCell(28).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");
-            row.createCell(29).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0);
-            row.createCell(30).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-            row.createCell(31).setCellValue("");
+            row.createCell(21).setCellValue(pmDisplay);
+            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
+            row.createCell(23).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");
+            row.createCell(24).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0);
+            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
+            row.createCell(26).setCellValue("");
         }
 
         // 열 너비 자동 조정
