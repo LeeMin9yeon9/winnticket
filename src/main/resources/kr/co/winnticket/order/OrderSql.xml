@@ -111,6 +111,94 @@
     </select>
 
     <!--
+    - 주문 내보내기 Select (행 = 주문상품 단위)
+    -->
+    <select id="selectOrderExportList" resultType="kr.co.winnticket.order.admin.dto.OrderExportResDto">
+        SELECT
+            COALESCE(e.name, '')                                                        AS channelName,
+            TO_CHAR(a.ordered_at, 'YYYY-MM-DD HH24:MI')                               AS orderedAt,
+            a.order_number                                                              AS orderNumber,
+            ''                                                                         AS companyName,
+            ''                                                                         AS departmentName,
+            a.customer_name                                                            AS customerName,
+            COALESCE(a.customer_phone, '')                                             AS customerPhone,
+            COALESCE(a.customer_email, '')                                             AS customerEmail,
+            ''                                                                         AS ordererZipcode,
+            ''                                                                         AS ordererAddress,
+            a.customer_name                                                            AS recipientName,
+            ''                                                                         AS recipientZipcode,
+            ''                                                                         AS recipientAddress,
+            COALESCE(a.customer_phone, '')                                             AS recipientPhone,
+            COALESCE(c.code, '')                                                       AS productCode,
+            b.product_name || '() / ' || COALESCE(STRING_AGG(f.option_value, ' ' ORDER BY f.id), '') AS productDisplayName,
+            ''                                                                         AS reservationDate,
+            ''                                                                         AS productCategory,
+            '모바일자동'                                                                 AS ticketType,
+            b.quantity                                                                 AS quantity,
+            b.unit_price                                                               AS unitPrice,
+            CAST(b.unit_price * (100 - COALESCE(d.commission_rate, 0)) / 100.0 AS INTEGER) AS supplyPrice,
+            0                                                                          AS shippingFee,
+            a.total_price                                                              AS totalOrderAmount,
+            a.payment_status                                                           AS paymentStatus,
+            a.final_price                                                              AS finalPrice,
+            a.payment_method                                                           AS paymentMethod,
+            COALESCE(a.point_amount, 0)                                                AS pointAmount,
+            COALESCE(a.benepia_id, '')                                                 AS benepiaId,
+            CASE WHEN a.payment_method = 'VIRTUAL_ACCOUNT' THEN a.final_price ELSE 0 END AS bankTransferAmount,
+            CASE WHEN a.payment_method = 'CARD' THEN a.final_price ELSE 0 END         AS cardAmount,
+            ''                                                                         AS voucherInfo
+        FROM orders a
+        JOIN order_items b ON b.order_id = a.id
+        JOIN products c ON c.id = b.product_id
+        LEFT JOIN partners d ON d.id = c.partner_id
+        LEFT JOIN channels e ON e.id = a.channel_id
+        LEFT JOIN order_item_options f ON f.order_item_id = b.id
+        WHERE 1 = 1
+          AND a.status != 'PENDING_PAYMENT'
+
+        <if test="srchWord != null and srchWord != ''">
+            AND (
+                Upper(a.order_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(a.customer_name) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(b.product_name) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(e.name) LIKE '%' || Upper(#{srchWord}) || '%'
+            )
+        </if>
+
+        <if test="begDate != null">
+            <![CDATA[
+            AND Date(a.ordered_at) >= #{begDate}
+            ]]>
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[
+            AND Date(a.ordered_at) <= #{endDate}
+            ]]>
+        </if>
+
+        <if test="status != null and status != '' and status != 'ALL'">
+            <![CDATA[
+            AND a.STATUS = #{status}::order_status
+            ]]>
+        </if>
+
+        <if test="channelId != null">
+            AND a.channel_id = #{channelId}
+        </if>
+
+        GROUP BY
+            a.id, e.name, a.ordered_at, a.order_number,
+            a.customer_name, a.customer_phone, a.customer_email,
+            a.total_price, a.payment_status, a.final_price, a.payment_method,
+            a.point_amount, a.benepia_id,
+            b.id, b.product_name, b.quantity, b.unit_price,
+            c.code, d.commission_rate
+
+        ORDER BY a.ordered_at DESC
+    </select>
+
+    <!--
    - 주문 상세 Select
    -->
     <select id="selectOrderAdminDetail" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
