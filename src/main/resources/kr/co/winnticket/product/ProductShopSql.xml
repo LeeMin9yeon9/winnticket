@@ -328,6 +328,7 @@
         ON pcov.option_value_id = v.ID
         AND pcov.channel_id = #{channelId}
         WHERE v.OPTION_ID = #{optionId}
+        ORDER BY v.DISPLAY_ORDER ASC
     </select>
 
 </mapper>
