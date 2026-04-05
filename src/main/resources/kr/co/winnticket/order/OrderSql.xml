@@ -233,7 +233,8 @@
             b.product_name || ' (' || STRING_AGG(f.option_value, ' ' ORDER BY f.id) || ')' product_name,  -- 상품명
             e.name partner_name,  -- 파트너명
             a.ticket_used,  -- 사용여부
-            a.ticket_used_date -- 사용일시
+            a.ticket_used_date, -- 사용일시
+            a.status
         FROM order_tickets a
         JOIN order_items b
           ON b.id = a.order_item_id
@@ -252,7 +253,8 @@
             b.product_name,
             e.name,
             a.ticket_used,
-            a.ticket_used_date
+            a.ticket_used_date,
+            a.status
         ORDER BY
             a.ticket_number;
     </select>
@@ -279,7 +281,8 @@
             oi.product_name     AS productName,
             t.ticket_number     As ticketNumber,
             t.ticket_used       AS ticketUsed,
-            t.ticket_used_date  AS ticketUsedDate
+            t.ticket_used_date  AS ticketUsedDate,
+            t.status
         FROM order_tickets t
         JOIN order_items oi
         ON oi.id = t.order_item_id
@@ -317,6 +320,7 @@
             order_item_id,
             ticket_number,
             ticket_used,
+            status,
             valid_from,
             valid_to
         )
@@ -325,6 +329,7 @@
              #{orderItemId},
              #{ticketNumber},
              false,
+             'ISSUED',
              #{validFrom},
              #{validTo}
         )
@@ -337,7 +342,8 @@
         UPDATE order_tickets
         SET
             ticket_used = true,
-            ticket_used_date = NOW()
+            ticket_used_date = NOW(),
+            status = 'USED'
         WHERE id = #{ticketId}
           AND ticket_used = false
     </update>
@@ -352,6 +358,7 @@
         On a.order_item_id = b.id
         WHERE b.order_id = #{orderId}
           AND a.ticket_used = false
+
     </select>
 
     <!--
@@ -589,13 +596,16 @@
         WHERE oi.order_id = #{orderId}
     </select>
 
-    <!-- 티켓 유효기간 조회 -->
-    <select id="selectPrePurchasedCouponIds" resultType="java.util.UUID">
-        SELECT oic.ticket_coupon_id
-        FROM order_item_coupons oic
-                 JOIN order_items oi ON oi.id = oic.order_item_id
-        WHERE oi.order_id = #{orderId}
-    </select>
+    <!--주문취소 후 상태변경-->
+    <update id="cancelTicketsByOrderId">
+        UPDATE order_tickets t
+        SET status = 'CANCELLED'
+            FROM order_items oi
+        WHERE t.order_item_id = oi.id
+          AND oi.order_id = #{orderId}
+    </update>
+
+
 
     <!--환불전용 kcp 부분취소-->
 <!--    <update id="updateOrderCancelPartial">-->

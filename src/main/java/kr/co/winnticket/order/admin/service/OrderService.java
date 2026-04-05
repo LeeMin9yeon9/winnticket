@@ -531,6 +531,8 @@ public class OrderService {
 
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
 
+        mapper.cancelTicketsByOrderId(orderId);
+
 
 
         /*
