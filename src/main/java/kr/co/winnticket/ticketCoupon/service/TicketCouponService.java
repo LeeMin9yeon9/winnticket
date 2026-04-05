@@ -255,17 +255,37 @@ public class TicketCouponService {
                 coupon.getCouponNumber()
         );
 
-        orderMapper.insertOrderTicket(
-                orderItemId,
-                coupon.getCouponNumber(),
-                validFrom,
-                validTo
-        );
+        String ticketNumber = coupon.getCouponNumber();
 
-        log.info("[쿠폰발급] orderId={}, orderItemId={}, productId={}, optionValueId={}, coupon={}",
-                orderId, orderItemId, productId, optionValueId, coupon.getCouponNumber());
-        return coupon.getCouponNumber();
-    }
+        UUID existingId = orderMapper.findCancelledTicket(ticketNumber);
+
+        if (existingId != null) {
+
+            // 재사용 (핵심)
+            orderMapper.reuseTicket(
+                    existingId,
+                    orderItemId,
+                    validFrom,
+                    validTo
+            );
+
+            log.info("[TICKET REUSE] {}", ticketNumber);
+
+        } else {
+
+            orderMapper.insertOrderTicket(
+                    orderItemId,
+                    coupon.getCouponNumber(),
+                    validFrom,
+                    validTo
+            );
+
+            log.info("[쿠폰발급] orderId={}, orderItemId={}, productId={}, optionValueId={}, coupon={}",
+                    orderId, orderItemId, productId, optionValueId, coupon.getCouponNumber());
+        }
+            return coupon.getCouponNumber();
+        }
+
 
     // 판매된 티켓 조회 후 미사용 시 복구
     @Transactional
