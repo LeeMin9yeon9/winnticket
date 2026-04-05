@@ -1,10 +1,10 @@
 package kr.co.winnticket.order.admin.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import kr.co.winnticket.common.enums.*;
+import kr.co.winnticket.common.enums.OrderStatus;
+import kr.co.winnticket.common.enums.PaymentMethod;
+import kr.co.winnticket.common.enums.PaymentStatus;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
@@ -22,9 +22,13 @@ import kr.co.winnticket.integration.spavis.service.SpavisService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
+import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +44,7 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final BenepiaOrderService benepiaOrderService;
     private final OrderPostPaymentService orderPostPaymentService;
+    private final TicketCouponMapper ticketCouponMapper;
 
     // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
@@ -446,6 +451,21 @@ public class OrderService {
         }
 
         log.info("[STOCK RESTORE] 완료 orderId={}", orderId);
+
+        // 선사입 쿠폰 복구
+        List<UUID> couponIds = mapper.selectPrePurchasedCouponIds(orderId);
+
+        for (UUID couponId : couponIds) {
+            int restored = ticketCouponMapper.restoreCoupon(couponId);
+
+            if (restored == 0) {
+                throw new IllegalStateException("쿠폰 복구 실패 (이미 사용되었거나 상태 이상)");
+            }
+        }
+
+        log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
+
+
 
         /*
          * =========================
