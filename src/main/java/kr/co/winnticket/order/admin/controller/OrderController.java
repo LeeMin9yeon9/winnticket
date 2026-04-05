@@ -67,12 +67,13 @@ public class OrderController {
 
     // 티켓조회 (현장관리자)
     @GetMapping("/tickets/{id}")
-    @Operation(summary = "티켓 조회(현장관리자)", description = "전달받은 주문id의 모든 티켓을 조회합니다.")
+    @Operation(summary = "티켓 조회(현장관리자)", description = "전달받은 주문, 티켓id의 티켓을 조회합니다.")
     public ResponseEntity<ApiResponse<OrderAdminTicketCheckGetResDto>> getOrderAdminTicketList (
-            @Parameter(description = "주문_ID") @PathVariable("id") UUID auId
+            @Parameter(description = "주문_ID") @PathVariable("id") UUID auId,
+            @Parameter(description = "티켓_ID") @PathVariable UUID ticketId
     ) throws Exception {
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.selectOrderAdminTicketList(auId))
+                ApiResponse.success("조회 성공", service.selectOrderAdminTicketList(auId, ticketId))
         );
     }
 

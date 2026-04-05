@@ -89,9 +89,9 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId) {
+    public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId, UUID ticketId) {
         OrderAdminTicketCheckGetResDto model = mapper.selectOrderTicketHeader(auId);
-        List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId);
+        List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId, ticketId);
 
         model.setTickets(tickets);
 
