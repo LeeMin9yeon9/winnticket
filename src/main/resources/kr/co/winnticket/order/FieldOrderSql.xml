@@ -79,21 +79,21 @@
             ]]>
         </if>
 
-        <if test="status != null and status != '' and status != 'ALL'">
+        <if test="status != null and status != '' and !status.equals('ALL')">
             <choose>
-                <when test="status == 'USED'">
+                <when test="status.equals('USED')">
                     AND t.ticket_used = true
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                 </when>
-                <when test="status == 'UNUSED'">
+                <when test="status.equals('UNUSED')">
                     AND t.ticket_used = false
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                     AND (pr.sales_end_date IS NULL OR pr.sales_end_date >= CURRENT_DATE)
                 </when>
-                <when test="status == 'CANCELED'">
+                <when test="status.equals('CANCELED')">
                     AND o.status IN ('CANCELED', 'REFUNDED')
                 </when>
-                <when test="status == 'EXPIRED'">
+                <when test="status.equals('EXPIRED')">
                     AND t.ticket_used = false
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                     <![CDATA[
