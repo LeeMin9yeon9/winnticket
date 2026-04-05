@@ -84,16 +84,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         /* ---------- 업로드 이미지 파일 공개 접근 허용 ---------- */
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/static/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**"
-                        ).permitAll()
-
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
