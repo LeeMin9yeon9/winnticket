@@ -3,6 +3,7 @@ package kr.co.winnticket.partners.partnerinfo.dto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import kr.co.winnticket.common.enums.PartnerStatus;
 import kr.co.winnticket.common.enums.PartnerType;
 import kr.co.winnticket.common.enums.TicketCodeType;
 import lombok.Data;
@@ -57,5 +58,13 @@ public class PartnerInfoGetResDto {
     @Schema(description = "쿠폰코드 생성 여부")
     private boolean couponCode;
 
+    @Schema(description = "파트너 상태")
+    private PartnerStatus status;
+
+    @Schema(description = "로고 URL")
+    private String logoUrl;
+
+    @Schema(description = "설명")
+    private String description;
 
 }

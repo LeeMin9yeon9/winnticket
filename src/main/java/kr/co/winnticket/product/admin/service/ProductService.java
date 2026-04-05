@@ -96,6 +96,7 @@ public class ProductService {
     }
 
     // 상품 옵션등록
+    @Transactional
     public void insertProductOption(UUID auId, ProductOptionPostReqDto model) {
         mapper.insertProductOption(auId, model);
 
@@ -111,6 +112,7 @@ public class ProductService {
     }
 
     // 상품 옵션 수정
+    @Transactional
     public void updateProductOption(UUID auId, ProductOptionPatchReqDto model) {
         mapper.updateProductOption(auId, model);
 

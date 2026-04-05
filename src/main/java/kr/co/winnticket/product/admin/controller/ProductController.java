@@ -269,7 +269,7 @@ public class ProductController {
         String id = auId.toString();
 
         return ResponseEntity.ok(
-                ApiResponse.success("등록 성공", id)
+                ApiResponse.success("삭제 성공", id)
         );
     }
 

@@ -143,5 +143,8 @@ public interface OrderMapper {
     // 쿠폰 조회
     List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
 
+    // 주문취소 티켓 조회
+    int deleteOrderTicketsByOrderId(@Param("orderId") UUID orderId);
+
 
 }
