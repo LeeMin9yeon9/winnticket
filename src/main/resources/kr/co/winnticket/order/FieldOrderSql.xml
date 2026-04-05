@@ -26,13 +26,15 @@
             o.paid_at               AS ticketSentDate,
             t.ticket_used_date      AS ticketUsedDate,
             o.canceled_at           AS canceledAt,
+            <![CDATA[
             CASE
                 WHEN o.status IN ('CANCELED', 'REFUNDED') THEN '취소'
                 WHEN t.ticket_used = true THEN '사용완료'
                 When t.valid_from Is Not null and t.valid_from > CURRENT_DATE then '사용시작전'
                 WHEN t.valid_to IS NOT NULL AND t.valid_to < CURRENT_DATE THEN '기간 만료'
                 ELSE '사용가능'
-            END                     AS ticketStatus,
+            END
+           ]]> AS ticketStatus,
             CASE
                 WHEN o.status IN ('CANCELED', 'REFUNDED') THEN o.canceled_at
                 WHEN t.ticket_used = true THEN t.ticket_used_date
@@ -56,7 +58,6 @@
         WHERE 1 = 1
           AND pr.partner_id = #{partnerId}
           AND o.status != 'PENDING_PAYMENT'
-
         <if test="srchWord != null and srchWord != ''">
             <![CDATA[
             AND (
@@ -65,7 +66,7 @@
                 OR Upper(oi.product_name) LIKE '%' || Upper(#{srchWord}) || '%'
                 OR Upper(oic.coupon_number) LIKE '%' || Upper(#{srchWord}) || '%'
             )
-            ]]>
+        ]]>
         </if>
 
         <if test="begDate != null">
