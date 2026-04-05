@@ -148,4 +148,16 @@ public interface OrderMapper {
 
     // 선사입 쿠폰 주문 취소 티켓 조ㅓ회
     int cancelTicketsByOrderId(@Param("orderId") UUID orderId);
+
+    // 주문 취소 시 티켓 찾기
+    UUID findCancelledTicket(@Param("ticketNumber") String ticketNumber);
+
+    // 주문 취소 후 선사입 재사용 사용 추가
+    int reuseTicket(
+            @Param("id") UUID id,
+            @Param("orderItemId") UUID orderItemId,
+            @Param("validFrom") LocalDate validFrom,
+            @Param("validTo") LocalDate validTo
+    );
+
 }
