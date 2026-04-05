@@ -267,6 +267,7 @@
         SET status = 'ACTIVE',
             updated_at = now()
         WHERE id = #{couponId}
+          AND status = 'SOLD'
     </update>
 
     <!--해당그룹 티켓 날짜 일괄변경-->
