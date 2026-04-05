@@ -77,8 +77,8 @@ public class OrderPostPaymentService {
         return productMapper.selectPrePurchasedByProductId(productId);
     }
 
-    public String issueCoupon(UUID orderItemId) {
-        return ticketCouponService.issueCoupon(orderItemId);
+    public String issueCoupon(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
+        return ticketCouponService.issueCoupon(orderItemId, validFrom, validTo);
     }
 
     public String generateTicketNumber() {

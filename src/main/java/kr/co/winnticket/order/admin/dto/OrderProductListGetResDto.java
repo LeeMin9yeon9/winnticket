@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -49,4 +50,7 @@ public class OrderProductListGetResDto {
 
     @Schema(description = "예약상품여부")
     private Boolean isReservation;
+
+    @JsonIgnore
+    private String usagePeriod;
 }

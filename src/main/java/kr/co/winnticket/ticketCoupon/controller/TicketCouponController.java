@@ -111,7 +111,7 @@ public class TicketCouponController {
             @PathVariable UUID orderItemId
     ) {
 
-        String couponNumber = service.issueCoupon(orderItemId);
+        String couponNumber = service.issueCoupon(orderItemId, null, null);
 
         return ResponseEntity.ok(ApiResponse.success("쿠폰 발급 성공", couponNumber)
         );
