@@ -579,9 +579,8 @@
     <select id="selectPrePurchasedCouponIds" resultType="java.util.UUID">
         SELECT oic.ticket_coupon_id
         FROM order_item_coupons oic
-                 JOIN ticket_coupons tc ON tc.id = oic.ticket_coupon_id
-        WHERE oic.order_id = #{orderId}
-          AND tc.status = 'SOLD'
+                 JOIN order_items oi ON oi.id = oic.order_item_id
+        WHERE oi.order_id = #{orderId}
     </select>
 
     <!--환불전용 kcp 부분취소-->
