@@ -301,9 +301,7 @@
             <if test="model.categoryId != null">
                 CATEGORY_ID = #{model.categoryId},
             </if>
-            <if test="model.partnerId != null">
                 PARTNER_ID = #{model.partnerId},
-            </if>
             <if test="model.price != null">
                 PRICE = #{model.price},
             </if>
@@ -319,12 +317,8 @@
             <if test="model.imageUrl != null">
                 IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             </if>
-            <if test="model.regionCode != null and model.regionCode != ''">
                 REGION_CODE = #{model.regionCode},
-            </if>
-            <if test="model.ticketType != null and model.ticketType != ''">
                 TICKET_TYPE = #{model.ticketType},
-            </if>
             <if test="model.prePurchased != null">
                 PRE_PURCHASED = #{model.prePurchased},
             </if>
