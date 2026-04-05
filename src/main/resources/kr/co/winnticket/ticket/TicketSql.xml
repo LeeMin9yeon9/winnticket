@@ -13,6 +13,7 @@
           And oi.partner_id = '85f50a52-7096-470e-95f5-a8e9c1cd6589'
           AND ot.partner_order_code = #{orderSales}
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
     </update>
 
     <!-- 스파비스 쿠폰조회 -->
@@ -41,6 +42,7 @@
           AND oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
     </update>
 
     <!-- 플레이스토리 주문조회 -->
@@ -51,6 +53,7 @@
                  JOIN order_tickets ot ON ot.order_item_id = oi.id
         WHERE oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
           AND o.created_at >= NOW() - INTERVAL '1 day'
     </select>
 
@@ -65,6 +68,7 @@
           AND oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
     </update>
 
     <!-- 웅진 주문조회 -->
@@ -75,6 +79,7 @@
                  JOIN order_tickets ot ON ot.order_item_id = oi.id
         WHERE oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
           AND o.created_at >= NOW() - INTERVAL '1 day'
     </select>
 
@@ -89,6 +94,7 @@
           AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
+          And ot.status = 'ISSUED'
     </update>
 
     <!-- 스마트인피니 주문조회 -->
