@@ -198,8 +198,8 @@
             a.quantity,
             a.unit_price,
             a.total_price,
-            a.is_reservation,
-            a.usage_period
+            c.is_reservation,
+            c.usage_period
         FROM
             order_items a
         JOIN orders b
