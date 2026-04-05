@@ -80,14 +80,14 @@
             ]]>
         </if>
 
-        <if test="status != null and status != '' and status != 'ALL'">
+        <if test="status != null and status != '' and !status.equals('ALL')">
             <choose>
-                <when test="status == 'USED'">
+                <when test="status.equals('USED')">
                     AND t.ticket_used = true
                     and t.status = 'USED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                 </when>
-                <when test="status == 'UNUSED'">
+                <when test="status.equals('UNUSED')">
                 <![CDATA[
                     AND t.ticket_used = false
                     and t.status = 'ISSUED'
@@ -96,11 +96,11 @@
                     and (t.valid_to Is null Or t.valid_to >= CURRENT_DATE)
                 ]]>
                 </when>
-                <when test="status == 'CANCELED'">
+                <when test="status.equals('CANCELED')">
                     AND o.status IN ('CANCELED', 'REFUNDED')
                     and t.status = 'CANCELLED'
                 </when>
-                <when test="status == 'EXPIRED'">
+                <when test="status.equals('EXPIRED')">
                     AND t.ticket_used = false
                     and t.status = 'ISSUED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
@@ -149,14 +149,14 @@
             ]]>
         </if>
 
-        <if test="status != null and status != '' and status != 'ALL'">
+        <if test="status != null and status != '' and !status.equals('ALL')">
             <choose>
-                <when test="status == 'USED'">
+                <when test="status.equals('USED')">
                     AND t.ticket_used = true
                     and t.status = 'USED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                 </when>
-                <when test="status == 'UNUSED'">
+                <when test="status.equals('UNUSED')">
                     <![CDATA[
                     AND t.ticket_used = false
                     and t.status = 'ISSUED'
@@ -165,11 +165,11 @@
                     and (t.valid_to Is null Or t.valid_to >= CURRENT_DATE)
                 ]]>
                 </when>
-                <when test="status == 'CANCELED'">
+                <when test="status.equals('CANCELED')">
                     AND o.status IN ('CANCELED', 'REFUNDED')
                     and t.status = 'CANCELLED'
                 </when>
-                <when test="status == 'EXPIRED'">
+                <when test="status.equals('EXPIRED')">
                     AND t.ticket_used = false
                     and t.status = 'ISSUED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
