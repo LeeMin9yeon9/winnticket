@@ -2,6 +2,7 @@ package kr.co.winnticket.order.admin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import kr.co.winnticket.common.enums.TicketCouponStatus;
 import lombok.Data;
 import lombok.ToString;
 
@@ -27,6 +28,9 @@ public class OrderTicketDetailGetResDto {
 
     @Schema(description = "사용일시")
     private LocalDateTime ticketUsedDate;
+
+    @Schema(description = "쿠폰상태")
+    private String status;
 
     @Schema(description = "포인트 금액")
     private Integer pointAmount;

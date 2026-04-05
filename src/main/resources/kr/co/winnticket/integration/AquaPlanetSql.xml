@@ -96,16 +96,19 @@
         UPDATE order_tickets
         SET
             ticket_used = true,
-            ticket_used_date = TO_TIMESTAMP(#{usedDate}, 'YYYYMMDDHH24MISS')
+            ticket_used_date = TO_TIMESTAMP(#{usedDate}, 'YYYYMMDDHH24MISS'),
+            status = 'USED'
         WHERE partner_order_code = #{reprCponIndictNo}
           AND ticket_used = false
+          And status = 'ISSUED'
     </update>
 
     <update id="updateAquaPlanetTicketUnused">
         UPDATE order_tickets
         SET
             ticket_used = false,
-            ticket_used_date = NULL
+            ticket_used_date = NULL,
+            status = 'CANCELLED'
         WHERE partner_order_code = #{reprCponIndictNo}
           AND ticket_used = true
     </update>

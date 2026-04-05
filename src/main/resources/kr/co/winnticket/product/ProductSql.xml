@@ -145,8 +145,8 @@
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
-            a.PARTNER_SUB_CODE,  -- 파트너별도코드
-            a.DISPLAY_ORDER  -- 표시순서
+            a.DISPLAY_ORDER,  -- 표시순서
+            a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -165,6 +165,7 @@
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
+            a.DISPLAY_ORDER,  -- 정렬순서
             a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
@@ -303,9 +304,7 @@
             <if test="model.categoryId != null">
                 CATEGORY_ID = #{model.categoryId},
             </if>
-            <if test="model.partnerId != null">
                 PARTNER_ID = #{model.partnerId},
-            </if>
             <if test="model.price != null">
                 PRICE = #{model.price},
             </if>
@@ -321,12 +320,8 @@
             <if test="model.imageUrl != null">
                 IMAGE_URL = #{model.imageUrl, jdbcType=OTHER, typeHandler=kr.co.winnticket.common.typehandler.JsonListTypeHandler},
             </if>
-            <if test="model.regionCode != null and model.regionCode != ''">
                 REGION_CODE = #{model.regionCode},
-            </if>
-            <if test="model.ticketType != null and model.ticketType != ''">
                 TICKET_TYPE = #{model.ticketType},
-            </if>
             <if test="model.prePurchased != null">
                 PRE_PURCHASED = #{model.prePurchased},
             </if>
@@ -348,18 +343,10 @@
     <update id="updateProductShipping">
         Update PRODUCTS
         <set>
-            <if test="model.shippingInfo != null and model.shippingInfo != ''">
-                SHIPPING_INFO = #{model.shippingInfo},
-            </if>
-            <if test="model.warrantyInfo != null and model.warrantyInfo != ''">
-                WARRANTY_INFO = #{model.warrantyInfo},
-            </if>
-            <if test="model.returnInfo != null and model.returnInfo != ''">
-                RETURN_INFO = #{model.returnInfo},
-            </if>
-            <if test="model.usagePeriod != null and model.usagePeriod != ''">
-                USAGE_PERIOD = #{model.usagePeriod},
-            </if>
+            SHIPPING_INFO = #{model.shippingInfo},
+            WARRANTY_INFO = #{model.warrantyInfo},
+            RETURN_INFO = #{model.returnInfo},
+            USAGE_PERIOD = #{model.usagePeriod},
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
@@ -529,6 +516,9 @@
             </if>
             <if test="model.basePrice != null">
                 BASE_PRICE = #{model.basePrice},
+            </if>
+            <if test="model.displayOrder != null">
+                DISPLAY_ORDER = #{model.displayOrder},
             </if>
             PARTNER_SUB_CODE = #{model.partnerSubCode},
             UPDATED_AT = CURRENT_TIMESTAMP

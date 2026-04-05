@@ -74,13 +74,14 @@ public class FieldOrderController {
     }
 
     // 현장관리자 티켓 조회
-    @GetMapping("/tickets/{orderId}")
+    @GetMapping("/tickets/{orderId}/{ticketId}")
     @Operation(summary = "현장관리자 티켓 조회", description = "현장관리자가 주문의 티켓을 조회합니다.")
     public ResponseEntity<ApiResponse<Object>> getFieldOrderTickets(
-            @Parameter(description = "주문_ID") @PathVariable UUID orderId
+            @Parameter(description = "주문_ID") @PathVariable UUID orderId,
+            @Parameter(description = "티켓_ID") @PathVariable UUID ticketId
     ) throws Exception {
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", orderService.selectOrderAdminTicketList(orderId))
+                ApiResponse.success("조회 성공", orderService.selectOrderAdminTicketList(orderId, ticketId))
         );
     }
 

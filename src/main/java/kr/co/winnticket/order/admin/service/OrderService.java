@@ -18,7 +18,6 @@ import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
-import kr.co.winnticket.integration.spavis.service.SpavisService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
@@ -49,24 +48,12 @@ public class OrderService {
     // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
     private final PlaystoryService playstoryService;
-    private final MairService mairService;
     private final CoreWorksService coreWorksService;
     private final SmartInfiniService smartInfiniService;
     private final PlusNService plusNService;
     private final AquaPlanetService aquaplanetService;
-    private final SpavisService spavisService;
     private final KcpService kcpService;
     private final LsCompanyService lsCompanyService;
-
-    private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
-    private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
-    private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
-    private static final String COREWORKS = "1d5228eb-6d03-4e12-b370-b2ceb19a77cc";
-    private static final String PLUSN = "85f50a52-7096-470e-95f5-a8e9c1cd6589";
-    private static final String SMARTINFINI = "eec583a7-ce38-4cd0-927e-c35b5391a66d";
-    private static final String SPAVIS = "0f46cad1-6fb4-4514-938f-d309850f0668";
-    private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
-    private static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
 
     @Transactional(readOnly = true)
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -94,9 +81,9 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId) {
+    public OrderAdminTicketCheckGetResDto selectOrderAdminTicketList(UUID auId, UUID ticketId) {
         OrderAdminTicketCheckGetResDto model = mapper.selectOrderTicketHeader(auId);
-        List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId);
+        List<OrderTicketDetailGetResDto> tickets = mapper.selectOrderTickets(auId, ticketId);
 
         model.setTickets(tickets);
 
@@ -159,7 +146,7 @@ public class OrderService {
             );
 
             LocalDate validFrom = validity.get("from");
-            LocalDate validTo   = validity.get("to");
+            LocalDate validTo = validity.get("to");
 
             for (int i = 0; i < item.getQuantity(); i++) {
                 String ticketNumber;
@@ -238,6 +225,12 @@ public class OrderService {
 
         Map<String, LocalDate> result = new HashMap<>();
 
+        if (text == null || text.isBlank()) {
+            result.put("from", null);
+            result.put("to", null);
+            return result;
+        }
+
         // 숫자만 (ex: "60")
         if (text.matches("^\\d+$")) {
             int days = Integer.parseInt(text);
@@ -275,11 +268,22 @@ public class OrderService {
     // 티켓 사용 처리
     @Transactional
     public void useTicket(UUID orderId, UUID ticketId) {
+        LocalDate today = LocalDate.now();
+        OrderTicketPeriod orderTicketPeriod= mapper.selectTicketUsePeriod(ticketId);
+
+        if (orderTicketPeriod != null && today.isBefore(orderTicketPeriod.getValidFrom())) {
+            throw new RuntimeException("사용 시작 전 티켓입니다.");
+        }
+
+        if (orderTicketPeriod != null && today.isAfter(orderTicketPeriod.getValidTo())) {
+            throw new RuntimeException("만료된 티켓입니다.");
+        }
+
         // 티켓 사용 처리
         int updated = mapper.updateTicketUsed(ticketId);
 
         if (updated == 0) {
-            throw new IllegalStateException("이미 사용된 티켓이거나 존재하지 않습니다.");
+            throw new IllegalStateException("이미 사용/취소된 티켓이거나 존재하지 않습니다.");
         }
 
         // 주문 내 미사용 티켓 존재 여부 확인
@@ -380,15 +384,7 @@ public class OrderService {
             }
         }
 
-        if (split.isHasMair()) {
-            try {
-                log.info("[엠에어 취소 시작]");
-                mairService.cancelByOrder(order.getOrderNumber());
-            } catch (Exception e) {
-                throw new IllegalStateException("엠에어 주문 취소 실패", e);
-            }
-        }
-
+        /*
         if (split.isHasCoreworks()) {
             try {
                 log.info("[코어웍스 취소 시작]");
@@ -397,6 +393,8 @@ public class OrderService {
                 throw new IllegalStateException("코어웍스 주문 취소 실패", e);
             }
         }
+
+         */
 
         /*
          * =========================
@@ -520,7 +518,7 @@ public class OrderService {
 
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
 
-        mapper.deleteOrderTicketsByOrderId(orderId);
+        mapper.cancelTicketsByOrderId(orderId);
 
         log.info("[ORDER_TICKETS DELETE] 완료 orderId={}", orderId);
 

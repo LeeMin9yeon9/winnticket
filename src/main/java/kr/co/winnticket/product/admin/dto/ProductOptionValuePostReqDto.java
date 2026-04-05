@@ -23,9 +23,9 @@ public class ProductOptionValuePostReqDto {
     @Schema(description = "원가")
     private int basePrice;
 
-    @Schema(description = "파트너별도코드")
-    private String partnerSubCode;
-
     @Schema(description = "표시순서")
     private Integer displayOrder;
+
+    @Schema(description = "파트너별도코드")
+    private String partnerSubCode;
 }

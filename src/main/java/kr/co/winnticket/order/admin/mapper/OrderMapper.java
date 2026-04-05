@@ -75,7 +75,8 @@ public interface OrderMapper {
 
     // 주문에 속한 티켓 목록 조회
     List<OrderTicketDetailGetResDto> selectOrderTickets(
-            @Param("id") UUID auId
+            @Param("id") UUID auId,
+            @Param("ticketId") UUID ticketId
     );
 
     // 티켓 사용 처리
@@ -152,8 +153,21 @@ public interface OrderMapper {
     // 쿠폰 조회
     List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
 
-    // 주문취소 티켓 조회
-    int deleteOrderTicketsByOrderId(@Param("orderId") UUID orderId);
+    // 티켓 유효기간 조회
+    OrderTicketPeriod selectTicketUsePeriod(@Param("ticketId") UUID ticketId);
 
+    // 선사입 쿠폰 주문 취소 티켓 조ㅓ회
+    int cancelTicketsByOrderId(@Param("orderId") UUID orderId);
+
+    // 주문 취소 시 티켓 찾기
+    UUID findCancelledTicket(@Param("ticketNumber") String ticketNumber);
+
+    // 주문 취소 후 선사입 재사용 사용 추가
+    int reuseTicket(
+            @Param("id") UUID id,
+            @Param("orderItemId") UUID orderItemId,
+            @Param("validFrom") LocalDate validFrom,
+            @Param("validTo") LocalDate validTo
+    );
 
 }

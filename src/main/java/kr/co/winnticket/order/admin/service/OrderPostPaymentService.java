@@ -44,7 +44,6 @@ public class OrderPostPaymentService {
     private final BizMsgService bizMsgService;
     private final SmsTemplateFinder smsTemplateFinder;
     private final TemplateRenderService templateRenderService;
-    private final BenepiaOrderService benepiaOrderService;
 
     // 파트너 서비스
     private final WoongjinService woongjinService;
@@ -54,7 +53,6 @@ public class OrderPostPaymentService {
     private final SmartInfiniService smartInfiniService;
     private final PlusNService plusNService;
     private final AquaPlanetService aquaplanetService;
-    private final SpavisService spavisService;
     private final LsCompanyService lsCompanyService;
 
     private static final String QR_URL = "https://www.winnticket.store/qr?orderNumber=";
@@ -110,10 +108,12 @@ public class OrderPostPaymentService {
             log.info("[Mair 발권]");
             mairService.issueTickets(order.getOrderNumber());
         }
+        /*
         if (split.isHasCoreworks()) {
             log.info("[Coreworks 발권]");
             coreWorksService.order(orderId);
         }
+        */
         if (split.isHasSmartInfini()) {
             log.info("[SmartInfini 발권]");
             smartInfiniService.order(orderId);
@@ -271,7 +271,7 @@ public class OrderPostPaymentService {
                             || (!WOOGJIN.equals(partnerId)
                             && !PLAYSTORY.equals(partnerId)
                             && !MAIR.equals(partnerId)
-                            && !COREWORKS.equals(partnerId)
+                            //&& !COREWORKS.equals(partnerId)
                             && !PLUSN.equals(partnerId)
                             && !LSCOMPANY.equals(partnerId));
                 })
