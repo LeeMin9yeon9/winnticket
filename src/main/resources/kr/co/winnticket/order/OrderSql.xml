@@ -348,6 +348,7 @@
             status = 'USED'
         WHERE id = #{ticketId}
           AND ticket_used = false
+          And status = 'ISSUED'
     </update>
 
     <!--
@@ -607,13 +608,14 @@
           AND oi.order_id = #{orderId}
     </update>
 
-    <!--발급된 티켓 발행티켓 테이블에서 삭제-->
-    <delete id="deleteOrderTicketsByOrderId">
-        DELETE FROM order_tickets
-        WHERE order_item_id IN (
-            SELECT id FROM order_items WHERE order_id = #{orderId}
-        )
-    </delete>
+    <!--티켓 유효기간 조회-->
+    <select id="selectTicketUsePeriod" resultType="kr.co.winnticket.order.admin.dto.OrderTicketPeriod">
+        SELECT
+            valid_from,
+            valid_to
+        FROM order_tickets
+        WHERE id = #{ticketId}
+    </select>
 
     <!--환불전용 kcp 부분취소-->
 <!--    <update id="updateOrderCancelPartial">-->
