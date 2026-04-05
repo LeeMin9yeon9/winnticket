@@ -145,12 +145,13 @@
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
-            a.DISPLAY_ORDER,  -- 정렬순서
+            a.DISPLAY_ORDER,  -- 표시순서
             a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
         And a.OPTION_ID = #{id}
+        Order By a.DISPLAY_ORDER ASC
     </select>
 
     <!--
@@ -491,7 +492,7 @@
             #{model.additionalPrice},
             #{model.basePrice},
             #{model.partnerSubCode},
-            #{model.displayOrder}
+            COALESCE(#{model.displayOrder}, 0)
         )
     </insert>
 
