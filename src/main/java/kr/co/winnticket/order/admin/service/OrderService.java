@@ -147,12 +147,21 @@ public class OrderService {
             Boolean prePurchased = orderPostPaymentService.selectPrePurchased(productId);
 
             List<String> ticketNumbers = new ArrayList<>();
+
+            Map<String, LocalDate> validity = parse(
+                    item.getUsagePeriod(),
+                    order.getOrderedAt().toLocalDate()
+            );
+
+            LocalDate validFrom = validity.get("from");
+            LocalDate validTo   = validity.get("to");
+
             for (int i = 0; i < item.getQuantity(); i++) {
                 String ticketNumber;
                 if (Boolean.TRUE.equals(prePurchased)) {
                     log.info("[선사입]");
                     try {
-                        ticketNumber = orderPostPaymentService.issueCoupon(item.getId());
+                        ticketNumber = orderPostPaymentService.issueCoupon(item.getId(), validFrom, validTo);
                     } catch (Exception e) {
                         log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
                         throw new RuntimeException("쿠폰 재고 없음");
@@ -160,7 +169,7 @@ public class OrderService {
                 } else {
                     log.info("[선사입 아님]");
                     ticketNumber = orderPostPaymentService.generateTicketNumber();
-                    mapper.insertOrderTicket(item.getId(), ticketNumber);
+                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
                 }
                 ticketNumbers.add(ticketNumber);
             }
@@ -215,6 +224,47 @@ public class OrderService {
                 }
             }
         });
+    }
+
+    // 티켓 유효기간 추출
+    public Map<String, LocalDate> parse(String text, LocalDate orderDate) {
+
+        text = text.trim();
+
+        Map<String, LocalDate> result = new HashMap<>();
+
+        // 숫자만 (ex: "60")
+        if (text.matches("^\\d+$")) {
+            int days = Integer.parseInt(text);
+
+            result.put("from", orderDate);
+            result.put("to", orderDate.plusDays(days));
+            return result;
+        }
+
+        // 사용기한
+        if (text.contains("사용기한")) {
+            String value = text.replace("사용기한", "").trim();
+            String[] arr = value.split("~");
+
+            LocalDate from = LocalDate.parse(arr[0].trim());
+            LocalDate to   = LocalDate.parse(arr[1].trim());
+
+            result.put("from", from);
+            result.put("to", to);
+            return result;
+        }
+
+        // 구매로부터
+        if (text.contains("구매로부터")) {
+            int days = Integer.parseInt(text.replaceAll("[^0-9]", ""));
+
+            result.put("from", orderDate);
+            result.put("to", orderDate.plusDays(days));
+            return result;
+        }
+
+        throw new IllegalArgumentException("유효기간 파싱 실패: " + text);
     }
 
     // 티켓 사용 처리

@@ -54,7 +54,9 @@ public interface OrderMapper {
     void insertOrderTicket(
             //@Param("id") UUID orderId,
             @Param("orderItemId") UUID orderItemId,
-            @Param("ticketNumber") String ticketNumber
+            @Param("ticketNumber") String ticketNumber,
+            @Param("validFrom") LocalDate validFrom,
+            @Param("validTo") LocalDate validTo
     );
 
     // 주문 + 티켓 헤더 조회

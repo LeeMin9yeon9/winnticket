@@ -230,7 +230,7 @@ public class TicketCouponService {
 
     // 쿠폰 주문 발급
     @Transactional
-    public String issueCoupon(UUID orderItemId) {
+    public String issueCoupon(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
 
         log.info("[쿠폰발급 시작] orderItemId={}", orderItemId);
 
@@ -257,7 +257,9 @@ public class TicketCouponService {
 
         orderMapper.insertOrderTicket(
                 orderItemId,
-                coupon.getCouponNumber()
+                coupon.getCouponNumber(),
+                validFrom,
+                validTo
         );
 
         log.info("[쿠폰발급] orderId={}, orderItemId={}, productId={}, optionValueId={}, coupon={}",

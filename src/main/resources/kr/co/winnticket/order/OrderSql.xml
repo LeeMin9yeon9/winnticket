@@ -197,7 +197,9 @@
             STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
             a.quantity,
             a.unit_price,
-            a.total_price
+            a.total_price,
+            a.is_reservation,
+            a.usage_period
         FROM
             order_items a
         JOIN orders b
@@ -314,13 +316,17 @@
         (
             order_item_id,
             ticket_number,
-            ticket_used
+            ticket_used,
+            valid_from,
+            valid_to
         )
         VALUES
         (
              #{orderItemId},
              #{ticketNumber},
-             false
+             false,
+             #{validFrom},
+             #{validTo}
         )
     </insert>
 
