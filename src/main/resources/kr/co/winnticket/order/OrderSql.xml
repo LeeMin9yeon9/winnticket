@@ -272,6 +272,7 @@
             o.customer_phone  AS customerPhone
         FROM orders o
         WHERE o.id = #{id}
+
     </select>
 
     <!--
@@ -289,6 +290,7 @@
         JOIN order_items oi
         ON oi.id = t.order_item_id
         WHERE oi.order_id = #{id}
+        and t.id = #{ticketId}
     </select>
 
     <!--

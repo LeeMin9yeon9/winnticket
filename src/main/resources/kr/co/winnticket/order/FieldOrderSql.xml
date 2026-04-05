@@ -17,7 +17,7 @@
             o.ordered_at            AS orderedAt,
             oi.unit_price           AS unitPrice,
             CAST(oi.unit_price * (100 - COALESCE(p.commission_rate, 0)) / 100.0 AS INTEGER) AS supplyPrice,
-            oic.coupon_number       AS couponNumber,
+            t.ticket_number       AS couponNumber,
             TO_CHAR(t.valid_from, 'YYYY-MM-DD') AS validFrom,
             TO_CHAR(t.valid_to, 'YYYY-MM-DD') AS validTo,
             p.name                  AS partnerName,

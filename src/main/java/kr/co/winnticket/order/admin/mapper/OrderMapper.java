@@ -66,7 +66,8 @@ public interface OrderMapper {
 
     // 주문에 속한 티켓 목록 조회
     List<OrderTicketDetailGetResDto> selectOrderTickets(
-            @Param("id") UUID auId
+            @Param("id") UUID auId,
+            @Param("id") UUID ticket_id
     );
 
     // 티켓 사용 처리
