@@ -617,6 +617,26 @@
         WHERE id = #{ticketId}
     </select>
 
+    <select id="findCancelledTicket" resultType="java.util.UUID">
+        SELECT id
+        FROM order_tickets
+        WHERE ticket_number = #{ticketNumber}
+          AND status = 'CANCELLED'
+            LIMIT 1
+    </select>
+    <!--취소된 선사입 티켓 재사용-->
+    <update id="reuseTicket">
+        UPDATE order_tickets
+        SET
+            order_item_id = #{orderItemId},
+            ticket_used = false,
+            ticket_used_date = NULL,
+            status = 'ISSUED',
+            valid_from = #{validFrom},
+            valid_to = #{validTo}
+        WHERE id = #{id}
+    </update>
+
     <!--환불전용 kcp 부분취소-->
 <!--    <update id="updateOrderCancelPartial">-->
 <!--        UPDATE orders-->
