@@ -16,51 +16,44 @@
 
             (p.image_url ->> 0) AS imageUrl,
 
-            (p.price + COALESCE(pov.additional_price, 0)) AS price,
+            pov.additional_price AS price,
 
-            CASE
-                WHEN pov.id IS NOT NULL THEN pov.stock
-                ELSE p.stock
-                END AS stock,
+            pov.stock AS stock,
 
             COALESCE(SUM(oi.quantity), 0) AS salesCount,
 
             COALESCE(
-                    SUM(oi.quantity * (p.price + COALESCE(pov.additional_price, 0))),
+                    SUM(oi.quantity * COALESCE(pov.additional_price, 0)),
                     0
             ) AS totalSalesAmount,
 
             p.sales_status AS salesStatus
 
-        FROM products p
+        FROM product_option_values pov
+
+                 JOIN product_options po
+                      ON po.id = pov.option_id
+                          AND po.visible = true
+
+                 JOIN products p
+                      ON p.id = po.product_id
+                          AND p.visible = true
 
                  LEFT JOIN menu_categories mc
                            ON mc.id = p.category_id
 
-                 LEFT JOIN product_options po
-                           ON po.product_id = p.id
-                               AND po.visible = true
-
-                 LEFT JOIN product_option_values pov
-                           ON pov.option_id = po.id
-                               AND pov.visible = true
+                 LEFT JOIN order_item_options oio
+                           ON oio.option_value_id = pov.id
 
                  LEFT JOIN order_items oi
-                           ON oi.product_id = p.id
-
-                 LEFT JOIN order_item_options oio
-                           ON oio.order_item_id = oi.id
-                               AND oio.option_value_id = pov.id
+                           ON oi.id = oio.order_item_id
 
         WHERE p.partner_id = #{partnerId}
-          AND p.visible = true
 
         GROUP BY
             p.id,
             p.name,
-            p.price,
             p.sales_status,
-            p.stock,
             p.image_url,
             pov.id,
             pov.value,
