@@ -143,8 +143,12 @@ public interface OrderMapper {
     // 쿠폰 조회
     List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
 
+    // 티켓 유효기간 조회
+    OrderTicketPeriod selectTicketUsePeriod(@Param("ticketId") UUID ticketId);
+
     // 주문취소 티켓 조회
     int deleteOrderTicketsByOrderId(@Param("orderId") UUID orderId);
 
-
+    // 선사입 쿠폰 주문 취소 티켓 조ㅓ회
+    int cancelTicketsByOrderId(@Param("orderId") UUID orderId);
 }

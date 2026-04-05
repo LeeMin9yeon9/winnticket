@@ -84,6 +84,7 @@
         WHERE order_item_id = #{orderItemId}
           AND partner_order_code IS NULL
           AND (ticket_used IS NULL OR ticket_used = false)
+          And status = 'ISSUED'
         ORDER BY created_at
 
     </select>
