@@ -272,7 +272,6 @@
             o.customer_phone  AS customerPhone
         FROM orders o
         WHERE o.id = #{id}
-
     </select>
 
     <!--
