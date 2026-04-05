@@ -340,18 +340,10 @@
     <update id="updateProductShipping">
         Update PRODUCTS
         <set>
-            <if test="model.shippingInfo != null and model.shippingInfo != ''">
-                SHIPPING_INFO = #{model.shippingInfo},
-            </if>
-            <if test="model.warrantyInfo != null and model.warrantyInfo != ''">
-                WARRANTY_INFO = #{model.warrantyInfo},
-            </if>
-            <if test="model.returnInfo != null and model.returnInfo != ''">
-                RETURN_INFO = #{model.returnInfo},
-            </if>
-            <if test="model.usagePeriod != null and model.usagePeriod != ''">
-                USAGE_PERIOD = #{model.usagePeriod},
-            </if>
+            SHIPPING_INFO = #{model.shippingInfo},
+            WARRANTY_INFO = #{model.warrantyInfo},
+            RETURN_INFO = #{model.returnInfo},
+            USAGE_PERIOD = #{model.usagePeriod},
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
