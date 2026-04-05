@@ -154,7 +154,7 @@ public class OrderService {
             );
 
             LocalDate validFrom = validity.get("from");
-            LocalDate validTo   = validity.get("to");
+            LocalDate validTo = validity.get("to");
 
             for (int i = 0; i < item.getQuantity(); i++) {
                 String ticketNumber;
@@ -233,6 +233,12 @@ public class OrderService {
 
         Map<String, LocalDate> result = new HashMap<>();
 
+        if (text == null || text.isBlank()) {
+            result.put("from", null);
+            result.put("to", null);
+            return result;
+        }
+
         // 숫자만 (ex: "60")
         if (text.matches("^\\d+$")) {
             int days = Integer.parseInt(text);
@@ -270,6 +276,16 @@ public class OrderService {
     // 티켓 사용 처리
     @Transactional
     public void useTicket(UUID orderId, UUID ticketId) {
+        LocalDate today = LocalDate.now();
+        OrderTicketPeriod orderTicketPeriod= mapper.selectTicketUsePeriod(ticketId);
+        if (orderTicketPeriod != null && today.isBefore(orderTicketPeriod.getValidFrom())) {
+            throw new RuntimeException("사용 시작 전");
+        }
+
+        if (orderTicketPeriod != null && today.isAfter(orderTicketPeriod.getValidTo())) {
+            throw new RuntimeException("만료된 티켓");
+        }
+
         // 티켓 사용 처리
         int updated = mapper.updateTicketUsed(ticketId);
 

@@ -143,5 +143,6 @@ public interface OrderMapper {
     // 쿠폰 조회
     List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
 
-
+    // 티켓 유효기간 조회
+    OrderTicketPeriod selectTicketUsePeriod(@Param("ticketId") UUID ticketId);
 }
