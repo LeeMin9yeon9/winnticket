@@ -97,6 +97,7 @@
             ticket_used_date = NOW()
         WHERE partner_order_number = #{trno}
           AND ticket_used = false
+          And status = 'ISSUED'
     </update>
 
 <!--    &lt;!&ndash;스케줄러&ndash;&gt;-->
@@ -133,6 +134,7 @@
           AND ot.partner_order_number IS NOT NULL   -- TRNO 있음
           AND ot.partner_order_code IS NOT NULL     -- 발급됨
           AND ot.ticket_used = false                -- 미사용만
+          And status = 'ISSUED'
     </select>
 
 
