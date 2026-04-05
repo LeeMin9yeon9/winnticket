@@ -81,6 +81,11 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId) {
+        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId);
+    }
+
+    @Transactional(readOnly = true)
     public OrderAdminDetailGetResDto selectOrderAdminDetail(UUID auId) {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));
