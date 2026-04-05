@@ -219,7 +219,9 @@
             d.id,
             a.quantity,
             a.unit_price,
-            a.total_price
+            a.total_price,
+            c.is_reservation,
+            c.usage_period
     </select>
 
     <!--
