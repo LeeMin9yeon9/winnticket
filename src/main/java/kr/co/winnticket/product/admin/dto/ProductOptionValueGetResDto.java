@@ -30,6 +30,9 @@ public class ProductOptionValueGetResDto {
     @Schema(description = "원가")
     private int basePrice;
 
+    @Schema(description = "정렬순서")
+    private int displayOrder;
+
     @Schema(description = "파트너별도코드")
     private String partnerSubCode;
 }
