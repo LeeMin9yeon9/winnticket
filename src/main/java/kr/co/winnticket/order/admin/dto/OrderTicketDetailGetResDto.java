@@ -30,7 +30,7 @@ public class OrderTicketDetailGetResDto {
     private LocalDateTime ticketUsedDate;
 
     @Schema(description = "쿠폰상태")
-    private TicketCouponStatus status;
+    private String status;
 
     @Schema(description = "포인트 금액")
     private Integer pointAmount;
