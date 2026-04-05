@@ -138,5 +138,8 @@ public interface OrderMapper {
     // 재고 원복
     void increaseStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") Integer quantity);
 
+    // 쿠폰 조회
+    List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
+
 
 }
