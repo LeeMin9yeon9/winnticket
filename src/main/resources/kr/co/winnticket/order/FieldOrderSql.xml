@@ -49,7 +49,7 @@
         LEFT JOIN order_item_coupons oic
             ON oic.order_item_id = oi.id
         LEFT JOIN ticket_coupons tc
-            ON tc.id = oic.coupon_id
+            ON tc.id = oic.ticket_coupon_id
         LEFT JOIN ticket_coupon_groups tcg
             ON tcg.id = tc.group_id
         WHERE 1 = 1
