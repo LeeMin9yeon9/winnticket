@@ -278,19 +278,20 @@ public class OrderService {
     public void useTicket(UUID orderId, UUID ticketId) {
         LocalDate today = LocalDate.now();
         OrderTicketPeriod orderTicketPeriod= mapper.selectTicketUsePeriod(ticketId);
+
         if (orderTicketPeriod != null && today.isBefore(orderTicketPeriod.getValidFrom())) {
-            throw new RuntimeException("사용 시작 전");
+            throw new RuntimeException("사용 시작 전 티켓입니다.");
         }
 
         if (orderTicketPeriod != null && today.isAfter(orderTicketPeriod.getValidTo())) {
-            throw new RuntimeException("만료된 티켓");
+            throw new RuntimeException("만료된 티켓입니다.");
         }
 
         // 티켓 사용 처리
         int updated = mapper.updateTicketUsed(ticketId);
 
         if (updated == 0) {
-            throw new IllegalStateException("이미 사용된 티켓이거나 존재하지 않습니다.");
+            throw new IllegalStateException("이미 사용/취소된 티켓이거나 존재하지 않습니다.");
         }
 
         // 주문 내 미사용 티켓 존재 여부 확인
@@ -532,7 +533,6 @@ public class OrderService {
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
 
         mapper.cancelTicketsByOrderId(orderId);
-        mapper.deleteOrderTicketsByOrderId(orderId);
 
         log.info("[ORDER_TICKETS DELETE] 완료 orderId={}", orderId);
 
