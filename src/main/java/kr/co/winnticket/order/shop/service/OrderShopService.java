@@ -622,6 +622,11 @@ public class OrderShopService {
             // 서울랜드
             else if ("eec583a7-ce38-4cd0-927e-c35b5391a66d".equals(partnerId)) {
                 ticket.setQrValue(ticket.getPartnerOrderCode());
+            }
+
+            // 아쿠아플라넷
+            else if ("d16d7f6f-e432-40ee-9f57-e4aaa2c65751".equals(partnerId)) {
+                ticket.setQrValue(ticket.getPartnerOrderCode());
             } else {
                 throw new IllegalArgumentException("QR 쿠폰이 없는 상품입니다.");
             }
