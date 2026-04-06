@@ -532,11 +532,12 @@ public class OrderService {
          * 롤백 시 "취소완료" 문자가 잘못 발송되는 것을 방지
          */
         final OrderAdminDetailGetResDto orderForSms = order;
+        final List<OrderProductListGetResDto> itemsForSms = new ArrayList<>(items);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
-                    orderPostPaymentService.sendOrderCancelledSms(orderForSms);
+                    orderPostPaymentService.sendOrderCancelledSms(orderForSms, itemsForSms);
                 } catch (Exception e) {
                     log.error("[취소 SMS 발송 실패] orderId={}", orderId, e);
                 }

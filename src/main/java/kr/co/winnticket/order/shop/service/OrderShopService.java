@@ -28,6 +28,10 @@ import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
+import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
+import kr.co.winnticket.siteinfo.companyinfo.entity.SiteInfo;
+import kr.co.winnticket.siteinfo.companyinfo.repository.SiteInfoRepository;
+import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
 import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
 import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
@@ -62,6 +66,7 @@ public class OrderShopService {
     private final KcpService kcpService;
     private final OrderService orderService;
     private final TicketCouponMapper ticketCouponMapper;
+    private final SiteInfoService siteInfoService;
     @Transactional(readOnly = true)
     public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(channelId, orderNumber);
@@ -493,10 +498,12 @@ public class OrderShopService {
         Map<String, String> vars = new HashMap<>();
 
         vars.put("주문자명", order.getCustomerName());
+        vars.put("상품명", buildProductLines(items));
         vars.put("주문번호", order.getOrderNumber());
-        vars.put("상품목록", buildProductLines(items));
-        vars.put("총결제금액", String.valueOf(order.getTotalPrice()));
-        vars.put("입금계좌목록", buildAccountLines());
+        vars.put("주문수량", String.valueOf(order.getAllCnt()));
+        vars.put("주문금액", String.valueOf(order.getTotalPrice()));
+        vars.put("입금계좌", buildAccountLines());
+        vars.put("고객센터", selectCallNumber());
 
         // 3. 템플릿 치환
         String message = templateRenderService.render(template.getContent(), vars);
@@ -574,6 +581,15 @@ public class OrderShopService {
         sb.setLength(sb.length() - 1);
 
         return sb.toString();
+    }
+
+    // 고객센터
+    private String selectCallNumber() {
+        SiteInfoResponse siteInfo = siteInfoService.getSiteInfo();
+
+        if (siteInfo == null) return "";
+
+        return siteInfo.getCustomerServiceTel();
     }
 
     @Transactional(readOnly = true)
