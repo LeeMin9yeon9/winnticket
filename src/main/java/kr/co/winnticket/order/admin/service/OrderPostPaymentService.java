@@ -196,7 +196,7 @@ public class OrderPostPaymentService {
                 couponText = String.join("\n", tickets);
             }
 
-            vars.put("티켓번호", couponText);
+            vars.put("티켓링크", couponText);
             vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
             vars.put("주문수량", String.valueOf(item.getQuantity()));
 
