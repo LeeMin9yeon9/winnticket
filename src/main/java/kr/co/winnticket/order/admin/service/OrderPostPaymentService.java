@@ -209,7 +209,9 @@ public class OrderPostPaymentService {
     public void sendOrderCancelledSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items) {
         if (order == null) return;
 
-        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(null, SmsTemplateCode.ORDER_CANCELLED);
+        UUID productId = items.get(0).getProductId();
+
+        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.ORDER_CANCELLED);
         if (template == null || template.getContent() == null) return;
 
         String message = templateRenderService.render(template.getContent(), Map.of(
