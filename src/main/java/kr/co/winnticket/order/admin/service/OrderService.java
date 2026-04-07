@@ -216,7 +216,7 @@ public class OrderService {
     // 티켓 유효기간 추출
     public Map<String, LocalDate> parse(String text, LocalDate orderDate) {
 
-        text = text.trim();
+        text = (text == null) ? "" : text.trim();
 
         Map<String, LocalDate> result = new HashMap<>();
 
