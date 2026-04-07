@@ -25,6 +25,7 @@ public interface OrderShopMapper {
             @Param("customerName") String customerName,
             @Param("customerPhone") String customerPhone,
             @Param("customerEmail") String customerEmail,
+            @Param("companyName") String companyName,
             @Param("memo") String memo,
             @Param("totalPrice") int totalPrice,
             @Param("discountPrice") int discountPrice,

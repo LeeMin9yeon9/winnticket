@@ -156,7 +156,7 @@ aquaplanet:
   wrkr-no: l1711019
   envr-dv-cd: R
 
-# 파트너 연동(LS컴퍼니 아직 개발서버꺼 )
+# 파트너 연동(LS컴퍼니)
 lscompany:
   base-url: "https://unity-prod.lscompany-api.com/Api_v3"
   agent-no: "CH2603241"

@@ -32,6 +32,9 @@ public class OrderCreateReqDto {
     @Schema(description = "주문자 이메일")
     private String customerEmail;
 
+    @Schema(description = "회사명(기관명)")
+    private String companyName;
+
     @Schema(description = "메모")
     private String memo;
 
