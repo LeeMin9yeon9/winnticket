@@ -158,7 +158,7 @@ aquaplanet:
 
 # 파트너 연동(LS컴퍼니 아직 개발서버꺼 )
 lscompany:
-  base-url: "https://unity-dev.lscompany-api.com/Api_v3"
-  agent-no: "CH2603091"
+  base-url: "https://unity-prod.lscompany-api.com/Api_v3"
+  agent-no: "CH2603241"
   token: ${LSCOMPANY_TOKEN}
 
