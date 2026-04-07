@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-//@EnableScheduling
+@EnableScheduling
 //@ComponentScan(basePackages = "kr.co.winnticket")
 public class WinticketApplication {
 
