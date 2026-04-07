@@ -134,7 +134,7 @@
           AND ot.partner_order_number IS NOT NULL   -- TRNO 있음
           AND ot.partner_order_code IS NOT NULL     -- 발급됨
           AND ot.ticket_used = false                -- 미사용만
-          And status = 'ISSUED'
+          And ot.status = 'ISSUED'
     </select>
 
 
