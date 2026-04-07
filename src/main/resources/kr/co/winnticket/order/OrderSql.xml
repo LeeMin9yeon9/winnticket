@@ -219,6 +219,7 @@
             a.customer_name, -- 주문자
             a.customer_phone, -- 주문자 연락처
             a.customer_email,  -- 주문자이메일
+            a.company_name,   -- 회사명
             a.payment_status, -- 결제상태
             a.final_price, -- 결제금액
             a.payment_method, -- 결제수단

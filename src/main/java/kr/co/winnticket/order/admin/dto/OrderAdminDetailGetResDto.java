@@ -46,6 +46,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "주문자이메일")
     private String customerEmail;
 
+    @Schema(description = "회사명(기관명)")
+    private String companyName;
+
     @Schema(description = "결제상태")
     private PaymentStatus paymentStatus;
 
