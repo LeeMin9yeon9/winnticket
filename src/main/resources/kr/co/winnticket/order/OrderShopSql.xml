@@ -22,6 +22,7 @@
             a.customer_name, -- 주문자
             a.customer_phone, -- 주문자 연락처
             a.customer_email,  -- 주문자이메일
+            a.company_name, -- 회사명
             a.payment_status, -- 결제상태
             a.final_price, -- 결제금액
             a.point_amount,  -- 포인트결제금액
@@ -100,6 +101,7 @@
             CUSTOMER_NAME,
             CUSTOMER_PHONE,
             CUSTOMER_EMAIL,
+            COMPANY_NAME,
             MEMO,
             TOTAL_PRICE,
             DISCOUNT_PRICE,
@@ -116,6 +118,7 @@
             #{customerName},
             #{customerPhone},
             #{customerEmail},
+            #{companyName},
             #{memo},
             #{totalPrice},
             #{discountPrice},

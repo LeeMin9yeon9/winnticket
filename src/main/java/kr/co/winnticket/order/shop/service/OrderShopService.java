@@ -28,16 +28,14 @@ import kr.co.winnticket.product.admin.dto.ProductOptionGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductOptionValueGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
-import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
-import kr.co.winnticket.siteinfo.companyinfo.entity.SiteInfo;
-import kr.co.winnticket.siteinfo.companyinfo.repository.SiteInfoRepository;
-import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
-import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
 import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
+import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
+import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
 import kr.co.winnticket.sms.service.BizMsgService;
 import kr.co.winnticket.sms.service.SmsTemplateFinder;
 import kr.co.winnticket.sms.service.TemplateRenderService;
+import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -127,6 +125,7 @@ public class OrderShopService {
                 reqDto.getCustomerName(),
                 reqDto.getCustomerPhone(),
                 reqDto.getCustomerEmail(),
+                reqDto.getCompanyName(),
                 reqDto.getMemo(),
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
@@ -187,9 +186,9 @@ public class OrderShopService {
                     }
 
                     if (!ProductType.STAY.equals(product.getType())) {
-                        log.info("==== dddddd - ProductType={}", product.getType());
+                        log.info("==== 상품타입 - ProductType={}", product.getType());
                         int updated = mapper.updateOptionValueStock(opt.getOptionValueId(), item.getQuantity());
-                        log.info("==== dddddd - updated={}", updated);
+                        log.info("==== 상품개수 - updated={}", updated);
                         if (updated == 0) {
                             throw new IllegalArgumentException("재고가 부족합니다.");
                         }
@@ -298,8 +297,8 @@ public class OrderShopService {
 
             resDto.setPaymentStatus("READY");
 
-            // 입금 기한 24시간
-            LocalDateTime deadline = LocalDateTime.now().plusHours(24);
+            // 입금 기한 72시간
+            LocalDateTime deadline = LocalDateTime.now().plusHours(72);
 
 
             mapper.updateDepositDeadline(orderId, deadline);

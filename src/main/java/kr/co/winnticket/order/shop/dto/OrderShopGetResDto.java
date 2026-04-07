@@ -3,10 +3,8 @@ package kr.co.winnticket.order.shop.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.OrderStatus;
-import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderTicketListGetResDto;
 import lombok.Data;
 import lombok.ToString;
 
@@ -43,6 +41,9 @@ public class OrderShopGetResDto {
 
     @Schema(description = "주문자이메일")
     private String customerEmail;
+
+    @Schema(description = "회사명(기관명)")
+    private String companyName;
 
     @Schema(description = "결제상태")
     private PaymentStatus paymentStatus;
