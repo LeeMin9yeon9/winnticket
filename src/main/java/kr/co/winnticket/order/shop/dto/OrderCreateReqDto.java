@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.shop.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -32,6 +33,7 @@ public class OrderCreateReqDto {
     @Schema(description = "주문자 이메일")
     private String customerEmail;
 
+    @JsonProperty("company_name")
     @Schema(description = "회사명(기관명)")
     private String companyName;
 
