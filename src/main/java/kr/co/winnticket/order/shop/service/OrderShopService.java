@@ -133,6 +133,8 @@ public class OrderShopService {
                 benefitId
         );
 
+        log.info("주문정보="+result.toString());
+
         UUID orderId = (UUID) result.get("id");
         String orderNumber = (String) result.get("order_number");
 
