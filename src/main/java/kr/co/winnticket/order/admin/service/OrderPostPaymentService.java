@@ -233,10 +233,21 @@ public class OrderPostPaymentService {
         PartnerSplitResult split = splitByPartner(items);
 
         if (split.isHasSpavis() || split.isHasNormalProduct()
-                || split.isHasSmartInfini() || split.isHasAquaplanet()
-                || split.isHasLsCompany()) {
+                || split.isHasSmartInfini() || split.isHasAquaplanet()) {
             List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
             sendTicketIssuedSms(order, normalItems, ticketMap);
+        }
+        /*else if(split.isHasCoreworks()) {
+            log.info("[CoreWorks 문자재전송]");
+            coreWorksService.order(orderId);
+        }
+         */
+        else if(split.isHasLsCompany()) {
+            log.info("[LSCompany 문자재전송]");
+            lsCompanyService.resendTicket(order.getId());
+        } else if(split.isHasWoongin()) {
+            log.info("[Woongin 문자재전송]");
+            woongjinService.resendPin(order.getId());
         }
     }
 
