@@ -199,8 +199,7 @@ public class OrderService {
 
                 try {
                     if (split.isHasSpavis() || split.isHasNormalProduct()
-                            || split.isHasSmartInfini() || split.isHasAquaplanet()
-                            || split.isHasLsCompany()) {
+                            || split.isHasSmartInfini() || split.isHasAquaplanet()) {
                         List<OrderProductListGetResDto> normalItems =
                                 orderPostPaymentService.extractNormalProducts(itemsSnap);
                         log.info("[발권완료 SMS 발송] orderId={}", auId);
