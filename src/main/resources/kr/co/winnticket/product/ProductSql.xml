@@ -282,7 +282,7 @@
             #{prePurchased},
             #{regionCode},
             #{ticketType},
-            COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
+            COALESCE((SELECT MIN(display_order) - 1 FROM PRODUCTS), 1),
             #{visible},
             #{isReservation}
         )
