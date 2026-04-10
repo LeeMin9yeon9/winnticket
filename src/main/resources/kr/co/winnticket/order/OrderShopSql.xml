@@ -334,6 +334,7 @@
                  JOIN orders o ON o.id = oi.order_id
 
         WHERE o.order_number = #{orderNumber}
+          AND ot.status != 'CANCELLED'
 
     </select>
 
