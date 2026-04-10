@@ -11,7 +11,6 @@ import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
-import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
