@@ -124,6 +124,8 @@ public class OrderShopService {
                 reqDto.getChannelId(),
                 reqDto.getCustomerName(),
                 reqDto.getCustomerPhone(),
+                reqDto.getRecipientName(),
+                reqDto.getRecipientPhone(),
                 reqDto.getCustomerEmail(),
                 reqDto.getCompanyName(),
                 reqDto.getMemo(),
