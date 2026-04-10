@@ -202,12 +202,8 @@ public class OrderPostPaymentService {
 
             String message = templateRenderService.render(template.getContent(), vars);
 
-            // QR/바코드 쿠폰은 수령자 번호로, 나머지는 주문자 번호로 발송
-            if ("QR".equals(ticketCodeType) || "BARCODE".equals(ticketCodeType)) {
-                sendCouponSms(order, message);
-            } else {
-                sendSms(order, message);
-            }
+            // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
+            sendCouponSms(order, message);
         }
     }
 
