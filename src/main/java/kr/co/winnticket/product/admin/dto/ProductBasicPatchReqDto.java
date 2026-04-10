@@ -70,6 +70,9 @@ public class ProductBasicPatchReqDto {
     @Schema(description = "예약상품여부")
     private boolean isReservation;
 
+    @Schema(description = "표시순서")
+    private Integer displayOrder;
+
     @Hidden
     @Schema(description = "아이디")
     private UUID id;

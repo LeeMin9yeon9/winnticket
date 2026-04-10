@@ -53,11 +53,39 @@ public class ProductService {
     // 상품 등록
     @Transactional
     public void insertProduct(ProductPostReqDto model) throws Exception {
+        if (model.getDisplayOrder() != null && model.getDisplayOrder() > 0) {
+            int maxOrder = mapper.getMaxProductDisplayOrder();
+            int newOrder = Math.min(model.getDisplayOrder(), maxOrder + 1);
+            model.setDisplayOrder(newOrder);
+            mapper.shiftProductDisplayOrderForInsert(newOrder);
+        } else {
+            // displayOrder 미입력 시 1로 설정, 기존 전체 +1 밀기
+            mapper.shiftProductDisplayOrderForInsert(1);
+            model.setDisplayOrder(1);
+        }
         mapper.insertProduct(model);
     }
 
     // 상품 기본정보 수정
+    @Transactional
     public void updateProductBasic(UUID auId, ProductBasicPatchReqDto model) throws Exception {
+        if (model.getDisplayOrder() != null && model.getDisplayOrder() > 0) {
+            int oldOrder = mapper.getProductDisplayOrder(auId);
+            int maxOrder = mapper.getMaxProductDisplayOrder();
+            int newOrder = Math.min(model.getDisplayOrder(), maxOrder);
+
+            if (oldOrder > 0 && newOrder != oldOrder) {
+                if (newOrder < oldOrder) {
+                    mapper.shiftProductDisplayOrderForMoveUp(newOrder, oldOrder, auId);
+                } else {
+                    mapper.shiftProductDisplayOrderForMoveDown(newOrder, oldOrder, auId);
+                }
+            } else if (oldOrder == 0) {
+                mapper.shiftProductDisplayOrderForInsert(newOrder);
+            }
+
+            model.setDisplayOrder(newOrder);
+        }
         mapper.updateProductBasic(auId, model);
     }
 
