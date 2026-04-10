@@ -85,6 +85,10 @@ public class ProductService {
             }
 
             model.setDisplayOrder(newOrder);
+        } else {
+            // 빈값 저장 시 최대값+1로 맨뒤로 이동
+            int maxOrder = mapper.getMaxProductDisplayOrder();
+            model.setDisplayOrder(maxOrder + 1);
         }
         mapper.updateProductBasic(auId, model);
     }

@@ -332,9 +332,7 @@
             <if test="model.isReservation != null">
                 IS_RESERVATION = #{model.isReservation},
             </if>
-            <if test="model.displayOrder != null">
                 DISPLAY_ORDER = #{model.displayOrder},
-            </if>
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
