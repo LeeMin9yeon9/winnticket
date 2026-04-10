@@ -97,6 +97,11 @@ public interface TicketCouponMapper {
                          @Param("validFrom") LocalDate validFrom,
                          @Param("validUntil") LocalDate validUntil);
 
+    // 그룹에 속한 개별 쿠폰들의 날짜 일괄 변경
+    void updateCouponsDateByGroupId(@Param("groupId") UUID groupId,
+                                    @Param("validFrom") LocalDate validFrom,
+                                    @Param("validUntil") LocalDate validUntil);
+
     // 유효기간 다르면 다른 그룹 생성
     UUID findGroupByOptionValueAndDate(
             @Param("productOptionValueId") UUID productOptionValueId,

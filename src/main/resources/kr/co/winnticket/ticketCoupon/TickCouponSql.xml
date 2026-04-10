@@ -282,6 +282,16 @@
 
     </update>
 
+    <!--해당그룹에 속한 개별 쿠폰 날짜 일괄변경-->
+    <update id="updateCouponsDateByGroupId">
+        UPDATE ticket_coupons
+        SET
+            valid_from = #{validFrom},
+            valid_until = #{validUntil},
+            updated_at = now()
+        WHERE group_id = #{groupId}
+    </update>
+
     <!--유효기간 다르면 다른 그룹으로 생성 -->
     <select id="findGroupByOptionValueAndDate" resultType="java.util.UUID">
         SELECT id

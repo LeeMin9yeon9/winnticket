@@ -311,6 +311,7 @@ public class TicketCouponService {
     public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil) {
         validateDates(validFrom, validUntil);
         mapper.updateGroupDate(groupId, validFrom, validUntil);
+        mapper.updateCouponsDateByGroupId(groupId, validFrom, validUntil);
     }
 
     // [이슈6] 공통 날짜 검증
