@@ -323,6 +323,8 @@
         JOIN ticket_coupon_groups tg ON tc.group_id = tg.id
         WHERE tg.product_option_value_id = #{optionValueId}
           AND tc.status = 'ACTIVE'
+          AND tc.valid_from <![CDATA[ <= ]]> CURRENT_DATE
+          AND tc.valid_until <![CDATA[ >= ]]> CURRENT_DATE
     </select>
 
 </mapper>
