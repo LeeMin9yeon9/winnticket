@@ -78,7 +78,8 @@
             a.USAGE_PERIOD,  -- 사용기한
             a.VISIBLE,  -- 활성화여부
             a.IMAGE_URL, -- 이미지
-            a.IS_RESERVATION  -- 예약상품여부
+            a.IS_RESERVATION,  -- 예약상품여부
+            a.DISPLAY_ORDER  -- 표시순서
         FROM
             PRODUCTS a
         Where 1 = 1
