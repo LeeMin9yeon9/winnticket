@@ -218,6 +218,8 @@
             a.status, -- 주문상태
             a.customer_name, -- 주문자
             a.customer_phone, -- 주문자 연락처
+            a.recipient_name, -- 수령자명
+            a.recipient_phone, -- 수령자 연락처
             a.customer_email,  -- 주문자이메일
             a.company_name,   -- 회사명
             a.payment_status, -- 결제상태

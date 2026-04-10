@@ -201,7 +201,13 @@ public class OrderPostPaymentService {
             vars.put("주문수량", String.valueOf(item.getQuantity()));
 
             String message = templateRenderService.render(template.getContent(), vars);
-            sendSms(order, message);
+
+            // QR/바코드 쿠폰은 수령자 번호로, 나머지는 주문자 번호로 발송
+            if ("QR".equals(ticketCodeType) || "BARCODE".equals(ticketCodeType)) {
+                sendCouponSms(order, message);
+            } else {
+                sendSms(order, message);
+            }
         }
     }
 
@@ -257,6 +263,22 @@ public class OrderPostPaymentService {
         bizMsgService.sendSms(
                 cmid,
                 order.getCustomerPhone(),
+                order.getCustomerName(),
+                "025118691",
+                "윈앤티켓",
+                message
+        );
+    }
+
+    // 쿠폰(QR/바코드) 문자 발송 - 수령자 번호 우선, 없으면 주문자 번호로 발송
+    private void sendCouponSms(OrderAdminDetailGetResDto order, String message) {
+        String phone = (order.getRecipientPhone() != null && !order.getRecipientPhone().isBlank())
+                ? order.getRecipientPhone()
+                : order.getCustomerPhone();
+        String cmid = UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        bizMsgService.sendSms(
+                cmid,
+                phone,
                 order.getCustomerName(),
                 "025118691",
                 "윈앤티켓",
