@@ -327,14 +327,14 @@
             ot.id AS ticketId,
             ot.ticket_number AS ticketNumber,
             ot.partner_order_code AS partnerOrderCode,
-            ot.ticket_used AS ticketUsed
+            ot.ticket_used AS ticketUsed,
+            ot.status AS status
 
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
                  JOIN orders o ON o.id = oi.order_id
 
         WHERE o.order_number = #{orderNumber}
-          AND ot.status != 'CANCELLED'
 
     </select>
 
