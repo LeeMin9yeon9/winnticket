@@ -115,4 +115,13 @@ public interface TicketCouponMapper {
     // 옵션값별 활성 쿠폰 수량 조회
     int countActiveCouponsByOptionValueId(@Param("optionValueId") UUID optionValueId);
 
+    // 쿠폰 예약 처리 (ACTIVE → PENDING)
+    int markCouponPending(@Param("couponId") UUID couponId);
+
+    // 예약 쿠폰 복구 (PENDING → ACTIVE)
+    int restorePendingCoupon(@Param("couponId") UUID couponId);
+
+    // 예약 쿠폰 판매 확정 (PENDING → SOLD)
+    int markPendingCouponSold(@Param("couponId") UUID couponId);
+
 }
