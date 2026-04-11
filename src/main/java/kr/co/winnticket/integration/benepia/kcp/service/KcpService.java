@@ -219,12 +219,13 @@ public class KcpService {
                     properties.getKcp().getPrivateKeyPassword()
             );
 
-
+            // modType 분기
+            String modType = (dto.getModType() != null) ? dto.getModType() : "STSC";
             // 전자서명 생성
             String signData = KcpSignUtil.makeSignature(
                     siteCd,
                     dto.getTno(),
-                    "STSC",
+                    modType,
                     privateKey
             );
             String url = properties.getKcp().getBaseUrl() + "/gw/mod/v1/cancel";
@@ -233,9 +234,17 @@ public class KcpService {
             body.put("site_cd", siteCd);                // 사이트코드
             body.put("kcp_cert_info", cert);            // 서비스 인증서
             body.put("tno", dto.getTno());              // KCP 거래번호
-            body.put("mod_type", "STSC");              // 취소 요청 구분
+            body.put("mod_type", modType);              // 취소 요청 구분
             body.put("kcp_sign_data", signData);        // 서명 데이터
             body.put("mod_desc", dto.getCancelReason());    // 취소 사유
+
+            //  부분취소일 때만 추가
+            if ("STRA".equals(modType)) {
+                body.put("mod_mny", String.valueOf(dto.getModMny()));
+                body.put("mod_ordr_idxx", dto.getModOrdrIdxx());
+                body.put("mod_ordr_goods", dto.getModOrdrGoods());
+            }
+
 
             String json = objectMapper.writeValueAsString(body);
 
