@@ -153,6 +153,12 @@ public interface OrderMapper {
     // 쿠폰 조회
     List<UUID> selectPrePurchasedCouponIds(@Param("orderId") UUID orderId);
 
+    // 주문 아이템별 예약된 쿠폰 조회 (결제 완료 시 사용)
+    List<OrderItemCouponDto> selectOrderItemCouponsByOrderItemId(@Param("orderItemId") UUID orderItemId);
+
+    // 주문 취소 시 주문 아이템 쿠폰 삭제
+    void deleteOrderItemCouponsByOrderId(@Param("orderId") UUID orderId);
+
     // 티켓 유효기간 조회
     OrderTicketPeriod selectTicketUsePeriod(@Param("ticketId") UUID ticketId);
 

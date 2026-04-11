@@ -147,22 +147,23 @@ public class OrderService {
             LocalDate validFrom = validity.get("from");
             LocalDate validTo = validity.get("to");
 
-            for (int i = 0; i < item.getQuantity(); i++) {
-                String ticketNumber;
-                if (Boolean.TRUE.equals(prePurchased)) {
-                    log.info("[선사입]");
-                    try {
-                        ticketNumber = orderPostPaymentService.issueCoupon(item.getId(), validFrom, validTo);
-                    } catch (Exception e) {
-                        log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
-                        throw new RuntimeException("쿠폰 재고 없음");
-                    }
-                } else {
-                    log.info("[선사입 아님]");
-                    ticketNumber = orderPostPaymentService.generateTicketNumber();
-                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
+            if (Boolean.TRUE.equals(prePurchased)) {
+                // 선사입: 주문 생성 시 이미 예약(PENDING)된 쿠폰을 확정(SOLD)하고 티켓 발행
+                log.info("[선사입 - 예약 쿠폰 확정] orderItemId={}", item.getId());
+                try {
+                    List<String> issued = orderPostPaymentService.issueReservedCoupons(item.getId(), validFrom, validTo);
+                    ticketNumbers.addAll(issued);
+                } catch (Exception e) {
+                    log.error("예약 쿠폰 확정 실패 orderItemId={}", item.getId(), e);
+                    throw new RuntimeException("예약 쿠폰 확정 실패", e);
                 }
-                ticketNumbers.add(ticketNumber);
+            } else {
+                for (int i = 0; i < item.getQuantity(); i++) {
+                    log.info("[선사입 아님]");
+                    String ticketNumber = orderPostPaymentService.generateTicketNumber();
+                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
+                    ticketNumbers.add(ticketNumber);
+                }
             }
             ticketMap.put(item.getId(), ticketNumbers);
         }
@@ -587,6 +588,9 @@ public class OrderService {
         }
 
         log.info("[STOCK RESTORE] 입금 전 주문 재고 복구 완료 orderId={}", orderId);
+
+        // 선사입 예약 쿠폰 복구 (PENDING → ACTIVE) + order_item_coupons 삭제
+        orderPostPaymentService.restoreReservedCoupons(orderId);
 
         mapper.cancelTicketsByOrderId(orderId);
 

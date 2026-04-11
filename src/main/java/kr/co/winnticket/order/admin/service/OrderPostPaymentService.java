@@ -84,6 +84,14 @@ public class OrderPostPaymentService {
         return ticketCouponService.issueCoupon(orderItemId, validFrom, validTo);
     }
 
+    public List<String> issueReservedCoupons(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
+        return ticketCouponService.issueReservedCoupons(orderItemId, validFrom, validTo);
+    }
+
+    public void restoreReservedCoupons(UUID orderId) {
+        ticketCouponService.restoreReservedCoupons(orderId);
+    }
+
     public String generateTicketNumber() {
         return "T"
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)

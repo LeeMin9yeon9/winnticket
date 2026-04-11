@@ -602,6 +602,27 @@
 
     </insert>
 
+    <!--주문 아이템별 예약된 쿠폰 조회 (결제 완료 시 사용)-->
+    <select id="selectOrderItemCouponsByOrderItemId"
+            resultType="kr.co.winnticket.order.admin.dto.OrderItemCouponDto">
+        SELECT
+            id,
+            order_id AS orderId,
+            order_item_id AS orderItemId,
+            product_id AS productId,
+            product_option_value_id AS productOptionValueId,
+            ticket_coupon_id AS ticketCouponId,
+            coupon_number AS couponNumber
+        FROM order_item_coupons
+        WHERE order_item_id = #{orderItemId}
+    </select>
+
+    <!--주문 취소 시 주문 아이템 쿠폰 삭제-->
+    <delete id="deleteOrderItemCouponsByOrderId">
+        DELETE FROM order_item_coupons
+        WHERE order_id = #{orderId}
+    </delete>
+
     <!--주문아이템 옵션값 조회-->
     <select id="findOptionValueIdByOrderItem"
             resultType="java.util.UUID">
