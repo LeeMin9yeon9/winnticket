@@ -407,6 +407,7 @@
             id,
             order_number,
             final_price,
+            point_amount,
             cancel_amount,
             payment_status,
             pg_provider,
