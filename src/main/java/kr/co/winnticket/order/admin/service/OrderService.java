@@ -307,8 +307,14 @@ public class OrderService {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
 
+        // 입금 전(READY) 주문 취소 - 단순 플로우
+        if (order.getPaymentStatus() == PaymentStatus.READY) {
+            cancelPendingOrder(orderId, order);
+            return;
+        }
+
         if (order.getPaymentStatus() != PaymentStatus.PAID) {
-            throw new IllegalStateException("결제 완료된 주문만 취소할 수 있습니다.");
+            throw new IllegalStateException("결제 완료 또는 입금 전 주문만 취소할 수 있습니다.");
         }
 
         // 사용된 티켓 확인
@@ -543,6 +549,63 @@ public class OrderService {
         });
 
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
+    }
+
+    // 입금 전 주문 취소 (READY 상태)
+    private void cancelPendingOrder(UUID orderId, OrderAdminDetailGetResDto order) throws Exception {
+
+        // 포인트 사용 시 반환
+        if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+
+            String tno = mapper.selectPointTno(order.getOrderNumber());
+
+            if (tno != null) {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(tno);
+                dto.setCancelReason("입금 전 주문 취소");
+
+                kcpService.cancelPoint(dto);
+
+                log.info("[POINT RETURN] 입금 전 주문 포인트 반환 완료 orderId={}", orderId);
+            }
+        }
+
+        // 주문 상태 CANCELED 변경
+        int updated = mapper.updateOrderCancelSuccess(orderId, 0, 0, null);
+
+        if (updated != 1) {
+            throw new IllegalStateException("주문 취소 상태 변경 실패");
+        }
+
+        // 재고 복구 (주문 생성 시 차감된 재고)
+        List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
+
+        for (OrderItemOptionDto opt : options) {
+            if (!ProductType.STAY.equals(opt.getProductType())) {
+                mapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
+            }
+        }
+
+        log.info("[STOCK RESTORE] 입금 전 주문 재고 복구 완료 orderId={}", orderId);
+
+        mapper.cancelTicketsByOrderId(orderId);
+
+        // SMS 발송 (커밋 후 비동기)
+        final OrderAdminDetailGetResDto orderForSms = order;
+        final List<OrderProductListGetResDto> itemsForSms = mapper.selectOrderProductList(orderId);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    orderPostPaymentService.sendOrderCancelledSms(orderForSms, itemsForSms);
+                } catch (Exception e) {
+                    log.error("[취소 SMS 발송 실패] orderId={}", orderId, e);
+                }
+            }
+        });
+
+        log.info("[ORDER_CANCEL] 입금 전 주문 관리자 취소 완료 orderId={}", orderId);
     }
 
     /*
