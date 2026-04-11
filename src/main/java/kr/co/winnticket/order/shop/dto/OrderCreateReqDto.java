@@ -28,6 +28,12 @@ public class OrderCreateReqDto {
     @Schema(description = "주문자 연락처")
     private String customerPhone;
 
+    @Schema(description = "수령자명 (쿠폰 수신)")
+    private String recipientName;
+
+    @Schema(description = "수령자 연락처 (쿠폰 수신, 미입력 시 주문자 연락처로 발송)")
+    private String recipientPhone;
+
     @Email
     @Schema(description = "주문자 이메일")
     private String customerEmail;

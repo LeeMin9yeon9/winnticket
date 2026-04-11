@@ -54,5 +54,8 @@ public class OrderQrCouponGetResDto {
         @Schema(description = "사용 여부")
         private Boolean ticketUsed;
 
+        @Schema(description = "티켓 상태")
+        private String status;
+
     }
 }

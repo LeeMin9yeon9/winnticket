@@ -97,6 +97,11 @@ public interface TicketCouponMapper {
                          @Param("validFrom") LocalDate validFrom,
                          @Param("validUntil") LocalDate validUntil);
 
+    // 그룹에 속한 개별 쿠폰들의 날짜 일괄 변경
+    void updateCouponsDateByGroupId(@Param("groupId") UUID groupId,
+                                    @Param("validFrom") LocalDate validFrom,
+                                    @Param("validUntil") LocalDate validUntil);
+
     // 유효기간 다르면 다른 그룹 생성
     UUID findGroupByOptionValueAndDate(
             @Param("productOptionValueId") UUID productOptionValueId,
@@ -109,5 +114,14 @@ public interface TicketCouponMapper {
 
     // 옵션값별 활성 쿠폰 수량 조회
     int countActiveCouponsByOptionValueId(@Param("optionValueId") UUID optionValueId);
+
+    // 쿠폰 예약 처리 (ACTIVE → PENDING)
+    int markCouponPending(@Param("couponId") UUID couponId);
+
+    // 예약 쿠폰 복구 (PENDING → ACTIVE)
+    int restorePendingCoupon(@Param("couponId") UUID couponId);
+
+    // 예약 쿠폰 판매 확정 (PENDING → SOLD)
+    int markPendingCouponSold(@Param("couponId") UUID couponId);
 
 }
