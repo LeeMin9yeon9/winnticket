@@ -304,6 +304,10 @@ public class OrderService {
             throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
         }
 
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
         if (order.getPaymentStatus() == PaymentStatus.CANCELED) {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
@@ -412,29 +416,40 @@ public class OrderService {
         int cancelAmount = 0;
         int cancelFee = 0;
 
+       // log.info("[CANCEL POLICY] amount={}, fee={}", cancelAmount, cancelFee);
+
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
 
                     String tno = mapper.selectPointTno(order.getOrderNumber());
 
-                    if (tno != null) {
-                        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                        dto.setTno(tno);
-                        dto.setCancelReason("무통장 취소");
+                if (tno != null) {
 
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(tno);
+                    dto.setModType("STSC");
+                    dto.setCancelReason("무통장 취소");
+
+                    try {
                         kcpService.cancelPoint(dto);
-
                         log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
+                    } catch (Exception e) {
+                        log.error("[POINT RETURN FAIL - VA] orderId={}", orderId, e);
                     }
+
+                } else {
+                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
+                }
                 }
 
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
 
+            // 카드 취소 실행 (여기서 카드금액 - 총수수료 계산됨)
             PayletterCancelResult result = payletterService.cancel(orderId);
 
             cancel = result.getPgResult();
-            cancelAmount = result.getCancelAmount();
-            cancelFee = result.getCancelFee();
+            cancelAmount = result.getCancelAmount(); // 카드 환불액
+            cancelFee = result.getCancelFee();      // 수수료
 
             log.info("[PG CANCEL RESULT] {}", cancel);
 
@@ -448,11 +463,17 @@ public class OrderService {
                     KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
 
                     dto.setTno(tno);
-                    dto.setCancelReason("혼합결제 취소");
+                    dto.setCancelReason("혼합결제 취소(포인트 전액반환)");
+                    dto.setModType("STSC");
 
-                    kcpService.cancelPoint(dto);
-
-                    log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                    try {
+                        kcpService.cancelPoint(dto);
+                        log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                    } catch (Exception e) {
+                        log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
+                    }
+                }else {
+                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
                 }
             }
 
@@ -463,9 +484,50 @@ public class OrderService {
                 throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
             }
 
+            String tno = (String) payInfo.get("pg_tid");
+
+            int finalPrice = ((Number) payInfo.get("final_price")).intValue();
+
+            // ===== 수수료 계산 (Payletter랑 동일하게 맞춰) =====
+            LocalDateTime orderedAt = ((java.sql.Timestamp) payInfo.get("ordered_at")).toLocalDateTime();
+
+            long days = java.time.temporal.ChronoUnit.DAYS.between(
+                    orderedAt.toLocalDate(),
+                    LocalDate.now()
+            );
+
+            cancelFee = (days <= 7)
+                    ? 1000
+                    : (int) Math.floor(finalPrice * 0.1);
+
+            int refundAmount = Math.max(finalPrice - cancelFee, 0);
+
+            log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+
             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-            dto.setTno((String) payInfo.get("pg_tid"));
-            dto.setCancelReason("관리자 취소");
+            dto.setTno(tno);
+            dto.setCancelReason("고객요청 관리자 취소");
+
+            if (cancelFee > 0) {
+                // 부분취소 (수수료 제외 금액만 환불)
+                dto.setModType("STRA");
+                dto.setModMny(refundAmount);
+                dto.setModOrdrIdxx(order.getOrderNumber());
+                dto.setModOrdrGoods("수수료 제외 포인트 취소");
+            } else {
+                //  전액취소
+                dto.setModType("STSC");
+            }
+
+
+            try {
+                kcpService.cancelPoint(dto);
+            } catch (Exception e) {
+                log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+            }
+
+            cancelAmount = refundAmount;
+            cancelFee = cancelFee;
 
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);

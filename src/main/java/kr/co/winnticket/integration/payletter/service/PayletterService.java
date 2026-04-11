@@ -270,48 +270,29 @@ public class PayletterService {
 
         // ===== 1. 금액 계산 =====
         int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
+        int pointAmount = orderInfo.get("point_amount") != null ? ((Number) orderInfo.get("point_amount")).intValue() : 0;
+        // 실제 카드로만 결제된 순수 금액 (이 금액이 카드 취소의 최대 한도임)
+        int pureCardAmount = finalPrice - pointAmount;
 
-        int alreadyCanceled = orderInfo.get("cancel_amount") != null
-                ? ((Number) orderInfo.get("cancel_amount")).intValue()
-                : 0;
-
-        int remainAmount = finalPrice - alreadyCanceled;
-
-        if (remainAmount <= 0) {
-            throw new IllegalStateException("이미 전액 취소된 주문");
-        }
-
-        // ===== 2. 예약상품 여부 =====
+        // 수수료 계산
         List<OrderProductListGetResDto> items = orderAdminMapper.selectOrderProductList(orderId);
 
-        boolean isReservation = items.stream()
-                .anyMatch(item -> Boolean.TRUE.equals(item.getIsReservation()));
+        boolean isReservation = items.stream().anyMatch(item -> Boolean.TRUE.equals(item.getIsReservation()));
 
-        int cancelAmount;
         int cancelFee = 0;
-
-        if (isReservation) {
-            cancelAmount = remainAmount;
-            log.info("[예약상품] 전액환불 orderId={}, amount={}", orderId, cancelAmount);
-
-        } else {
+        if (!isReservation) {
             Timestamp ts = (Timestamp) orderInfo.get("ordered_at");
             LocalDateTime orderedAt = ts.toLocalDateTime();
+            long days = ChronoUnit.DAYS.between(orderedAt.toLocalDate(), LocalDate.now());
 
-            long days = ChronoUnit.DAYS.between(
-                    orderedAt.toLocalDate(),
-                    LocalDate.now()
-            );
-
-            cancelFee = (days <= 7)
-                    ? 1000
-                    : (int) Math.floor(remainAmount * 0.1);
-
-            cancelAmount = Math.max(remainAmount - cancelFee, 0);
-
-            log.info("[일반상품] orderId={}, days={}, fee={}, refund={}",
-                    orderId, days, cancelFee, cancelAmount);
+            // 수수료 정책: 7일 이내 1,000원, 이후 10%
+            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(finalPrice * 0.1);
         }
+
+        // 3. 최종 카드 환불액 = 카드결제액 - 수수료 (단, 0보다 작을 수 없음)
+        int cancelAmount = Math.max(pureCardAmount - cancelFee, 0);
+
+        log.info("[카드 환불 계산] 총금액={}, 포인트={}, 카드결제액={}, 수수료={}, 최종카드환불액={}", finalPrice, pointAmount, pureCardAmount, cancelFee, cancelAmount);
 
         // ===== 3. 거래조회 (당일 포함) =====
         PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
@@ -349,10 +330,10 @@ public class PayletterService {
         PayletterCancelResDto res = payletterClient.partialCancel(req);
 
         if (res == null || !res.isCanceled()) {
-            throw new IllegalStateException("PG 취소 실패");
+            throw new IllegalStateException("카드 부분 취소 실패: " + (res != null ? res.getMessage() : "응답없음"));
         }
 
-        // ===== 5. DB 업데이트 =====
+         //===== 5. DB 업데이트 =====
         try {
             Map<String, Object> payload = Map.of(
                     "cancelAmount", cancelAmount,

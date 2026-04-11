@@ -19,4 +19,16 @@ public class KcpPointCancelReqDto {
 
     @Schema(description = "취소 사유")
     private String cancelReason;
+
+    @Schema(description = "STSC / STRA")
+    private String modType;
+
+    @Schema(description = "부분취소 금액")
+    private Integer modMny;
+
+    @Schema(description = "부분취소  주문번호")
+    private String modOrdrIdxx;
+
+    @Schema(description = "상품명")
+    private String modOrdrGoods;
 }
