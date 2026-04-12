@@ -10,7 +10,7 @@
             o.order_number AS orderNumber,
             o.payment_status AS paymentStatus,
             COALESCE(o.recipient_name, o.customer_name) AS customerName,
-            COALESCE(o.recipient_phone, o.customer_phone) AS customerPhone,
+            COALESCE(o.recipient_phone, o.customer_phone) AS customerPhone
         FROM orders o
         WHERE o.order_number = #{orderNumber}
 
