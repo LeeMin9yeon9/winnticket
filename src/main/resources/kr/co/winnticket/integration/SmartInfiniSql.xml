@@ -26,8 +26,8 @@
     <select id="selectSmartinfiniOrder" resultMap="SIOrderMap">
         SELECT
             o.order_number AS ORDER_NO,
-            o.customer_name AS USER_NAME,
-            o.customer_phone AS USER_HP,
+            COALESCE(o.recipient_name, o.customer_name) AS USER_NAME,
+            COALESCE(o.recipient_phone, o.customer_phone) AS USER_HP,
             o.customer_email AS USER_EMAIL,
             to_char(o.created_at, 'YYYY-MM-DD HH24:MI:SS') AS ORDER_DATE,
             o.payment_method AS PAY_METHOD,
@@ -97,7 +97,7 @@
         SELECT
             'O' As TYPE,
             o.order_number AS ORDER_NO,
-            o.customer_phone AS USER_HP
+            COALESCE(o.recipient_phone, o.customer_phone) AS USER_HP,
         FROM orders o
         JOIN order_items oi
         ON o.id = oi.order_id
