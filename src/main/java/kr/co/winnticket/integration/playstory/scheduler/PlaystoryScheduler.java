@@ -20,7 +20,7 @@ public class PlaystoryScheduler {
     private final TicketMapper mapper;
     private final PlaystoryService playstoryService;
 
-    //@Scheduled(fixedDelay = 3600000)
+    @Scheduled(fixedDelay = 3600000)
     public void playstoryCheckScheduler() {
 
         log.info("[Playstory Scheduler Start]");
