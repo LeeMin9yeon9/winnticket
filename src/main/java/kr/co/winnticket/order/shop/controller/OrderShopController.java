@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.co.winnticket.common.dto.ApiResponse;
+import kr.co.winnticket.order.admin.service.OrderService;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
@@ -24,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderShopController {
     private final OrderShopService service;
+    private final OrderService orderService;
 
     // 주문 조회
     @GetMapping("/{channelId}/{orderNumber}")
@@ -50,6 +52,16 @@ public class OrderShopController {
         return ResponseEntity.ok(
                 ApiResponse.success("주문 성공", response)
         );
+    }
+
+    // 주문 취소 (쇼핑몰)
+    @PostMapping("/{orderId}/cancel")
+    @Operation(summary = "주문 취소(쇼핑몰)", description = "고객이 직접 주문을 취소합니다.")
+    public ResponseEntity<ApiResponse<String>> cancelOrder(
+            @Parameter(description = "주문ID") @PathVariable("orderId") UUID orderId
+    ) throws Exception {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(ApiResponse.success("주문 취소 완료", orderId.toString()));
     }
 
     // QR 쿠폰 조회
