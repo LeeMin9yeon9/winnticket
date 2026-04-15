@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
@@ -37,7 +36,6 @@ import java.util.UUID;
 
 public class OrderController {
     private final OrderService service;
-    private final PayletterService payletterService;
 
     // 주문 상태별 카운트 조회
     @GetMapping("/status")

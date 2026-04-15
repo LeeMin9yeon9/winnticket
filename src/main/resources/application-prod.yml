@@ -86,18 +86,12 @@ benepia-batch:
 
 
 
-# 신용카드 연동 (페이레터 운영)
-
-payletter:
-  base-url: https://pgapi.payletter.com
-  client-id: pay_test #운영은 문의해봐야함
-  payment-api-key: ${PAYLETTER_PAYMENT_API_KEY}
-  search-api-key: ${PAYLETTER_SEARCH_API_KEY}
-  service-name: 페이레터
-
-  return-url: https://api.winnticket.co.kr/api/payletter/return
-  callback-url: https://api.winnticket.co.kr/api/payletter/callback
-  cancel-url: https://api.winnticket.co.kr/api/payletter/cancel
+# 신용카드/간편결제 연동 (Toss Payments 운영)
+toss:
+  client-key: ${TOSS_CLIENT_KEY}
+  secret-key: ${TOSS_SECRET_KEY}
+  success-url: https://www.winnticket.co.kr/payment/callback
+  fail-url: https://www.winnticket.co.kr/payment/fail
 
 
 # 파트너 연동 (플러스앤 운영)

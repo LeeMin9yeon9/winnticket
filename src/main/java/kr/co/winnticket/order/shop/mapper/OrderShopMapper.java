@@ -61,37 +61,18 @@ public interface OrderShopMapper {
             @Param("pointAmount") int pointAmount
     );
 
-    // payletter 결제요청 결과 저장
-    int updatePayletterRequest(
+    // Toss 결제 초기화 (주문 생성 시 pg_provider = TOSSPAYMENTS 설정)
+    int updateTossPaymentInit(@Param("orderId") UUID orderId);
+
+    // Toss 결제 승인 성공 처리 (paymentKey 저장, 중복 처리 방지)
+    int updateTossConfirmSuccessIfNotPaid(
             @Param("orderId") UUID orderId,
-            @Param("pgProvider") String pgProvider,
-            @Param("pgTid") String pgTid,
-            @Param("pgOnlineUrl") String pgOnlineUrl,
-            @Param("pgMobileUrl") String pgMobileUrl,
-            @Param("pgCode") String pgCode
+            @Param("paymentKey") String paymentKey,
+            @Param("payloadJson") String payloadJson
     );
 
-    // payletter 상품명 + 개수
-    Map<String, Object> selectPayletterProductSummary(@Param("orderId") UUID orderId);
-
-
-    // payletter 주문 결제정보 조회(금액검증.취소)
-    Map<String, Object> selectOrderPaymentInfo(@Param("orderId") UUID orderId);
-
-    // 결제 성공 콜백 처리 중복 방지
-    int updatePayletterCallbackSuccessIfNotPaid(
-            @Param("orderId") UUID orderId,
-            @Param("payloadJson") String payloadJson,
-            @Param("tid") String tid,
-            @Param("cid") String cid
-    );
-
-    //payletter 콜백 실패
-    int updatePayletterCallbackFailed(
-            @Param("orderId") UUID orderId,
-            @Param("payloadJson") String payloadJson,
-            @Param("failReason") String failReason
-    );
+    // 상품명 + 개수 조회 (주문명 생성용)
+    Map<String, Object> selectProductSummary(@Param("orderId") UUID orderId);
 
 
     // 티켓주문 정보 저장
@@ -129,4 +110,7 @@ public interface OrderShopMapper {
 
     // 주문 후 재고 차감
     int updateOptionValueStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") int quantity);
+
+    // 토스 결제 승인 후 실제 결제수단 업데이트 (카드/가상계좌/계좌이체 등)
+    int updatePaymentMethod(@Param("orderId") UUID orderId, @Param("paymentMethod") String paymentMethod);
 }

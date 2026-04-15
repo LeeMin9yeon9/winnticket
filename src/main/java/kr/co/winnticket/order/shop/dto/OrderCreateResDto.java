@@ -23,16 +23,6 @@ public class OrderCreateResDto {
     @Schema(description = "최종 결제금액")
     private int finalPrice;
 
-    // 베네피아(Payletter 카드결제)일 때만 내려줌
-    @Schema(description = "PG 제공자(PAYLETTER)", nullable = true)
+    @Schema(description = "PG 제공자(TOSSPAYMENTS)", nullable = true)
     private String pgProvider;
-
-    @Schema(description = "PG 거래키(token)", nullable = true)
-    private String pgTid;
-
-    @Schema(description = "PC 결제 URL", nullable = true)
-    private String pgOnlineUrl;
-
-    @Schema(description = "모바일 결제 URL", nullable = true)
-    private String pgMobileUrl;
 }

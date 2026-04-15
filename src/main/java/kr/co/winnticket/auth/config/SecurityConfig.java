@@ -55,12 +55,12 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain payletterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain tossChain(HttpSecurity http) throws Exception {
 
         http
-                .securityMatcher("/api/payletter/**")
+                .securityMatcher("/api/toss/**")
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())   // Payletter는 CORS 검사 안함
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 );
@@ -88,7 +88,7 @@ public class SecurityConfig {
                         /* ---------- 모든 사용자 접근 허용 (비로그인) ---------- */
                         .requestMatchers(
                                 "/api/mair/**",
-                                "/api/payletter/**",
+                                "/api/toss/**",
                                 "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -107,9 +107,8 @@ public class SecurityConfig {
                                 "/api/swagger-ui/**",
                                 "/api/v3/api-docs/**",
                                 "/api/swagger-ui.html",
-                                "/api/payletter/callback",
-                                "/api/payletter/return",
-                                "/api/payletter/cancel",
+                                "/api/toss/confirm",
+                                "/api/toss/webhook",
                                 "/api/ticketCoupon/**",
                                 "/api/lscompany/**"
                         ).permitAll()

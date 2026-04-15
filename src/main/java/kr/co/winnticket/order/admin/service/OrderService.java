@@ -11,9 +11,8 @@ import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.integration.tosspayments.dto.TossCancelResult;
+import kr.co.winnticket.integration.tosspayments.service.TossPaymentsService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
@@ -38,7 +37,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderMapper mapper;
-    private final PayletterService payletterService;
+    private final TossPaymentsService tossPaymentsService;
     private final ObjectMapper objectMapper;
     private final BenepiaOrderService benepiaOrderService;
     private final OrderPostPaymentService orderPostPaymentService;
@@ -401,51 +400,43 @@ public class OrderService {
          */
 
         PaymentMethod method = order.getPaymentMethod();
-        PayletterCancelResDto cancel = null;
+        String pgProvider = order.getPgProvider();
+        TossCancelResult tossCancelResult = null;
         int cancelAmount = 0;
         int cancelFee = 0;
 
-        if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+        // PG사가 TOSSPAYMENTS면 payment_method와 관계없이 토스 취소 API 호출
+        // (토스 위젯에서 카드/가상계좌/간편결제 등 어떤 방식으로 결제했든 토스 API로 취소)
+        if ("TOSSPAYMENTS".equalsIgnoreCase(pgProvider)) {
+
+            tossCancelResult = tossPaymentsService.cancel(orderId);
+            cancelAmount = tossCancelResult.getCancelAmount();
+            cancelFee = tossCancelResult.getCancelFee();
+
+            log.info("[TOSS CANCEL RESULT] cancelAmount={}, cancelFee={}", cancelAmount, cancelFee);
+
+            // 혼합결제(토스+포인트)인 경우 포인트도 반환
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-
-                    String tno = mapper.selectPointTno(order.getOrderNumber());
-
-                    if (tno != null) {
-                        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                        dto.setTno(tno);
-                        dto.setCancelReason("무통장 취소");
-
-                        kcpService.cancelPoint(dto);
-
-                        log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
-                    }
-                }
-
-        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
-
-            PayletterCancelResult result = payletterService.cancel(orderId);
-
-            cancel = result.getPgResult();
-            cancelAmount = result.getCancelAmount();
-            cancelFee = result.getCancelFee();
-
-            log.info("[PG CANCEL RESULT] {}", cancel);
-
-            // 혼합결제 포인트 반환
-            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-
                 String tno = mapper.selectPointTno(order.getOrderNumber());
-
                 if (tno != null) {
-
                     KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-
                     dto.setTno(tno);
                     dto.setCancelReason("혼합결제 취소");
-
                     kcpService.cancelPoint(dto);
-
                     log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                }
+            }
+
+        } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
+            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+                String tno = mapper.selectPointTno(order.getOrderNumber());
+                if (tno != null) {
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(tno);
+                    dto.setCancelReason("무통장 취소");
+                    kcpService.cancelPoint(dto);
+                    log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
                 }
             }
 
@@ -459,6 +450,8 @@ public class OrderService {
             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
             dto.setTno((String) payInfo.get("pg_tid"));
             dto.setCancelReason("관리자 취소");
+            kcpService.cancelPoint(dto);
+            log.info("[POINT CANCEL] 포인트 환불 완료 orderId={}", orderId);
 
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
@@ -470,7 +463,10 @@ public class OrderService {
          * =========================
          */
 
-        String payloadJson = cancel != null ? objectMapper.writeValueAsString(cancel) : null;
+        // Toss 취소 응답을 JSON으로 저장 (취소 이력 보관)
+        String payloadJson = tossCancelResult != null
+                ? objectMapper.writeValueAsString(tossCancelResult.getPgResult())
+                : null;
 
         int updated = mapper.updateOrderCancelSuccess(
                 orderId,

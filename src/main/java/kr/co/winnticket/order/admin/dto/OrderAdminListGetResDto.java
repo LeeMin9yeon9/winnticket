@@ -67,4 +67,10 @@ public class OrderAdminListGetResDto {
     @Schema(description = "포인트 결제 금액")
     private Integer pointAmount;
 
+    @Schema(description = "PG사")
+    private String pgProvider;
+
+    @Schema(description = "토스 실제 결제수단 (카드, 가상계좌, 토스페이, 카카오페이 등)")
+    private String tossMethod;
+
 }

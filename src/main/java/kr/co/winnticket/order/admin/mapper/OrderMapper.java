@@ -89,10 +89,13 @@ public interface OrderMapper {
     void updateOrderCompleted(UUID orderId);
 
 
-    // 페이레터 주문정보 조회
+    // 주문 결제 정보 조회 (PG 검증/취소용)
     Map<String, Object> selectOrderPaymentInfo(UUID orderId);
 
-    // 페이레터 취소 성공
+    // 포인트 결제 금액 조회 (Toss 금액 검증용)
+    int selectPointAmount(@Param("orderId") UUID orderId);
+
+    // 주문 취소 성공 처리
     int updateOrderCancelSuccess(
             @Param("orderId") UUID orderId,
             @Param("cancelAmount") int cancelAmount,

@@ -12,8 +12,8 @@ import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointResDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
+// Toss Payments - 카드/간편결제 PG 연동
+// Payletter는 제거됨
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
@@ -54,7 +54,7 @@ public class OrderShopService {
     private final OrderShopMapper mapper;
     private final ShopCartService shopCartService;
     private final ChannelMapper channelMapper;
-    private final PayletterService paymentService;
+    // Toss Payments 직접 PG 호출 없음 - confirm은 FE → /api/toss/confirm 경유
     private final OrderMapper orderMapper;
     private final SmsTemplateFinder smsTemplateFinder;
     private final TemplateRenderService templateRenderService;
@@ -85,20 +85,11 @@ public class OrderShopService {
         log.info(" paymentMethod = {}", reqDto.getPaymentMethod());
         log.info(" pointAmount(raw) = {}", reqDto.getPointAmount());
 
-        Boolean useCard = channelMapper.selectUseCardById(reqDto.getChannelId());
-        Boolean cardAllowed = (useCard != null && useCard);
-
         Boolean usePoint = channelMapper.selectUsePointById(reqDto.getChannelId());
         log.info("usePoint(DB) = {}", usePoint);
 
-
-
-        // 결제수단 결정 (카드 미허용 채널이면 무조건 무통장으로 보정)
+        // 결제수단 결정 (토스페이먼츠 전환 후 모든 채널에서 카드 결제 가능)
         PaymentMethod paymentMethod = reqDto.getPaymentMethod();
-        // 카드 미허용 채널이면 카드 -> 무통장
-        if (!cardAllowed && paymentMethod == PaymentMethod.CARD) {
-            paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
-        }
 
         // 포인트 미허용 채널이면 차단
         Integer pointAmount = reqDto.getPointAmount() == null ? 0 : reqDto.getPointAmount();
@@ -422,49 +413,42 @@ public class OrderShopService {
             }
         }
 
-        //CARD
+        // CARD / KAKAOPAY: Toss Payments 위젯 결제
+        // 주문 생성 단계에서는 PG API 호출 없이 pg_provider만 설정
+        // FE가 /payment/checkout 페이지에서 Toss 위젯을 렌더링 후
+        // 결제 완료 → /payment/callback → POST /api/toss/confirm → completePayment 순서로 진행
         if (paymentMethod == PaymentMethod.CARD || paymentMethod == PaymentMethod.KAKAOPAY) {
 
             try {
-                // PG 결제 요청
-                PayletterPaymentResDto payRes = paymentService.paymentRequest(
-                        orderId,
-                        orderNumber,
-                        pgAmount,
-                        reqDto.getCustomerName(),
-                        reqDto.getCustomerEmail(),
-                        reqDto.getCustomerPhone(),
-                        paymentMethod.name()
-                );
+                // pg_provider = TOSSPAYMENTS, payment_status = REQUESTED 설정
+                mapper.updateTossPaymentInit(orderId);
 
                 resDto.setPaymentStatus("REQUESTED");
-                resDto.setPgProvider("PAYLETTER");
-                resDto.setPgTid(String.valueOf(payRes.getToken()));
-                resDto.setPgOnlineUrl(payRes.getOnlineUrl());
-                resDto.setPgMobileUrl(payRes.getMobileUrl());
+                resDto.setPgProvider("TOSSPAYMENTS");
+                // pgOnlineUrl / pgMobileUrl 없음: FE가 위젯으로 직접 처리
 
+                log.info("[TOSS] 주문 생성 완료, FE가 위젯 결제 진행 orderId={}, pgAmount={}", orderId, pgAmount);
                 return resDto;
-            } catch (Exception pgError) {
-                log.error("[PG ERROR] 결제요청 실패 orderId={}", orderId, pgError);
 
-                if(pointDeducted){
+            } catch (Exception e) {
+                log.error("[TOSS] 주문 초기화 실패 orderId={}", orderId, e);
+
+                // 포인트 선차감 롤백
+                if (pointDeducted) {
                     try {
                         String tno = orderMapper.selectPointTno(orderNumber);
-                        if(tno != null){
+                        if (tno != null) {
                             KcpPointCancelReqDto cancelReqDto = new KcpPointCancelReqDto();
-
                             cancelReqDto.setTno(tno);
-                            cancelReqDto.setCancelReason("PG 결제  실패 롤백");
-
+                            cancelReqDto.setCancelReason("주문 초기화 실패 롤백");
                             kcpService.cancelPoint(cancelReqDto);
-
                             log.info("[POINT ROLLBACK] 포인트 자동복구 orderId={}", orderId);
                         }
-                    }catch (Exception rollbackError){
-                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}",orderId,rollbackError);
+                    } catch (Exception rollbackError) {
+                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}", orderId, rollbackError);
                     }
                 }
-                throw new RuntimeException("PG 결제 요청 실패");
+                throw new RuntimeException("주문 초기화 실패");
             }
         }
         return resDto;

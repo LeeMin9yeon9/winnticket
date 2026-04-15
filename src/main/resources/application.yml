@@ -40,6 +40,13 @@ jwt:
   access-token-validity: 10800000  #15분
   refresh-token-validity: 1209600000 #7일
 
+# Toss Payments 위젯 테스트 키 (토스 공식 문서 공개 테스트키 - 실제 운영 키는 application-prod.yml 환경변수 사용)
+toss:
+  client-key: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  success-url: http://localhost:3000/payment/callback
+  fail-url: http://localhost:3000/payment/fail
+
 logging:
   level:
     kr.co.winnticket: DEBUG

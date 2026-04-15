@@ -55,7 +55,16 @@
                 a.payment_status, -- 결제상태
                 a.final_price, -- 결제금액
                 a.payment_method, -- 결제수단
-                a.point_amount -- 포인트결제금액
+                a.point_amount, -- 포인트결제금액
+                a.pg_provider, -- PG사
+                CASE
+                    WHEN a.pg_callback_payload IS NOT NULL
+                         AND a.pg_callback_payload::jsonb ->> 'method' = '간편결제'
+                    THEN a.pg_callback_payload::jsonb -> 'easyPay' ->> 'provider'
+                    WHEN a.pg_callback_payload IS NOT NULL
+                    THEN a.pg_callback_payload::jsonb ->> 'method'
+                    ELSE NULL
+                END AS toss_method -- 토스 실제 결제수단 (카드, 가상계좌, 토스페이, 카카오페이 등)
             FROM
                 orders a
             JOIN order_items b
@@ -225,6 +234,7 @@
             a.payment_status, -- 결제상태
             a.final_price, -- 결제금액
             a.payment_method, -- 결제수단
+            a.pg_provider, -- PG사
             a.paid_at,  -- 결제일시
             a.canceled_at,  -- 취소일시
             a.total_price, -- 상품총금액
@@ -510,6 +520,13 @@
             ordered_at,
             canceled_at,
             pg_cancel_payload
+        FROM orders
+        WHERE id = #{orderId}::uuid
+    </select>
+
+    <!--포인트 결제 금액 조회 (Toss 금액 검증용)-->
+    <select id="selectPointAmount" resultType="int">
+        SELECT COALESCE(point_amount, 0)
         FROM orders
         WHERE id = #{orderId}::uuid
     </select>
