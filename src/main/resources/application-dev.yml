@@ -53,7 +53,7 @@ benepia:
     cert-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_CERT.pem
     private-key-path: /home/ubuntu/cert/KCP_AUTH_A8MCD_PRIKEY.pem
     privateKeyPassword: winn123#@!
-    base-url: https://stg-spl.kcp.co.kr
+    base-url: https://spl.kcp.co.kr
 
 benepia-batch:
   max-file-bytes: 20971520   # 20MB
