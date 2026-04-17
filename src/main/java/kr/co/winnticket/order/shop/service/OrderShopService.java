@@ -133,7 +133,7 @@ public class OrderShopService {
                 reqDto.getTotalPrice(),
                 reqDto.getDiscountPrice(),
                 paymentMethod.name(),
-                benefitId
+                reqDto.getBenepiaId()
         );
 
         log.info("주문정보="+result.toString());
@@ -310,7 +310,8 @@ public class OrderShopService {
             resDto.setPaymentStatus("READY");
 
             // 입금 기한 72시간
-            LocalDateTime deadline = LocalDateTime.now().plusHours(72);
+            //LocalDateTime deadline = LocalDateTime.now().plusHours(72);
+            LocalDateTime deadline = LocalDateTime.now().plusMinutes(2);
 
 
             mapper.updateDepositDeadline(orderId, deadline);
