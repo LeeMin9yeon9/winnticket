@@ -310,8 +310,9 @@ public class OrderShopService {
             resDto.setPaymentStatus("READY");
 
             // 입금 기한 72시간
-            //LocalDateTime deadline = LocalDateTime.now().plusHours(72);
-            LocalDateTime deadline = LocalDateTime.now().plusMinutes(2);
+            LocalDateTime deadline = LocalDateTime.now().plusHours(72);
+            // 테스트용 2분
+            // LocalDateTime deadline = LocalDateTime.now().plusMinutes(2);
 
 
             mapper.updateDepositDeadline(orderId, deadline);
@@ -373,7 +374,7 @@ public class OrderShopService {
 
                 log.info("[POINT] 포인트 단독결제 성공 orderId={}", orderId);
 
-                // ⭐ 반드시 결제완료 로직 실행
+                //  반드시 결제완료 로직 실행
                 orderService.completePayment(orderId);
 
             } catch (Exception e) {
