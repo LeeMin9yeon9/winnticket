@@ -100,6 +100,8 @@
             CHANNEL_ID,
             CUSTOMER_NAME,
             CUSTOMER_PHONE,
+            RECIPIENT_NAME,
+            RECIPIENT_PHONE,
             CUSTOMER_EMAIL,
             COMPANY_NAME,
             MEMO,
@@ -116,7 +118,9 @@
             'W'|| TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEXTVAL('seq_order_number'),
             #{channelId},
             #{customerName},
-            #{customerPhone},
+            REGEXP_REPLACE(#{customerPhone}, '[^0-9]', '', 'g'),
+            #{recipientName},
+            REGEXP_REPLACE(#{recipientPhone}, '[^0-9]', '', 'g'),
             #{customerEmail},
             #{companyName},
             #{memo},
@@ -327,7 +331,8 @@
             ot.id AS ticketId,
             ot.ticket_number AS ticketNumber,
             ot.partner_order_code AS partnerOrderCode,
-            ot.ticket_used AS ticketUsed
+            ot.ticket_used AS ticketUsed,
+            ot.status AS status
 
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id

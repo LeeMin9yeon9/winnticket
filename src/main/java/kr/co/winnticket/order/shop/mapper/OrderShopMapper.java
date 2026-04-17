@@ -24,6 +24,8 @@ public interface OrderShopMapper {
             @Param("channelId") UUID channelId,
             @Param("customerName") String customerName,
             @Param("customerPhone") String customerPhone,
+            @Param("recipientName") String recipientName,
+            @Param("recipientPhone") String recipientPhone,
             @Param("customerEmail") String customerEmail,
             @Param("companyName") String companyName,
             @Param("memo") String memo,

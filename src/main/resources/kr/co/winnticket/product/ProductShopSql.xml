@@ -114,6 +114,7 @@
             WHEN b.SALES_STATUS = 'ON_SALE' THEN 1
             WHEN b.SALES_STATUS = 'READY' THEN 2
             END,
+            b.DISPLAY_ORDER ASC NULLS LAST,
             b.CREATED_AT DESC;
         ]]>
     </select>
@@ -162,6 +163,7 @@
         WHEN a.SALES_STATUS = 'ON_SALE' THEN 1
         WHEN a.SALES_STATUS = 'READY' THEN 2
         END,
+        a.DISPLAY_ORDER ASC NULLS LAST,
         a.CREATED_AT DESC
     </select>
 
@@ -328,6 +330,7 @@
         ON pcov.option_value_id = v.ID
         AND pcov.channel_id = #{channelId}
         WHERE v.OPTION_ID = #{optionId}
+        ORDER BY v.DISPLAY_ORDER ASC
     </select>
 
 </mapper>

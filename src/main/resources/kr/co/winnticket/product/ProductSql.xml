@@ -78,7 +78,8 @@
             a.USAGE_PERIOD,  -- 사용기한
             a.VISIBLE,  -- 활성화여부
             a.IMAGE_URL, -- 이미지
-            a.IS_RESERVATION  -- 예약상품여부
+            a.IS_RESERVATION,  -- 예약상품여부
+            a.DISPLAY_ORDER  -- 표시순서
         FROM
             PRODUCTS a
         Where 1 = 1
@@ -145,12 +146,13 @@
             a.STOCK,  -- 옵션별가격재고
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
-            a.DISPLAY_ORDER,  -- 정렬순서
+            a.DISPLAY_ORDER,  -- 표시순서
             a.PARTNER_SUB_CODE  -- 파트너별도코드
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
         And a.OPTION_ID = #{id}
+        Order By a.DISPLAY_ORDER ASC
     </select>
 
     <!--
@@ -281,7 +283,7 @@
             #{prePurchased},
             #{regionCode},
             #{ticketType},
-            COALESCE((SELECT MAX(display_order) + 1 FROM PRODUCTS), 1),
+            #{displayOrder},
             #{visible},
             #{isReservation}
         )
@@ -330,11 +332,53 @@
             <if test="model.isReservation != null">
                 IS_RESERVATION = #{model.isReservation},
             </if>
+                DISPLAY_ORDER = #{model.displayOrder},
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1
         And ID = #{id}
     </update>
+
+    <!-- 상품 등록 시 display_order 밀기 -->
+    <update id="shiftProductDisplayOrderForInsert">
+        <![CDATA[
+        UPDATE products
+        SET display_order = display_order + 1
+        WHERE display_order >= #{newOrder}
+        ]]>
+    </update>
+
+    <!-- 상품 수정 시: 순서 앞으로 (ex: 5→2 → 2~4 +1) -->
+    <update id="shiftProductDisplayOrderForMoveUp">
+        <![CDATA[
+        UPDATE products
+        SET display_order = display_order + 1
+        WHERE display_order >= #{newOrder}
+          AND display_order < #{oldOrder}
+          AND id != #{productId}
+        ]]>
+    </update>
+
+    <!-- 상품 수정 시: 순서 뒤로 (ex: 2→5 → 3~5 -1) -->
+    <update id="shiftProductDisplayOrderForMoveDown">
+        <![CDATA[
+        UPDATE products
+        SET display_order = display_order - 1
+        WHERE display_order <= #{newOrder}
+          AND display_order > #{oldOrder}
+          AND id != #{productId}
+        ]]>
+    </update>
+
+    <!-- 상품 현재 display_order 조회 -->
+    <select id="getProductDisplayOrder" resultType="int">
+        SELECT COALESCE(display_order, 0) FROM products WHERE id = #{productId}
+    </select>
+
+    <!-- 상품 display_order 최댓값 조회 -->
+    <select id="getMaxProductDisplayOrder" resultType="int">
+        SELECT COALESCE(MAX(display_order), 0) FROM products WHERE display_order IS NOT NULL
+    </select>
 
     <!--
     - 상품 배송정보 수정
@@ -491,7 +535,7 @@
             #{model.additionalPrice},
             #{model.basePrice},
             #{model.partnerSubCode},
-            #{model.displayOrder}
+            COALESCE(#{model.displayOrder}, 0)
         )
     </insert>
 

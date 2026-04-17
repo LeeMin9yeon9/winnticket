@@ -1,5 +1,6 @@
 package kr.co.winnticket.ticketCoupon.service;
 
+import kr.co.winnticket.order.admin.dto.OrderItemCouponDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import kr.co.winnticket.ticketCoupon.dto.TicketCouponCreateReqDto;
@@ -228,6 +229,39 @@ public class TicketCouponService {
         mapper.deleteGroup(groupId);
     }
 
+    // 선사입 쿠폰 예약 (주문 생성 시점)
+    // ACTIVE 쿠폰 N개를 PENDING으로 변경하고 order_item_coupons 에 기록
+    @Transactional
+    public void reserveCoupons(UUID orderId, UUID orderItemId, UUID productId, UUID optionValueId, int quantity) {
+
+        for (int i = 0; i < quantity; i++) {
+
+            TicketCouponListResDto coupon = mapper.findActiveCouponByOptionValueId(optionValueId);
+
+            if (coupon == null) {
+                throw new IllegalArgumentException("선사입 쿠폰 재고가 부족합니다.");
+            }
+
+            int updated = mapper.markCouponPending(coupon.getId());
+
+            if (updated == 0) {
+                throw new IllegalStateException("쿠폰 예약 실패 (동시성 충돌)");
+            }
+
+            orderMapper.insertOrderItemCoupon(
+                    orderId,
+                    orderItemId,
+                    productId,
+                    optionValueId,
+                    coupon.getId(),
+                    coupon.getCouponNumber()
+            );
+
+            log.info("[쿠폰 예약] orderItemId={}, couponId={}, couponNumber={}",
+                    orderItemId, coupon.getId(), coupon.getCouponNumber());
+        }
+    }
+
     // 쿠폰 주문 발급
     @Transactional
     public String issueCoupon(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
@@ -287,6 +321,64 @@ public class TicketCouponService {
         }
 
 
+    // 예약된(PENDING) 쿠폰을 판매 확정(SOLD)하고 티켓 발행
+    // 결제 완료 시점에 호출됨. 수량만큼 이미 예약된 쿠폰을 모두 확정한다.
+    @Transactional
+    public List<String> issueReservedCoupons(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
+
+        List<OrderItemCouponDto> reserved = orderMapper.selectOrderItemCouponsByOrderItemId(orderItemId);
+
+        if (reserved == null || reserved.isEmpty()) {
+            throw new RuntimeException("예약된 쿠폰이 없습니다. orderItemId=" + orderItemId);
+        }
+
+        List<String> ticketNumbers = new ArrayList<>();
+
+        for (OrderItemCouponDto c : reserved) {
+
+            int updated = mapper.markPendingCouponSold(c.getTicketCouponId());
+
+            if (updated == 0) {
+                throw new IllegalStateException("예약 쿠폰 판매 확정 실패 couponId=" + c.getTicketCouponId());
+            }
+
+            String ticketNumber = c.getCouponNumber();
+
+            UUID existingId = orderMapper.findCancelledTicket(ticketNumber);
+
+            if (existingId != null) {
+                orderMapper.reuseTicket(existingId, orderItemId, validFrom, validTo);
+                log.info("[TICKET REUSE] {}", ticketNumber);
+            } else {
+                orderMapper.insertOrderTicket(orderItemId, ticketNumber, validFrom, validTo);
+                log.info("[쿠폰 판매확정/티켓발행] orderItemId={}, couponNumber={}", orderItemId, ticketNumber);
+            }
+
+            ticketNumbers.add(ticketNumber);
+        }
+
+        return ticketNumbers;
+    }
+
+    // 예약된(PENDING) 쿠폰을 복구(ACTIVE)하고 order_item_coupons 삭제
+    // 입금 전 주문 취소, 주문 만료 시 호출됨
+    @Transactional
+    public void restoreReservedCoupons(UUID orderId) {
+
+        List<UUID> reservedIds = orderMapper.selectPrePurchasedCouponIds(orderId);
+
+        for (UUID couponId : reservedIds) {
+            int restored = mapper.restorePendingCoupon(couponId);
+            if (restored == 0) {
+                log.warn("[쿠폰 복구 실패] PENDING 상태가 아님 couponId={}", couponId);
+            }
+        }
+
+        orderMapper.deleteOrderItemCouponsByOrderId(orderId);
+
+        log.info("[RESERVED COUPON RESTORE] 완료 orderId={}, count={}", orderId, reservedIds.size());
+    }
+
     // 판매된 티켓 조회 후 미사용 시 복구
     @Transactional
     public void cancelCoupon(UUID couponId) {
@@ -311,6 +403,7 @@ public class TicketCouponService {
     public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil) {
         validateDates(validFrom, validUntil);
         mapper.updateGroupDate(groupId, validFrom, validUntil);
+        mapper.updateCouponsDateByGroupId(groupId, validFrom, validUntil);
     }
 
     // [이슈6] 공통 날짜 검증

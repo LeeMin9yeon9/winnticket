@@ -84,6 +84,14 @@ public class OrderPostPaymentService {
         return ticketCouponService.issueCoupon(orderItemId, validFrom, validTo);
     }
 
+    public List<String> issueReservedCoupons(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
+        return ticketCouponService.issueReservedCoupons(orderItemId, validFrom, validTo);
+    }
+
+    public void restoreReservedCoupons(UUID orderId) {
+        ticketCouponService.restoreReservedCoupons(orderId);
+    }
+
     public String generateTicketNumber() {
         return "T"
                 + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
@@ -201,7 +209,9 @@ public class OrderPostPaymentService {
             vars.put("주문수량", String.valueOf(item.getQuantity()));
 
             String message = templateRenderService.render(template.getContent(), vars);
-            sendSms(order, message);
+
+            // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
+            sendCouponSms(order, message);
         }
     }
 
@@ -257,6 +267,22 @@ public class OrderPostPaymentService {
         bizMsgService.sendSms(
                 cmid,
                 order.getCustomerPhone(),
+                order.getCustomerName(),
+                "025118691",
+                "윈앤티켓",
+                message
+        );
+    }
+
+    // 쿠폰(QR/바코드) 문자 발송 - 수령자 번호 우선, 없으면 주문자 번호로 발송
+    private void sendCouponSms(OrderAdminDetailGetResDto order, String message) {
+        String phone = (order.getRecipientPhone() != null && !order.getRecipientPhone().isBlank())
+                ? order.getRecipientPhone()
+                : order.getCustomerPhone();
+        String cmid = UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        bizMsgService.sendSms(
+                cmid,
+                phone,
                 order.getCustomerName(),
                 "025118691",
                 "윈앤티켓",

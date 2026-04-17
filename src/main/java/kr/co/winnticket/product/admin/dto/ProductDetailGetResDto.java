@@ -80,6 +80,9 @@ public class ProductDetailGetResDto {
     @Schema(description = "예약상품여부")
     private boolean isReservation;
 
+    @Schema(description = "표시순서")
+    private Integer displayOrder;
+
     @Schema(description = "섹션 관리")
     private List<ProductSectionGetResDto> sections = new ArrayList<>();
 

@@ -41,6 +41,13 @@ public interface ProductMapper {
     // 상품 등록
     void insertProduct(ProductPostReqDto model);
 
+    // 상품 display_order shift
+    void shiftProductDisplayOrderForInsert(@Param("newOrder") int newOrder);
+    void shiftProductDisplayOrderForMoveUp(@Param("newOrder") int newOrder, @Param("oldOrder") int oldOrder, @Param("productId") UUID productId);
+    void shiftProductDisplayOrderForMoveDown(@Param("newOrder") int newOrder, @Param("oldOrder") int oldOrder, @Param("productId") UUID productId);
+    int getProductDisplayOrder(@Param("productId") UUID productId);
+    int getMaxProductDisplayOrder();
+
     // 상품 기본정보 수정
     void updateProductBasic(
             @Param("id") UUID auId,
