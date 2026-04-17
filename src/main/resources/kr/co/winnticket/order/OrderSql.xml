@@ -154,7 +154,6 @@
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             COALESCE(ot.ticket_number, '')                                                             AS ticketNumber,
             CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
-
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
         JOIN products c ON c.id = b.product_id
