@@ -119,7 +119,7 @@
             COALESCE(d.name, '')                                                                        AS partnerName,
             TO_CHAR(a.ordered_at, 'YYYY-MM-DD HH24:MI')                                               AS orderedAt,
             a.order_number                                                                              AS orderNumber,
-            ''                                                                                         AS companyName,
+            a.company_name                                                                              AS companyName,
             ''                                                                                         AS departmentName,
             a.customer_name                                                                            AS customerName,
             COALESCE(a.customer_phone, '')                                                             AS customerPhone,
@@ -197,7 +197,10 @@
         ORDER BY a.ordered_at DESC, ot.ticket_number
     </select>
 
+   
+
     <!--
+
    - 주문 상세 Select
    -->
     <select id="selectOrderAdminDetail" resultType="kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto">
