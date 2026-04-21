@@ -49,12 +49,6 @@
             ON pr.id = oi.product_id
         LEFT JOIN partners p
             ON p.id = pr.partner_id
-        LEFT JOIN order_item_coupons oic
-            ON oic.order_item_id = oi.id
-        LEFT JOIN ticket_coupons tc
-            ON tc.id = oic.ticket_coupon_id
-        LEFT JOIN ticket_coupon_groups tcg
-            ON tcg.id = tc.group_id
         WHERE 1 = 1
           AND pr.partner_id = #{partnerId}
           AND o.status != 'PENDING_PAYMENT'
@@ -64,7 +58,12 @@
                 Upper(o.order_number) LIKE '%' || Upper(#{srchWord}) || '%'
                 OR Upper(o.customer_name) LIKE '%' || Upper(#{srchWord}) || '%'
                 OR Upper(oi.product_name) LIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(oic.coupon_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR Upper(t.ticket_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                OR EXISTS (
+                    SELECT 1 FROM order_item_coupons oic2
+                    WHERE oic2.order_item_id = oi.id
+                    AND Upper(oic2.coupon_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                )
             )
         ]]>
         </if>
