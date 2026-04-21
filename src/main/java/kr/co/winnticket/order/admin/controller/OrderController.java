@@ -73,9 +73,10 @@ public class OrderController {
             @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) LocalDate asBegDate,
             @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate,
             @Parameter(description = "상태") @RequestParam(value = "status", required = false) String status,
-            @Parameter(description = "채널Id") @RequestParam(value = "channelId", required = false) UUID channelId
+            @Parameter(description = "채널Id") @RequestParam(value = "channelId", required = false) UUID channelId,
+            @Parameter(description = "파트너Id") @RequestParam(value = "partnerId", required = false) UUID partnerId
     ) throws Exception {
-        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId);
+        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
 
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("주문목록");
