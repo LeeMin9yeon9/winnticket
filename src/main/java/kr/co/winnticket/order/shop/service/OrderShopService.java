@@ -368,37 +368,34 @@ public class OrderShopService {
             dto.setBenepiaId(benepiaId);
             dto.setBenepiaPwd(benepiaPwd);
 
-            boolean kcpPointCharged = false;
+            // KCP 포인트 차감 - tno는 DB 조회 없이 응답값 직접 사용
+            // (completePayment 실패 시 트랜잭션이 rollback-only가 되어 DB 조회 불가)
+            KcpPointPayResDto pointPayRes;
+            try {
+                pointPayRes = kcpService.pointPayAndUpdate(dto);
+            } catch (Exception e) {
+                log.error("[POINT] KCP 포인트 차감 실패 orderId={}", orderId, e);
+                throw new RuntimeException("포인트 결제 실패");
+            }
+
+            String kcpTno = pointPayRes.getTno();
+            log.info("[POINT] 포인트 단독결제 성공 orderId={}, tno={}", orderId, kcpTno);
 
             try {
-
-                kcpService.pointPayAndUpdate(dto);
-                kcpPointCharged = true;
-
-                log.info("[POINT] 포인트 단독결제 성공 orderId={}", orderId);
-
-                //  반드시 결제완료 로직 실행
                 orderService.completePayment(orderId);
-
             } catch (Exception e) {
-
-                log.error("[POINT] 포인트 결제 실패", e);
-
-                if (kcpPointCharged) {
+                log.error("[POINT] completePayment 실패, KCP 롤백 시도 orderId={}, tno={}", orderId, kcpTno, e);
+                if (kcpTno != null) {
                     try {
-                        String tno = orderMapper.selectPointTno(orderNumber);
-                        if (tno != null) {
-                            KcpPointCancelReqDto cancelDto = new KcpPointCancelReqDto();
-                            cancelDto.setTno(tno);
-                            cancelDto.setCancelReason("주문 처리 실패 롤백");
-                            kcpService.cancelPoint(cancelDto);
-                            log.info("[POINT ROLLBACK] 포인트 자동 복구 완료 orderId={}", orderId);
-                        }
+                        KcpPointCancelReqDto cancelDto = new KcpPointCancelReqDto();
+                        cancelDto.setTno(kcpTno);
+                        cancelDto.setCancelReason("주문 처리 실패 롤백");
+                        kcpService.cancelPoint(cancelDto);
+                        log.info("[POINT ROLLBACK] 포인트 자동 복구 완료 orderId={}, tno={}", orderId, kcpTno);
                     } catch (Exception rollbackError) {
-                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}", orderId, rollbackError);
+                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}, tno={}", orderId, kcpTno, rollbackError);
                     }
                 }
-
                 throw new RuntimeException("포인트 결제 실패");
             }
 
@@ -406,9 +403,10 @@ public class OrderShopService {
 
             return resDto;
         }
-        // POINT
         // 혼합결제 포인트 먼저 차감
+        // tno를 외부에 선언해서 CARD 블록에서도 사용 (DB 조회 없이 메모리에서 사용)
         boolean pointDeducted = false;
+        String mixedKcpTno = null;
         if (pointAmount > 0) {
 
             String benepiaId = reqDto.getBenepiaId();
@@ -436,16 +434,12 @@ public class OrderShopService {
             dto.setBenepiaPwd(benepiaPwd);
 
             try {
-
-                kcpService.pointPayAndUpdate(dto);
+                KcpPointPayResDto mixedPointRes = kcpService.pointPayAndUpdate(dto);
                 pointDeducted = true;
-
-                log.info("혼합결제 포인트 선차감 완료 orderId={}", orderId);
-
+                mixedKcpTno = mixedPointRes.getTno();
+                log.info("혼합결제 포인트 선차감 완료 orderId={}, tno={}", orderId, mixedKcpTno);
             } catch (Exception e) {
-
                 log.error("포인트 결제 실패", e);
-
                 throw new RuntimeException("포인트 결제 실패");
             }
         }
@@ -475,21 +469,15 @@ public class OrderShopService {
             } catch (Exception pgError) {
                 log.error("[PG ERROR] 결제요청 실패 orderId={}", orderId, pgError);
 
-                if(pointDeducted){
+                if (pointDeducted && mixedKcpTno != null) {
                     try {
-                        String tno = orderMapper.selectPointTno(orderNumber);
-                        if(tno != null){
-                            KcpPointCancelReqDto cancelReqDto = new KcpPointCancelReqDto();
-
-                            cancelReqDto.setTno(tno);
-                            cancelReqDto.setCancelReason("PG 결제  실패 롤백");
-
-                            kcpService.cancelPoint(cancelReqDto);
-
-                            log.info("[POINT ROLLBACK] 포인트 자동복구 orderId={}", orderId);
-                        }
-                    }catch (Exception rollbackError){
-                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}",orderId,rollbackError);
+                        KcpPointCancelReqDto cancelReqDto = new KcpPointCancelReqDto();
+                        cancelReqDto.setTno(mixedKcpTno);
+                        cancelReqDto.setCancelReason("PG 결제 실패 롤백");
+                        kcpService.cancelPoint(cancelReqDto);
+                        log.info("[POINT ROLLBACK] 포인트 자동복구 orderId={}, tno={}", orderId, mixedKcpTno);
+                    } catch (Exception rollbackError) {
+                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}, tno={}", orderId, mixedKcpTno, rollbackError);
                     }
                 }
                 throw new RuntimeException("PG 결제 요청 실패");
