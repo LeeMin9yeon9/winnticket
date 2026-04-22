@@ -10,4 +10,5 @@ public interface SpavisMapper {
 
     // 이용결과 확인
     List<String> selectCouponNo(UUID orderId);
+
 }
