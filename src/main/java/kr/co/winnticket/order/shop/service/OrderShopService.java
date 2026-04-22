@@ -367,7 +367,6 @@ public class OrderShopService {
 
             // KCP 포인트 차감 - tno는 DB 조회 없이 응답값 직접 사용
             // (completePayment 실패 시 트랜잭션이 rollback-only가 되어 DB 조회 불가)
-           // KcpPointPayResDto
             KcpPointPayResDto pointPayRes;
             try {
                 pointPayRes = kcpService.pointPayAndUpdate(dto);
