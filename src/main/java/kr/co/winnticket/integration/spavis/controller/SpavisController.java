@@ -7,6 +7,7 @@ import kr.co.winnticket.integration.spavis.service.SpavisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,7 +19,7 @@ public class SpavisController {
     private final SpavisService service;
 
     @GetMapping("/check")
-    public SPCouponCheckResponse check(@RequestParam UUID orderId) throws Exception {
+    public List<SPCouponCheckResponse> check(@RequestParam UUID orderId) throws Exception {
         return service.check(orderId);
     }
 }
