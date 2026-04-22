@@ -173,14 +173,14 @@ public class OrderService {
         // 주문 상태 변경
         mapper.updateOrderStatus(auId);
 
-        // 베네피아 주문 전송
-        try {
-            if (order.getBenepiaId() != null) {
+        // 베네피아 주문 전송 (실패해도 결제는 성공 처리 - Benepia 전송은 비필수 알림)
+        if (order.getBenepiaId() != null) {
+            try {
                 log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
                 benepiaOrderService.sendOrder(order, items);
+            } catch (Exception e) {
+                log.error("[BENEPIA 주문 전송 실패] 결제는 정상 처리됨. 관리자 확인 필요 orderId={}", auId, e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("[BENEPIA 주문 전송 실패]", e);
         }
 
         // 파트너 발권 (실패 시 RuntimeException → 트랜잭션 전체 롤백 → 결제도 취소)
