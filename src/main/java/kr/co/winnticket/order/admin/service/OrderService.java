@@ -480,10 +480,6 @@ public class OrderService {
         } else if (method == PaymentMethod.POINT) {
             String tno = mapper.selectPointTno(order.getOrderNumber());
 
-            if (tno == null) {
-                throw new IllegalStateException("포인트 거래번호(tno)가 존재하지 않습니다.");
-            }
-
             int finalPrice = order.getFinalPrice();
 
             // ===== 수수료 계산 =====
@@ -502,26 +498,27 @@ public class OrderService {
 
             log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
 
-            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-            dto.setTno(tno);
-            dto.setCancelReason("고객요청 관리자 취소");
+            if (tno != null) {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(tno);
+                dto.setCancelReason("고객요청 관리자 취소");
 
-            if (cancelFee > 0) {
-                // 부분취소 (수수료 제외 금액만 환불)
-                dto.setModType("STRA");
-                dto.setModMny(refundAmount);
-                dto.setModOrdrIdxx(order.getOrderNumber());
-                dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                if (cancelFee > 0) {
+                    dto.setModType("STRA");
+                    dto.setModMny(refundAmount);
+                    dto.setModOrdrIdxx(order.getOrderNumber());
+                    dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                } else {
+                    dto.setModType("STSC");
+                }
+
+                try {
+                    kcpService.cancelPoint(dto);
+                } catch (Exception e) {
+                    log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                }
             } else {
-                //  전액취소
-                dto.setModType("STSC");
-            }
-
-
-            try {
-                kcpService.cancelPoint(dto);
-            } catch (Exception e) {
-                log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
             }
 
             cancelAmount = refundAmount;
