@@ -80,9 +80,11 @@ public class AquaPlanetScheduler {
                     try {
                         int result;
                         if ("U".equals(item.getCponUseStatCd())) {
+                            String cleanClltDs = item.getClltDs().replaceAll("[^0-9]", "");
+
                             result = aquaPlanetMapper.updateAquaPlanetTicketUsed(
                                     item.getReprCponIndictNo(),
-                                    item.getClltDs()
+                                    cleanClltDs
                             );
                             if (result > 0) {
                                 log.info("[AquaPlanet] 사용 처리 reprCponIndictNo={}, clltDs={}", item.getReprCponIndictNo(), item.getClltDs());
