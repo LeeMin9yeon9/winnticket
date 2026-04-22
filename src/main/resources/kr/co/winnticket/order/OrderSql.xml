@@ -85,13 +85,13 @@
 
         <if test="begDate != null">
             <![CDATA[
-            AND Date(a.ordered_at) >= #{begDate}
+            AND a.ordered_at::date >= #{begDate}
             ]]>
         </if>
 
         <if test="endDate != null">
             <![CDATA[
-            AND Date(a.ordered_at) <= #{endDate}
+            AND a.ordered_at::date <= #{endDate}
             ]]>
         </if>
 
@@ -154,7 +154,6 @@
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             COALESCE(ot.ticket_number, '')                                                             AS ticketNumber,
             CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
-
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
         JOIN products c ON c.id = b.product_id
@@ -175,13 +174,13 @@
 
         <if test="begDate != null">
             <![CDATA[
-            AND Date(a.ordered_at) >= #{begDate}
+            AND a.ordered_at::date >= #{begDate}
             ]]>
         </if>
 
         <if test="endDate != null">
             <![CDATA[
-            AND Date(a.ordered_at) <= #{endDate}
+            AND a.ordered_at::date <= #{endDate}
             ]]>
         </if>
 
@@ -193,6 +192,10 @@
 
         <if test="channelId != null">
             AND a.channel_id = #{channelId}
+        </if>
+
+        <if test="partnerId != null">
+            AND c.partner_id = #{partnerId}
         </if>
 
         ORDER BY a.ordered_at DESC, ot.ticket_number
