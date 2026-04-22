@@ -381,10 +381,13 @@
             t.ticket_number     As ticketNumber,
             t.ticket_used       AS ticketUsed,
             t.ticket_used_date  AS ticketUsedDate,
-            t.status
+            CASE
+                WHEN o.status IN ('CANCELED', 'REFUNDED') THEN 'CANCELLED'
+                ELSE t.status
+            END AS status
         FROM order_tickets t
-        JOIN order_items oi
-        ON oi.id = t.order_item_id
+        JOIN order_items oi ON oi.id = t.order_item_id
+        JOIN orders o ON o.id = oi.order_id
         WHERE oi.order_id = #{id}
         and t.id = #{ticketId}
     </select>
