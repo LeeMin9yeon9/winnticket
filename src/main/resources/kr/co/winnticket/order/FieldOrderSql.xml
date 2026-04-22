@@ -29,6 +29,7 @@
             <![CDATA[
             CASE
                 WHEN o.status IN ('CANCELED', 'REFUNDED') THEN '취소'
+                WHEN t.status = 'CANCELLED' THEN '취소'
                 WHEN t.ticket_used = true THEN '사용완료'
                 When t.valid_from Is Not null and t.valid_from > CURRENT_DATE then '사용시작전'
                 WHEN t.valid_to IS NOT NULL AND t.valid_to < CURRENT_DATE THEN '기간 만료'
@@ -36,10 +37,12 @@
             END
            ]]> AS ticketStatus,
             CASE
-                WHEN o.status IN ('CANCELED', 'REFUNDED') THEN o.canceled_at
-                WHEN t.ticket_used = true THEN t.ticket_used_date
-                ELSE NULL
-            END                     AS processedAt
+            WHEN o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED'
+                THEN o.canceled_at
+            WHEN t.ticket_used = true
+                THEN t.ticket_used_date
+            ELSE NULL
+            END     AS processedAt
         FROM order_tickets t
         JOIN order_items oi
             ON oi.id = t.order_item_id
@@ -52,17 +55,17 @@
         WHERE 1 = 1
           AND pr.partner_id = #{partnerId}
           AND o.status != 'PENDING_PAYMENT'
-        <if test="srchWord != null and srchWord != ''">
+        <if test="srchWord != null and srchWord.trim() != ''">
             <![CDATA[
             AND (
-                Upper(o.order_number) LIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(o.customer_name) LIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(oi.product_name) LIKE '%' || Upper(#{srchWord}) || '%'
-                OR Upper(t.ticket_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                o.order_number ILIKE '%' || #{srchWord} || '%'
+                OR o.customer_name ILIKE '%' || #{srchWord} || '%'
+                OR oi.product_name ILIKE '%' || #{srchWord} || '%'
+                OR t.ticket_number ILIKE '%' || #{srchWord} || '%'
                 OR EXISTS (
                     SELECT 1 FROM order_item_coupons oic2
                     WHERE oic2.order_item_id = oi.id
-                    AND Upper(oic2.coupon_number) LIKE '%' || Upper(#{srchWord}) || '%'
+                        AND oic2.coupon_number ILIKE '%' || #{srchWord} || '%'
                 )
             )
         ]]>
@@ -70,13 +73,13 @@
 
         <if test="begDate != null">
             <![CDATA[
-            AND Date(o.ordered_at) >= #{begDate}
+            AND o.ordered_at >= #{begDate}
             ]]>
         </if>
 
         <if test="endDate != null">
             <![CDATA[
-            AND Date(o.ordered_at) <= #{endDate}
+            AND o.ordered_at < #{endDate} + INTERVAL '1 day'
             ]]>
         </if>
 
@@ -98,15 +101,14 @@
                 </when>
                 <when test="status.equals('CANCELED')">
                     AND o.status IN ('CANCELED', 'REFUNDED')
-                    and t.status = 'CANCELLED'
                 </when>
                 <when test="status.equals('EXPIRED')">
                     AND t.ticket_used = false
                     and t.status = 'ISSUED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                     <![CDATA[
-                    AND t.valid_from IS Not NULL and t.valid_from > CURRENT_DATE
-                    and t.valid_to Is Not null and t.valid_to < CURRENT_DATE
+                    AND t.valid_to IS NOT NULL
+                    AND t.valid_to < CURRENT_DATE
                     ]]>
                 </when>
             </choose>
