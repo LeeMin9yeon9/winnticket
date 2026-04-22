@@ -90,7 +90,7 @@ benepia-batch:
 
 payletter:
   base-url: https://pgapi.payletter.com
-  client-id: pay_test #운영은 문의해봐야함
+  client-id: lspm1 #운영은 문의해봐야함
   payment-api-key: ${PAYLETTER_PAYMENT_API_KEY}
   search-api-key: ${PAYLETTER_SEARCH_API_KEY}
   service-name: 페이레터
