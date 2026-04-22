@@ -368,9 +368,12 @@ public class OrderShopService {
             dto.setBenepiaId(benepiaId);
             dto.setBenepiaPwd(benepiaPwd);
 
+            boolean kcpPointCharged = false;
+
             try {
 
                 kcpService.pointPayAndUpdate(dto);
+                kcpPointCharged = true;
 
                 log.info("[POINT] 포인트 단독결제 성공 orderId={}", orderId);
 
@@ -380,6 +383,21 @@ public class OrderShopService {
             } catch (Exception e) {
 
                 log.error("[POINT] 포인트 결제 실패", e);
+
+                if (kcpPointCharged) {
+                    try {
+                        String tno = orderMapper.selectPointTno(orderNumber);
+                        if (tno != null) {
+                            KcpPointCancelReqDto cancelDto = new KcpPointCancelReqDto();
+                            cancelDto.setTno(tno);
+                            cancelDto.setCancelReason("주문 처리 실패 롤백");
+                            kcpService.cancelPoint(cancelDto);
+                            log.info("[POINT ROLLBACK] 포인트 자동 복구 완료 orderId={}", orderId);
+                        }
+                    } catch (Exception rollbackError) {
+                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}", orderId, rollbackError);
+                    }
+                }
 
                 throw new RuntimeException("포인트 결제 실패");
             }

@@ -116,7 +116,7 @@ public class KcpService {
             body.put("ordr_idxx", dto.getOrderNo());                // 주문번호
             body.put("amount",dto.getAmount());
 
-            body.put("good_name",dto.getProductName());             // 상품명
+            body.put("good_name", dto.getProductName() + " (" + dto.getOrderNo() + ")");  // 상품명 (주문번호)
             body.put("good_cd",dto.getProductCode());               // 상품코드
             body.put("buyr_name",dto.getBuyerName());               // 주문자명
             body.put("buyr_mail",dto.getBuyerEmail());              // 주문자 이메일
