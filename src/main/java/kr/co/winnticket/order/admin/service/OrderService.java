@@ -478,18 +478,16 @@ public class OrderService {
             }
 
         } else if (method == PaymentMethod.POINT) {
-            Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
+            String tno = mapper.selectPointTno(order.getOrderNumber());
 
-            if (payInfo == null || payInfo.get("pg_tid") == null) {
-                throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
+            if (tno == null) {
+                throw new IllegalStateException("포인트 거래번호(tno)가 존재하지 않습니다.");
             }
 
-            String tno = (String) payInfo.get("pg_tid");
+            int finalPrice = order.getFinalPrice();
 
-            int finalPrice = ((Number) payInfo.get("final_price")).intValue();
-
-            // ===== 수수료 계산 (Payletter랑 동일하게 맞춰) =====
-            LocalDateTime orderedAt = ((java.sql.Timestamp) payInfo.get("ordered_at")).toLocalDateTime();
+            // ===== 수수료 계산 =====
+            LocalDateTime orderedAt = order.getOrderedAt();
 
             long days = java.time.temporal.ChronoUnit.DAYS.between(
                     orderedAt.toLocalDate(),
