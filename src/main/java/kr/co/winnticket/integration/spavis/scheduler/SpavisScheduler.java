@@ -36,7 +36,7 @@ public class SpavisScheduler {
 
         for (UUID orderId : orderIds) {
 
-            List<String> couponNos = Collections.singletonList(spavisMapper.selectCouponNo(orderId));
+            List<String> couponNos = spavisMapper.selectCouponNo(orderId);
 
             for (String couponNo : couponNos) {
 
