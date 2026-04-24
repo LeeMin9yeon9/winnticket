@@ -41,8 +41,9 @@ public interface TicketMapper {
     List<String> selectWoongjinOrders();
 
     // 웅진 쿠폰 사용처리
-    void updateWoongjinTicketUsed(
-            @Param("couponNo") String couponNo
+    int updateWoongjinTicketUsed(
+            @Param("couponNo") String couponNo,
+            @Param("resultDate") String resultDate
     );
 
     // 스마트인피니 쿠폰 조회
