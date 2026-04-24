@@ -73,9 +73,10 @@ public class OrderController {
             @Parameter(description = "시작일자") @RequestParam(value = "begDate", required = false) LocalDate asBegDate,
             @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate,
             @Parameter(description = "상태") @RequestParam(value = "status", required = false) String status,
-            @Parameter(description = "채널Id") @RequestParam(value = "channelId", required = false) UUID channelId
+            @Parameter(description = "채널Id") @RequestParam(value = "channelId", required = false) UUID channelId,
+            @Parameter(description = "파트너Id") @RequestParam(value = "partnerId", required = false) UUID partnerId
     ) throws Exception {
-        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId);
+        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
 
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("주문목록");
@@ -89,14 +90,15 @@ public class OrderController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         String[] headers = {
-                "채널명", "주문일", "주문번호", "회사명", "부서명",
+                "채널명", "파트너 이름", "주문일", "주문번호", "회사명",
                 "주문자 이름", "주문자 전화번호", "주문자 이메일",
                 "수령자 이름", "수령자 전화번호",
                 "상품번호", "주문상품", "예약일자", "상품종류", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
                 "결제상태", "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
-                "무통장 결제금액", "신용카드 결제금액", "이용권"
+                "무통장 결제금액", "신용카드 결제금액", "이용권",
+                "결제일시", "티켓번호", "티켓사용여부"
         };
 
         HSSFRow headerRow = sheet.createRow(0);
@@ -110,45 +112,48 @@ public class OrderController {
         int rowNum = 1;
         for (OrderExportResDto r : rows) {
             HSSFRow row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(r.getChannelName() != null ? r.getChannelName() : "");
-            row.createCell(1).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
-            row.createCell(2).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");
-            row.createCell(3).setCellValue("");
-            row.createCell(4).setCellValue("");
-            row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");
-            row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");
-            row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");
-            row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");
-            row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : "");
-            row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");
-            row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
-            row.createCell(12).setCellValue("");
-            row.createCell(13).setCellValue("");
-            row.createCell(14).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");
-            row.createCell(15).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
-            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
-            row.createCell(17).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);
-            row.createCell(18).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0);
+            row.createCell(0).setCellValue(r.getChannelName() != null ? r.getChannelName() : "");       // 채널명
+            row.createCell(1).setCellValue(r.getPartnerName() != null ? r.getPartnerName() : "");       // 파트너 이름
+            row.createCell(2).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");           // 주문일
+            row.createCell(3).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");       // 주문번호
+            row.createCell(4).setCellValue(r.getCompanyName() != null ? r.getCompanyName() : "");       // 회사명
+            row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");     // 주문자
+            row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");   // 주문자 전화번호
+            row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");   // 이메일
+            row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");   // 수령자
+            row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : ""); // 수령자 번호
+            row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");      // 상품번호
+            row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : ""); // 주문상품
+            row.createCell(12).setCellValue("");                                                         // 예약일자
+            row.createCell(13).setCellValue("");                                                         // 상품종류
+            row.createCell(14).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");        // 티켓종류
+            row.createCell(15).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);             // 수량
+            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);           // 단가
+            row.createCell(17).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);       // 공급가
+            row.createCell(18).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0); // 총 주문금액
             // 결제상태 한글 변환
             String psDisplay = "";
             if (r.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(r.getPaymentStatus()).getDisplayName(); }
                 catch (Exception e) { psDisplay = r.getPaymentStatus(); }
             }
-            row.createCell(19).setCellValue(psDisplay);
-            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(19).setCellValue(psDisplay);                                                  // 결제상태
+            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);          // 결제금액
             // 결제수단 한글 변환
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(r.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
             }
-            row.createCell(21).setCellValue(pmDisplay);
-            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-            row.createCell(23).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");
-            row.createCell(24).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0);
-            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-            row.createCell(26).setCellValue("");
+            row.createCell(21).setCellValue(pmDisplay);                                                  // 결제수단
+            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트
+            row.createCell(23).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
+            row.createCell(24).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0); // 무통장 결제금액
+            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);          // 카드 결제금액
+            row.createCell(26).setCellValue("");                                                          // 베네피아 이용권
+            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");                 // 결제일시
+            row.createCell(28).setCellValue(r.getTicketNumber() != null ? r.getTicketNumber() : "");     // 티켓번호
+            row.createCell(29).setCellValue(r.getTicketUsed() != null ? r.getTicketUsed() : "미사용");   // 티켓사용여부
         }
 
         // 열 너비 자동 조정

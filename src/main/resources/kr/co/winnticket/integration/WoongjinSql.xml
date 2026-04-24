@@ -17,8 +17,8 @@
     <select id="selectWJOrder" resultMap="WJOrderMap">
         SELECT
             o.order_number        AS CHANNEL_ORDER_NUMBER,
-            o.customer_name       AS USER_NAME,
-            o.customer_phone      AS USER_PHONE,
+            COALESCE(o.recipient_name, o.customer_name) AS USER_NAME,
+            COALESCE(o.recipient_phone, o.customer_phone) AS USER_PHONE,
             o.customer_email      AS USER_EMAIL,
             ot.ticket_number      AS PRODUCT_CHANNEL_ORDER_NUMBER,
             pov.code              AS OPTION_ID

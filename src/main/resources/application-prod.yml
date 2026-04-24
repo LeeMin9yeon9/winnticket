@@ -72,7 +72,7 @@ benepia:
   api-key: ${BENEPIA_KCP_API_KEY}
   kcp:
     site-cd: A8MCD
-    pt-memcorp-cd: A8MCD
+    pt-memcorp-cd: 5555
     cert-path: /home/winnticket/cert/KCP_AUTH_A8MCD_CERT.pem
     private-key-path: /home/winnticket/cert/KCP_AUTH_A8MCD_PRIKEY.pem
     base-url: https://spl.kcp.co.kr
@@ -90,7 +90,7 @@ benepia-batch:
 
 payletter:
   base-url: https://pgapi.payletter.com
-  client-id: pay_test #운영은 문의해봐야함
+  client-id: lspm
   payment-api-key: ${PAYLETTER_PAYMENT_API_KEY}
   search-api-key: ${PAYLETTER_SEARCH_API_KEY}
   service-name: 페이레터
@@ -156,9 +156,9 @@ aquaplanet:
   wrkr-no: l1711019
   envr-dv-cd: R
 
-# 파트너 연동(LS컴퍼니 아직 개발서버꺼 )
+# 파트너 연동(LS컴퍼니)
 lscompany:
-  base-url: "https://unity-dev.lscompany-api.com/Api_v3"
-  agent-no: "CH2603091"
+  base-url: "https://unity-prod.lscompany-api.com/Api_v3"
+  agent-no: "CH2603241"
   token: ${LSCOMPANY_TOKEN}
 

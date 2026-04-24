@@ -337,7 +337,7 @@ public class BenepiaOrderService {
     }
 
     // =========================
-    // JSON 파일 생성
+    // JSON 파일 생성 (실패해도 결제 처리에 영향 없음 - 로그만)
     // =========================
     private void createJsonFile(BenepiaOrderRequest req){
 
@@ -362,13 +362,13 @@ public class BenepiaOrderService {
             log.info("[BENEPIA] JSON FILE CREATED = {}", path);
 
         }catch (Exception e){
-            log.error("[BENEPIA] JSON FILE CREATE FAIL", e);
-            throw new RuntimeException(e);
+            // 파일 생성 실패는 결제를 막지 않음 (로그만 기록)
+            log.error("[BENEPIA] JSON FILE CREATE FAIL (결제는 정상 처리됨)", e);
         }
     }
 
     // =========================
-    // JSON 파일 생성
+    // JSON 파일 생성 (실패해도 결제 처리에 영향 없음 - 로그만)
     // =========================
     private void createJsonFile(BenepiaCancelRequest req){
 
@@ -393,8 +393,8 @@ public class BenepiaOrderService {
             log.info("[BENEPIA] JSON FILE CREATED = {}", path);
 
         }catch (Exception e){
-            log.error("[BENEPIA] JSON FILE CREATE FAIL", e);
-            throw new RuntimeException(e);
+            // 파일 생성 실패는 결제를 막지 않음 (로그만 기록)
+            log.error("[BENEPIA] JSON FILE CREATE FAIL (결제는 정상 처리됨)", e);
         }
     }
 

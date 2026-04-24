@@ -9,12 +9,15 @@ import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
-import kr.co.winnticket.integration.spavis.service.SpavisService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
+import kr.co.winnticket.siteinfo.bankaccount.dto.BankAccountResDto;
+import kr.co.winnticket.siteinfo.bankaccount.service.BankAccountService;
+import kr.co.winnticket.siteinfo.companyinfo.dto.SiteInfoResponse;
+import kr.co.winnticket.siteinfo.companyinfo.service.SiteInfoService;
 import kr.co.winnticket.sms.service.BizMsgService;
 import kr.co.winnticket.sms.service.SmsTemplateFinder;
 import kr.co.winnticket.sms.service.TemplateRenderService;
@@ -44,19 +47,20 @@ public class OrderPostPaymentService {
     private final BizMsgService bizMsgService;
     private final SmsTemplateFinder smsTemplateFinder;
     private final TemplateRenderService templateRenderService;
+    private final SiteInfoService siteInfoService;
 
     // 파트너 서비스
     private final WoongjinService woongjinService;
     private final PlaystoryService playstoryService;
     private final MairService mairService;
-    private final CoreWorksService coreWorksService;
     private final SmartInfiniService smartInfiniService;
     private final PlusNService plusNService;
     private final AquaPlanetService aquaplanetService;
     private final LsCompanyService lsCompanyService;
+    private final BankAccountService bankAccountService;
 
-    private static final String QR_URL = "https://www.winnticket.store/qr?orderNumber=";
-    private static final String BARCODE_URL = "https://www.winnticket.store/barcode?orderNumber=";
+    private static final String QR_URL = "https://www.winnticket.co.kr/qr?orderNumber=";
+    private static final String BARCODE_URL = "https://www.winnticket.co.kr/barcode?orderNumber=";
     private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
     private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
     private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
@@ -77,6 +81,14 @@ public class OrderPostPaymentService {
 
     public String issueCoupon(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
         return ticketCouponService.issueCoupon(orderItemId, validFrom, validTo);
+    }
+
+    public List<String> issueReservedCoupons(UUID orderItemId, LocalDate validFrom, LocalDate validTo) {
+        return ticketCouponService.issueReservedCoupons(orderItemId, validFrom, validTo);
+    }
+
+    public void restoreReservedCoupons(UUID orderId) {
+        ticketCouponService.restoreReservedCoupons(orderId);
     }
 
     public String generateTicketNumber() {
@@ -146,7 +158,12 @@ public class OrderPostPaymentService {
 
         String message = templateRenderService.render(template.getContent(), Map.of(
                 "주문자명", order.getCustomerName(),
-                "주문번호", order.getOrderNumber()
+                "주문번호", order.getOrderNumber(),
+                "상품명", buildProductLines(items),
+                "주문수량", String.valueOf(order.getAllCnt()),
+                "주문금액", String.valueOf(order.getTotalPrice()),
+                "입금계좌", buildAccountLines(),
+                "고객센터", selectCallNumber()
         ));
         sendSms(order, message);
     }
@@ -165,6 +182,10 @@ public class OrderPostPaymentService {
             Map<String, String> vars = new HashMap<>();
             vars.put("주문자명", order.getCustomerName());
             vars.put("상품명", item.getProductName());
+            vars.put("주문번호", order.getOrderNumber());
+            vars.put("주문금액", String.valueOf(order.getTotalPrice()));
+            vars.put("입금계좌", buildAccountLines());
+            vars.put("고객센터", selectCallNumber());
 
             List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
             String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
@@ -182,24 +203,34 @@ public class OrderPostPaymentService {
                 couponText = String.join("\n", tickets);
             }
 
-            vars.put("티켓번호", couponText);
-            vars.put("옵션값명", item.getOptionName() == null ? "" : item.getOptionName());
-            vars.put("수량", String.valueOf(item.getQuantity()));
+            vars.put("티켓링크", couponText);
+            vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
+            vars.put("주문수량", String.valueOf(item.getQuantity()));
 
             String message = templateRenderService.render(template.getContent(), vars);
-            sendSms(order, message);
+
+            // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
+            sendCouponSms(order, message);
         }
     }
 
     /** 주문취소 문자 발송 */
-    public void sendOrderCancelledSms(OrderAdminDetailGetResDto order) {
+    public void sendOrderCancelledSms(OrderAdminDetailGetResDto order, List<OrderProductListGetResDto> items) {
         if (order == null) return;
 
-        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(null, SmsTemplateCode.ORDER_CANCELLED);
+        UUID productId = items.get(0).getProductId();
+
+        ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.ORDER_CANCELLED);
         if (template == null || template.getContent() == null) return;
 
         String message = templateRenderService.render(template.getContent(), Map.of(
-                "주문자명", order.getCustomerName()
+                "주문자명", order.getCustomerName(),
+                "주문번호", order.getOrderNumber(),
+                "상품명", buildProductLines(items),
+                "주문수량", String.valueOf(order.getAllCnt()),
+                "주문금액", String.valueOf(order.getTotalPrice()),
+                "입금계좌", buildAccountLines(),
+                "고객센터", selectCallNumber()
         ));
         sendSms(order, message);
     }
@@ -211,10 +242,21 @@ public class OrderPostPaymentService {
         PartnerSplitResult split = splitByPartner(items);
 
         if (split.isHasSpavis() || split.isHasNormalProduct()
-                || split.isHasSmartInfini() || split.isHasAquaplanet()
-                || split.isHasLsCompany()) {
+                || split.isHasSmartInfini() || split.isHasAquaplanet()) {
             List<OrderProductListGetResDto> normalItems = extractNormalProducts(items);
             sendTicketIssuedSms(order, normalItems, ticketMap);
+        }
+        /*else if(split.isHasCoreworks()) {
+            log.info("[CoreWorks 문자재전송]");
+            coreWorksService.order(orderId);
+        }
+         */
+        else if(split.isHasLsCompany()) {
+            log.info("[LSCompany 문자재전송]");
+            lsCompanyService.resendTicket(order.getId());
+        } else if(split.isHasWoongin()) {
+            log.info("[Woongin 문자재전송]");
+            woongjinService.resendPin(order.getId());
         }
     }
 
@@ -229,6 +271,90 @@ public class OrderPostPaymentService {
                 "윈앤티켓",
                 message
         );
+    }
+
+    // 쿠폰(QR/바코드) 문자 발송 - 수령자 번호 우선, 없으면 주문자 번호로 발송
+    private void sendCouponSms(OrderAdminDetailGetResDto order, String message) {
+        String phone = (order.getRecipientPhone() != null && !order.getRecipientPhone().isBlank())
+                ? order.getRecipientPhone()
+                : order.getCustomerPhone();
+        String cmid = UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        bizMsgService.sendSms(
+                cmid,
+                phone,
+                order.getCustomerName(),
+                "025118691",
+                "윈앤티켓",
+                message
+        );
+    }
+
+    // 문자 변수 데이터 추출
+    // 상품 + 옵션 + 수량
+    private String buildProductLines(List<OrderProductListGetResDto> items) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (OrderProductListGetResDto item : items) {
+
+            String productName = item.getProductName();
+            String optionText = buildOptionText(item);
+
+            sb.append(productName);
+
+            if (!optionText.isBlank()) {
+                sb.append(" / ").append(optionText);
+            }
+
+            sb.append(" / ").append(item.getQuantity());
+            sb.append("\n");
+        }
+
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1); // 마지막 줄바꿈 제거
+        }
+
+        return sb.toString();
+    }
+
+    // 옵션 텍스트
+    private String buildOptionText(OrderProductListGetResDto item) {
+        if (item.getOptionName() != null) {
+            return item.getOptionName();
+        }
+
+        return "";
+    }
+
+    // 계좌번호 목록
+    private String buildAccountLines() {
+
+        List<BankAccountResDto> accounts =
+                bankAccountService.getVisibleBankAccounts();
+
+        if (accounts == null || accounts.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+
+        for (BankAccountResDto acc : accounts) {
+            sb.append(acc.getBankName())
+                    .append(" : ")
+                    .append(acc.getAccountNumber())
+                    .append("\n");
+        }
+
+        sb.setLength(sb.length() - 1);
+
+        return sb.toString();
+    }
+
+    // 고객센터
+    private String selectCallNumber() {
+        SiteInfoResponse siteInfo = siteInfoService.getSiteInfo();
+
+        if (siteInfo == null) return "";
+
+        return siteInfo.getCustomerServiceTel();
     }
 
     // ─────────────────────────────────────────────

@@ -9,8 +9,8 @@
             o.id AS orderId,
             o.order_number AS orderNumber,
             o.payment_status AS paymentStatus,
-            o.customer_name AS customerName,
-            o.customer_phone AS customerPhone
+            COALESCE(o.recipient_name, o.customer_name) AS customerName,
+            COALESCE(o.recipient_phone, o.customer_phone) AS customerPhone
         FROM orders o
         WHERE o.order_number = #{orderNumber}
 
@@ -134,7 +134,7 @@
           AND ot.partner_order_number IS NOT NULL   -- TRNO 있음
           AND ot.partner_order_code IS NOT NULL     -- 발급됨
           AND ot.ticket_used = false                -- 미사용만
-          And status = 'ISSUED'
+          And ot.status = 'ISSUED'
     </select>
 
 

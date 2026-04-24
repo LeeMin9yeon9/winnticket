@@ -22,6 +22,7 @@
             a.customer_name, -- 주문자
             a.customer_phone, -- 주문자 연락처
             a.customer_email,  -- 주문자이메일
+            a.company_name, -- 회사명
             a.payment_status, -- 결제상태
             a.final_price, -- 결제금액
             a.point_amount,  -- 포인트결제금액
@@ -37,7 +38,6 @@
             orders a
         Where 1 = 1
         And a.ORDER_NUMBER = #{orderNumber}
-        AND a.channel_id = #{channelId}
     </select>
 
     <!--
@@ -99,7 +99,10 @@
             CHANNEL_ID,
             CUSTOMER_NAME,
             CUSTOMER_PHONE,
+            RECIPIENT_NAME,
+            RECIPIENT_PHONE,
             CUSTOMER_EMAIL,
+            COMPANY_NAME,
             MEMO,
             TOTAL_PRICE,
             DISCOUNT_PRICE,
@@ -114,8 +117,11 @@
             'W'|| TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEXTVAL('seq_order_number'),
             #{channelId},
             #{customerName},
-            #{customerPhone},
+            REGEXP_REPLACE(#{customerPhone}, '[^0-9]', '', 'g'),
+            #{recipientName},
+            REGEXP_REPLACE(#{recipientPhone}, '[^0-9]', '', 'g'),
             #{customerEmail},
+            #{companyName},
             #{memo},
             #{totalPrice},
             #{discountPrice},
@@ -324,7 +330,8 @@
             ot.id                 AS ticket_id,
             ot.ticket_number      AS ticket_number,
             ot.partner_order_code AS partner_order_code,
-            ot.ticket_used        AS ticket_used
+            ot.ticket_used        AS ticket_used,
+            ot.status             AS status
 
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
@@ -342,17 +349,6 @@
         WHERE id = #{orderId}
     </update>
 
-    <!--입금기한 초과 주문 조회-->
-    <select id="findExpiredOrderNumbers" resultType="string">
-        SELECT order_number
-        FROM orders
-        WHERE status = 'PENDING_PAYMENT'
-          AND payment_status = 'READY'
-          AND payment_method = 'VIRTUAL_ACCOUNT'
-          AND deposit_deadline IS NOT NULL
-        AND deposit_deadline &lt; NOW()
-    </select>
-
     <!-- 주문 후 재고 차감 -->
     <update id="updateOptionValueStock">
         UPDATE product_option_values
@@ -360,5 +356,49 @@
             updated_at = NOW()
         WHERE id = #{optionValueId}
         AND stock >= #{quantity}
+    </update>
+
+    <!-- 미입금자 취소 대상 조회 -->
+    <select id="findExpiredOrderNumbers" resultType="string">
+        SELECT order_number
+        FROM orders
+        WHERE payment_status = 'READY'
+          AND status = 'PENDING_PAYMENT'
+          AND payment_method = 'VIRTUAL_ACCOUNT'
+          AND deposit_deadline IS NOT NULL
+      <![CDATA[
+          AND deposit_deadline < NOW()
+        ]]>
+    </select>
+
+    <!-- 미입금자 취소 상태 선점 -->
+    <update id="updateToCanceling">
+        UPDATE orders
+        SET payment_status = 'CANCELING',
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+          AND payment_status = 'READY'
+          AND status = 'PENDING_PAYMENT'
+    </update>
+
+    <!-- 미입금자 취소 최종 상태 변경 -->
+    <update id="updateExpireCompleted">
+        UPDATE orders
+        SET
+            payment_status = 'FAILED',
+            status = 'CANCELED',
+            canceled_at = NOW(),
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+          AND payment_status = 'CANCELING'
+    </update>
+
+    <!-- 미입금자 취소 실패 시 롤백 -->
+    <update id="rollbackCanceling">
+        UPDATE orders
+        SET payment_status = 'READY',
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+          AND payment_status = 'CANCELING'
     </update>
 </mapper>

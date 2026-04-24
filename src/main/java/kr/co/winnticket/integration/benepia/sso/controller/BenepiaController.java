@@ -79,7 +79,7 @@ public class BenepiaController {
         }
 
         // fallback 유지 (기존 기능 보호)
-        return "redirect:/shop?channel=" + channel;
+        return "redirect:/?channel=" + channel;
     }
 
 

@@ -24,7 +24,10 @@ public interface OrderShopMapper {
             @Param("channelId") UUID channelId,
             @Param("customerName") String customerName,
             @Param("customerPhone") String customerPhone,
+            @Param("recipientName") String recipientName,
+            @Param("recipientPhone") String recipientPhone,
             @Param("customerEmail") String customerEmail,
+            @Param("companyName") String companyName,
             @Param("memo") String memo,
             @Param("totalPrice") int totalPrice,
             @Param("discountPrice") int discountPrice,
@@ -121,9 +124,20 @@ public interface OrderShopMapper {
             @Param("deadline") LocalDateTime deadline
     );
 
-    // 만료 주문 조회(스케줄러용)
+    // 입금기한 초과 주문
     List<String> findExpiredOrderNumbers();
+
+    // 상태 선점 (중복 방지)
+    int updateToCanceling(@Param("orderNumber") String orderNumber);
+
+    // 최종 취소 완료
+    int updateExpireCompleted(@Param("orderNumber") String orderNumber);
+
+    // 실패 시 롤백
+    int rollbackCanceling(@Param("orderNumber") String orderNumber);
 
     // 주문 후 재고 차감
     int updateOptionValueStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") int quantity);
+
+
 }

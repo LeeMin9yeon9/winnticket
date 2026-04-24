@@ -11,7 +11,6 @@ import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
-import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -68,8 +67,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId) {
-        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId);
+    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId, UUID partnerId) {
+        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
     }
 
     @Transactional(readOnly = true)
@@ -148,22 +147,23 @@ public class OrderService {
             LocalDate validFrom = validity.get("from");
             LocalDate validTo = validity.get("to");
 
-            for (int i = 0; i < item.getQuantity(); i++) {
-                String ticketNumber;
-                if (Boolean.TRUE.equals(prePurchased)) {
-                    log.info("[선사입]");
-                    try {
-                        ticketNumber = orderPostPaymentService.issueCoupon(item.getId(), validFrom, validTo);
-                    } catch (Exception e) {
-                        log.error("쿠폰 발급 실패 orderItemId={}", item.getId(), e);
-                        throw new RuntimeException("쿠폰 재고 없음");
-                    }
-                } else {
-                    log.info("[선사입 아님]");
-                    ticketNumber = orderPostPaymentService.generateTicketNumber();
-                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
+            if (Boolean.TRUE.equals(prePurchased)) {
+                // 선사입: 주문 생성 시 이미 예약(PENDING)된 쿠폰을 확정(SOLD)하고 티켓 발행
+                log.info("[선사입 - 예약 쿠폰 확정] orderItemId={}", item.getId());
+                try {
+                    List<String> issued = orderPostPaymentService.issueReservedCoupons(item.getId(), validFrom, validTo);
+                    ticketNumbers.addAll(issued);
+                } catch (Exception e) {
+                    log.error("예약 쿠폰 확정 실패 orderItemId={}", item.getId(), e);
+                    throw new RuntimeException("예약 쿠폰 확정 실패", e);
                 }
-                ticketNumbers.add(ticketNumber);
+            } else {
+                for (int i = 0; i < item.getQuantity(); i++) {
+                    log.info("[선사입 아님]");
+                    String ticketNumber = orderPostPaymentService.generateTicketNumber();
+                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
+                    ticketNumbers.add(ticketNumber);
+                }
             }
             ticketMap.put(item.getId(), ticketNumbers);
         }
@@ -173,14 +173,14 @@ public class OrderService {
         // 주문 상태 변경
         mapper.updateOrderStatus(auId);
 
-        // 베네피아 주문 전송
-        try {
-            if (order.getBenepiaId() != null) {
+        // 베네피아 주문 전송 (실패해도 결제는 성공 처리 - Benepia 전송은 비필수 알림)
+        if (order.getBenepiaId() != null) {
+            try {
                 log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
                 benepiaOrderService.sendOrder(order, items);
+            } catch (Exception e) {
+                log.error("[BENEPIA 주문 전송 실패] 결제는 정상 처리됨. 관리자 확인 필요 orderId={}", auId, e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("[BENEPIA 주문 전송 실패]", e);
         }
 
         // 파트너 발권 (실패 시 RuntimeException → 트랜잭션 전체 롤백 → 결제도 취소)
@@ -204,8 +204,7 @@ public class OrderService {
 
                 try {
                     if (split.isHasSpavis() || split.isHasNormalProduct()
-                            || split.isHasSmartInfini() || split.isHasAquaplanet()
-                            || split.isHasLsCompany()) {
+                            || split.isHasSmartInfini() || split.isHasAquaplanet()) {
                         List<OrderProductListGetResDto> normalItems =
                                 orderPostPaymentService.extractNormalProducts(itemsSnap);
                         log.info("[발권완료 SMS 발송] orderId={}", auId);
@@ -221,7 +220,7 @@ public class OrderService {
     // 티켓 유효기간 추출
     public Map<String, LocalDate> parse(String text, LocalDate orderDate) {
 
-        text = text.trim();
+        text = (text == null) ? "" : text.trim();
 
         Map<String, LocalDate> result = new HashMap<>();
 
@@ -305,12 +304,22 @@ public class OrderService {
             throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
         }
 
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
         if (order.getPaymentStatus() == PaymentStatus.CANCELED) {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
 
+        // 입금 전(READY) 주문 취소 - 단순 플로우
+        if (order.getPaymentStatus() == PaymentStatus.READY) {
+            cancelPendingOrder(orderId, order);
+            return;
+        }
+
         if (order.getPaymentStatus() != PaymentStatus.PAID) {
-            throw new IllegalStateException("결제 완료된 주문만 취소할 수 있습니다.");
+            throw new IllegalStateException("결제 완료 또는 입금 전 주문만 취소할 수 있습니다.");
         }
 
         // 사용된 티켓 확인
@@ -407,29 +416,40 @@ public class OrderService {
         int cancelAmount = 0;
         int cancelFee = 0;
 
+       // log.info("[CANCEL POLICY] amount={}, fee={}", cancelAmount, cancelFee);
+
         if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
 
                     String tno = mapper.selectPointTno(order.getOrderNumber());
 
-                    if (tno != null) {
-                        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                        dto.setTno(tno);
-                        dto.setCancelReason("무통장 취소");
+                if (tno != null) {
 
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(tno);
+                    dto.setModType("STSC");
+                    dto.setCancelReason("무통장 취소");
+
+                    try {
                         kcpService.cancelPoint(dto);
-
                         log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
+                    } catch (Exception e) {
+                        log.error("[POINT RETURN FAIL - VA] orderId={}", orderId, e);
                     }
+
+                } else {
+                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
+                }
                 }
 
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
 
+            // 카드 취소 실행 (여기서 카드금액 - 총수수료 계산됨)
             PayletterCancelResult result = payletterService.cancel(orderId);
 
             cancel = result.getPgResult();
-            cancelAmount = result.getCancelAmount();
-            cancelFee = result.getCancelFee();
+            cancelAmount = result.getCancelAmount(); // 카드 환불액
+            cancelFee = result.getCancelFee();      // 수수료
 
             log.info("[PG CANCEL RESULT] {}", cancel);
 
@@ -443,24 +463,66 @@ public class OrderService {
                     KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
 
                     dto.setTno(tno);
-                    dto.setCancelReason("혼합결제 취소");
+                    dto.setCancelReason("혼합결제 취소(포인트 전액반환)");
+                    dto.setModType("STSC");
 
-                    kcpService.cancelPoint(dto);
-
-                    log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                    try {
+                        kcpService.cancelPoint(dto);
+                        log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                    } catch (Exception e) {
+                        log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
+                    }
+                }else {
+                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
                 }
             }
 
         } else if (method == PaymentMethod.POINT) {
-            Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
+            String tno = mapper.selectPointTno(order.getOrderNumber());
 
-            if (payInfo == null || payInfo.get("pg_tid") == null) {
-                throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
+            int finalPrice = order.getFinalPrice();
+
+            // ===== 수수료 계산 =====
+            LocalDateTime orderedAt = order.getOrderedAt();
+
+            long days = java.time.temporal.ChronoUnit.DAYS.between(
+                    orderedAt.toLocalDate(),
+                    LocalDate.now()
+            );
+
+            cancelFee = (days <= 7)
+                    ? 1000
+                    : (int) Math.floor(finalPrice * 0.1);
+
+            int refundAmount = Math.max(finalPrice - cancelFee, 0);
+
+            log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+
+            if (tno != null) {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(tno);
+                dto.setCancelReason("고객요청 관리자 취소");
+
+                if (cancelFee > 0) {
+                    dto.setModType("STRA");
+                    dto.setModMny(refundAmount);
+                    dto.setModOrdrIdxx(order.getOrderNumber());
+                    dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                } else {
+                    dto.setModType("STSC");
+                }
+
+                try {
+                    kcpService.cancelPoint(dto);
+                } catch (Exception e) {
+                    log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                }
+            } else {
+                log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
             }
 
-            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-            dto.setTno((String) payInfo.get("pg_tid"));
-            dto.setCancelReason("관리자 취소");
+            cancelAmount = refundAmount;
+            cancelFee = cancelFee;
 
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
@@ -532,11 +594,12 @@ public class OrderService {
          * 롤백 시 "취소완료" 문자가 잘못 발송되는 것을 방지
          */
         final OrderAdminDetailGetResDto orderForSms = order;
+        final List<OrderProductListGetResDto> itemsForSms = new ArrayList<>(items);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
-                    orderPostPaymentService.sendOrderCancelledSms(orderForSms);
+                    orderPostPaymentService.sendOrderCancelledSms(orderForSms, itemsForSms);
                 } catch (Exception e) {
                     log.error("[취소 SMS 발송 실패] orderId={}", orderId, e);
                 }
@@ -544,6 +607,66 @@ public class OrderService {
         });
 
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
+    }
+
+    // 입금 전 주문 취소 (READY 상태)
+    private void cancelPendingOrder(UUID orderId, OrderAdminDetailGetResDto order) throws Exception {
+
+        // 포인트 사용 시 반환
+        if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+
+            String tno = mapper.selectPointTno(order.getOrderNumber());
+
+            if (tno != null) {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(tno);
+                dto.setCancelReason("입금 전 주문 취소");
+
+                kcpService.cancelPoint(dto);
+
+                log.info("[POINT RETURN] 입금 전 주문 포인트 반환 완료 orderId={}", orderId);
+            }
+        }
+
+        // 주문 상태 CANCELED 변경
+        int updated = mapper.updateOrderCancelSuccess(orderId, 0, 0, null);
+
+        if (updated != 1) {
+            throw new IllegalStateException("주문 취소 상태 변경 실패");
+        }
+
+        // 재고 복구 (주문 생성 시 차감된 재고)
+        List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
+
+        for (OrderItemOptionDto opt : options) {
+            if (!ProductType.STAY.equals(opt.getProductType())) {
+                mapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
+            }
+        }
+
+        log.info("[STOCK RESTORE] 입금 전 주문 재고 복구 완료 orderId={}", orderId);
+
+        // 선사입 예약 쿠폰 복구 (PENDING → ACTIVE) + order_item_coupons 삭제
+        orderPostPaymentService.restoreReservedCoupons(orderId);
+
+        mapper.cancelTicketsByOrderId(orderId);
+
+        // SMS 발송 (커밋 후 비동기)
+        final OrderAdminDetailGetResDto orderForSms = order;
+        final List<OrderProductListGetResDto> itemsForSms = mapper.selectOrderProductList(orderId);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    orderPostPaymentService.sendOrderCancelledSms(orderForSms, itemsForSms);
+                } catch (Exception e) {
+                    log.error("[취소 SMS 발송 실패] orderId={}", orderId, e);
+                }
+            }
+        });
+
+        log.info("[ORDER_CANCEL] 입금 전 주문 관리자 취소 완료 orderId={}", orderId);
     }
 
     /*

@@ -66,7 +66,7 @@ public class ProductPostReqDto {
     private boolean isReservation;
 
     @Schema(description = "표시순서", example = "1")
-    private String displayOrder;
+    private Integer displayOrder;
 
     @Hidden
     private UUID id;

@@ -29,8 +29,8 @@
         SELECT
             o.id AS orderId,
             o.order_number AS orderNumber,
-            o.customer_name AS customerName,
-            o.customer_phone AS customerPhone,
+            COALESCE(o.recipient_name, o.customer_name) AS customerName,
+            COALESCE(o.recipient_phone, o.customer_phone) AS customerPhone,
             o.customer_email AS customerEmail,
             o.payment_status AS paymentStatus,
             o.status AS orderStatus
@@ -106,8 +106,8 @@
         SELECT
             o.id AS orderId,
             o.order_number AS orderNumber,
-            o.customer_name AS customerName,
-            o.customer_phone AS customerPhone,
+            COALESCE(o.recipient_name, o.customer_name) AS customerName,
+            COALESCE(o.recipient_phone, o.customer_phone) AS customerPhone,
             o.customer_email AS customerEmail,
             o.status AS orderStatus
         FROM orders o

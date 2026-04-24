@@ -23,8 +23,8 @@
         SELECT
             ROW_NUMBER() OVER() AS ROW_NO,
             o.order_number AS ORDER_ID,
-            o.customer_name AS USER_NAME,
-            o.customer_phone AS USER_HP,
+            COALESCE(o.recipient_name, o.customer_name) AS USER_NAME,
+            COALESCE(o.recipient_phone, o.customer_phone) AS USER_HP,
             o.customer_email AS USER_EMAIL,
             TO_CHAR(o.paid_at, 'YYYYMMDDHH24MISS') AS ORDER_DATE,
             CASE
