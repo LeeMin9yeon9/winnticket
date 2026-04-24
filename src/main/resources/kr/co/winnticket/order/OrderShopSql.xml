@@ -292,7 +292,7 @@
     <!-- QR 쿠폰 조회 -->
     <select id="selectOrderQrInfo" resultType="kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto">
         SELECT
-            oi.partner_id AS partnerId,
+            p.partner_id AS partnerId,
             oi.product_name AS productName,
             oio.option_value AS optionName,
             o.customer_name AS customerName,
