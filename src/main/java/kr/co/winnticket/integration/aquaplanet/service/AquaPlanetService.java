@@ -37,6 +37,18 @@ public class AquaPlanetService {
                 AquaPlanetIssueResponse response = client.issue(target);
                 response.setTicketId(target.getTicketId());
 
+                // 바코드 번호(reprCponIndictNo)가 비어있으면 발행 실패로 간주하고 롤백
+                // → 고객이 바코드 없는 쿠폰을 수령하는 사고 방지
+                if (response.getReprCponIndictNo() == null || response.getReprCponIndictNo().isBlank()) {
+                    log.error(
+                            "[AquaPlanet][ISSUE] 바코드 번호 없음. orderId={}, ticketId={}, response={}",
+                            orderId,
+                            target.getTicketId(),
+                            response
+                    );
+                    throw new RuntimeException("아쿠아플라넷 발행 응답에 바코드 번호가 없습니다.");
+                }
+
                 mapper.updateAquaPlanetTicket(
                         target.getTicketId(),
                         response.getReprCponIndictNo(),
