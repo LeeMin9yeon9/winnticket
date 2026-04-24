@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -69,10 +71,19 @@ public class BizMsgService {
     }
 
     private int decideMsgType(String msg) {
-        // 간단 규칙: 글자 수 기준(환경별로 조정 가능)
-        // SMS 90자, MMS 90자 초과
-        int len = msg == null ? 0 : msg.length();
-        return (len > 90) ? 5 : 0;
+        if (msg == null) return 0;
+
+        try {
+            // 한글을 2바이트로 계산하는 EUC-KR 기준으로 바이트 배열 추출
+            int byteLength = msg.getBytes("EUC-KR").length;
+
+            // 90바이트 초과면 MMS(5), 이하면 SMS(0)
+            return (byteLength > 90) ? 5 : 0;
+
+        } catch (UnsupportedEncodingException e) {
+            // 예외 발생 시 안전하게 글자 수 기반으로 대체 (또는 기본 MMS 처리)
+            return (msg.length() > 40) ? 5 : 0;
+        }
     }
 
     private String safe(String s) {
