@@ -321,10 +321,10 @@
     <select id="selectTicketsByOrderNumber" resultType="kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto$Ticket">
 
         SELECT
-            ot.id AS ticketId,
-            ot.ticket_number AS ticketNumber,
-            ot.partner_order_code AS partnerOrderCode,
-            ot.ticket_used AS ticketUsed
+            ot.id                 AS ticket_id,
+            ot.ticket_number      AS ticket_number,
+            ot.partner_order_code AS partner_order_code,
+            ot.ticket_used        AS ticket_used
 
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
