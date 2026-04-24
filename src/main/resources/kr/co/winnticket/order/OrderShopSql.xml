@@ -38,7 +38,6 @@
             orders a
         Where 1 = 1
         And a.ORDER_NUMBER = #{orderNumber}
-        AND a.channel_id = #{channelId}
     </select>
 
     <!--
