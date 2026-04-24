@@ -66,8 +66,8 @@ benepia-batch:
 payletter:
   base-url: https://testpgapi.payletter.com #운영 : https://pgapi.payletter.com/
   client-id: pay_test
-  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
-  search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=
+  payment-api-key: QkY0M0E1N0RCOTQ0MDg2NkM0M0YwMDJCNjI0RDY0QkM=
+  search-api-key: MkRBNjA0QjkwREVEQkQyMzQ1NjNDMkMzMEI2NTAyMTc=
   service-name: 페이레터
 
   return-url: https://13.209.91.167/api/payletter/return

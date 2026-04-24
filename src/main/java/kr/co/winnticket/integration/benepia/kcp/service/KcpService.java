@@ -52,6 +52,7 @@ public class KcpService {
 
 
             Map<String, Object> body = new HashMap<>();
+
             body.put("site_cd", properties.getKcp().getSiteCd());
             body.put("kcp_cert_info", certInfo);
             body.put("pay_method", "POINT");
@@ -65,6 +66,9 @@ public class KcpService {
             body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());
 
             String json = objectMapper.writeValueAsString(body);
+
+            Map<String, Object> logBody = new HashMap<>(body);
+            logBody.put("pt_pwd", "****");
 
             log.info("===== KCP REQUEST START =====");
             log.info("baseUrl = {}", properties.getKcp().getBaseUrl());
@@ -134,7 +138,10 @@ public class KcpService {
 
             String json = objectMapper.writeValueAsString(body);
 
-            log.info("[KCP POINTPAY REQ] {}", json);
+            Map<String, Object> logBody = new HashMap<>(body);
+            logBody.put("pt_pwd", "****");
+
+            log.info("[KCP POINTPAY REQ] {}", objectMapper.writeValueAsString(logBody));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
