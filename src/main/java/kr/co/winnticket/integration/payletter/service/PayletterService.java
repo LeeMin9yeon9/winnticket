@@ -285,14 +285,21 @@ public class PayletterService {
             LocalDateTime orderedAt = ts.toLocalDateTime();
             long days = ChronoUnit.DAYS.between(orderedAt.toLocalDate(), LocalDate.now());
 
-            // 수수료 정책: 7일 이내 1,000원, 이후 10%
-            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(finalPrice * 0.1);
+            // 수수료 정책: 7일 이내 1,000원, 이후 카드결제액의 10%
+            // pureCardAmount 기준으로 계산 (포인트 혼합 시 전체금액 기준 시 수수료 초과 방지)
+            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(pureCardAmount * 0.1);
         }
 
         // 3. 최종 카드 환불액 = 카드결제액 - 수수료 (단, 0보다 작을 수 없음)
         int cancelAmount = Math.max(pureCardAmount - cancelFee, 0);
 
         log.info("[카드 환불 계산] 총금액={}, 포인트={}, 카드결제액={}, 수수료={}, 최종카드환불액={}", finalPrice, pointAmount, pureCardAmount, cancelFee, cancelAmount);
+
+        // 카드 환불액이 0이면 페이레터 취소 불필요 (포인트로만 결제된 경우)
+        if (cancelAmount == 0) {
+            log.info("[카드 환불 스킵] cancelAmount=0, 포인트 환불만 진행 orderId={}", orderId);
+            return new PayletterCancelResult(0, cancelFee, null);
+        }
 
         // ===== 3. 거래조회 (당일 포함) =====
         PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
