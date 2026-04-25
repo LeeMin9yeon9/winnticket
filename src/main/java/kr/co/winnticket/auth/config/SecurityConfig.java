@@ -190,6 +190,10 @@ public class SecurityConfig {
 
                         /* ---------- 나머지는 인증 필요 ---------- */
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(JsonAuthEntryPoints.authenticationEntryPoint())
+                        .accessDeniedHandler(JsonAuthEntryPoints.accessDeniedHandler())
+                )
                 .httpBasic(httpBasic -> httpBasic.disable());
 
         // JWT 필터 등록
