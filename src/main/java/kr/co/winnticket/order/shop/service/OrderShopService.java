@@ -240,7 +240,18 @@ public class OrderShopService {
             throw new IllegalArgumentException("포인트 금액 오류");
         }
 
-        mapper.updateOrderPrice(orderId, finalPrice, pointAmount);
+        int bankAmount = 0;
+        int cardAmount = 0;
+
+        if (paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT) {
+            bankAmount = pgAmount;
+        } else if (
+                paymentMethod == PaymentMethod.CARD ||
+                        paymentMethod == PaymentMethod.KAKAOPAY
+        ) {
+            cardAmount = pgAmount;
+        }
+        mapper.updateOrderPrice(orderId, finalPrice, pointAmount,bankAmount, cardAmount);
 
         log.info("결제금액 구조 finalPrice={}, pointAmount={}, pgAmount={}", finalPrice, pointAmount, pgAmount);
 
