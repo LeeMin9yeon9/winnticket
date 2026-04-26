@@ -36,4 +36,7 @@ public class PayletterProperties {
 
     @Schema(description = "결제 취소 URL", example = "https://winnticket.co.kr/payletter/cancel")
     private String cancelUrl;
+
+    @Schema(description = "결제 완료 후 프론트엔드 리다이렉트 URL", example = "https://www.winnticket.co.kr")
+    private String frontUrl;
 }

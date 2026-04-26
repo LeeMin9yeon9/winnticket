@@ -98,6 +98,7 @@ payletter:
   return-url: https://api.winnticket.co.kr/api/payletter/return
   callback-url: https://api.winnticket.co.kr/api/payletter/callback
   cancel-url: https://api.winnticket.co.kr/api/payletter/cancel
+  front-url: https://www.winnticket.co.kr
 
 
 # 파트너 연동 (플러스앤 운영)

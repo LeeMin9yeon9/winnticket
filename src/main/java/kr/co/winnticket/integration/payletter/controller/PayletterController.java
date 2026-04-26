@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class PayletterController {
 
     private final PayletterService service;
+    private final PayletterProperties properties;
     private final OrderService orderService;
     private final OrderMapper orderMapper;
 
@@ -82,7 +84,7 @@ public class PayletterController {
         }
 
         response.sendRedirect(
-                "https://www.winnticket.store/payment-success?orderNumber=" + orderNumber
+                properties.getFrontUrl() + "/payment-success?orderNumber=" + orderNumber
         );
     }
 
@@ -93,7 +95,7 @@ public class PayletterController {
 
         log.info("Payletter cancel orderId={}", custom_parameter);
 
-        return "redirect:https://www.winnticket.store/order";
+        return "redirect:" + properties.getFrontUrl() + "/order";
     }
 
 

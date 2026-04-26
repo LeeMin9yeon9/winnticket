@@ -73,6 +73,7 @@ payletter:
   return-url: https://13.209.91.167/api/payletter/return
   callback-url:  https://13.209.91.167/api/payletter/callback
   cancel-url: https://13.209.91.167/api/payletter/cancel
+  front-url: https://www.winnticket.store
 
 # 파트너 연동 (플러스앤)
 plusn:
