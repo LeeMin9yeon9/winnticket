@@ -478,18 +478,12 @@ public class OrderService {
             }
 
         } else if (method == PaymentMethod.POINT) {
-            Map<String, Object> payInfo = mapper.selectOrderPaymentInfo(orderId);
+            String tno = mapper.selectPointTno(order.getOrderNumber());
 
-            if (payInfo == null || payInfo.get("pg_tid") == null) {
-                throw new IllegalStateException("PG 거래번호가 존재하지 않습니다.");
-            }
+            int finalPrice = order.getFinalPrice();
 
-            String tno = (String) payInfo.get("pg_tid");
-
-            int finalPrice = ((Number) payInfo.get("final_price")).intValue();
-
-            // ===== 수수료 계산 (Payletter랑 동일하게 맞춰) =====
-            LocalDateTime orderedAt = ((java.sql.Timestamp) payInfo.get("ordered_at")).toLocalDateTime();
+            // ===== 수수료 계산 =====
+            LocalDateTime orderedAt = order.getOrderedAt();
 
             long days = java.time.temporal.ChronoUnit.DAYS.between(
                     orderedAt.toLocalDate(),
@@ -504,26 +498,27 @@ public class OrderService {
 
             log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
 
-            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-            dto.setTno(tno);
-            dto.setCancelReason("고객요청 관리자 취소");
+            if (tno != null) {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(tno);
+                dto.setCancelReason("고객요청 관리자 취소");
 
-            if (cancelFee > 0) {
-                // 부분취소 (수수료 제외 금액만 환불)
-                dto.setModType("STRA");
-                dto.setModMny(refundAmount);
-                dto.setModOrdrIdxx(order.getOrderNumber());
-                dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                if (cancelFee > 0) {
+                    dto.setModType("STRA");
+                    dto.setModMny(refundAmount);
+                    dto.setModOrdrIdxx(order.getOrderNumber());
+                    dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                } else {
+                    dto.setModType("STSC");
+                }
+
+                try {
+                    kcpService.cancelPoint(dto);
+                } catch (Exception e) {
+                    log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                }
             } else {
-                //  전액취소
-                dto.setModType("STSC");
-            }
-
-
-            try {
-                kcpService.cancelPoint(dto);
-            } catch (Exception e) {
-                log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
             }
 
             cancelAmount = refundAmount;
