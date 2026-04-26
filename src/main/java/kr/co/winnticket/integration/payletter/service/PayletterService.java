@@ -288,10 +288,8 @@ public class PayletterService {
             LocalDateTime orderedAt = ts.toLocalDateTime();
             long days = ChronoUnit.DAYS.between(orderedAt.toLocalDate(), LocalDate.now());
 
-
             // 수수료 정책: 7일 이내 1,000원, 이후 10%
             cancelFee = (days <= 7) ? 1000 : (int) Math.floor(cardAmount * 0.1);
-
         }
 
 
@@ -348,20 +346,23 @@ public class PayletterService {
                     .taxAmount(0)
                     .ipAddr(ipAddr)
                     .build();
-
             res = payletterClient.partialCancel(req);
+
+            log.info("[PAYLETTER PARTIAL CANCEL RES] {}", res);
+
 
             if (res == null || !res.isCanceled()) {
                 throw new IllegalStateException(
                         "카드 부분 취소 실패: " + (res != null ? res.getMessage() : "응답없음")
                 );
+
             }
 
         } else {
             log.info("[PAYLETTER CANCEL SKIP] cancelAmount=0, PG 취소 생략 orderId={}", orderId);
         }
 
-         //===== 5. DB 업데이트 =====
+        //===== 5. DB 업데이트 =====
         try {
             Map<String, Object> payload = Map.of(
                     "cancelAmount", cancelAmount,

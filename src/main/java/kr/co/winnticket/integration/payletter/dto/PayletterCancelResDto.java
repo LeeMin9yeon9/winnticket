@@ -37,6 +37,8 @@ public class PayletterCancelResDto {
     private String message;
 
     public boolean isCanceled() {
-        return tid != null && !tid.isBlank();
+        return code == null
+                && tid != null && !tid.isBlank()
+                && amount != null;
     }
 }
