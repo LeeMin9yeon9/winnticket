@@ -58,7 +58,9 @@ public interface OrderShopMapper {
     void updateOrderPrice(
             @Param("orderId") UUID orderId,
             @Param("finalPrice") int finalPrice,
-            @Param("pointAmount") int pointAmount
+            @Param("pointAmount") int pointAmount,
+            @Param("bankAmount") int bankAmount,
+            @Param("cardAmount") int cardAmount
     );
 
     // payletter 결제요청 결과 저장

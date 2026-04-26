@@ -269,10 +269,13 @@ public class PayletterService {
                 : (email != null && !email.isBlank() ? email : orderNumber);
 
         // ===== 1. 금액 계산 =====
-        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
-        int pointAmount = orderInfo.get("point_amount") != null ? ((Number) orderInfo.get("point_amount")).intValue() : 0;
-        // 실제 카드로만 결제된 순수 금액 (이 금액이 카드 취소의 최대 한도임)
-        int pureCardAmount = finalPrice - pointAmount;
+//        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
+//        int pointAmount = orderInfo.get("point_amount") != null ? ((Number) orderInfo.get("point_amount")).intValue() : 0;
+//        // 실제 카드로만 결제된 순수 금액 (이 금액이 카드 취소의 최대 한도임)
+//        int pureCardAmount = finalPrice - pointAmount;
+        int cardAmount = orderInfo.get("card_amount") != null
+                ? ((Number) orderInfo.get("card_amount")).intValue()
+                : 0;
 
         // 수수료 계산
         List<OrderProductListGetResDto> items = orderAdminMapper.selectOrderProductList(orderId);
@@ -285,15 +288,24 @@ public class PayletterService {
             LocalDateTime orderedAt = ts.toLocalDateTime();
             long days = ChronoUnit.DAYS.between(orderedAt.toLocalDate(), LocalDate.now());
 
-            // 수수료 정책: 7일 이내 1,000원, 이후 카드결제액의 10%
-            // pureCardAmount 기준으로 계산 (포인트 혼합 시 전체금액 기준 시 수수료 초과 방지)
-            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(pureCardAmount * 0.1);
+
+            // 수수료 정책: 7일 이내 1,000원, 이후 10%
+            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(cardAmount * 0.1);
+
         }
 
-        // 3. 최종 카드 환불액 = 카드결제액 - 수수료 (단, 0보다 작을 수 없음)
-        int cancelAmount = Math.max(pureCardAmount - cancelFee, 0);
 
-        log.info("[카드 환불 계산] 총금액={}, 포인트={}, 카드결제액={}, 수수료={}, 최종카드환불액={}", finalPrice, pointAmount, pureCardAmount, cancelFee, cancelAmount);
+        // 3. 최종 카드 환불액 = 카드결제액 - 수수료 (단, 0보다 작을 수 없음)
+        int cancelAmount = Math.max(cardAmount - cancelFee, 0);
+
+
+
+        log.info(
+                "[카드 환불 계산] cardAmount={}, cancelFee={}, cancelAmount={}",
+                cardAmount,
+                cancelFee,
+                cancelAmount
+        );
 
         // 카드 환불액이 0이면 페이레터 취소 불필요 (포인트로만 결제된 경우)
         if (cancelAmount == 0) {
@@ -322,22 +334,31 @@ public class PayletterService {
         String tid = txItem.getTid();
         String pgCode = txItem.getPgCode();
 
-        // ===== 4. 부분취소 요청 =====
-        PayletterPartialCancelReqDto req = PayletterPartialCancelReqDto.builder()
-                .pgCode(pgCode)
-                .clientId(properties.getClientId())
-                .userId(userId)
-                .tid(tid)
-                .amount(cancelAmount)
-                .taxfreeAmount(0)
-                .taxAmount(0)
-                .ipAddr(ipAddr)
-                .build();
+        PayletterCancelResDto res = null;
 
-        PayletterCancelResDto res = payletterClient.partialCancel(req);
+        if (cancelAmount > 0) {
 
-        if (res == null || !res.isCanceled()) {
-            throw new IllegalStateException("카드 부분 취소 실패: " + (res != null ? res.getMessage() : "응답없음"));
+            PayletterPartialCancelReqDto req = PayletterPartialCancelReqDto.builder()
+                    .pgCode(pgCode)
+                    .clientId(properties.getClientId())
+                    .userId(userId)
+                    .tid(tid)
+                    .amount(cancelAmount)
+                    .taxfreeAmount(0)
+                    .taxAmount(0)
+                    .ipAddr(ipAddr)
+                    .build();
+
+            res = payletterClient.partialCancel(req);
+
+            if (res == null || !res.isCanceled()) {
+                throw new IllegalStateException(
+                        "카드 부분 취소 실패: " + (res != null ? res.getMessage() : "응답없음")
+                );
+            }
+
+        } else {
+            log.info("[PAYLETTER CANCEL SKIP] cancelAmount=0, PG 취소 생략 orderId={}", orderId);
         }
 
          //===== 5. DB 업데이트 =====
@@ -350,10 +371,10 @@ public class PayletterService {
 
             String payloadJson = objectMapper.writeValueAsString(payload);
 
-            orderAdminMapper.updateOrderCancelSuccess(orderId,
-                    cancelAmount,
-                    cancelFee,
-                    payloadJson);
+//            orderAdminMapper.updateOrderCancelSuccess(orderId,
+//                    cancelAmount,
+//                    cancelFee,
+//                    payloadJson);
 
         } catch (Exception e) {
             log.error("cancel payload 저장 실패", e);
