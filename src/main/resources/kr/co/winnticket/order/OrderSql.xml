@@ -516,7 +516,9 @@
             all_ticket_used,
             ordered_at,
             canceled_at,
-            pg_cancel_payload
+            pg_cancel_payload,
+            card_amount,
+            bank_amount
         FROM orders
         WHERE id = #{orderId}::uuid
     </select>

@@ -191,7 +191,9 @@
         update ORDERS
         Set
             FINAL_PRICE = #{finalPrice},
-            POINT_AMOUNT = #{pointAmount}
+            POINT_AMOUNT = #{pointAmount},
+            BANK_AMOUNT   = #{bankAmount},
+            CARD_AMOUNT   = #{cardAmount}
         Where 1 = 1
         And id = #{orderId}
     </update>
