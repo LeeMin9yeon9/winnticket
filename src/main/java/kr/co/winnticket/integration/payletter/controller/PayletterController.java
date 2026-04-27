@@ -94,25 +94,28 @@ public class PayletterController {
     @RequestMapping(value = "/cancel", method = {RequestMethod.GET, RequestMethod.POST})
     @Operation(summary = "Payletter 결제 취소 redirect", description = "결제창 종료/취소 시 이동 처리")
     public void payCancel(
-            @RequestParam(required = false) String custom_parameter,
-            HttpServletResponse response
+            @RequestParam(required = false) String custom_parameter,@RequestParam(required = false) String order_no, HttpServletResponse response
     ) throws IOException {
 
-        log.info("[PAYLETTER] cancel hit custom_parameter={}", custom_parameter);
+        log.info("[PAYLETTER] cancel hit custom_parameter={}, order_no={}", custom_parameter, order_no);
 
         try {
 
             UUID orderId = null;
 
+            // custom_parameter
             if (custom_parameter != null && !custom_parameter.isBlank()) {
                 try {
                     orderId = UUID.fromString(custom_parameter);
-                } catch (Exception e) {
-                    log.warn("[PAYLETTER] invalid UUID={}", custom_parameter);
-                }
+                } catch (Exception ignore) {}
+            }
+
+            if (orderId == null && order_no != null) {
+                orderId = orderMapper.findOrderIdByOrderNumber(order_no);
             }
 
             if (orderId != null) {
+
                 Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
 
                 if (paymentInfo != null) {
@@ -124,6 +127,7 @@ public class PayletterController {
                     String pointTid = (String) paymentInfo.get("point_tid");
 
                     if (pointAmount > 0 && pointTid != null) {
+
                         try {
                             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
                             dto.setTno(pointTid);
