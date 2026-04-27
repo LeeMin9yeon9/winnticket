@@ -98,6 +98,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // CORS preflight 무조건 제외
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
         String path = request.getRequestURI();
         return path.startsWith("/api/auth/login")
                 || path.startsWith("/api/auth/refresh")
@@ -113,9 +117,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/bankda/test")
                 || path.startsWith("/api/bankda")
                 || path.startsWith("/api/aquaplanet/test")
-                || path.startsWith("/api/payletter/cancel")
-                || path.startsWith("/api/payletter/return")
-                || path.startsWith("/api/payletter/callback")
+                || path.startsWith("/api/payletter")
                 || path.startsWith("/api/lscompany");
     }
 }
