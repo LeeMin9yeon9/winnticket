@@ -39,6 +39,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -335,6 +337,19 @@ public class OrderShopService {
             List<OrderProductListGetResDto> items =
                     orderMapper.selectOrderProductList(orderId);
 
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                sendOrderReceiptSms(orderDetail, items);
+                                log.info("무통장 주문접수 문자 발송 완료 - orderId={}", orderId);
+                            } catch (Exception e) {
+                                log.error("무통장 주문접수 문자 발송 실패 - orderId={}", orderId, e);
+                            }
+                        }
+                    }
+            );
 
 
             return resDto;
@@ -397,6 +412,8 @@ public class OrderShopService {
                 }
                 throw new RuntimeException("포인트 결제 실패");
             }
+
+
 
             resDto.setPaymentStatus("PAID");
 
