@@ -125,13 +125,14 @@ public class PayletterController {
                             : 0;
 
                     String pointTid = (String) paymentInfo.get("point_tid");
+                    String orderNumber = (String) paymentInfo.get("order_number");
 
                     if (pointAmount > 0 && pointTid != null) {
 
                         try {
                             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
                             dto.setTno(pointTid);
-                            dto.setCancelReason("결제 취소");
+                            dto.setCancelReason("사용자 결제 취소 / orderNo=" + orderNumber);
 
                             kcpService.cancelPoint(dto);
 
