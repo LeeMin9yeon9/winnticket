@@ -92,46 +92,59 @@ public class PayletterController {
     }
 
     @RequestMapping(value = "/cancel", method = {RequestMethod.GET, RequestMethod.POST})
-    @Operation(summary = "Payletter 결제 취소 redirect", description = "Payletter 결제 취소 후 주문페이지 이동")
+    @Operation(summary = "Payletter 결제 취소 redirect", description = "결제창 종료/취소 시 이동 처리")
     public void payCancel(
             @RequestParam(required = false) String custom_parameter,
             HttpServletResponse response
     ) throws IOException {
 
-        log.info("[PAYLETTER] cancel hit");
-        log.info("[PAYLETTER] cancel custom_parameter={}", custom_parameter);
+        log.info("[PAYLETTER] cancel hit custom_parameter={}", custom_parameter);
 
         try {
-            UUID orderId = UUID.fromString(custom_parameter);
 
-            Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
+            UUID orderId = null;
 
-            if (paymentInfo != null) {
-                Integer pointAmount = paymentInfo.get("point_amount") != null
-                        ? ((Number) paymentInfo.get("point_amount")).intValue()
-                        : 0;
+            if (custom_parameter != null && !custom_parameter.isBlank()) {
+                try {
+                    orderId = UUID.fromString(custom_parameter);
+                } catch (Exception e) {
+                    log.warn("[PAYLETTER] invalid UUID={}", custom_parameter);
+                }
+            }
 
-                String pointTid = (String) paymentInfo.get("point_tid");
+            if (orderId != null) {
+                Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
 
-                if (pointAmount > 0 && pointTid != null) {
-                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                    dto.setTno(pointTid);
-                    dto.setCancelReason("사용자 카드결제 취소");
+                if (paymentInfo != null) {
 
-                    kcpService.cancelPoint(dto);
+                    Integer pointAmount = paymentInfo.get("point_amount") != null
+                            ? ((Number) paymentInfo.get("point_amount")).intValue()
+                            : 0;
 
-                    log.info("[POINT ROLLBACK] payCancel rollback success orderId={}", orderId);
+                    String pointTid = (String) paymentInfo.get("point_tid");
+
+                    if (pointAmount > 0 && pointTid != null) {
+                        try {
+                            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                            dto.setTno(pointTid);
+                            dto.setCancelReason("결제 취소");
+
+                            kcpService.cancelPoint(dto);
+
+                            log.info("[POINT ROLLBACK] success orderId={}", orderId);
+
+                        } catch (Exception e) {
+                            log.error("[POINT ROLLBACK FAIL]", e);
+                        }
+                    }
                 }
             }
 
         } catch (Exception e) {
-            log.error("[PAYLETTER CANCEL ROLLBACK FAIL]", e);
+            log.error("[PAYLETTER CANCEL ERROR]", e);
+        } finally {
+            response.sendRedirect(properties.getFrontUrl() + "/order");
         }
-
-
-        response.sendRedirect(
-                properties.getFrontUrl() + "/order"
-        );
     }
 
 
