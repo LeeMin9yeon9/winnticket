@@ -52,24 +52,24 @@ public class SecurityConfig {
         return http.build();
     }
 
-//    @Bean
-//    @Order(1)
-//    public SecurityFilterChain payletterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .securityMatcher("/api/payletter/**")
-//                .csrf(csrf -> csrf.disable())
-//                .cors(cors -> cors.disable())   // Payletter는 CORS 검사 안함
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()
-//                );
-//
-//        return http.build();
-//    }
+    @Bean
+    @Order(1)
+    public SecurityFilterChain payletterChain(HttpSecurity http) throws Exception {
+
+        http
+                .securityMatcher("/api/payletter/**")
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())   // Payletter는 CORS 검사 안함
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                );
+
+        return http.build();
+    }
 
 
     @Bean
-    @Order(1)
+    @Order(2)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http

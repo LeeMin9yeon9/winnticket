@@ -52,14 +52,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             String sid = claims.get("sid", String.class);
                             if (sid == null) {
                                 SecurityContextHolder.clearContext();
-                                filterChain.doFilter(request, response);
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
                                 return;
                             }
 
                             String currentSid = fieldSessionService.get(accountId);
                             if (currentSid == null || !currentSid.equals(sid)) {
                                 SecurityContextHolder.clearContext();
-                                filterChain.doFilter(request, response);
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"error\":\"SESSION_INVALID\"}");
+
                                 return;
                             }
 
