@@ -175,6 +175,7 @@ public class OrderService {
         mapper.updateOrderStatus(auId);
 
         // 베네피아 주문 전송 (실패해도 결제는 성공 처리 - Benepia 전송은 비필수 알림)
+        /*
         if (order.getBenepiaId() != null) {
             try {
                 log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
@@ -183,6 +184,8 @@ public class OrderService {
                 log.error("[BENEPIA 주문 전송 실패] 결제는 정상 처리됨. 관리자 확인 필요 orderId={}", auId, e);
             }
         }
+
+         */
 
         // 파트너 발권 (실패 시 RuntimeException → 트랜잭션 전체 롤백 → 결제도 취소)
         PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
@@ -548,6 +551,7 @@ public class OrderService {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
         }
         // 베네피아 주문 취소 전송
+        /*
         try {
             if (order.getBenepiaId() != null) {
                 log.info("[BENEPIA 주문 취소 전송] benefitId={}", order.getBenepiaId());
@@ -556,6 +560,8 @@ public class OrderService {
         } catch (Exception e) {
             throw new IllegalArgumentException("[BENEPIA 주문 취소 전송 실패]", e);
         }
+        
+         */
 
         // 재고 복구
         List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
