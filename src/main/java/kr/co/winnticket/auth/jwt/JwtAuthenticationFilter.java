@@ -52,18 +52,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             String sid = claims.get("sid", String.class);
                             if (sid == null) {
                                 SecurityContextHolder.clearContext();
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                filterChain.doFilter(request, response);
                                 return;
                             }
 
                             String currentSid = fieldSessionService.get(accountId);
                             if (currentSid == null || !currentSid.equals(sid)) {
                                 SecurityContextHolder.clearContext();
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.setContentType("application/json;charset=UTF-8");
-                                response.getWriter().write("{\"error\":\"SESSION_INVALID\"}");
+                                filterChain.doFilter(request, response);
                                 return;
                             }
+
                         }
 
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleId);
@@ -80,9 +79,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            log.debug("JWT filter exception: {}", e.getMessage());
+            log.error("JWT filter exception", e);
             SecurityContextHolder.clearContext();
+
+            // response 끊지 말고 그냥 진행
             filterChain.doFilter(request, response);
+            return;
         }
     }
 
@@ -111,7 +113,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/bankda/test")
                 || path.startsWith("/api/bankda")
                 || path.startsWith("/api/aquaplanet/test")
-                || path.startsWith("/api/payletter")
+                || path.startsWith("/api/payletter/cancel")
+                || path.startsWith("/api/payletter/return")
+                || path.startsWith("/api/payletter/callback")
                 || path.startsWith("/api/lscompany");
     }
 }

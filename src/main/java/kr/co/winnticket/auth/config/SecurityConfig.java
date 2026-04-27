@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -53,24 +52,24 @@ public class SecurityConfig {
         return http.build();
     }
 
+//    @Bean
+//    @Order(1)
+//    public SecurityFilterChain payletterChain(HttpSecurity http) throws Exception {
+//
+//        http
+//                .securityMatcher("/api/payletter/**")
+//                .csrf(csrf -> csrf.disable())
+//                .cors(cors -> cors.disable())   // Payletter는 CORS 검사 안함
+//                .authorizeHttpRequests(auth -> auth
+//                        .anyRequest().permitAll()
+//                );
+//
+//        return http.build();
+//    }
+
+
     @Bean
     @Order(1)
-    public SecurityFilterChain payletterChain(HttpSecurity http) throws Exception {
-
-        http
-                .securityMatcher("/api/payletter/**")
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())   // Payletter는 CORS 검사 안함
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
-
-        return http.build();
-    }
-
-
-    @Bean
-    @Order(2)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
@@ -107,9 +106,6 @@ public class SecurityConfig {
                                 "/api/swagger-ui/**",
                                 "/api/v3/api-docs/**",
                                 "/api/swagger-ui.html",
-                                "/api/payletter/callback",
-                                "/api/payletter/return",
-                                "/api/payletter/cancel",
                                 "/api/ticketCoupon/**",
                                 "/api/lscompany/**"
                         ).permitAll()
