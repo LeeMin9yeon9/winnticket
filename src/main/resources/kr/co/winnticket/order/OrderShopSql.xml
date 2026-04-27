@@ -439,7 +439,7 @@
           AND status = 'PENDING_PAYMENT'
     <![CDATA[
           AND payment_method <> 'VIRTUAL_ACCOUNT'
-          AND updated_at < NOW() - INTERVAL '3 minutes'
+          AND updated_at < NOW() - INTERVAL '15 minutes'
         ]]>
     </select>
 
