@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
@@ -30,10 +32,11 @@ public class PayletterController {
     private final PayletterProperties properties;
     private final OrderService orderService;
     private final OrderMapper orderMapper;
+    private final KcpService kcpService;
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
-    public Map<String, Object> callback(@RequestBody Map<String, Object> payload, HttpSession session){
+    public Map<String, Object> callback(@RequestBody Map<String, Object> payload, HttpSession session) {
 
         log.info("[PAYLETTER] callback received payload={}", payload);
 
@@ -45,7 +48,7 @@ public class PayletterController {
                 UUID orderId = UUID.fromString(String.valueOf(param));
                 orderService.completePayment(orderId);
                 log.info("[PAYLETTER] payment processed orderId={}", orderId);
-            }else {
+            } else {
                 log.warn("[PAYLETTER] custom_parameter missing payload={}", payload);
             }
 
@@ -55,7 +58,7 @@ public class PayletterController {
                     "message", "success"
             );
 
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("[PAYLETTER CALLBACK ERROR] payload={}", payload, e);
             return Map.of(
                     "code", 1,
@@ -88,15 +91,49 @@ public class PayletterController {
         );
     }
 
-    @PostMapping("/cancel")
+    @RequestMapping(value = "/cancel", method = {RequestMethod.GET, RequestMethod.POST})
     @Operation(summary = "Payletter 결제 취소 redirect", description = "Payletter 결제 취소 후 주문페이지 이동")
-    public String payCancel(
-            @RequestParam(required = false) String custom_parameter) {
+    public void payCancel(
+            @RequestParam(required = false) String custom_parameter,
+            HttpServletResponse response
+    ) throws IOException {
 
-        log.info("Payletter cancel orderId={}", custom_parameter);
+        log.info("[PAYLETTER] cancel hit");
+        log.info("[PAYLETTER] cancel custom_parameter={}", custom_parameter);
 
-        return "redirect:" + properties.getFrontUrl() + "/order";
+        try {
+            UUID orderId = UUID.fromString(custom_parameter);
+
+            Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
+
+            if (paymentInfo != null) {
+                Integer pointAmount = paymentInfo.get("point_amount") != null
+                        ? ((Number) paymentInfo.get("point_amount")).intValue()
+                        : 0;
+
+                String pointTid = (String) paymentInfo.get("point_tid");
+
+                if (pointAmount > 0 && pointTid != null) {
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(pointTid);
+                    dto.setCancelReason("사용자 카드결제 취소");
+
+                    kcpService.cancelPoint(dto);
+
+                    log.info("[POINT ROLLBACK] payCancel rollback success orderId={}", orderId);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("[PAYLETTER CANCEL ROLLBACK FAIL]", e);
+        }
+
+
+        response.sendRedirect(
+                properties.getFrontUrl() + "/order"
+        );
     }
+
 
 
     @GetMapping("/transaction/list")
