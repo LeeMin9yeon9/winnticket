@@ -141,5 +141,10 @@ public interface OrderShopMapper {
     // 주문 후 재고 차감
     int updateOptionValueStock(@Param("optionValueId") UUID optionValueId, @Param("quantity") int quantity);
 
+    // 15분 이상 REQUESTED 상태인 Payletter 주문 조회
+    List<String> findRequestedTimeoutOrders();
+
+    // REQUESTED 주문 CANCELING Lock
+    int lockRequestedCanceling(@Param("orderNumber") String orderNumber);
 
 }

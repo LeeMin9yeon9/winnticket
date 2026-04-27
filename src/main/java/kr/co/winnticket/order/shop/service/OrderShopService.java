@@ -6,7 +6,9 @@ import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
-import kr.co.winnticket.integration.benepia.kcp.dto.*;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
@@ -37,8 +39,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -63,6 +63,8 @@ public class OrderShopService {
     private final TicketCouponMapper ticketCouponMapper;
     private final kr.co.winnticket.ticketCoupon.service.TicketCouponService ticketCouponService;
     private final SiteInfoService siteInfoService;
+    private final PayletterService payletterService;
+
     @Transactional(readOnly = true)
     public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
         OrderShopGetResDto model = mapper.selectOrderShop(channelId, orderNumber);
@@ -270,49 +272,49 @@ public class OrderShopService {
             boolean pointDeducted = false;
 
             // 포인트 사용 시
-            if (pointAmount > 0) {
-
-                String benepiaId = reqDto.getBenepiaId();
-                String benepiaPwd = reqDto.getBenepiaPwd();
-
-                if (benepiaId == null || benepiaPwd == null) {
-                    throw new IllegalArgumentException("베네피아 ID/PW 필요");
-                }
-
-                // 포인트 조회
-                KcpPointReqDto pointReq = new KcpPointReqDto();
-                pointReq.setBenepiaId(benepiaId);
-                pointReq.setBenepiaPwd(benepiaPwd);
-                pointReq.setAmount(pointAmount);
-
-                KcpPointResDto pointRes = kcpService.getPoint(pointReq);
-
-                if (pointRes.getRsv_pnt()< pointAmount) {
-                    throw new IllegalArgumentException("포인트가 부족합니다.");
-                }
-
-                // 포인트 차감
-                List<OrderProductListGetResDto> items =
-                        orderMapper.selectOrderProductList(orderId);
-
-                KcpPointPayReqDto dto = new KcpPointPayReqDto();
-
-                dto.setOrderNo(orderNumber);
-                dto.setAmount(pointAmount);
-                dto.setProductName(items.get(0).getProductName());
-                dto.setProductCode(items.get(0).getProductCode());
-                dto.setBuyerName(reqDto.getCustomerName());
-                dto.setBuyerEmail(reqDto.getCustomerEmail());
-                dto.setBuyerPhone(reqDto.getCustomerPhone());
-                dto.setBenepiaId(benepiaId);
-                dto.setBenepiaPwd(benepiaPwd);
-
-                kcpService.pointPayAndUpdate(dto);
-
-                pointDeducted = true;
-
-                log.info("무통장 + 포인트 선차감 완료 orderId={}", orderId);
-            }
+//            if (pointAmount > 0) {
+//
+//                String benepiaId = reqDto.getBenepiaId();
+//                String benepiaPwd = reqDto.getBenepiaPwd();
+//
+//                if (benepiaId == null || benepiaPwd == null) {
+//                    throw new IllegalArgumentException("베네피아 ID/PW 필요");
+//                }
+//
+//                // 포인트 조회
+//                KcpPointReqDto pointReq = new KcpPointReqDto();
+//                pointReq.setBenepiaId(benepiaId);
+//                pointReq.setBenepiaPwd(benepiaPwd);
+//                pointReq.setAmount(pointAmount);
+//
+//                KcpPointResDto pointRes = kcpService.getPoint(pointReq);
+//
+//                if (pointRes.getRsv_pnt()< pointAmount) {
+//                    throw new IllegalArgumentException("포인트가 부족합니다.");
+//                }
+//
+//                // 포인트 차감
+//                List<OrderProductListGetResDto> items =
+//                        orderMapper.selectOrderProductList(orderId);
+//
+//                KcpPointPayReqDto dto = new KcpPointPayReqDto();
+//
+//                dto.setOrderNo(orderNumber);
+//                dto.setAmount(pointAmount);
+//                dto.setProductName(items.get(0).getProductName());
+//                dto.setProductCode(items.get(0).getProductCode());
+//                dto.setBuyerName(reqDto.getCustomerName());
+//                dto.setBuyerEmail(reqDto.getCustomerEmail());
+//                dto.setBuyerPhone(reqDto.getCustomerPhone());
+//                dto.setBenepiaId(benepiaId);
+//                dto.setBenepiaPwd(benepiaPwd);
+//
+//                kcpService.pointPayAndUpdate(dto);
+//
+//                pointDeducted = true;
+//
+//                log.info("무통장 + 포인트 선차감 완료 orderId={}", orderId);
+//            }
 
 
             resDto.setPaymentStatus("READY");
@@ -333,19 +335,7 @@ public class OrderShopService {
             List<OrderProductListGetResDto> items =
                     orderMapper.selectOrderProductList(orderId);
 
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            try {
-                                sendOrderReceiptSms(orderDetail, items);
-                                log.info("무통장 주문접수 문자 발송 완료 - orderId={}", orderId);
-                            } catch (Exception e) {
-                                log.error("무통장 주문접수 문자 발송 실패 - orderId={}", orderId, e);
-                            }
-                        }
-                    }
-            );
+
 
             return resDto;
         }
@@ -378,6 +368,7 @@ public class OrderShopService {
 
             // KCP 포인트 차감 - tno는 DB 조회 없이 응답값 직접 사용
             // (completePayment 실패 시 트랜잭션이 rollback-only가 되어 DB 조회 불가)
+           // KcpPointPayResDto
             KcpPointPayResDto pointPayRes;
             try {
                 pointPayRes = kcpService.pointPayAndUpdate(dto);
@@ -392,7 +383,7 @@ public class OrderShopService {
             try {
                 orderService.completePayment(orderId);
             } catch (Exception e) {
-                log.error("[POINT] completePayment 실패, KCP 롤백 시도 orderId={}, tno={}", orderId, kcpTno, e);
+                log.error("[POINT] completePayment 실패, KCP 롤백 시도 orderId={}", orderId, e);
                 if (kcpTno != null) {
                     try {
                         KcpPointCancelReqDto cancelDto = new KcpPointCancelReqDto();

@@ -379,11 +379,21 @@
         SET payment_status = 'CANCELING',
             updated_at = NOW()
         WHERE order_number = #{orderNumber}
-          AND payment_status = 'READY'
+          AND payment_status ='READY'
           AND status = 'PENDING_PAYMENT'
     </update>
 
     <!-- 미입금자 취소 최종 상태 변경 -->
+<!--    <update id="updateExpireCompleted">-->
+<!--        UPDATE orders-->
+<!--        SET-->
+<!--            payment_status = 'FAILED',-->
+<!--            status = 'CANCELED',-->
+<!--            canceled_at = NOW(),-->
+<!--            updated_at = NOW()-->
+<!--        WHERE order_number = #{orderNumber}-->
+<!--          AND payment_status = 'CANCELING'-->
+<!--    </update>-->
     <update id="updateExpireCompleted">
         UPDATE orders
         SET
@@ -395,12 +405,56 @@
           AND payment_status = 'CANCELING'
     </update>
 
+
+
     <!-- 미입금자 취소 실패 시 롤백 -->
+<!--    <update id="rollbackCanceling">-->
+<!--        UPDATE orders-->
+<!--        SET payment_status = 'READY',-->
+<!--            updated_at = NOW()-->
+<!--        WHERE order_number = #{orderNumber}-->
+<!--          AND payment_status = 'CANCELING'-->
+<!--    </update>-->
     <update id="rollbackCanceling">
         UPDATE orders
-        SET payment_status = 'READY',
+        SET payment_status =
+                CASE
+                    WHEN payment_method = 'VIRTUAL_ACCOUNT' THEN 'READY'
+                    ELSE 'REQUESTED'
+                    END,
             updated_at = NOW()
         WHERE order_number = #{orderNumber}
           AND payment_status = 'CANCELING'
     </update>
+
+    <!--
+        Payletter 결제창 진입 후
+        15분 동안 callback 없는 REQUESTED 주문 조회
+    -->
+    <select id="findRequestedTimeoutOrders" resultType="string">
+        SELECT order_number
+        FROM orders
+        WHERE pg_provider = 'PAYLETTER'
+          AND payment_status = 'REQUESTED'
+          AND status = 'PENDING_PAYMENT'
+    <![CDATA[
+          AND payment_method <> 'VIRTUAL_ACCOUNT'
+          AND updated_at < NOW() - INTERVAL '3 minutes'
+        ]]>
+    </select>
+
+    <!--
+    REQUESTED Timeout 주문 LOCK
+-->
+    <update id="lockRequestedCanceling">
+        UPDATE orders
+        SET payment_status = 'CANCELING',
+            updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+          AND payment_status = 'REQUESTED'
+          AND status = 'PENDING_PAYMENT'
+    </update>
+
+
+
 </mapper>

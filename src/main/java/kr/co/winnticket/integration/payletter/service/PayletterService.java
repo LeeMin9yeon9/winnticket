@@ -2,6 +2,7 @@ package kr.co.winnticket.integration.payletter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.winnticket.common.util.ClientIpProvider;
+import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.payletter.config.PayletterHashUtil;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.*;
@@ -32,6 +33,7 @@ public class PayletterService {
     private final OrderMapper orderAdminMapper;
     private final ObjectMapper objectMapper;
     private final ClientIpProvider clientIpProvider;
+    private final KcpService kcpService;
 
 
     // Payletter 결제요청

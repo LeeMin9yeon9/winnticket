@@ -183,6 +183,12 @@ public class KcpService {
             throw new IllegalStateException("결제 가능한 상태가 아닙니다.");
         }
 
+        String existingTno = orderMapper.selectPointTno(dto.getOrderNo());
+        if (existingTno != null) {
+            log.warn("[DUPLICATE POINT PAYMENT BLOCKED] orderNo={}", dto.getOrderNo());
+            throw new IllegalStateException("이미 포인트 결제 처리됨");
+        }
+
         KcpPointPayResDto res = pointPay(dto);  // 기존 KCP 호출
 
         if (!"0000".equals(res.getRes_cd())) {

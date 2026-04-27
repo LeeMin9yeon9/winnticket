@@ -119,6 +119,7 @@ public class OrderService {
             return;
         }
 
+
         // 결제 상태 / 결제일시 업데이트
         mapper.updatePaymentComplete(auId, LocalDateTime.now());
 
