@@ -163,7 +163,21 @@ public class PayletterController {
                     if (updated > 0) {
                         log.info("[CANCEL] 주문 즉시 취소 완료 orderId={}", orderId);
 
-                        // 4. 재고 복구
+                        // 4. 카드 결제가 이미 처리된 경우(엣지케이스) 수수료 없이 환불
+                        String pgTid = (String) paymentInfo.get("pg_tid");
+                        Integer cardAmount = paymentInfo.get("card_amount") != null
+                                ? ((Number) paymentInfo.get("card_amount")).intValue()
+                                : 0;
+                        if (pgTid != null && !pgTid.isBlank() && cardAmount > 0) {
+                            try {
+                                service.cancelWithoutFee(orderId);
+                                log.info("[CANCEL] 카드 수수료없는 환불 완료 orderId={}", orderId);
+                            } catch (Exception e) {
+                                log.error("[CANCEL] 카드 수수료없는 환불 실패 orderId={}", orderId, e);
+                            }
+                        }
+
+                        // 5. 재고 복구
                         try {
                             List<OrderItemOptionDto> options = orderMapper.selectOrderItemOptions(orderId);
                             for (OrderItemOptionDto opt : options) {
@@ -176,7 +190,7 @@ public class PayletterController {
                             log.error("[CANCEL] 재고 복구 실패 orderId={}", orderId, e);
                         }
 
-                        // 5. 예약쿠폰 복구
+                        // 6. 예약쿠폰 복구
                         try {
                             ticketCouponService.restoreReservedCoupons(orderId);
                             log.info("[CANCEL] 쿠폰 복구 완료 orderId={}", orderId);
