@@ -23,7 +23,9 @@ import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
 import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
+import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
 import kr.co.winnticket.ticketCoupon.mapper.TicketCouponMapper;
+import kr.co.winnticket.ticketCoupon.service.TicketCouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,11 +43,13 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderMapper mapper;
+    private final OrderShopMapper orderShopMapper;
     private final PayletterService payletterService;
     private final ObjectMapper objectMapper;
     private final BenepiaOrderService benepiaOrderService;
     private final OrderPostPaymentService orderPostPaymentService;
     private final TicketCouponMapper ticketCouponMapper;
+    private final TicketCouponService ticketCouponService;
 
     // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
@@ -135,6 +139,7 @@ public class OrderService {
             if (creds == null) {
                 log.error("[혼합결제] 베네피아 인증 정보 만료 orderId={}", auId);
                 tryCancelCardWithoutFee(auId);
+                cleanupFailedHybridOrder(auId);
                 throw new RuntimeException("베네피아 인증 정보가 만료되었습니다. 카드 결제가 취소되었습니다.");
             }
 
@@ -157,6 +162,7 @@ public class OrderService {
                 log.error("[혼합결제] 포인트 차감 실패 orderId={}", auId, e);
                 benepiaCredentialStore.delete(auId);
                 tryCancelCardWithoutFee(auId);
+                cleanupFailedHybridOrder(auId);
                 throw new RuntimeException("포인트 잔액 부족 또는 포인트 결제 오류. 카드 결제가 취소되었습니다.", e);
             }
 
@@ -271,6 +277,35 @@ public class OrderService {
             log.info("[혼합결제] 카드 수수료없는 취소 완료 orderId={}", orderId);
         } catch (Exception e) {
             log.error("[혼합결제] 카드 수수료없는 취소 실패 — 관리자 확인 필요 orderId={}", orderId, e);
+        }
+    }
+
+    // 혼합결제 실패 후 주문 상태/재고/예약쿠폰 정리 (각 단계는 독립적, 실패해도 다음 단계 진행)
+    private void cleanupFailedHybridOrder(UUID orderId) {
+        try {
+            orderShopMapper.updateCancelIfRequested(orderId);
+            log.info("[혼합결제 정리] 주문 FAILED/CANCELED 처리 orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("[혼합결제 정리] 주문 상태 변경 실패 orderId={}", orderId, e);
+        }
+
+        try {
+            List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
+            for (OrderItemOptionDto opt : options) {
+                if (!ProductType.STAY.equals(opt.getProductType())) {
+                    mapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
+                }
+            }
+            log.info("[혼합결제 정리] 재고 복구 완료 orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("[혼합결제 정리] 재고 복구 실패 orderId={}", orderId, e);
+        }
+
+        try {
+            ticketCouponService.restoreReservedCoupons(orderId);
+            log.info("[혼합결제 정리] 쿠폰 복구 완료 orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("[혼합결제 정리] 쿠폰 복구 실패 orderId={}", orderId, e);
         }
     }
 

@@ -3,6 +3,7 @@ package kr.co.winnticket.integration.payletter.scheduler;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.OrderItemOptionDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
@@ -26,6 +27,7 @@ public class PayletterRequestedTimeoutScheduler {
     private final OrderMapper orderMapper;
     private final KcpService kcpService;
     private final TicketCouponService ticketCouponService;
+    private final PayletterService payletterService;
 
 
     @Scheduled(fixedDelay = 300000) // 5분
@@ -65,6 +67,16 @@ public class PayletterRequestedTimeoutScheduler {
                     kcpService.cancelPoint(dto);
 
                     log.info("포인트 환불 완료 order={}", orderNumber);
+                }
+
+                /*
+                 * 1-2. 카드 환불 (이미 결제된 경우에만 - 수수료 없이)
+                 */
+                try {
+                    payletterService.cancelWithoutFee(orderId);
+                    log.info("카드 환불 완료 order={}", orderNumber);
+                } catch (Exception e) {
+                    log.warn("카드 환불 스킵/실패 order={} reason={}", orderNumber, e.getMessage());
                 }
 
                 /*
