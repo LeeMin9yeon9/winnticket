@@ -136,6 +136,9 @@ public interface OrderMapper {
     // orderId로 orderNumber 조회
     String findOrderNumberById(@Param("orderId") UUID orderId);
 
+    // 주문의 첫 번째 상품 ID (취소 후 상세페이지 리다이렉트용)
+    UUID findFirstProductIdByOrderId(@Param("orderId") UUID orderId);
+
     // 파트너 티켓코드타입 조회
     String selectTicketCodeType(UUID partnerId);
 

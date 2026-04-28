@@ -116,6 +116,7 @@ public class PayletterController {
         log.info("[PAYLETTER] cancel hit custom_parameter={}, order_no={}", custom_parameter, order_no);
 
         String channelCode = null;
+        UUID firstProductId = null;
 
         try {
 
@@ -132,6 +133,11 @@ public class PayletterController {
             }
 
             if (orderId != null) {
+
+                // 리다이렉트용 첫 상품 ID 조회 (실패해도 무시)
+                try {
+                    firstProductId = orderMapper.findFirstProductIdByOrderId(orderId);
+                } catch (Exception ignore) {}
 
                 Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
 
@@ -204,9 +210,12 @@ public class PayletterController {
         } catch (Exception e) {
             log.error("[PAYLETTER CANCEL ERROR]", e);
         } finally {
-            String redirectUrl = properties.getFrontUrl() + "/order";
+            // 상품 상세페이지로 복귀 (없으면 메인)
+            String redirectUrl = (firstProductId != null)
+                    ? properties.getFrontUrl() + "/product/" + firstProductId
+                    : properties.getFrontUrl() + "/";
             if (channelCode != null && !channelCode.isBlank()) {
-                redirectUrl += "?channel=" + channelCode;
+                redirectUrl += (redirectUrl.contains("?") ? "&" : "?") + "channel=" + channelCode;
             }
             response.sendRedirect(redirectUrl);
         }

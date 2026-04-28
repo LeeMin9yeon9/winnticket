@@ -676,6 +676,15 @@
         WHERE order_number = #{orderNumber}
     </select>
 
+    <!-- 주문의 첫 번째 상품 ID 조회 (취소 후 상세페이지 리다이렉트용) -->
+    <select id="findFirstProductIdByOrderId" resultType="java.util.UUID">
+        SELECT product_id
+        FROM order_items
+        WHERE order_id = #{orderId}
+        ORDER BY created_at ASC
+        LIMIT 1
+    </select>
+
     <!-- 파트너 티켓타입코드 조회 -->
     <select id="selectTicketCodeType" resultType="String">
         SELECT
