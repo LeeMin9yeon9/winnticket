@@ -7,6 +7,9 @@ import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
+import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
@@ -52,6 +55,7 @@ public class OrderService {
     private final PlusNService plusNService;
     private final AquaPlanetService aquaplanetService;
     private final KcpService kcpService;
+    private final BenepiaCredentialStore benepiaCredentialStore;
     private final LsCompanyService lsCompanyService;
 
     @Transactional(readOnly = true)
@@ -119,6 +123,45 @@ public class OrderService {
             return;
         }
 
+        // ===== 혼합결제: 카드 확정 후 포인트 차감 =====
+        // 카드가 먼저 승인된 뒤 이 콜백이 호출되므로, 여기서 KCP 포인트를 차감한다.
+        // 포인트 부족이나 오류 시 카드를 수수료 없이 전액 취소하고 주문 실패 처리.
+        boolean isHybrid = order.getPointAmount() != null && order.getPointAmount() > 0
+                && (order.getPaymentMethod() == PaymentMethod.CARD
+                    || order.getPaymentMethod() == PaymentMethod.KAKAOPAY);
+
+        if (isHybrid) {
+            String[] creds = benepiaCredentialStore.get(auId);
+            if (creds == null) {
+                log.error("[혼합결제] 베네피아 인증 정보 만료 orderId={}", auId);
+                tryCancelCardWithoutFee(auId);
+                throw new RuntimeException("베네피아 인증 정보가 만료되었습니다. 카드 결제가 취소되었습니다.");
+            }
+
+            List<OrderProductListGetResDto> itemsForPoint = mapper.selectOrderProductList(auId);
+            KcpPointPayReqDto pointDto = new KcpPointPayReqDto();
+            pointDto.setOrderNo(order.getOrderNumber());
+            pointDto.setAmount(order.getPointAmount());
+            pointDto.setProductName(itemsForPoint.get(0).getProductName());
+            pointDto.setProductCode(itemsForPoint.get(0).getProductCode());
+            pointDto.setBuyerName(order.getCustomerName());
+            pointDto.setBuyerEmail(order.getCustomerEmail());
+            pointDto.setBuyerPhone(order.getCustomerPhone());
+            pointDto.setBenepiaId(creds[0]);
+            pointDto.setBenepiaPwd(creds[1]);
+
+            try {
+                KcpPointPayResDto pointRes = kcpService.pointPayAndUpdate(pointDto);
+                log.info("[혼합결제] 포인트 차감 완료 orderId={}, tno={}", auId, pointRes.getTno());
+            } catch (Exception e) {
+                log.error("[혼합결제] 포인트 차감 실패 orderId={}", auId, e);
+                benepiaCredentialStore.delete(auId);
+                tryCancelCardWithoutFee(auId);
+                throw new RuntimeException("포인트 잔액 부족 또는 포인트 결제 오류. 카드 결제가 취소되었습니다.", e);
+            }
+
+            benepiaCredentialStore.delete(auId);
+        }
 
         // 결제 상태 / 결제일시 업데이트
         mapper.updatePaymentComplete(auId, LocalDateTime.now());
@@ -219,6 +262,16 @@ public class OrderService {
                 }
             }
         });
+    }
+
+    // 혼합결제 실패 시 카드 수수료 없이 취소 (실패해도 로그만 남기고 진행)
+    private void tryCancelCardWithoutFee(UUID orderId) {
+        try {
+            payletterService.cancelWithoutFee(orderId);
+            log.info("[혼합결제] 카드 수수료없는 취소 완료 orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("[혼합결제] 카드 수수료없는 취소 실패 — 관리자 확인 필요 orderId={}", orderId, e);
+        }
     }
 
     // 티켓 유효기간 추출
