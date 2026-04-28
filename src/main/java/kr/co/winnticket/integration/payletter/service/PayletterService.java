@@ -388,6 +388,86 @@ public class PayletterService {
         return new PayletterCancelResult(cancelAmount, cancelFee, res);
     }
 
+    /**
+     * 수수료 없이 전액 취소 — 시스템 귀책(포인트 부족 등)으로 인한 자동 취소에 사용.
+     */
+    @Transactional
+    public PayletterCancelResult cancelWithoutFee(UUID orderId) {
+
+        if (orderId == null) throw new IllegalArgumentException("orderId is null");
+
+        String ipAddr = clientIpProvider.getClientIp();
+        if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
+
+        Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
+        if (orderInfo == null) throw new IllegalStateException("주문 없음 orderId=" + orderId);
+
+        String pgProvider = (String) orderInfo.get("pg_provider");
+        if (!"PAYLETTER".equalsIgnoreCase(pgProvider)) {
+            throw new IllegalStateException("PAYLETTER 주문 아님");
+        }
+
+        String orderNumber = (String) orderInfo.get("order_number");
+
+        String phone = (String) orderInfo.get("customer_phone");
+        String email = (String) orderInfo.get("customer_email");
+        String userId = (phone != null && !phone.isBlank())
+                ? phone.replaceAll("[^0-9]", "")
+                : (email != null && !email.isBlank() ? email : orderNumber);
+
+        int cardAmount = orderInfo.get("card_amount") != null
+                ? ((Number) orderInfo.get("card_amount")).intValue()
+                : 0;
+
+        if (cardAmount == 0) {
+            log.info("[수수료없는 카드취소 SKIP] cardAmount=0 orderId={}", orderId);
+            return new PayletterCancelResult(0, 0, null);
+        }
+
+        PayletterTransactionListResDto txRes = payletterClient.getTransactionList(
+                properties.getClientId(),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+                "transaction",
+                null,
+                orderNumber
+        );
+
+        if (txRes == null || !Boolean.TRUE.equals(txRes.isSuccess())) {
+            throw new IllegalStateException("transaction 조회 실패");
+        }
+
+        PayletterTransactionItemDto txItem = txRes.getList().stream()
+                .filter(tx -> tx.getTid() != null)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("유효한 거래 없음"));
+
+        String tid = txItem.getTid();
+        String pgCode = txItem.getPgCode();
+
+        PayletterPartialCancelReqDto req = PayletterPartialCancelReqDto.builder()
+                .pgCode(pgCode)
+                .clientId(properties.getClientId())
+                .userId(userId)
+                .tid(tid)
+                .amount(cardAmount)
+                .taxfreeAmount(0)
+                .taxAmount(0)
+                .ipAddr(ipAddr)
+                .build();
+
+        PayletterCancelResDto res = payletterClient.partialCancel(req);
+
+        log.info("[수수료없는 카드취소 RES] {}", res);
+
+        if (res == null || !res.isCanceled()) {
+            throw new IllegalStateException("수수료없는 카드 취소 실패: " + (res != null ? res.getMessage() : "응답없음"));
+        }
+
+        log.info("[수수료없는 카드취소 완료] orderId={}, refund={}", orderId, cardAmount);
+
+        return new PayletterCancelResult(cardAmount, 0, res);
+    }
+
     // 결제내역 조회
     public PayletterTransactionListResDto getTransactionList(String date, String dateType, String pgCode, String orderNumber) {
 

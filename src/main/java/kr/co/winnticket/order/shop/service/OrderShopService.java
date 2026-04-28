@@ -9,6 +9,7 @@ import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
+import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentResDto;
@@ -61,6 +62,7 @@ public class OrderShopService {
     private final BankAccountService bankAccountService;
     private final PriceService priceService;
     private final KcpService kcpService;
+    private final BenepiaCredentialStore benepiaCredentialStore;
     private final OrderService orderService;
     private final TicketCouponMapper ticketCouponMapper;
     private final kr.co.winnticket.ticketCoupon.service.TicketCouponService ticketCouponService;
@@ -419,12 +421,8 @@ public class OrderShopService {
 
             return resDto;
         }
-        // 혼합결제 포인트 먼저 차감
-        // tno를 외부에 선언해서 CARD 블록에서도 사용 (DB 조회 없이 메모리에서 사용)
-        boolean pointDeducted = false;
-        String mixedKcpTno = null;
+        // 혼합결제: 카드 콜백 후 포인트 차감을 위해 인증 정보를 Redis에 임시 보관
         if (pointAmount > 0) {
-
             String benepiaId = reqDto.getBenepiaId();
             String benepiaPwd = reqDto.getBenepiaPwd();
 
@@ -432,32 +430,8 @@ public class OrderShopService {
                 throw new IllegalArgumentException("베네피아 ID/PW 필요");
             }
 
-            List<OrderProductListGetResDto> items = orderMapper.selectOrderProductList(orderId);
-
-            KcpPointPayReqDto dto = new KcpPointPayReqDto();
-
-            dto.setOrderNo(orderNumber);
-            dto.setAmount(pointAmount);
-
-            dto.setProductName(items.get(0).getProductName());
-            dto.setProductCode(items.get(0).getProductCode());
-
-            dto.setBuyerName(reqDto.getCustomerName());
-            dto.setBuyerEmail(reqDto.getCustomerEmail());
-            dto.setBuyerPhone(reqDto.getCustomerPhone());
-
-            dto.setBenepiaId(benepiaId);
-            dto.setBenepiaPwd(benepiaPwd);
-
-            try {
-                KcpPointPayResDto mixedPointRes = kcpService.pointPayAndUpdate(dto);
-                pointDeducted = true;
-                mixedKcpTno = mixedPointRes.getTno();
-                log.info("혼합결제 포인트 선차감 완료 orderId={}, tno={}", orderId, mixedKcpTno);
-            } catch (Exception e) {
-                log.error("포인트 결제 실패", e);
-                throw new RuntimeException("포인트 결제 실패");
-            }
+            benepiaCredentialStore.save(orderId, benepiaId, benepiaPwd);
+            log.info("[혼합결제] 베네피아 인증 정보 임시 저장 orderId={}", orderId);
         }
 
         //CARD
@@ -484,17 +458,9 @@ public class OrderShopService {
                 return resDto;
             } catch (Exception pgError) {
                 log.error("[PG ERROR] 결제요청 실패 orderId={}", orderId, pgError);
-
-                if (pointDeducted && mixedKcpTno != null) {
-                    try {
-                        KcpPointCancelReqDto cancelReqDto = new KcpPointCancelReqDto();
-                        cancelReqDto.setTno(mixedKcpTno);
-                        cancelReqDto.setCancelReason("PG 결제 실패 롤백");
-                        kcpService.cancelPoint(cancelReqDto);
-                        log.info("[POINT ROLLBACK] 포인트 자동복구 orderId={}, tno={}", orderId, mixedKcpTno);
-                    } catch (Exception rollbackError) {
-                        log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}, tno={}", orderId, mixedKcpTno, rollbackError);
-                    }
+                // 카드 요청 실패 시 Redis에 저장한 인증 정보 정리
+                if (pointAmount > 0) {
+                    benepiaCredentialStore.delete(orderId);
                 }
                 throw new RuntimeException("PG 결제 요청 실패");
             }
