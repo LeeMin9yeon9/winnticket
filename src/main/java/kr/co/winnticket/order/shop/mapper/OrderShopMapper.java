@@ -147,4 +147,7 @@ public interface OrderShopMapper {
     // REQUESTED 주문 CANCELING Lock
     int lockRequestedCanceling(@Param("orderNumber") String orderNumber);
 
+    // PG 결제창 닫기/취소 시 즉시 FAILED 처리
+    int updateCancelIfRequested(@Param("orderId") UUID orderId);
+
 }

@@ -5,19 +5,25 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
+import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.order.admin.dto.OrderItemOptionDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.service.OrderService;
+import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
+import kr.co.winnticket.ticketCoupon.service.TicketCouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,7 +38,10 @@ public class PayletterController {
     private final PayletterProperties properties;
     private final OrderService orderService;
     private final OrderMapper orderMapper;
+    private final OrderShopMapper orderShopMapper;
     private final KcpService kcpService;
+    private final BenepiaCredentialStore benepiaCredentialStore;
+    private final TicketCouponService ticketCouponService;
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
@@ -129,27 +138,50 @@ public class PayletterController {
                 if (paymentInfo != null) {
 
                     channelCode = (String) paymentInfo.get("channel_code");
-
-                    Integer pointAmount = paymentInfo.get("point_amount") != null
-                            ? ((Number) paymentInfo.get("point_amount")).intValue()
-                            : 0;
-
-                    String pointTid = (String) paymentInfo.get("point_tid");
                     String orderNumber = (String) paymentInfo.get("order_number");
 
-                    if (pointAmount > 0 && pointTid != null) {
-
+                    // 1. 포인트가 실제로 차감된 경우(point_tid 있음)만 환불
+                    String pointTid = (String) paymentInfo.get("point_tid");
+                    if (pointTid != null && !pointTid.isBlank()) {
                         try {
                             KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
                             dto.setTno(pointTid);
                             dto.setCancelReason("사용자 결제 취소 / orderNo=" + orderNumber);
-
                             kcpService.cancelPoint(dto);
-
-                            log.info("[POINT ROLLBACK] success orderId={}", orderId);
-
+                            log.info("[CANCEL] 포인트 환불 완료 orderId={}", orderId);
                         } catch (Exception e) {
-                            log.error("[POINT ROLLBACK FAIL]", e);
+                            log.error("[CANCEL] 포인트 환불 실패 orderId={}", orderId, e);
+                        }
+                    }
+
+                    // 2. Redis 인증 정보 즉시 삭제 (혼합결제 대기 중이었던 경우)
+                    benepiaCredentialStore.delete(orderId);
+
+                    // 3. 주문 상태 즉시 FAILED/CANCELED (REQUESTED 상태인 경우만)
+                    int updated = orderShopMapper.updateCancelIfRequested(orderId);
+
+                    if (updated > 0) {
+                        log.info("[CANCEL] 주문 즉시 취소 완료 orderId={}", orderId);
+
+                        // 4. 재고 복구
+                        try {
+                            List<OrderItemOptionDto> options = orderMapper.selectOrderItemOptions(orderId);
+                            for (OrderItemOptionDto opt : options) {
+                                if (!ProductType.STAY.equals(opt.getProductType())) {
+                                    orderMapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
+                                }
+                            }
+                            log.info("[CANCEL] 재고 복구 완료 orderId={}", orderId);
+                        } catch (Exception e) {
+                            log.error("[CANCEL] 재고 복구 실패 orderId={}", orderId, e);
+                        }
+
+                        // 5. 예약쿠폰 복구
+                        try {
+                            ticketCouponService.restoreReservedCoupons(orderId);
+                            log.info("[CANCEL] 쿠폰 복구 완료 orderId={}", orderId);
+                        } catch (Exception e) {
+                            log.error("[CANCEL] 쿠폰 복구 실패 orderId={}", orderId, e);
                         }
                     }
                 }

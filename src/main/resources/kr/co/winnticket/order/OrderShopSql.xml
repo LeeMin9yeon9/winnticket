@@ -455,6 +455,17 @@
           AND status = 'PENDING_PAYMENT'
     </update>
 
+    <!-- PG 결제창 닫기/취소 시 즉시 FAILED 처리 (REQUESTED 상태인 경우만) -->
+    <update id="updateCancelIfRequested">
+        UPDATE orders
+        SET payment_status = 'FAILED',
+            status         = 'CANCELED',
+            canceled_at    = NOW(),
+            updated_at     = NOW()
+        WHERE id = #{orderId}::uuid
+          AND payment_status = 'REQUESTED'
+          AND status = 'PENDING_PAYMENT'
+    </update>
 
 
 </mapper>
