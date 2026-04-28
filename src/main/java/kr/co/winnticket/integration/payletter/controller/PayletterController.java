@@ -76,19 +76,26 @@ public class PayletterController {
         log.info("[PAYLETTER] return custom_parameter={}", custom_parameter);
 
         String orderNumber = custom_parameter;
+        String channelCode = null;
         try {
             UUID orderId = UUID.fromString(custom_parameter);
             String found = orderMapper.findOrderNumberById(orderId);
             if (found != null) {
                 orderNumber = found;
             }
+            Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
+            if (paymentInfo != null) {
+                channelCode = (String) paymentInfo.get("channel_code");
+            }
         } catch (Exception e) {
             log.warn("[PAYLETTER] custom_parameter is not UUID, using as-is: {}", custom_parameter);
         }
 
-        response.sendRedirect(
-                properties.getFrontUrl() + "/payment-success?orderNumber=" + orderNumber
-        );
+        String redirectUrl = properties.getFrontUrl() + "/payment-success?orderNumber=" + orderNumber;
+        if (channelCode != null && !channelCode.isBlank()) {
+            redirectUrl += "&channel=" + channelCode;
+        }
+        response.sendRedirect(redirectUrl);
     }
 
     @RequestMapping(value = "/cancel", method = {RequestMethod.GET, RequestMethod.POST})
@@ -99,11 +106,12 @@ public class PayletterController {
 
         log.info("[PAYLETTER] cancel hit custom_parameter={}, order_no={}", custom_parameter, order_no);
 
+        String channelCode = null;
+
         try {
 
             UUID orderId = null;
 
-            // custom_parameter
             if (custom_parameter != null && !custom_parameter.isBlank()) {
                 try {
                     orderId = UUID.fromString(custom_parameter);
@@ -119,6 +127,8 @@ public class PayletterController {
                 Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
 
                 if (paymentInfo != null) {
+
+                    channelCode = (String) paymentInfo.get("channel_code");
 
                     Integer pointAmount = paymentInfo.get("point_amount") != null
                             ? ((Number) paymentInfo.get("point_amount")).intValue()
@@ -148,7 +158,11 @@ public class PayletterController {
         } catch (Exception e) {
             log.error("[PAYLETTER CANCEL ERROR]", e);
         } finally {
-            response.sendRedirect(properties.getFrontUrl() + "/order");
+            String redirectUrl = properties.getFrontUrl() + "/order";
+            if (channelCode != null && !channelCode.isBlank()) {
+                redirectUrl += "?channel=" + channelCode;
+            }
+            response.sendRedirect(redirectUrl);
         }
     }
 

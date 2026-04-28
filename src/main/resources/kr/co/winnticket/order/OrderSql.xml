@@ -503,27 +503,29 @@
     <!--주문 결제정보 조회 검증용임-->
     <select id="selectOrderPaymentInfo" resultType="map">
         SELECT
-            id,
-            order_number,
-            final_price,
-            point_amount,
-            cancel_amount,
-            payment_status,
-            pg_provider,
-            pg_tid,
-            pg_approval_no,
-            customer_phone,
-            customer_email,
-            payment_method,
-            status,
-            all_ticket_used,
-            ordered_at,
-            canceled_at,
-            pg_cancel_payload,
-            card_amount,
-            bank_amount
-        FROM orders
-        WHERE id = #{orderId}::uuid
+            o.id,
+            o.order_number,
+            o.final_price,
+            o.point_amount,
+            o.cancel_amount,
+            o.payment_status,
+            o.pg_provider,
+            o.pg_tid,
+            o.pg_approval_no,
+            o.customer_phone,
+            o.customer_email,
+            o.payment_method,
+            o.status,
+            o.all_ticket_used,
+            o.ordered_at,
+            o.canceled_at,
+            o.pg_cancel_payload,
+            o.card_amount,
+            o.bank_amount,
+            c.code AS channel_code
+        FROM orders o
+        LEFT JOIN channels c ON c.id = o.channel_id
+        WHERE o.id = #{orderId}::uuid
     </select>
 
     <!--주문 취소 성공 처리-->
