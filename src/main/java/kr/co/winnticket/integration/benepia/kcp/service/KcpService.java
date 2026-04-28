@@ -178,8 +178,10 @@ public class KcpService {
             throw new IllegalStateException("이미 결제된 주문입니다.");
         }
 
-        if (order.getPaymentStatus() != PaymentStatus.READY) {
-            log.info("KCP 결제 가능한 상태가 아닙니다.");
+        // READY: 포인트 단독결제, REQUESTED: 카드+포인트 혼합결제(카드 콜백 후 포인트 차감)
+        if (order.getPaymentStatus() != PaymentStatus.READY
+                && order.getPaymentStatus() != PaymentStatus.REQUESTED) {
+            log.info("KCP 결제 가능한 상태가 아닙니다. status={}", order.getPaymentStatus());
             throw new IllegalStateException("결제 가능한 상태가 아닙니다.");
         }
 
