@@ -60,12 +60,12 @@ public class WoongjinScheduler {
                     for (WJOrderInquiryResponse.Product product : order.getProducts()) {
                         String pin = product.getPin();
                         String ticketNo = product.getProduct_channel_order_number();
-                        String usedAt = product.getUsed_at();
-                        String formattedUsedAt = usedAt.replaceAll("[^0-9]", "").substring(0, 14);
                         log.info("[Woongjin] 상품 상태 확인 - Pin: {}, State: {}, IsUsed: {}",
                                 pin, product.getProduct_state(), product.getIs_used());
                         // 사용완료
                         if (Boolean.TRUE.equals(product.getIs_used()) || "COMPLETE".equals(product.getProduct_state())) {
+                            String usedAt = product.getUsed_at();
+                            String formattedUsedAt = usedAt.replaceAll("[^0-9]", "").substring(0, 14);
 
                             int updatedRows = mapper.updateWoongjinTicketUsed(ticketNo, formattedUsedAt);
 

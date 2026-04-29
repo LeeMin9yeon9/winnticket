@@ -58,6 +58,11 @@ public class SpavisScheduler {
                                     coupon.getResultDate()
                             );
 
+                            ticketMapper.updateSpavisCouponUsed(
+                                    coupon.getCouponNo(),
+                                    coupon.getResultDate()
+                            );
+
                             log.info("[Spavis] used coupon={}", coupon.getCouponNo());
                         }
                     }

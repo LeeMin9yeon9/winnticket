@@ -28,6 +28,9 @@ public interface TicketMapper {
             @Param("resultDate") String resultDate
     );
 
+    // 선사입 쿠폰 사용 동기화
+    void updateSpavisCouponUsed(String couponNo, String resultDate);
+
     // 플레이스토리 주문조회
     List<UUID> selectPlaystoryCheckOrders();
 

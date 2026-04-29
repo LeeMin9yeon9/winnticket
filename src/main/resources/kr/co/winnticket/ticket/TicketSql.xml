@@ -7,6 +7,7 @@
         UPDATE order_tickets ot
         SET
             ticket_used = true,
+            status = 'USED',
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
@@ -28,7 +29,6 @@
                       ON oic.ticket_coupon_id = tc.id
         WHERE oi.partner_id = '0f46cad1-6fb4-4514-938f-d309850f0668'
           AND tc.used_at IS NULL
-          AND o.created_at >= NOW() - INTERVAL '1 day'
     </select>
 
     <!-- 스파비스 쿠폰 사용처리 -->
@@ -36,6 +36,7 @@
         UPDATE order_tickets ot
         SET
             ticket_used = true,
+            status = 'USED',
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
@@ -43,6 +44,19 @@
           AND ot.ticket_number = #{couponNo}
           AND ot.ticket_used = false
           And ot.status = 'ISSUED'
+    </update>
+
+    <!-- 선사입 쿠폰 사용 동기화 -->
+    <update id="updateSpavisCouponUsed">
+        update ticket_coupons tc
+        set
+            used_at = ot.ticket_used_date,
+            status = 'USED'
+        from order_tickets ot
+        where 1 = 1
+        and ot.ticket_number = tc.coupon_number
+        and ot.ticket_used = true
+        and tc.status != 'USED'
     </update>
 
     <!-- 플레이스토리 주문조회 -->
@@ -54,7 +68,6 @@
         WHERE oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
           AND ot.ticket_used = false
           And ot.status = 'ISSUED'
-          AND o.created_at >= NOW() - INTERVAL '1 day'
     </select>
 
     <!-- 플레이스토리 쿠폰 사용처리 -->
@@ -62,6 +75,7 @@
         UPDATE order_tickets ot
         SET
             ticket_used = true,
+            status = 'USED',
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
@@ -80,7 +94,6 @@
         WHERE oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
           AND ot.ticket_used = false
           And ot.status = 'ISSUED'
-          AND o.created_at >= NOW() - INTERVAL '1 day'
     </select>
 
     <!-- 웅진 쿠폰 사용처리 -->
@@ -88,6 +101,7 @@
         UPDATE order_tickets ot
         SET
             ticket_used = true,
+            status = 'USED',
             ticket_used_date = TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
             FROM order_items oi
         WHERE ot.order_item_id = oi.id
@@ -126,6 +140,12 @@
                                        TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
                                    ELSE
                                         null
+            End,
+            status = CASE
+                         WHEN #{orderDiv} = '51' THEN
+                             'USED'
+                        Else
+                            status
             End
         WHERE 1 = 1
         AND ticket_number = #{ticketCode}
@@ -160,6 +180,12 @@
                    TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
                ELSE
                    null
+                End,
+            status = CASE
+                         WHEN #{orderDiv} = 'use' THEN
+                             'USED'
+                         Else
+                             status
                 End
         WHERE 1 = 1
           AND ticket_number = #{ticketCode}
