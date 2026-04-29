@@ -3,15 +3,16 @@ package kr.co.winnticket.common.util;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Component
 @RequiredArgsConstructor
 public class ClientIpProvider {
-    private final HttpServletRequest request;
 
     /**
      * 클라이언트 실제 IP 추출
-     * - 프록시/로드밸런서/Nginx 환경 대응
+     * - 스케줄러/배치 등 HTTP 컨텍스트가 없는 경우 null 반환 (NPE 방지)
      * - 우선순위:
      *   1) X-Forwarded-For (첫번째 값)
      *   2) X-Real-IP
@@ -22,6 +23,11 @@ public class ClientIpProvider {
      *   7) remoteAddr
      */
     public String getClientIp() {
+        ServletRequestAttributes attrs =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs == null) return null;
+
+        HttpServletRequest request = attrs.getRequest();
         String ip;
 
         ip = getFirstIp(request.getHeader("X-Forwarded-For"));

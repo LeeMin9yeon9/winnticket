@@ -389,15 +389,17 @@ public class PayletterService {
     }
 
     /**
-     * 수수료 없이 전액 취소 — 시스템 귀책(포인트 부족 등)으로 인한 자동 취소에 사용.
+     * 수수료 없이 전액 취소 — 시스템 귀책(포인트 부족, 스케줄러 자동취소 등)에 사용.
+     * REQUIRES_NEW: 호출자 트랜잭션과 독립 실행 — 실패해도 외부 트랜잭션 오염 없음.
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public PayletterCancelResult cancelWithoutFee(UUID orderId) {
 
         if (orderId == null) throw new IllegalArgumentException("orderId is null");
 
+        // 스케줄러 등 HTTP 컨텍스트 없는 경우 서버 로컬 IP 사용
         String ipAddr = clientIpProvider.getClientIp();
-        if (ipAddr == null || ipAddr.isBlank()) throw new IllegalArgumentException("ipAddr is null");
+        if (ipAddr == null || ipAddr.isBlank()) ipAddr = "127.0.0.1";
 
         Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
         if (orderInfo == null) throw new IllegalStateException("주문 없음 orderId=" + orderId);
