@@ -273,53 +273,40 @@ public class OrderShopService {
         // 무통장(일반/베네피아 가능)
         if (paymentMethod == PaymentMethod.VIRTUAL_ACCOUNT) {
 
-            boolean pointDeducted = false;
+            // 포인트 사용 시 즉시 차감 (무통장은 입금 대기 중에도 포인트를 먼저 차감)
+            // 입금기한 초과 시 OrderExpireScheduler가 point_tid로 포인트 자동 환불
+            if (pointAmount > 0) {
 
-            // 포인트 사용 시
-//            if (pointAmount > 0) {
-//
-//                String benepiaId = reqDto.getBenepiaId();
-//                String benepiaPwd = reqDto.getBenepiaPwd();
-//
-//                if (benepiaId == null || benepiaPwd == null) {
-//                    throw new IllegalArgumentException("베네피아 ID/PW 필요");
-//                }
-//
-//                // 포인트 조회
-//                KcpPointReqDto pointReq = new KcpPointReqDto();
-//                pointReq.setBenepiaId(benepiaId);
-//                pointReq.setBenepiaPwd(benepiaPwd);
-//                pointReq.setAmount(pointAmount);
-//
-//                KcpPointResDto pointRes = kcpService.getPoint(pointReq);
-//
-//                if (pointRes.getRsv_pnt()< pointAmount) {
-//                    throw new IllegalArgumentException("포인트가 부족합니다.");
-//                }
-//
-//                // 포인트 차감
-//                List<OrderProductListGetResDto> items =
-//                        orderMapper.selectOrderProductList(orderId);
-//
-//                KcpPointPayReqDto dto = new KcpPointPayReqDto();
-//
-//                dto.setOrderNo(orderNumber);
-//                dto.setAmount(pointAmount);
-//                dto.setProductName(items.get(0).getProductName());
-//                dto.setProductCode(items.get(0).getProductCode());
-//                dto.setBuyerName(reqDto.getCustomerName());
-//                dto.setBuyerEmail(reqDto.getCustomerEmail());
-//                dto.setBuyerPhone(reqDto.getCustomerPhone());
-//                dto.setBenepiaId(benepiaId);
-//                dto.setBenepiaPwd(benepiaPwd);
-//
-//                kcpService.pointPayAndUpdate(dto);
-//
-//                pointDeducted = true;
-//
-//                log.info("무통장 + 포인트 선차감 완료 orderId={}", orderId);
-//            }
+                String benepiaId = reqDto.getBenepiaId();
+                String benepiaPwd = reqDto.getBenepiaPwd();
 
+                if (benepiaId == null || benepiaPwd == null) {
+                    throw new IllegalArgumentException("베네피아 ID/PW 필요");
+                }
+
+                // 포인트 차감
+                List<OrderProductListGetResDto> pointItems =
+                        orderMapper.selectOrderProductList(orderId);
+
+                KcpPointPayReqDto dto = new KcpPointPayReqDto();
+                dto.setOrderNo(orderNumber);
+                dto.setAmount(pointAmount);
+                dto.setProductName(pointItems.get(0).getProductName());
+                dto.setProductCode(pointItems.get(0).getProductCode());
+                dto.setBuyerName(reqDto.getCustomerName());
+                dto.setBuyerEmail(reqDto.getCustomerEmail());
+                dto.setBuyerPhone(reqDto.getCustomerPhone());
+                dto.setBenepiaId(benepiaId);
+                dto.setBenepiaPwd(benepiaPwd);
+
+                try {
+                    kcpService.pointPayAndUpdate(dto);
+                    log.info("[무통장+포인트] 포인트 선차감 완료 orderId={}", orderId);
+                } catch (Exception e) {
+                    log.error("[무통장+포인트] 포인트 차감 실패 orderId={}", orderId, e);
+                    throw new RuntimeException("포인트 결제 실패");
+                }
+            }
 
             resDto.setPaymentStatus("READY");
 
