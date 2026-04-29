@@ -61,6 +61,7 @@ public class ChannelInfoResGetDto {
     @Schema(description = "포인트 사용 여부" ,example = "false")
     private Boolean usePoint;
 
-
+    @Schema(description = "포인트 변경 페이지 사용 여부", example = "false")
+    private Boolean usePointChange;
 
 }

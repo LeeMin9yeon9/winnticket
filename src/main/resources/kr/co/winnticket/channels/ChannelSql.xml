@@ -15,7 +15,8 @@
         c.visible,
         c.domain,
         COALESCE(c.use_card, false) AS useCard,
-        COALESCE(c.use_point, false) AS usePoint
+        COALESCE(c.use_point, false) AS usePoint,
+        COALESCE(c.use_point_change, false) AS usePointChange
 
         FROM channels c
 
@@ -89,6 +90,7 @@
             visible,
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
+            COALESCE(use_point_change, false) AS usePointChange,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
@@ -114,6 +116,7 @@
             <if test="model.domain != null">DOMAIN = #{model.domain},</if>
             <if test="model.useCard != null">USE_CARD = #{model.useCard},</if>
             <if test="model.usePoint != null">USE_POINT = #{model.usePoint},</if>
+            <if test="model.usePointChange != null">USE_POINT_CHANGE = #{model.usePointChange},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
@@ -184,7 +187,7 @@
             visible,
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
-
+            COALESCE(use_point_change, false) AS usePointChange,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels

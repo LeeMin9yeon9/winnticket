@@ -54,6 +54,9 @@ public class ChannelPatchReqDto {
     @Schema(description = "포인트 사용 여부" ,example = "false")
     private Boolean usePoint;
 
+    @Schema(description = "포인트 변경 페이지 사용 여부", example = "false")
+    private Boolean usePointChange;
+
     public void setCode(String code) {
         if (code != null) {
             this.code = code.toUpperCase(); // 소문자로 들어와도 대문자로 변환
