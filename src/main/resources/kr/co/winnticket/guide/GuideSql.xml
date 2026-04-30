@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.guide.mapper.GuideMapper">
+
+    <select id="selectAll" resultType="kr.co.winnticket.guide.dto.GuideStatusDto">
+        SELECT menu_key AS menuKey, seen
+        FROM admin_guide_status
+        WHERE account_id = #{accountId}
+    </select>
+
+    <insert id="upsertSeen">
+        INSERT INTO admin_guide_status (account_id, menu_key, seen, updated_at)
+        VALUES (#{accountId}, #{menuKey}, #{seen}, NOW())
+        ON CONFLICT (account_id, menu_key)
+        DO UPDATE SET seen = #{seen}, updated_at = NOW()
+    </insert>
+
+</mapper>
