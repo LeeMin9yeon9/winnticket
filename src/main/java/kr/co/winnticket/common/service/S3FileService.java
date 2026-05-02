@@ -33,6 +33,8 @@ public class S3FileService implements FileStorageService {
     private static final List<String> ALLOWED_EXT =
             List.of("jpg", "jpeg", "png", "gif", "webp");
 
+    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024; // 10MB
+
 
     @Override
     public List<String> uploadFiles(MultipartFile[] files) {
@@ -111,9 +113,9 @@ public class S3FileService implements FileStorageService {
             throw new IllegalArgumentException("빈 파일입니다.");
         }
 
-//        if (file.getSize() > MAX_FILE_SIZE) {
-//            throw new IllegalArgumentException("파일 크기 초과 (5MB)");
-//        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("파일 크기 초과 (최대 10MB)");
+        }
 
         String originalName = file.getOriginalFilename();
         if (originalName == null) {
