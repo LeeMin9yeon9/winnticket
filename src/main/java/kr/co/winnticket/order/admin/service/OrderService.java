@@ -171,7 +171,13 @@ public class OrderService {
         }
 
         // 결제 상태 / 결제일시 업데이트
-        mapper.updatePaymentComplete(auId, LocalDateTime.now());
+        // SQL 조건: payment_status != 'PAID' → 동시에 두 콜백이 들어와도 한쪽만 성공
+        // 이미 다른 스레드가 처리했으면 0건 반환 → 후속 처리(쿠폰발행/SMS) 중복 방지
+        int paidUpdated = mapper.updatePaymentComplete(auId, LocalDateTime.now());
+        if (paidUpdated == 0) {
+            log.info("[중복 콜백 차단] 이미 PAID 처리됨 orderId={}", auId);
+            return;
+        }
 
         // 입금 완료 → 입금기한 제거
         mapper.clearDepositDeadline(auId);
