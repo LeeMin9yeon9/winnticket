@@ -50,6 +50,7 @@ public class OrderService {
     private final OrderPostPaymentService orderPostPaymentService;
     private final TicketCouponMapper ticketCouponMapper;
     private final TicketCouponService ticketCouponService;
+    private final OrderCleanupService orderCleanupService;
 
     // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
@@ -280,33 +281,11 @@ public class OrderService {
         }
     }
 
-    // 혼합결제 실패 후 주문 상태/재고/예약쿠폰 정리 (각 단계는 독립적, 실패해도 다음 단계 진행)
+    // 혼합결제 실패 후 주문 상태/재고/예약쿠폰 정리 → OrderCleanupService 위임
     private void cleanupFailedHybridOrder(UUID orderId) {
-        try {
-            orderShopMapper.updateCancelIfRequested(orderId);
-            log.info("[혼합결제 정리] 주문 FAILED/CANCELED 처리 orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("[혼합결제 정리] 주문 상태 변경 실패 orderId={}", orderId, e);
-        }
-
-        try {
-            List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
-            for (OrderItemOptionDto opt : options) {
-                if (!ProductType.STAY.equals(opt.getProductType())) {
-                    mapper.increaseStock(opt.getOptionValueId(), opt.getQuantity());
-                }
-            }
-            log.info("[혼합결제 정리] 재고 복구 완료 orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("[혼합결제 정리] 재고 복구 실패 orderId={}", orderId, e);
-        }
-
-        try {
-            ticketCouponService.restoreReservedCoupons(orderId);
-            log.info("[혼합결제 정리] 쿠폰 복구 완료 orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("[혼합결제 정리] 쿠폰 복구 실패 orderId={}", orderId, e);
-        }
+        orderCleanupService.cancelToFailedIfRequested(orderId);
+        orderCleanupService.restoreStock(orderId);
+        orderCleanupService.restoreCoupons(orderId);
     }
 
     // 티켓 유효기간 추출
