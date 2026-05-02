@@ -23,7 +23,7 @@ public class KcpPointCancelReqDto {
     @Schema(description = "STSC / STRA")
     private String modType;
 
-    @Schema(description = "부분취소 금액")
+    @Schema(description = "STRA 부분취소 시 '취소 후 남는 금액(잔액)' — 환불액이 아님")
     private Integer modMny;
 
     @Schema(description = "부분취소  주문번호")

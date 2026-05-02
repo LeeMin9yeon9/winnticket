@@ -597,7 +597,9 @@ public class OrderService {
 
                 if (cancelFee > 0) {
                     dto.setModType("STRA");
-                    dto.setModMny(refundAmount);
+                    // KCP STRA 부분취소: mod_mny = "취소 후 남는 금액(잔액)"
+                    // 환불액이 아니라 잔액(=수수료)을 보내야 KCP가 (원금-잔액) = 환불액만큼 차감
+                    dto.setModMny(finalPrice - refundAmount);
                     dto.setModOrdrIdxx(order.getOrderNumber());
                     dto.setModOrdrGoods("수수료 제외 포인트 취소");
                 } else {
