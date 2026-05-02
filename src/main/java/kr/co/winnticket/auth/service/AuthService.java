@@ -5,11 +5,13 @@ import kr.co.winnticket.auth.dto.*;
 import kr.co.winnticket.auth.jwt.JwtTokenProvider;
 import kr.co.winnticket.auth.mapper.AuthMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -21,6 +23,10 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final FieldSessionService fieldSessionService;
 
+
+    private static boolean isBcryptHash(String s) {
+        return s != null && (s.startsWith("$2a$") || s.startsWith("$2b$") || s.startsWith("$2y$"));
+    }
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto){
         String accountId = loginRequestDto.getAccountId();
@@ -55,10 +61,25 @@ public class AuthService {
         boolean passwordMatches;
         if ("ROLE001".equals(roleId)) {
             // 직원(ROLE001) → bcrypt
-            passwordMatches = passwordEncoder.matches(password,loginUser.getPassword());
+            passwordMatches = passwordEncoder.matches(password, loginUser.getPassword());
         } else if ("ROLE002".equals(roleId)) {
-            // 현장 관리자(ROLE002) → 평문
-            passwordMatches = password.equals(loginUser.getPassword());
+            // 현장 관리자(ROLE002): BCrypt 해시면 matches, 평문이면 직접 비교 후 자동 해시 마이그레이션
+            String stored = loginUser.getPassword();
+            if (isBcryptHash(stored)) {
+                passwordMatches = passwordEncoder.matches(password, stored);
+            } else {
+                passwordMatches = (stored != null) && stored.equals(password);
+                if (passwordMatches) {
+                    // 평문 비번 일치 → 즉시 BCrypt로 마이그레이션 후 DB 갱신
+                    try {
+                        String hashed = passwordEncoder.encode(password);
+                        authmapper.updateFieldPasswordHash(loginUser.getId(), hashed);
+                        log.info("[비번 마이그레이션] 평문 → BCrypt 변환 완료 fieldManagerId={}", loginUser.getId());
+                    } catch (Exception e) {
+                        log.error("[비번 마이그레이션] 해시 갱신 실패 fieldManagerId={}", loginUser.getId(), e);
+                    }
+                }
+            }
         } else {
             throw new RuntimeException("Unknown role: " + roleId);
         }

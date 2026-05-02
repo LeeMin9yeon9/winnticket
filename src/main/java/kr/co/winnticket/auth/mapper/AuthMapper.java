@@ -15,4 +15,7 @@ public interface AuthMapper {
 
     // 현장관리자 마지막 로그인 시간
     int updateLastLoginAt(String id);
+
+    // 현장관리자 비밀번호 해시값 갱신 (평문 → BCrypt 자동 마이그레이션용)
+    int updateFieldPasswordHash(@Param("id") String id, @Param("hashed") String hashed);
 }
