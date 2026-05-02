@@ -164,7 +164,8 @@ public class AuthService {
                 fieldSessionService.delete(accountId);
             }
         }catch(Exception e){
-
+            // 토큰 파싱 실패 — 변조/만료 토큰일 수 있어 보안 이벤트로 로그 남김
+            log.warn("[LOGOUT] 토큰 파싱 실패 (블랙리스트는 처리됨)", e);
         }
     }
 

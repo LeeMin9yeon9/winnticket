@@ -140,3 +140,8 @@ lscompany:
 
 
 
+
+# 배치 트리거용 비밀헤더 (X-Batch-Secret)
+winn:
+  batch:
+    secret: ${BATCH_SECRET:}

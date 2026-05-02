@@ -1,5 +1,6 @@
 package kr.co.winnticket.integration.payletter.scheduler;
 
+import kr.co.winnticket.common.lock.SchedulerLock;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,14 +29,27 @@ public class PayletterRequestedTimeoutScheduler {
     private final OrderMapper orderMapper;
     private final OrderCleanupService orderCleanupService;
     private final OrderPostPaymentService orderPostPaymentService;
+    private final SchedulerLock schedulerLock;
 
 
     @Scheduled(fixedDelay = 300000) // 5분
     @Transactional(propagation = REQUIRES_NEW)
     public void expireOrders() {
 
-        log.info("주문 만료/타임아웃 체크 시작");
+        // 다중 인스턴스 환경 동시 실행 방지 (TTL 락 1회 실행시간 + 여유)
+        String lockToken = schedulerLock.acquire("payletter-expire-orders", Duration.ofMinutes(4));
+        if (lockToken == null) return;
 
+        try {
+            log.info("주문 만료/타임아웃 체크 시작");
+
+            doExpire();
+        } finally {
+            schedulerLock.release("payletter-expire-orders", lockToken);
+        }
+    }
+
+    private void doExpire() {
         List<String> orderNumbers = mapper.findRequestedTimeoutOrders();
 
         for (String orderNumber : orderNumbers) {

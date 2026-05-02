@@ -1,6 +1,7 @@
 package kr.co.winnticket.order.admin.scheduler;
 
 import kr.co.winnticket.common.enums.ProductType;
+import kr.co.winnticket.common.lock.SchedulerLock;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,14 +35,26 @@ public class OrderExpireScheduler {
     private final KcpService kcpService;
     private final TicketCouponService ticketCouponService;
     private final OrderPostPaymentService orderPostPaymentService;
+    private final SchedulerLock schedulerLock;
 
     // 5분마다 실행
     @Scheduled(fixedDelay = 300000)
     @Transactional(propagation = REQUIRES_NEW)
     public void expireOrders() {
 
-        log.info("입금기한 체크 시작");
+        // 다중 인스턴스 동시 실행 방지
+        String lockToken = schedulerLock.acquire("order-expire", Duration.ofMinutes(4));
+        if (lockToken == null) return;
 
+        try {
+            log.info("입금기한 체크 시작");
+            doExpire();
+        } finally {
+            schedulerLock.release("order-expire", lockToken);
+        }
+    }
+
+    private void doExpire() {
         // READY + deadline 지난 주문
         List<String> orderNumbers = mapper.findExpiredOrderNumbers();
 
