@@ -146,28 +146,29 @@ public class PayletterController {
                     channelCode = (String) paymentInfo.get("channel_code");
                     String orderNumber = (String) paymentInfo.get("order_number");
 
-                    // 1. 포인트가 실제로 차감된 경우(point_tid 있음)만 환불
-                    String pointTid = (String) paymentInfo.get("point_tid");
-                    if (pointTid != null && !pointTid.isBlank()) {
-                        try {
-                            KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                            dto.setTno(pointTid);
-                            dto.setCancelReason("사용자 결제 취소 / orderNo=" + orderNumber);
-                            kcpService.cancelPoint(dto);
-                            log.info("[CANCEL] 포인트 환불 완료 orderId={}", orderId);
-                        } catch (Exception e) {
-                            log.error("[CANCEL] 포인트 환불 실패 orderId={}", orderId, e);
-                        }
-                    }
-
-                    // 2. Redis 인증 정보 즉시 삭제 (혼합결제 대기 중이었던 경우)
-                    benepiaCredentialStore.delete(orderId);
-
-                    // 3. 주문 상태 즉시 FAILED/CANCELED (REQUESTED 상태인 경우만)
+                    // 1. 주문 상태 즉시 FAILED/CANCELED (REQUESTED 상태인 경우만 atomic 전환)
+                    //    이미 PAID 처리된 주문이면 0건 반환 → 아래 환불/복구 로직 전부 스킵 (안전장치)
                     int updated = orderShopMapper.updateCancelIfRequested(orderId);
 
                     if (updated > 0) {
                         log.info("[CANCEL] 주문 즉시 취소 완료 orderId={}", orderId);
+
+                        // 2. 포인트가 실제로 차감된 경우(point_tid 있음)만 환불
+                        String pointTid = (String) paymentInfo.get("point_tid");
+                        if (pointTid != null && !pointTid.isBlank()) {
+                            try {
+                                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                                dto.setTno(pointTid);
+                                dto.setCancelReason("사용자 결제 취소 / orderNo=" + orderNumber);
+                                kcpService.cancelPoint(dto);
+                                log.info("[CANCEL] 포인트 환불 완료 orderId={}", orderId);
+                            } catch (Exception e) {
+                                log.error("[CANCEL] 포인트 환불 실패 orderId={}", orderId, e);
+                            }
+                        }
+
+                        // 3. Redis 인증 정보 즉시 삭제 (혼합결제 대기 중이었던 경우)
+                        benepiaCredentialStore.delete(orderId);
 
                         // 4. 카드 결제가 이미 처리된 경우(엣지케이스) 수수료 없이 환불
                         String pgTid = (String) paymentInfo.get("pg_tid");

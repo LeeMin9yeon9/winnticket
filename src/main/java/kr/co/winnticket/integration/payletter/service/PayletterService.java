@@ -446,18 +446,17 @@ public class PayletterService {
         String tid = txItem.getTid();
         String pgCode = txItem.getPgCode();
 
-        PayletterPartialCancelReqDto req = PayletterPartialCancelReqDto.builder()
+        // 전액취소 API 사용 (partialCancel은 카드결제액 == 취소금액일 때 PayLetter가 893 거부)
+        PayletterCancelReqDto req = PayletterCancelReqDto.builder()
                 .pgCode(pgCode)
                 .clientId(properties.getClientId())
                 .userId(userId)
                 .tid(tid)
                 .amount(cardAmount)
-                .taxfreeAmount(0)
-                .taxAmount(0)
                 .ipAddr(ipAddr)
                 .build();
 
-        PayletterCancelResDto res = payletterClient.partialCancel(req);
+        PayletterCancelResDto res = payletterClient.cancelPayment(req);
 
         log.info("[수수료없는 카드취소 RES] {}", res);
 
