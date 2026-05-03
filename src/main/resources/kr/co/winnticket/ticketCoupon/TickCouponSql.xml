@@ -135,7 +135,7 @@
         SELECT
             tc.id,
             tc.group_id AS groupId,
-            p.product_name AS productName,
+            p.name AS productName,
             tc.coupon_number AS couponNumber,
             tc.status,
             tc.valid_from AS validFrom,

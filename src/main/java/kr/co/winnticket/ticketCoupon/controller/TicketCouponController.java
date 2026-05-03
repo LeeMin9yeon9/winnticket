@@ -213,6 +213,7 @@ public class TicketCouponController {
             );
 
             row.createCell(5).setCellValue(
+
                     r.getUsedAt() != null ? r.getUsedAt().toString() : ""
             );
         }
