@@ -9,6 +9,7 @@ import java.util.UUID;
 @Data
 @Schema(title = "[상품 > 쿠폰생성 요청 DTO] TicketCouponCreateReqDto")
 public class TicketCouponCreateReqDto {
+
     @Schema(description="상품 ID")
     private UUID productId;
 

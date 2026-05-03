@@ -10,9 +10,17 @@ import kr.co.winnticket.ticketCoupon.dto.TicketCouponListResDto;
 import kr.co.winnticket.ticketCoupon.dto.TicketCouponUpdateReqDto;
 import kr.co.winnticket.ticketCoupon.service.TicketCouponService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -144,6 +152,105 @@ public class TicketCouponController {
 
         return ResponseEntity.ok(ApiResponse.<Void>success("변경 완료", null)
         );
+    }
+
+    @GetMapping("/groups/{groupId}/coupons/export")
+    @Operation(summary = "쿠폰 목록 Excel 다운로드", description = "그룹별 쿠폰 목록 Excel 다운로드")
+    public ResponseEntity<byte[]> exportCoupons(
+            @PathVariable UUID groupId
+    ) throws Exception {
+
+        List<TicketCouponListResDto> rows = service.getCouponsByGroup(groupId);
+
+        HSSFWorkbook workbook = new HSSFWorkbook();
+        HSSFSheet sheet = workbook.createSheet("쿠폰목록");
+
+        HSSFCellStyle headerStyle = workbook.createCellStyle();
+        HSSFFont headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        String[] headers = {
+                "쿠폰번호",
+                "상태",
+                "유효시작일",
+                "유효종료일",
+                "생성일",
+                "사용일"
+        };
+
+        HSSFRow headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            HSSFCell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        for (TicketCouponListResDto r : rows) {
+            HSSFRow row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(
+                    r.getCouponNumber() != null ? r.getCouponNumber() : ""
+            );
+
+            row.createCell(1).setCellValue(
+                    convertCouponStatus(r.getStatus())
+            );
+
+            row.createCell(2).setCellValue(
+                    r.getValidFrom() != null ? r.getValidFrom().toString() : ""
+            );
+
+            row.createCell(3).setCellValue(
+                    r.getValidUntil() != null ? r.getValidUntil().toString() : ""
+            );
+
+            row.createCell(4).setCellValue(
+                    r.getCreatedAt() != null ? r.getCreatedAt().toString() : ""
+            );
+
+            row.createCell(5).setCellValue(
+                    r.getUsedAt() != null ? r.getUsedAt().toString() : ""
+            );
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        workbook.write(baos);
+        workbook.close();
+
+        String productName = rows.isEmpty() ? "쿠폰목록" : rows.get(0).getProductName();
+
+        productName = productName.replaceAll("[\\\\/:*?\"<>|]", "_");
+
+        String filename = productName + "_쿠폰목록.xls";
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''" + encodedFilename
+                )
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(baos.toByteArray());
+    }
+
+    private String convertCouponStatus(String status) {
+        if (status == null) return "";
+
+        return switch (status) {
+            case "ACTIVE" -> "사용가능";
+            case "SOLD" -> "판매됨";
+            case "USED" -> "사용완료";
+            default -> status;
+        };
     }
 
 
