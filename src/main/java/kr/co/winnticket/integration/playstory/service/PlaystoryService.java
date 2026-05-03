@@ -6,6 +6,7 @@ import kr.co.winnticket.integration.playstory.config.PlaystoryConfig;
 import kr.co.winnticket.integration.playstory.dto.*;
 import kr.co.winnticket.integration.playstory.mapper.PlaystoryMapper;
 import kr.co.winnticket.integration.playstory.mapper.PlaystoryResponseMapper;
+import kr.co.winnticket.integration.smartinfini.dto.SIOrderResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class PlaystoryService {
 
         log.info("Playstory request = {}", req);
         PlaystoryOrderResponse response = playstoryClient.order(req);
-
+        log.info("Playstory response = {}", response);
         IntegrationResult result = responseMapper.mapOrder(response);
 
         if (!result.isSuccess()) {
@@ -38,6 +39,15 @@ public class PlaystoryService {
                             + ", message: "
                             + result.getMessage()
             );
+        }
+
+        if (response.getOptList() != null) {
+            for (PlaystoryOrderResponse.OptOrdResult opt : response.getOptList()) {
+                if (opt.getCpnNo() != null && opt.getCode() != null) {
+                    mapper.updateTicketPartnerCode(opt.getCpnNo(), opt.getCode());
+                    log.info("플레이스토리 주문번호 업데이트 = {}, {}", opt.getCpnNo(), opt.getCode());
+                }
+            }
         }
 
         return response;

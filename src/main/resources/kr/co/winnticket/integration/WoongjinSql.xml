@@ -35,6 +35,12 @@
           AND oi.partner_id = 'bd0e1a6e-b871-44a0-827c-f44c0d82f3f4'
     </select>
 
+    <update id="updateWJPartnerCode">
+        UPDATE order_tickets
+        SET partner_order_code = #{pin}
+        WHERE ticket_number = #{ticketNumber}
+    </update>
+
     <!-- 취소 -->
     <resultMap id="WJCancelMap" type="kr.co.winnticket.integration.woongjin.dto.WJCancelRequest">
         <id property="channel_order_number" column="CHANNEL_ORDER_NUMBER"/>

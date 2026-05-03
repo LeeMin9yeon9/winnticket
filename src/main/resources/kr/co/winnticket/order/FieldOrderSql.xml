@@ -10,106 +10,110 @@
     -->
     <select id="selectFieldOrderList" resultType="kr.co.winnticket.order.field.dto.FieldOrderListGetResDto">
         SELECT
-            t.id                    AS ticketId,
-            o.id                    AS orderId,
-            o.order_number          AS orderNumber,
-            oi.product_name         AS productName,
-            o.ordered_at            AS orderedAt,
-            oi.unit_price           AS unitPrice,
-            CAST(oi.unit_price * (100 - COALESCE(p.commission_rate, 0)) / 100.0 AS INTEGER) AS supplyPrice,
-            t.ticket_number       AS couponNumber,
-            TO_CHAR(t.valid_from, 'YYYY-MM-DD') AS validFrom,
-            TO_CHAR(t.valid_to, 'YYYY-MM-DD') AS validTo,
-            p.name                  AS partnerName,
-            o.customer_name         AS customerName,
-            o.customer_phone        AS customerPhone,
-            o.paid_at               AS ticketSentDate,
-            t.ticket_used_date      AS ticketUsedDate,
-            o.canceled_at           AS canceledAt,
-            <![CDATA[
-            CASE
-                WHEN o.status IN ('CANCELED', 'REFUNDED') THEN '취소'
-                WHEN t.status = 'CANCELLED' THEN '취소'
-                WHEN t.ticket_used = true THEN '사용완료'
-                When t.valid_from Is Not null and t.valid_from > CURRENT_DATE then '사용시작전'
-                WHEN t.valid_to IS NOT NULL AND t.valid_to < CURRENT_DATE THEN '기간 만료'
-                ELSE '사용가능'
-            END
-           ]]> AS ticketStatus,
-            CASE
-            WHEN o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED'
-                THEN o.canceled_at
-            WHEN t.ticket_used = true
-                THEN t.ticket_used_date
-            ELSE NULL
-            END     AS processedAt
+        t.id                    AS ticketId,
+        o.id                    AS orderId,
+        o.order_number          AS orderNumber,
+        oi.product_name         AS productName,
+        o.ordered_at            AS orderedAt,
+        oi.unit_price           AS unitPrice,
+        CAST(oi.unit_price * (100 - COALESCE(p.commission_rate, 0)) / 100.0 AS INTEGER) AS supplyPrice,
+
+        -- 수정: 파트너사 코드(핀번호 등)가 있으면 우선 출력
+        COALESCE(NULLIF(t.partner_order_code, ''), t.ticket_number, '') AS couponNumber,
+
+        TO_CHAR(t.valid_from, 'YYYY-MM-DD') AS validFrom,
+        TO_CHAR(t.valid_to, 'YYYY-MM-DD') AS validTo,
+        p.name                  AS partnerName,
+        o.customer_name         AS customerName,
+        o.customer_phone        AS customerPhone,
+        o.paid_at               AS ticketSentDate,
+        t.ticket_used_date      AS ticketUsedDate,
+        o.canceled_at           AS canceledAt,
+        <![CDATA[
+        CASE
+            WHEN o.status IN ('CANCELED', 'REFUNDED') THEN '취소'
+            WHEN t.status = 'CANCELLED' THEN '취소'
+            WHEN t.ticket_used = true THEN '사용완료'
+            WHEN t.valid_from IS NOT NULL AND t.valid_from > CURRENT_DATE THEN '사용시작전'
+            WHEN t.valid_to IS NOT NULL AND t.valid_to < CURRENT_DATE THEN '기간 만료'
+            ELSE '사용가능'
+        END
+       ]]> AS ticketStatus,
+        CASE
+        WHEN o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED'
+        THEN o.canceled_at
+        WHEN t.ticket_used = true
+        THEN t.ticket_used_date
+        ELSE NULL
+        END     AS processedAt
         FROM order_tickets t
         JOIN order_items oi
-            ON oi.id = t.order_item_id
+        ON oi.id = t.order_item_id
         JOIN orders o
-            ON o.id = oi.order_id
+        ON o.id = oi.order_id
         JOIN products pr
-            ON pr.id = oi.product_id
+        ON pr.id = oi.product_id
         LEFT JOIN partners p
-            ON p.id = pr.partner_id
+        ON p.id = pr.partner_id
         WHERE 1 = 1
-          AND pr.partner_id = #{partnerId}
-          AND o.status != 'PENDING_PAYMENT'
+        AND pr.partner_id = #{partnerId}
+        AND o.status != 'PENDING_PAYMENT'
+
         <if test="srchWord != null and srchWord.trim() != ''">
-            <![CDATA[
             AND (
-                o.order_number ILIKE '%' || #{srchWord} || '%'
-                OR o.customer_name ILIKE '%' || #{srchWord} || '%'
-                OR oi.product_name ILIKE '%' || #{srchWord} || '%'
-                OR t.ticket_number ILIKE '%' || #{srchWord} || '%'
-                OR EXISTS (
-                    SELECT 1 FROM order_item_coupons oic2
-                    WHERE oic2.order_item_id = oi.id
-                        AND oic2.coupon_number ILIKE '%' || #{srchWord} || '%'
-                )
+            o.order_number ILIKE '%' || #{srchWord} || '%'
+            OR o.customer_name ILIKE '%' || #{srchWord} || '%'
+            OR oi.product_name ILIKE '%' || #{srchWord} || '%'
+            OR t.ticket_number ILIKE '%' || #{srchWord} || '%'
+            -- 추가: 파트너사 코드(핀번호)로도 검색 가능하도록
+            OR t.partner_order_code ILIKE '%' || #{srchWord} || '%'
+            OR EXISTS (
+            SELECT 1 FROM order_item_coupons oic2
+            WHERE oic2.order_item_id = oi.id
+            AND oic2.coupon_number ILIKE '%' || #{srchWord} || '%'
             )
-        ]]>
+            )
         </if>
 
         <if test="begDate != null">
             <![CDATA[
-            AND o.ordered_at >= #{begDate}
-            ]]>
+        AND o.ordered_at >= #{begDate}
+        ]]>
         </if>
 
         <if test="endDate != null">
             <![CDATA[
-            AND o.ordered_at < #{endDate} + INTERVAL '1 day'
-            ]]>
+        AND o.ordered_at < #{endDate} + INTERVAL '1 day'
+        ]]>
         </if>
 
         <if test="status != null and status != '' and !status.equals('ALL')">
             <choose>
                 <when test="status.equals('USED')">
                     AND t.ticket_used = true
-                    and t.status = 'USED'
+                    AND t.status = 'USED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                 </when>
                 <when test="status.equals('UNUSED')">
-                <![CDATA[
-                    AND t.ticket_used = false
-                    and t.status = 'ISSUED'
-                    AND o.status NOT IN ('CANCELED', 'REFUNDED')
-                    AND (t.valid_from IS NULL OR t.valid_from <= CURRENT_DATE)
-                    and (t.valid_to Is null Or t.valid_to >= CURRENT_DATE)
-                ]]>
+                    <![CDATA[
+                AND t.ticket_used = false
+                AND t.status = 'ISSUED'
+                AND o.status NOT IN ('CANCELED', 'REFUNDED')
+                AND (t.valid_from IS NULL OR t.valid_from <= CURRENT_DATE)
+                AND (t.valid_to IS NULL OR t.valid_to >= CURRENT_DATE)
+            ]]>
                 </when>
                 <when test="status.equals('CANCELED')">
-                    AND o.status IN ('CANCELED', 'REFUNDED')
+                    AND (o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED')
                 </when>
                 <when test="status.equals('EXPIRED')">
                     AND t.ticket_used = false
-                    and t.status = 'ISSUED'
+                    AND t.status = 'ISSUED'
                     AND o.status NOT IN ('CANCELED', 'REFUNDED')
                     <![CDATA[
-                    AND t.valid_to IS NOT NULL
-                    AND t.valid_to < CURRENT_DATE
-                    ]]>
+                AND t.valid_to IS NOT NULL
+                AND t.valid_to < CURRENT_DATE
+                ]]>
                 </when>
             </choose>
         </if>

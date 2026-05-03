@@ -23,6 +23,7 @@ public interface PlusNMapper {
     // 주문후 플러스앤 주문번호 저장
     void updateTicketOrderSales(
             @Param("ticketId") UUID ticketId,
-            @Param("orderSales") String orderSales
+            @Param("orderSales") String orderSales,
+            @Param("couponNo") String couponNo
     );
 }

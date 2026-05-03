@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 @Component
@@ -45,7 +46,8 @@ public class PlaystoryScheduler {
                         String cpnNo = opt.getCpnNo();
 
                     if(code.equals("2001")) {
-                        int result = mapper.updatePlaystoryTicketUsed(cpnNo, String.valueOf(LocalDate.now()));
+                        String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "000000";
+                        int result = mapper.updatePlaystoryTicketUsed(cpnNo, now);
 
                         if (result > 0) {
                             updated++;

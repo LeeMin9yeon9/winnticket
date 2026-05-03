@@ -18,4 +18,7 @@ public interface PlaystoryMapper {
 
     // 주문취소
     PlaystoryCheckCancelRequest selectPlaystoryCancel(UUID orderId);
+
+    // 플레이스토리 쿠폰번호 업데이트
+    void updateTicketPartnerCode(String cpnNo, String code);
 }

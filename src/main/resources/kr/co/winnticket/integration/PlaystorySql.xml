@@ -96,4 +96,10 @@
         WHERE o.id = #{orderId}
         And oi.partner_id = 'e8e6f928-ebe2-44f9-930c-4a3f9a061b3c'
     </select>
+
+    <update id="updateTicketPartnerCode">
+        UPDATE order_tickets
+        SET partner_order_code = #{partnerCode}
+        WHERE ticket_number = #{cpnNo}
+    </update>
 </mapper>

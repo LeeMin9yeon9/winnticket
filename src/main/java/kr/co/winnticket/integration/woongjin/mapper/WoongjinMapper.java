@@ -18,4 +18,7 @@ public interface WoongjinMapper {
 
     // 재전송
     WJResendRequest selectWJResend(UUID orderId);
+
+    // 웅진 핀번호 업데이트
+    void updateWJPartnerCode(String ticketNumber, String pin);
 }

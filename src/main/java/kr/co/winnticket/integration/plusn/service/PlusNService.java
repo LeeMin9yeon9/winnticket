@@ -60,7 +60,8 @@ public class PlusNService {
 
             mapper.updateTicketOrderSales(
                     ticket.getTicketId(),
-                    coupon.getOrder_sales()
+                    coupon.getOrder_sales(),
+                    coupon.getCoupon_no()
             );
         }
 

@@ -85,7 +85,8 @@
     <update id="updateTicketOrderSales">
         UPDATE order_tickets
         SET
-            partner_order_code = #{orderSales}
+            partner_order_code = #{couponNo},
+            partner_order_number = #{orderSales}
         WHERE id = #{ticketId}
     </update>
 </mapper>

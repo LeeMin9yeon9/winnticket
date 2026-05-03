@@ -152,7 +152,11 @@
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
-            COALESCE(ot.ticket_number, '')                                                             AS ticketNumber,
+            CASE
+            WHEN ot.partner_order_code IS NOT NULL AND ot.partner_order_code != ''
+            THEN ot.partner_order_code
+            ELSE COALESCE(ot.ticket_number, '')
+            END AS ticketNumber,
             CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
@@ -328,34 +332,38 @@
         SELECT
             a.id,  -- 티켓id
             a.order_item_id,  -- 주문상품_id
-            a.ticket_number,  -- 티켓번호
+            -- 수정: 파트너사 코드(핀번호)가 있으면 우선 출력, 없으면 티켓번호 출력
+            COALESCE(NULLIF(a.partner_order_code, ''), a.ticket_number) AS display_number,
+            a.ticket_number,  -- 원본 티켓번호
+            a.partner_order_code, -- 원본 파트너코드
             b.product_name || ' (' || STRING_AGG(f.option_value, ' ' ORDER BY f.id) || ')' product_name,  -- 상품명
             e.name partner_name,  -- 파트너명
             a.ticket_used,  -- 사용여부
             a.ticket_used_date, -- 사용일시
             a.status
         FROM order_tickets a
-        JOIN order_items b
-          ON b.id = a.order_item_id
-        JOIN orders c
-          ON c.id = b.order_id
-        JOIN products d
-          ON d.id = b.product_id
-        LEFT JOIN partners e
-          ON e.id = d.partner_id
-        LEFT JOIN order_item_options f
-               ON f.order_item_id = b.id
+                 JOIN order_items b
+                      ON b.id = a.order_item_id
+                 JOIN orders c
+                      ON c.id = b.order_id
+                 JOIN products d
+                      ON d.id = b.product_id
+                 LEFT JOIN partners e
+                           ON e.id = d.partner_id
+                 LEFT JOIN order_item_options f
+                           ON f.order_item_id = b.id
         WHERE c.id = #{id}
         GROUP BY
             a.id,
             a.ticket_number,
+            a.partner_order_code,
             b.product_name,
             e.name,
             a.ticket_used,
             a.ticket_used_date,
             a.status
         ORDER BY
-            a.ticket_number;
+            display_number;
     </select>
 
     <!--
@@ -378,18 +386,19 @@
         SELECT
             t.id                AS ticketId,
             oi.product_name     AS productName,
-            t.ticket_number     As ticketNumber,
+            -- 수정: partner_order_code가 있으면 우선 출력, 없으면 ticket_number 출력
+            COALESCE(NULLIF(t.partner_order_code, ''), t.ticket_number) AS ticketNumber,
             t.ticket_used       AS ticketUsed,
             t.ticket_used_date  AS ticketUsedDate,
             CASE
                 WHEN o.status IN ('CANCELED', 'REFUNDED') THEN 'CANCELLED'
                 ELSE t.status
-            END AS status
+                END AS status
         FROM order_tickets t
-        JOIN order_items oi ON oi.id = t.order_item_id
-        JOIN orders o ON o.id = oi.order_id
+                 JOIN order_items oi ON oi.id = t.order_item_id
+                 JOIN orders o ON o.id = oi.order_id
         WHERE oi.order_id = #{id}
-        and t.id = #{ticketId}
+          AND t.id = #{ticketId}
     </select>
 
     <!--

@@ -29,7 +29,32 @@ public class WoongjinService {
     // 상품주문
     public ApiResponse<WJOrderResponse> order(UUID orderId) {
         WJOrderRequest req = mapper.selectWJOrder(orderId);
-        return responseMapper.mapOrder(client.order(req));
+
+        // 웅진 API 호출
+        WJOrderResponse rawResponse = client.order(req);
+
+        // 공통 응답 포맷으로 매핑 (성능 및 유효성 체크)
+        ApiResponse<WJOrderResponse> response = responseMapper.mapOrder(rawResponse);
+
+        // 성공 시 핀번호(pin) 업데이트 로직
+        if (response.isSuccess() && rawResponse.getData() != null) {
+            // 이중 리스트 구조 (DataBlock -> Product) 순회
+            for (WJOrderResponse.DataBlock block : rawResponse.getData()) {
+                if (block.getProducts() == null) continue;
+
+                for (WJOrderResponse.Product product : block.getProducts()) {
+                    String ticketNumber = product.getProduct_channel_order_number();
+                    String pin = product.getPin();
+
+                    // 티켓번호와 핀번호가 모두 있을 때만 업데이트
+                    if (ticketNumber != null && pin != null) {
+                        mapper.updateWJPartnerCode(ticketNumber, pin);
+                    }
+                }
+            }
+        }
+
+        return response;
     }
 
     // 주문조회
