@@ -332,9 +332,8 @@
         SELECT
             a.id,  -- 티켓id
             a.order_item_id,  -- 주문상품_id
-            -- 수정: 파트너사 코드(핀번호)가 있으면 우선 출력, 없으면 티켓번호 출력
-            COALESCE(NULLIF(a.partner_order_code, ''), a.ticket_number) AS display_number,
-            a.ticket_number,  -- 원본 티켓번호
+            -- 기존 ticket_number 필드에 로직을 씌워 partner_order_code를 우선 출력
+            COALESCE(NULLIF(a.partner_order_code, ''), a.ticket_number) AS ticket_number,
             a.partner_order_code, -- 원본 파트너코드
             b.product_name || ' (' || STRING_AGG(f.option_value, ' ' ORDER BY f.id) || ')' product_name,  -- 상품명
             e.name partner_name,  -- 파트너명
@@ -363,7 +362,7 @@
             a.ticket_used_date,
             a.status
         ORDER BY
-            display_number;
+            ticket_number;
     </select>
 
     <!--
