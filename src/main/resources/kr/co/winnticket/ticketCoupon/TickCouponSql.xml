@@ -62,7 +62,7 @@
         SELECT
             g.id,
             g.product_id AS productId,
-            p.product_name AS productName,
+            p.name AS productName,
             g.product_option_id AS productOptionId,
             g.product_option_value_id AS productOptionValueId,
             g.group_name AS groupName,
@@ -78,7 +78,7 @@
                  LEFT JOIN products p ON p.id = g.product_id
         WHERE g.product_id = #{productId}
         GROUP BY
-            g.id, g.product_id, g.product_option_id, g.product_option_value_id,
+            g.id, g.product_id,p.name, g.product_option_id, g.product_option_value_id,
             g.group_name, g.valid_from, g.valid_until, g.created_at, g.updated_at
         ORDER BY g.created_at DESC
     </select>
