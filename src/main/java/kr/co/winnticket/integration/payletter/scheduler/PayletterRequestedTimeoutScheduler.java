@@ -1,8 +1,6 @@
 package kr.co.winnticket.integration.payletter.scheduler;
 
 import kr.co.winnticket.common.lock.SchedulerLock;
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.admin.service.OrderCleanupService;
 import kr.co.winnticket.order.admin.service.OrderPostPaymentService;
@@ -12,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.util.List;
@@ -78,21 +74,21 @@ public class PayletterRequestedTimeoutScheduler {
                 mapper.updateExpireCompleted(orderNumber);
                 log.info("자동취소 완료 order={}", orderNumber);
 
-                // 취소 안내 SMS (트랜잭션 커밋 후 발송)
-                final String finalOrderNumber = orderNumber;
-                OrderAdminDetailGetResDto order = orderMapper.selectOrderAdminDetail(orderId);
-                List<OrderProductListGetResDto> items = orderMapper.selectOrderProductList(orderId);
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        try {
-                            orderPostPaymentService.sendOrderCancelledSms(order, items);
-                            log.info("자동취소 문자 발송 완료 order={}", finalOrderNumber);
-                        } catch (Exception e) {
-                            log.error("자동취소 문자 실패 order={}", finalOrderNumber, e);
-                        }
-                    }
-                });
+//                // 취소 안내 SMS (트랜잭션 커밋 후 발송)
+//                final String finalOrderNumber = orderNumber;
+//                OrderAdminDetailGetResDto order = orderMapper.selectOrderAdminDetail(orderId);
+//                List<OrderProductListGetResDto> items = orderMapper.selectOrderProductList(orderId);
+//                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+//                    @Override
+//                    public void afterCommit() {
+//                        try {
+//                            orderPostPaymentService.sendOrderCancelledSms(order, items);
+//                            log.info("자동취소 문자 발송 완료 order={}", finalOrderNumber);
+//                        } catch (Exception e) {
+//                            log.error("자동취소 문자 실패 order={}", finalOrderNumber, e);
+//                        }
+//                    }
+//                });
 
 
             } catch (Exception e) {

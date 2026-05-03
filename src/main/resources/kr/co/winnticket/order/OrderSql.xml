@@ -97,9 +97,20 @@
 
 
         <if test="status != null and status != '' and status != 'ALL'">
-            <![CDATA[
-            AND a.STATUS = #{status}::order_status
-            ]]>
+            <choose>
+                <when test="status == 'USED'">
+                    AND EXISTS (
+                    SELECT 1
+                    FROM order_tickets t
+                    JOIN order_items oi ON oi.id = t.order_item_id
+                    WHERE oi.order_id = a.id
+                    AND t.ticket_used = true
+                    )
+                </when>
+                <otherwise>
+                    AND a.STATUS = #{status}::order_status
+                </otherwise>
+            </choose>
         </if>
 
         <if test="channelId != null">
@@ -189,9 +200,14 @@
         </if>
 
         <if test="status != null and status != '' and status != 'ALL'">
-            <![CDATA[
-            AND a.STATUS = #{status}::order_status
-            ]]>
+            <choose>
+                <when test="status == 'USED'">
+                    AND ot.ticket_used = true
+                </when>
+                <otherwise>
+                    AND a.STATUS = #{status}::order_status
+                </otherwise>
+            </choose>
         </if>
 
         <if test="channelId != null">
