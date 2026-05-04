@@ -174,6 +174,8 @@ public class TicketCouponController {
 
         String[] headers = {
                 "쿠폰번호",
+                "주문번호",
+                "주문자명",
                 "상태",
                 "유효시작일",
                 "유효종료일",
@@ -197,22 +199,30 @@ public class TicketCouponController {
             );
 
             row.createCell(1).setCellValue(
-                    convertCouponStatus(r.getStatus())
+                    r.getOrderNumber() != null ? r.getOrderNumber() : ""
             );
 
             row.createCell(2).setCellValue(
-                    r.getValidFrom() != null ? r.getValidFrom().toString() : ""
+                    r.getCustomerName() != null ? r.getCustomerName() : ""
             );
 
             row.createCell(3).setCellValue(
-                    r.getValidUntil() != null ? r.getValidUntil().toString() : ""
+                    convertCouponStatus(r.getStatus())
             );
 
             row.createCell(4).setCellValue(
-                    r.getCreatedAt() != null ? r.getCreatedAt().toString() : ""
+                    r.getValidFrom() != null ? r.getValidFrom().toString() : ""
             );
 
             row.createCell(5).setCellValue(
+                    r.getValidUntil() != null ? r.getValidUntil().toString() : ""
+            );
+
+            row.createCell(6).setCellValue(
+                    r.getCreatedAt() != null ? r.getCreatedAt().toString() : ""
+            );
+
+            row.createCell(7).setCellValue(
 
                     r.getUsedAt() != null ? r.getUsedAt().toString() : ""
             );
