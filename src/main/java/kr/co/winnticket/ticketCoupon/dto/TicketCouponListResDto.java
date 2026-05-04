@@ -42,4 +42,7 @@ public class TicketCouponListResDto {
 
     @Schema(description = "구매자 주문번호")
     private String orderNumber;
+
+    @Schema(description = "주문자 이름")
+    private String customerName;
 }
