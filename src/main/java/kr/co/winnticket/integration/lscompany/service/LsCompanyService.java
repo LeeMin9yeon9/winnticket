@@ -44,13 +44,13 @@ public class LsCompanyService {
     public LsIssueResDto issueTicket(UUID orderId) {
         // 주문 정보 조회
         LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
-        log.info("orderInfo = {}", orderInfo);
-
-        String orderNumber = orderInfo.getOrderNumber();
 
         if (orderInfo == null) {
-            throw new RuntimeException("주문정보 없음 orderNumber=" + orderNumber);
+            throw new RuntimeException("주문정보 없음 orderId=" + orderId);
         }
+
+        log.info("orderInfo = {}", orderInfo);
+        String orderNumber = orderInfo.getOrderNumber();
 
         // 주문 상품 조회
         List<LsOrderItemInfoDto> items = mapper.selectOrderItemInfos(orderId);
@@ -160,8 +160,7 @@ public class LsCompanyService {
                 log.error("LS 발권 실패 resultCode={} message={}",
                         res.getResultCode(),
                         res.getResultMessage());
-
-               return res;
+                throw new RuntimeException("LS 발권 실패: " + res.getResultMessage());
             }
 
             // 바코드 개수 검증

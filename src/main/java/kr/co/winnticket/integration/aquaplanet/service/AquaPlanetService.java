@@ -26,8 +26,8 @@ public class AquaPlanetService {
         List<AquaPlanetIssueRequest> targets = mapper.selectIssueTargets(orderId);
 
         if (targets == null || targets.isEmpty()) {
-            log.info("[AquaPlanet][ISSUE] 발행 대상 없음. orderId={}", orderId);
-            return List.of();
+            log.error("[AquaPlanet][ISSUE] 발행 대상 없음. orderId={}", orderId);
+            throw new RuntimeException("아쿠아플라넷 발행 대상이 없습니다. orderId=" + orderId);
         }
 
         List<AquaPlanetIssueResponse> results = new ArrayList<>();

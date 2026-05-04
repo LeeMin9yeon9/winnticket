@@ -36,8 +36,12 @@ public class WoongjinService {
         // 공통 응답 포맷으로 매핑 (성능 및 유효성 체크)
         ApiResponse<WJOrderResponse> response = responseMapper.mapOrder(rawResponse);
 
+        if (!response.isSuccess()) {
+            throw new RuntimeException("웅진 주문 실패: " + response.getMessage());
+        }
+
         // 성공 시 핀번호(pin) 업데이트 로직
-        if (response.isSuccess() && rawResponse.getData() != null) {
+        if (rawResponse.getData() != null) {
             // 이중 리스트 구조 (DataBlock -> Product) 순회
             for (WJOrderResponse.DataBlock block : rawResponse.getData()) {
                 if (block.getProducts() == null) continue;
