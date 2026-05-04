@@ -368,7 +368,9 @@ public class OrderPostPaymentService {
         boolean hasNormalProduct = false;
 
         for (OrderProductListGetResDto item : items) {
-            String partnerId = String.valueOf(item.getPartnerId());
+            UUID partnerUuid = item.getPartnerId();
+            if (partnerUuid == null) { hasNormalProduct = true; continue; }
+            String partnerId = partnerUuid.toString();
 
             if (WOOGJIN.equals(partnerId)) hasWoongin = true;
             else if (PLAYSTORY.equals(partnerId)) hasPlaystory = true;
@@ -392,7 +394,7 @@ public class OrderPostPaymentService {
     public List<OrderProductListGetResDto> extractNormalProducts(List<OrderProductListGetResDto> items) {
         return items.stream()
                 .filter(item -> {
-                    String partnerId = String.valueOf(item.getPartnerId());
+                    String partnerId = item.getPartnerId() != null ? item.getPartnerId().toString() : null;
                     return partnerId == null
                             || (!WOOGJIN.equals(partnerId)
                             && !PLAYSTORY.equals(partnerId)
