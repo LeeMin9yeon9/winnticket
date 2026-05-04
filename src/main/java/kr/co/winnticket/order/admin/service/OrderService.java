@@ -14,6 +14,7 @@ import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
+import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
@@ -62,6 +63,7 @@ public class OrderService {
     private final KcpService kcpService;
     private final BenepiaCredentialStore benepiaCredentialStore;
     private final LsCompanyService lsCompanyService;
+    private final MairService mairService;
 
     @Transactional(readOnly = true)
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -467,6 +469,15 @@ public class OrderService {
                 playstoryService.cancel(orderId);
             } catch (Exception e) {
                 throw new IllegalStateException("플레이스토리 주문 취소 실패", e);
+            }
+        }
+
+        if (split.isHasMair()){
+            try{
+                log.info("[엠에어 취소 시작]");
+                mairService.cancelByOrder(order.getOrderNumber());
+            } catch (Exception e){
+                throw new IllegalStateException("엠에어 주문 취소 실패", e);
             }
         }
 
