@@ -55,7 +55,7 @@
     <select id="selectPlusNCancel" resultMap="PlusNCancelMap">
         SELECT
             o.order_number AS ORDER_ID,
-            ot.partner_order_code AS ORDER_SALES,
+            ot.partner_order_number AS ORDER_SALES,
             TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS RESULT_DATE
         FROM orders o
          JOIN order_items oi
