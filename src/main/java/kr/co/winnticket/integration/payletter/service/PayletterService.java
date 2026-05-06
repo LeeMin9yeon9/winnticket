@@ -129,12 +129,11 @@ public class PayletterService {
 
     //callback payload 그대로 저장 + 결제완료 처리
     @Transactional
-    public void handleCallback(Map<String, Object> payload) {
+    public UUID handleCallback(Map<String, Object> payload) {
 
-        try {
             if(payload == null || payload.isEmpty()){
                 log.warn("[PAYLETTER] empty callback");
-                return;
+                return null;
             }
 
             // custom_parameter에서 orderNumber 사용
@@ -204,16 +203,13 @@ public class PayletterService {
             // 이미 처리된 콜백이면 종료
             if(updated != 1){
                 log.info("[PAYLETTER] already processed orderId={}", orderId);
-                return;
+                return orderId;
 
             }
             log.info("[PAYLETTER] callback processed orderId={}", orderId);
 
 
-        } catch (Exception e) {
-            log.error("[PAYLETTER] callback error payload={}", payload, e);
-
-        }
+        return orderId;
     }
 
     // 내부용 주문 취소

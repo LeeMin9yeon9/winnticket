@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.integration.payletter.config.PayletterProperties;
 import kr.co.winnticket.integration.payletter.dto.PayletterPaymentStatusResDto;
 import kr.co.winnticket.integration.payletter.dto.PayletterTransactionListResDto;
@@ -35,23 +34,25 @@ public class PayletterController {
 
     @PostMapping("/callback")
     @Operation(summary = "Payletter 콜백", description = "Payletter 결제 성공 알림")
-    public Map<String, Object> callback(@RequestBody Map<String, Object> payload, HttpSession session) {
+    public Map<String, Object> callback(@RequestBody Map<String, Object> payload) {
 
         log.info("[PAYLETTER] callback received payload={}", payload);
 
         try {
-            service.handleCallback(payload);
+            UUID orderId = service.handleCallback(payload);
 
-            Object param = payload.get("custom_parameter");
-            if (param != null) {
-                UUID orderId = UUID.fromString(String.valueOf(param));
-                orderService.completePayment(orderId);
-                log.info("[PAYLETTER] payment processed orderId={}", orderId);
-            } else {
-                log.warn("[PAYLETTER] custom_parameter missing payload={}", payload);
-            }
+            orderService.completePayment(orderId);
 
-            log.info("[PAYLETTER] callback response code=0");
+//            Object param = payload.get("custom_parameter");
+//            if (param != null) {
+//                UUID orderId = UUID.fromString(String.valueOf(param));
+//                orderService.completePayment(orderId);
+//                log.info("[PAYLETTER] payment processed orderId={}", orderId);
+//            } else {
+//                log.warn("[PAYLETTER] custom_parameter missing payload={}", payload);
+//            }
+            log.info("[PAYLETTER] payment processed orderId={}", orderId);
+
             return Map.of(
                     "code", 0,
                     "message", "success"
@@ -61,7 +62,7 @@ public class PayletterController {
             log.error("[PAYLETTER CALLBACK ERROR] payload={}", payload, e);
             return Map.of(
                     "code", 1,
-                    "message", "fail"
+                    "message",  e.getMessage()
             );
         }
     }
@@ -69,10 +70,36 @@ public class PayletterController {
     @RequestMapping(value = "/return", method = {RequestMethod.GET, RequestMethod.POST})
     @Operation(summary = "Payletter 결제 완료 후 redirect", description = "Payletter 결제 완료 후 페이지 이동")
     public void payReturn(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String message,
             @RequestParam(required = false) String custom_parameter, HttpServletResponse response
     ) throws IOException {
 
-        log.info("[PAYLETTER] return custom_parameter={}", custom_parameter);
+        log.info("[PAYLETTER] return code={}, message={}, custom_parameter={}",
+                code, message, custom_parameter);
+
+
+        // 실패 시 프론트 실패페이지 이동
+        if (!"0".equals(code)) {
+            String failUrl = properties.getFrontUrl() + "/payment/fail";
+
+            if (custom_parameter != null && !custom_parameter.isBlank()) {
+                try {
+                    UUID orderId = UUID.fromString(custom_parameter);
+                    Map<String, Object> paymentInfo = orderMapper.selectOrderPaymentInfo(orderId);
+
+                    if (paymentInfo != null) {
+                        String channelCode = (String) paymentInfo.get("channel_code");
+                        if (channelCode != null && !channelCode.isBlank()) {
+                            failUrl += "?channel=" + channelCode;
+                        }
+                    }
+                } catch (Exception ignore) {}
+            }
+
+            response.sendRedirect(failUrl);
+            return;
+        }
 
         String orderNumber = custom_parameter;
         String channelCode = null;
