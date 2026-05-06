@@ -73,7 +73,7 @@ public class KcpService {
             log.info("baseUrl = {}", properties.getKcp().getBaseUrl());
             log.info("KCP URL = {}", url);
             log.info("certPath = {}", properties.getKcp().getCertPath());
-            log.info("REQUEST BODY = {}", json);
+            log.info("REQUEST BODY = {}", objectMapper.writeValueAsString(logBody));
             log.info("===== KCP REQUEST END =====");
 
 
@@ -101,12 +101,11 @@ public class KcpService {
 
             return res;
 
+        } catch (IllegalStateException e) {
+            throw e;   // 그대로 던져서 GlobalExceptionHandler 타게
 
         } catch (Exception e) {
-            log.error("===== KCP POINT ERROR START =====");
-
-            e.printStackTrace();
-
+            log.error("===== KCP POINT ERROR START =====", e);
             log.error("===== KCP POINT ERROR END =====");
 
             throw new RuntimeException("KCP 포인트 조회 실패", e);
@@ -126,13 +125,13 @@ public class KcpService {
             body.put("kcp_cert_info", certInfo);                         // 서비스인증서
             body.put("pay_method", "POINT");                         // 결제수단
             body.put("ordr_idxx", dto.getOrderNo());                // 주문번호
-            body.put("amount",dto.getAmount());
+            body.put("amount", dto.getAmount());
 
             body.put("good_name", dto.getProductName() + " (" + dto.getOrderNo() + ")");  // 상품명 (주문번호)
-            body.put("good_cd",dto.getProductCode());               // 상품코드
-            body.put("buyr_name",dto.getBuyerName());               // 주문자명
-            body.put("buyr_mail",dto.getBuyerEmail());              // 주문자 이메일
-            body.put("buyr_tel2",dto.getBuyerPhone());              // 주문자 연락처
+            body.put("good_cd", dto.getProductCode());               // 상품코드
+            body.put("buyr_name", dto.getBuyerName());               // 주문자명
+            body.put("buyr_mail", dto.getBuyerEmail());              // 주문자 이메일
+            body.put("buyr_tel2", dto.getBuyerPhone());              // 주문자 연락처
 
             body.put("pt_issue", "SCWB");                           // 포인트기관 : SCWB
             body.put("pt_txtype", "91200000");                      // 포인트전문유형 : 91200000
@@ -141,7 +140,7 @@ public class KcpService {
             body.put("pt_pwd", dto.getBenepiaPwd());                // 베네피아PW
 
             body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());    // 소속사코드
-            body.put("pt_mny",String.valueOf(dto.getAmount()));     // 포인트결제금액 : amount 금액과 동일해야함
+            body.put("pt_mny", String.valueOf(dto.getAmount()));     // 포인트결제금액 : amount 금액과 동일해야함
             body.put("pt_paycode", "04");                           // 결제코드:04
 
             String json = objectMapper.writeValueAsString(body);
@@ -159,7 +158,7 @@ public class KcpService {
 
             HttpResponse<String> response =
                     HTTP_CLIENT.send(request,
-                                    HttpResponse.BodyHandlers.ofString());
+                            HttpResponse.BodyHandlers.ofString());
 
             log.info("[KCP POINT RES] {}", response.body());
 
@@ -167,6 +166,7 @@ public class KcpService {
                     response.body(),
                     KcpPointPayResDto.class
             );
+
         } catch (Exception e) {
             throw new RuntimeException("KCP 포인트 결제 실패",e);
         }
@@ -225,7 +225,7 @@ public class KcpService {
 
     // 포인트 취소
     public KcpModResDto cancelPoint(KcpPointCancelReqDto dto){
-        try{
+        try {
             String siteCd = properties.getKcp().getSiteCd();
 
             // 서비스 인증서 로딩
@@ -300,6 +300,8 @@ public class KcpService {
             }
 
             return res;
+        }catch (IllegalStateException e) {
+            throw e;
 
         } catch (Exception e) {
             log.error("KCP cancel error", e);
