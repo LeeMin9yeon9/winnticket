@@ -45,14 +45,13 @@ public class KcpService {
 
         log.info("KCP certPath = {}", properties.getKcp().getCertPath());
         log.info("KCP keyPath = {}", properties.getKcp().getPrivateKeyPath());
+
         try {
             String certInfo = KcpCertUtil.loadCert(properties.getKcp().getCertPath());
 
             String url = properties.getKcp().getBaseUrl() + "/gw/hub/v1/payment";
 
-
             Map<String, Object> body = new HashMap<>();
-
             body.put("site_cd", properties.getKcp().getSiteCd());
             body.put("kcp_cert_info", certInfo);
             body.put("pay_method", "POINT");
@@ -89,10 +88,19 @@ public class KcpService {
 
             log.info("[KCP POINT RES] {}", response.body());
 
-            return objectMapper.readValue(
+            KcpPointResDto res = objectMapper.readValue(
                     response.body(),
                     KcpPointResDto.class
             );
+
+            if (!"0000".equals(res.getRes_cd())) {
+                throw new IllegalStateException(
+                        "KCP 포인트 조회 실패 : " + res.getRes_msg()
+                );
+            }
+
+            return res;
+
 
         } catch (Exception e) {
             log.error("===== KCP POINT ERROR START =====");
@@ -141,7 +149,7 @@ public class KcpService {
             Map<String, Object> logBody = new HashMap<>(body);
             logBody.put("pt_pwd", "****");
 
-            log.info("[KCP POINTPAY REQ] {}", objectMapper.writeValueAsString(logBody));
+            log.info("[KCP POINT REQ] {}", objectMapper.writeValueAsString(logBody));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -153,7 +161,7 @@ public class KcpService {
                     HTTP_CLIENT.send(request,
                                     HttpResponse.BodyHandlers.ofString());
 
-            log.info("[KCP POINTPAY RES] {}", response.body());
+            log.info("[KCP POINT RES] {}", response.body());
 
             return objectMapper.readValue(
                     response.body(),
