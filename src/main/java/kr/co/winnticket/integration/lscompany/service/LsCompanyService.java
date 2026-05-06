@@ -4,8 +4,6 @@ import kr.co.winnticket.integration.lscompany.client.LsCompanyClient;
 import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.mapper.LsCompanyMapper;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
-import kr.co.winnticket.integration.smartinfini.dto.SIUseCallbackResponse;
-import kr.co.winnticket.integration.smartinfini.dto.SmartInfiniOrderTicket;
 import kr.co.winnticket.ticket.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -321,7 +319,7 @@ public class LsCompanyService {
             return fail("이미 사용된 티켓");
         }
 
-        if (!ticket.isTicketUsed() && req.getCode().equals("useCancle")) {
+        if (!ticket.isTicketUsed() && req.getCode().equals("useCancel")) {
             return fail("이미 취소된 티켓");
         }
 
