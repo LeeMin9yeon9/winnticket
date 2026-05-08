@@ -1,5 +1,6 @@
 package kr.co.winnticket.order.admin.mapper;
 
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpCancelTargetDto;
 import kr.co.winnticket.order.admin.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -179,6 +180,12 @@ public interface OrderMapper {
             @Param("validFrom") LocalDate validFrom,
             @Param("validTo") LocalDate validTo
     );
+
+    // 베네피아 테스트 계정 조회(스케줄러 취소용)
+    List<KcpCancelTargetDto> selectTesttravelPaymentTargets();
+
+    // 베네피아 테스트 계정 취소 후 상태변경용 (스케줄러)
+    int updateTesttravelCancelStatus(@Param("orderNo") String orderNo);
 
 
 }
