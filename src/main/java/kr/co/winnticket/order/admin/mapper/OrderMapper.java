@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.mapper;
 
-import kr.co.winnticket.integration.benepia.kcp.dto.KcpCancelTargetDto;
 import kr.co.winnticket.order.admin.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -182,10 +181,10 @@ public interface OrderMapper {
     );
 
     // 베네피아 테스트 계정 조회(스케줄러 취소용)
-    List<KcpCancelTargetDto> selectTesttravelPaymentTargets();
+    List<UUID> selectTesttravelOrderIds();
 
-    // 베네피아 테스트 계정 취소 후 상태변경용 (스케줄러)
-    int updateTesttravelCancelStatus(@Param("orderNo") String orderNo);
+    // 취소된 주문 선사입티켓 주문자,주문번호 삭제
+    void deleteOrderItemCouponByCouponId(UUID couponId);
 
 
 }

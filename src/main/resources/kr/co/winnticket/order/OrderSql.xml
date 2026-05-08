@@ -799,32 +799,19 @@
 
 
     <!--베네피아 KCP 테스트계정 취소 조회 (스케줄러용)-->
-    <select id="selectTesttravelPaymentTargets"
-            resultType="kr.co.winnticket.integration.benepia.kcp.dto.KcpCancelTargetDto">
-
-        SELECT
-            o.order_number AS orderNo,
-            o.point_tno AS tno
-        FROM orders o
-        WHERE o.benepia_id = 'testtravel'
-          AND o.payment_status = 'PAID'
-          AND o.point_tno IS NOT NULL
-
+    <select id="selectTesttravelOrderIds" resultType="java.util.UUID">
+        SELECT id
+        FROM orders
+        WHERE benepia_id = 'testtravel'
+          AND payment_status = 'PAID'
     </select>
 
-    <!-- 베네피아 KCP testtravel 자동취소 상태 변경 -->
-    <update id="updateTesttravelCancelStatus">
 
-        UPDATE orders
-        SET
-            status = 'CANCELED',
-            payment_status = 'CANCELED',
-            canceled_at = NOW(),
-            updated_at = NOW()
-        WHERE order_number = #{orderNo}
-          AND payment_status = 'PAID'
-
-    </update>
+    <!--선사입 티켓 환불건 주문자,주문번호 삭제-->
+    <delete id="deleteOrderItemCouponByCouponId">
+        DELETE FROM order_item_coupons
+        WHERE ticket_coupon_id = #{couponId}
+    </delete>
 
     <!--환불전용 kcp 부분취소-->
 <!--    <update id="updateOrderCancelPartial">-->

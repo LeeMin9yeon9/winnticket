@@ -566,25 +566,41 @@ public class OrderService {
             }
 
         } else if (method == PaymentMethod.POINT) {
+
+            boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
+
             String tno = mapper.selectPointTno(order.getOrderNumber());
 
             int finalPrice = order.getFinalPrice();
+            int refundAmount;
 
-            // ===== 수수료 계산 =====
-            LocalDateTime orderedAt = order.getOrderedAt();
+            // ===== testtravel 테스트 계정은 수수료 없이 전액 환불 =====
+            if (isTestTravel) {
 
-            long days = java.time.temporal.ChronoUnit.DAYS.between(
-                    orderedAt.toLocalDate(),
-                    LocalDate.now()
-            );
+                cancelFee = 0;
+                refundAmount = finalPrice;
 
-            cancelFee = (days <= 7)
-                    ? 1000
-                    : (int) Math.floor(finalPrice * 0.1);
+                log.info("[TESTTRAVEL POINT CANCEL] full refund orderId={}", orderId);
+                log.info("[TESTTRAVEL POINT CANCEL] skip cancel fee. benepiaId={}", order.getBenepiaId());
 
-            int refundAmount = Math.max(finalPrice - cancelFee, 0);
+            } else {
 
-            log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+                // ===== 수수료 계산 =====
+                LocalDateTime orderedAt = order.getOrderedAt();
+
+                long days = java.time.temporal.ChronoUnit.DAYS.between(
+                        orderedAt.toLocalDate(),
+                        LocalDate.now()
+                );
+
+                cancelFee = (days <= 7)
+                        ? 1000
+                        : (int) Math.floor(finalPrice * 0.1);
+
+                refundAmount = Math.max(finalPrice - cancelFee, 0);
+
+                log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+            }
 
             if (tno != null) {
                 KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
@@ -669,6 +685,8 @@ public class OrderService {
             if (restored == 0) {
                 throw new IllegalStateException("쿠폰 복구 실패 (이미 사용되었거나 상태 이상)");
             }
+            // 선사입 쿠폰 주문정보 삭제
+            mapper.deleteOrderItemCouponByCouponId(couponId);
         }
 
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);
