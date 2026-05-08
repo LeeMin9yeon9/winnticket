@@ -157,24 +157,59 @@
             a.payment_status                                                                           AS paymentStatus,
             a.final_price                                                                              AS finalPrice,
             a.payment_method                                                                           AS paymentMethod,
-            COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             COALESCE(a.benepia_id, '')                                                                 AS benepiaId,
+            COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             CASE WHEN a.payment_method = 'VIRTUAL_ACCOUNT' THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS bankTransferAmount,
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
-            CASE
-            WHEN ot.partner_order_code IS NOT NULL AND ot.partner_order_code != ''
-            THEN ot.partner_order_code
-            ELSE COALESCE(ot.ticket_number, '')
-            END AS ticketNumber,
-            CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
+--             CASE
+--             WHEN ot.partner_order_code IS NOT NULL AND ot.partner_order_code != ''
+--             THEN ot.partner_order_code
+--             ELSE COALESCE(ot.ticket_number, '')
+--             END AS ticketNumber,
+--             CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
+        -- 티켓번호 한줄 처리
+        COALESCE(
+        (
+        SELECT STRING_AGG(
+        CASE
+        WHEN t.partner_order_code IS NOT NULL
+        AND t.partner_order_code != ''
+        THEN t.partner_order_code
+        ELSE COALESCE(t.ticket_number, '')
+        END,
+        ', '
+        ORDER BY t.ticket_number
+        )
+        FROM order_tickets t
+        WHERE t.order_item_id = b.id
+        ),
+        ''
+        ) AS ticketNumber,
+        -- 티켓사용여부 한줄 처리
+        COALESCE(
+        (
+        SELECT STRING_AGG(
+        CASE
+        WHEN t.ticket_used = true
+        THEN '사용완료'
+        ELSE '미사용'
+        END,
+        ', '
+        ORDER BY t.ticket_number
+        )
+        FROM order_tickets t
+        WHERE t.order_item_id = b.id
+        ),
+        ''
+        ) AS ticketUsed
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
         JOIN products c ON c.id = b.product_id
         LEFT JOIN partners d ON d.id = c.partner_id
         LEFT JOIN channels e ON e.id = a.channel_id
-        LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
+--         LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
         WHERE 1 = 1
           AND a.status != 'PENDING_PAYMENT'
 
@@ -202,8 +237,14 @@
         <if test="status != null and status != '' and status != 'ALL'">
             <choose>
                 <when test="status == 'USED'">
-                    AND ot.ticket_used = true
+                    AND EXISTS (
+                    SELECT 1
+                    FROM order_tickets t
+                    WHERE t.order_item_id = b.id
+                    AND t.ticket_used = true
+                    )
                 </when>
+
                 <otherwise>
                     AND a.STATUS = #{status}::order_status
                 </otherwise>
@@ -218,7 +259,7 @@
             AND c.partner_id = #{partnerId}
         </if>
 
-        ORDER BY a.ordered_at DESC, ot.ticket_number
+        ORDER BY a.ordered_at DESC
     </select>
 
    

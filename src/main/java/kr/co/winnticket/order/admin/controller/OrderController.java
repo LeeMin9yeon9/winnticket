@@ -1,6 +1,5 @@
 package kr.co.winnticket.order.admin.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,15 +7,12 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.integration.payletter.service.PayletterService;
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminTicketCheckGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderExportResDto;
+import kr.co.winnticket.order.admin.dto.*;
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -96,7 +92,7 @@ public class OrderController {
                 "상품번호", "주문상품", "예약일자", "상품종류", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
                 "결제상태", "결제금액", "결제수단",
-                "베네피아 포인트 결제금액", "베네피아 아이디",
+                "베네피아 아이디","베네피아 포인트 결제금액",
                 "무통장 결제금액", "신용카드 결제금액", "이용권",
                 "결제일시", "티켓번호", "티켓사용여부"
         };
@@ -118,42 +114,44 @@ public class OrderController {
             row.createCell(3).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");       // 주문번호
             row.createCell(4).setCellValue(r.getCompanyName() != null ? r.getCompanyName() : "");       // 회사명
             row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");     // 주문자
-            row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");   // 주문자 전화번호
+            row.createCell(6).setCellValue(formatPhoneNumber(r.getCustomerPhone()));                // 주문자 전화번호
+           // row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");   // 주문자 전화번호
             row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");   // 이메일
             row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");   // 수령자
-            row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : ""); // 수령자 번호
+            row.createCell(9).setCellValue(formatPhoneNumber(r.getRecipientPhone()));                   // 수령자 번호
+            //row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : ""); // 수령자 번호
             row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");      // 상품번호
             row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : ""); // 주문상품
-            row.createCell(12).setCellValue("");                                                         // 예약일자
-            row.createCell(13).setCellValue("");                                                         // 상품종류
-            row.createCell(14).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");        // 티켓종류
-            row.createCell(15).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);             // 수량
-            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);           // 단가
-            row.createCell(17).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);       // 공급가
-            row.createCell(18).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0); // 총 주문금액
+            //row.createCell(12).setCellValue("");                                                         // 예약일자
+            //row.createCell(13).setCellValue("");                                                         // 상품종류
+            row.createCell(12).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");        // 티켓종류
+            row.createCell(13).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);             // 수량
+            row.createCell(14).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);           // 단가
+            row.createCell(15).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);       // 공급가
+            row.createCell(16).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0); // 총 주문금액
             // 결제상태 한글 변환
             String psDisplay = "";
             if (r.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(r.getPaymentStatus()).getDisplayName(); }
                 catch (Exception e) { psDisplay = r.getPaymentStatus(); }
             }
-            row.createCell(19).setCellValue(psDisplay);                                                  // 결제상태
-            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);          // 결제금액
+            row.createCell(17).setCellValue(psDisplay);                                                  // 결제상태
+            row.createCell(18).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);          // 결제금액
             // 결제수단 한글 변환
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(r.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
             }
-            row.createCell(21).setCellValue(pmDisplay);                                                  // 결제수단
-            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트
-            row.createCell(23).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
-            row.createCell(24).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0); // 무통장 결제금액
-            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);          // 카드 결제금액
-            row.createCell(26).setCellValue("");                                                          // 베네피아 이용권
-            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");                 // 결제일시
-            row.createCell(28).setCellValue(r.getTicketNumber() != null ? r.getTicketNumber() : "");     // 티켓번호
-            row.createCell(29).setCellValue(r.getTicketUsed() != null ? r.getTicketUsed() : "미사용");   // 티켓사용여부
+            row.createCell(19).setCellValue(pmDisplay);                                                  // 결제수단
+            row.createCell(20).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
+            row.createCell(21).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트
+            row.createCell(22).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0); // 무통장 결제금액
+            row.createCell(23).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);          // 카드 결제금액
+            row.createCell(24).setCellValue("");                                                          // 베네피아 이용권
+            row.createCell(25).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");                 // 결제일시
+            row.createCell(26).setCellValue(r.getTicketNumber() != null ? r.getTicketNumber() : "");     // 티켓번호
+            row.createCell(27).setCellValue(r.getTicketUsed() != null ? r.getTicketUsed() : "미사용");   // 티켓사용여부
         }
 
         // 열 너비 자동 조정
@@ -242,6 +240,33 @@ public class OrderController {
     ) throws Exception {
         service.resendTicketSms(orderId);
         return ResponseEntity.ok(ApiResponse.success("재전송 완료",orderId.toString()));
+    }
+
+    private String formatPhoneNumber(String phone) {
+
+        if (phone == null || phone.isBlank()) {
+            return "";
+        }
+
+        String onlyNumber = phone.replaceAll("[^0-9]", "");
+
+        // 01012341234 -> 010-1234-1234
+        if (onlyNumber.length() == 11) {
+            return onlyNumber.replaceFirst(
+                    "(\\d{3})(\\d{4})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        // 0212345678 -> 021-234-5678
+        if (onlyNumber.length() == 10) {
+            return onlyNumber.replaceFirst(
+                    "(\\d{3})(\\d{3})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        return phone;
     }
 
 
