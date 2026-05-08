@@ -145,7 +145,7 @@
                          WHEN #{orderDiv} = '51' THEN
                              'USED'
                         Else
-                            status
+                            'ISSUED'
             End
         WHERE 1 = 1
         AND ticket_number = #{ticketCode}
@@ -177,7 +177,7 @@
                 END,
             ticket_used_date = CASE
                WHEN #{orderDiv} = 'use' THEN
-                   TO_TIMESTAMP(#{resultDate}, 'YYYYMMDDHH24MISS')
+                   TO_TIMESTAMP(#{resultDate}, 'YYYY-MM-DD HH24:MI:SS')
                ELSE
                    null
                 End,
@@ -185,7 +185,7 @@
                          WHEN #{orderDiv} = 'use' THEN
                              'USED'
                          Else
-                             status
+                             'ISSUED'
                 End
         WHERE 1 = 1
           AND ticket_number = #{ticketCode}
