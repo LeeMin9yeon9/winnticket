@@ -472,14 +472,14 @@ public class OrderService {
             }
         }
 
-        if (split.isHasMair()){
-            try{
-                log.info("[엠에어 취소 시작]");
-                mairService.cancelByOrder(order.getOrderNumber());
-            } catch (Exception e){
-                throw new IllegalStateException("엠에어 주문 취소 실패", e);
-            }
-        }
+//        if (split.isHasMair()){
+//            try{
+//                log.info("[엠에어 취소 시작]");
+//                mairService.cancelByOrder(order.getOrderNumber());
+//            } catch (Exception e){
+//                throw new IllegalStateException("엠에어 주문 취소 실패", e);
+//            }
+//        }
 
         /*
         if (split.isHasCoreworks()) {
@@ -532,15 +532,30 @@ public class OrderService {
 
         } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
 
-            // 카드 취소 실행 (여기서 카드금액 - 총수수료 계산됨)
-            PayletterCancelResult result = payletterService.cancel(orderId);
+            // testtravel 계정 여부 확인
+            boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
 
-            cancel = result.getPgResult();
-            cancelAmount = result.getCancelAmount(); // 카드 환불액
-            cancelFee = result.getCancelFee();      // 수수료
+            if(isTestTravel) {
+                // testtravel은 카드 취소 수수료 없이 전액 취소
+                PayletterCancelResult result = payletterService.cancelWithoutFee(orderId);
 
-            log.info("[PG CANCEL RESULT] {}", cancel);
+                cancel = result.getPgResult();
+                cancelAmount = result.getCancelAmount(); // 전액 환불
+                cancelFee = 0;                           // 수수료 없음
 
+                log.info("[TESTTRAVEL CARD CANCEL] full refund orderId={}", orderId);
+
+            }else {
+                // 카드 취소 실행 (여기서 카드금액 - 총수수료 계산됨)
+                PayletterCancelResult result = payletterService.cancel(orderId);
+
+                cancel = result.getPgResult();
+                cancelAmount = result.getCancelAmount(); // 카드 환불액
+                cancelFee = result.getCancelFee();      // 수수료
+
+                log.info("[PG CANCEL RESULT] {}", cancel);
+
+            }
             // 혼합결제 포인트 반환
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
 
