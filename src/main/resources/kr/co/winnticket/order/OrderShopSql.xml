@@ -296,7 +296,6 @@
         SELECT
             oi.partner_id AS partnerId,
             oi.product_name AS productName,
-            oio.option_value AS optionName,
             o.customer_name AS customerName,
             oi.quantity AS quantity,
 
@@ -327,20 +326,18 @@
 
 
     <select id="selectTicketsByOrderNumber" resultType="kr.co.winnticket.order.shop.dto.OrderQrCouponGetResDto$Ticket">
-
         SELECT
             ot.id                 AS ticket_id,
             ot.ticket_number      AS ticket_number,
             ot.partner_order_code AS partner_order_code,
             ot.ticket_used        AS ticket_used,
-            ot.status             AS status
-
+            ot.status             AS status,
+            oio.option_value      AS optionName
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
                  JOIN orders o ON o.id = oi.order_id
-
+                 LEFT JOIN order_item_options oio ON oio.order_item_id = oi.id
         WHERE o.order_number = #{orderNumber}
-
     </select>
 
     <!--입금 기한 저장-->
