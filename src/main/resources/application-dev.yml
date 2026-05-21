@@ -64,8 +64,8 @@ benepia-batch:
 
 # 토스페이먼츠 연동
 toss:
-  client-key: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm
-  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  client-key: live_gck_DLJOpm5QrlWL2wKgEgQLVPNdxbWn
+  secret-key: live_gsk_ORzdMaqN3wK6l1WgnwpM35AkYXQG
   success-url: https://www.winnticket.store/payment/callback
   fail-url: https://www.winnticket.store/payment/fail
 
