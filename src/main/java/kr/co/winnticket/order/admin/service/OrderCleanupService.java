@@ -4,7 +4,7 @@ import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.integration.tosspayments.service.TossPaymentsService;
 import kr.co.winnticket.order.admin.dto.OrderItemOptionDto;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.order.shop.mapper.OrderShopMapper;
@@ -32,7 +32,7 @@ public class OrderCleanupService {
     private final OrderMapper orderMapper;
     private final OrderShopMapper orderShopMapper;
     private final KcpService kcpService;
-    private final PayletterService payletterService;
+    private final TossPaymentsService tossPaymentsService;
     private final TicketCouponService ticketCouponService;
     private final BenepiaCredentialStore benepiaCredentialStore;
 
@@ -111,10 +111,10 @@ public class OrderCleanupService {
      */
     public void refundCardWithoutFee(UUID orderId) {
         try {
-            payletterService.cancelWithoutFee(orderId);
-            log.info("[CLEANUP] 카드 수수료없는 환불 완료 orderId={}", orderId);
+            tossPaymentsService.cancel(orderId);
+            log.info("[CLEANUP] 카드 환불 완료 orderId={}", orderId);
         } catch (Exception e) {
-            log.error("[CLEANUP] 카드 수수료없는 환불 실패 orderId={}", orderId, e);
+            log.error("[CLEANUP] 카드 환불 실패 orderId={}", orderId, e);
         }
     }
 
