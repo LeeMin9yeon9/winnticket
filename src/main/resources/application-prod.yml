@@ -88,8 +88,8 @@ benepia-batch:
 
 # 신용카드/간편결제 연동 (Toss Payments 운영)
 toss:
-  client-key: ${TOSS_CLIENT_KEY}
-  secret-key: ${TOSS_SECRET_KEY}
+  client-key: live_gck_DLJOpm5QrlWL2wKgEgQLVPNdxbWn
+  secret-key: live_gsk_ORzdMaqN3wK6l1WgnwpM35AkYXQG
   success-url: https://www.winnticket.co.kr/payment/callback
   fail-url: https://www.winnticket.co.kr/payment/fail
 
