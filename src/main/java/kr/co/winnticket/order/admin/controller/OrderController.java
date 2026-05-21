@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
 import kr.co.winnticket.order.admin.dto.*;
+
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.hssf.usermodel.*;
@@ -33,7 +33,6 @@ import java.util.UUID;
 
 public class OrderController {
     private final OrderService service;
-    private final PayletterService payletterService;
 
     // 주문 상태별 카운트 조회
     @GetMapping("/status")
@@ -92,7 +91,7 @@ public class OrderController {
                 "상품번호", "주문상품", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
                 "결제상태", "결제금액", "결제수단",
-                "베네피아 아이디","베네피아 포인트 결제금액",
+                "베네피아 포인트 결제금액", "베네피아 아이디",
                 "무통장 결제금액", "신용카드 결제금액", "이용권",
                 "결제일시", "티켓번호", "티켓사용여부"
         };
@@ -114,16 +113,12 @@ public class OrderController {
             row.createCell(3).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");       // 주문번호
             row.createCell(4).setCellValue(r.getCompanyName() != null ? r.getCompanyName() : "");       // 회사명
             row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");     // 주문자
-            row.createCell(6).setCellValue(formatPhoneNumber(r.getCustomerPhone()));                // 주문자 전화번호
-           // row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");   // 주문자 전화번호
+            row.createCell(6).setCellValue(formatPhoneNumber(r.getCustomerPhone()));                     // 주문자 전화번호
             row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");   // 이메일
             row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");   // 수령자
-            row.createCell(9).setCellValue(formatPhoneNumber(r.getRecipientPhone()));                   // 수령자 번호
-            //row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : ""); // 수령자 번호
+            row.createCell(9).setCellValue(formatPhoneNumber(r.getRecipientPhone()));                    // 수령자 번호
             row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");      // 상품번호
             row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : ""); // 주문상품
-            //row.createCell(12).setCellValue("");                                                         // 예약일자
-            //row.createCell(13).setCellValue("");                                                         // 상품종류
             row.createCell(12).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");        // 티켓종류
             row.createCell(13).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);             // 수량
             row.createCell(14).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);           // 단가
@@ -144,11 +139,11 @@ public class OrderController {
                 catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
             }
             row.createCell(19).setCellValue(pmDisplay);                                                  // 결제수단
-            row.createCell(20).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
-            row.createCell(21).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트
+            row.createCell(20).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트 결제금액
+            row.createCell(21).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
             row.createCell(22).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0); // 무통장 결제금액
             row.createCell(23).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);          // 카드 결제금액
-            row.createCell(24).setCellValue("");                                                          // 베네피아 이용권
+            row.createCell(24).setCellValue("");                                                          // 이용권
             row.createCell(25).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");                 // 결제일시
             row.createCell(26).setCellValue(r.getTicketNumber() != null ? r.getTicketNumber() : "");     // 티켓번호
             row.createCell(27).setCellValue(r.getTicketUsed() != null ? r.getTicketUsed() : "미사용");   // 티켓사용여부
