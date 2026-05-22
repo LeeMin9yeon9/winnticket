@@ -28,6 +28,7 @@
             a.point_amount,  -- 포인트결제금액
             CASE
                 WHEN a.point_amount IS NOT NULL AND a.point_amount > 0
+                     AND a.payment_method::text != 'POINT'
                     THEN a.payment_method::text || ', POINT'
                 ELSE a.payment_method::text
             END AS payment_method, -- 결제수단
