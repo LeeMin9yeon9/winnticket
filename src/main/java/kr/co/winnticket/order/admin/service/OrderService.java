@@ -557,6 +557,12 @@ public class OrderService {
 
         } else if (method == PaymentMethod.POINT) {
 
+            log.info(
+                    "[TEST CHECK] benepiaId='{}', isTestTravel={}",
+                    order.getBenepiaId(),
+                    "testtravel".equals(order.getBenepiaId())
+            );
+
             boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
 
             String tno = mapper.selectPointTno(order.getOrderNumber());
