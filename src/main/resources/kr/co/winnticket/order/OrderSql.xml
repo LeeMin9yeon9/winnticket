@@ -262,6 +262,10 @@
             AND c.partner_id = #{partnerId}
         </if>
 
+        <if test="partnerName != null and partnerName != ''">
+            AND d.name = #{partnerName}
+        </if>
+
         ORDER BY a.ordered_at DESC
     </select>
 

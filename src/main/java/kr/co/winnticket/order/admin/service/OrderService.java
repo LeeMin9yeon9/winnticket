@@ -77,8 +77,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId, UUID partnerId) {
-        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
+    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId, UUID partnerId, String partnerName) {
+        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId, partnerName);
     }
 
     @Transactional(readOnly = true)

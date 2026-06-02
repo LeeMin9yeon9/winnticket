@@ -32,7 +32,8 @@ public interface OrderMapper {
             @Param("endDate") LocalDate asEndDate,
             @Param("status") String status,
             @Param("channelId") UUID channelId,
-            @Param("partnerId") UUID partnerId
+            @Param("partnerId") UUID partnerId,
+            @Param("partnerName") String partnerName
     );
 
     // 주문 상세 조회(관리자)
