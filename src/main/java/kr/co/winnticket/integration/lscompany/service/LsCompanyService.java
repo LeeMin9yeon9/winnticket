@@ -4,8 +4,6 @@ import kr.co.winnticket.integration.lscompany.client.LsCompanyClient;
 import kr.co.winnticket.integration.lscompany.dto.*;
 import kr.co.winnticket.integration.lscompany.mapper.LsCompanyMapper;
 import kr.co.winnticket.integration.lscompany.props.LsCompanyProperties;
-import kr.co.winnticket.integration.smartinfini.dto.SIUseCallbackResponse;
-import kr.co.winnticket.integration.smartinfini.dto.SmartInfiniOrderTicket;
 import kr.co.winnticket.ticket.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -44,13 +42,13 @@ public class LsCompanyService {
     public LsIssueResDto issueTicket(UUID orderId) {
         // 주문 정보 조회
         LsOrderInfoDto orderInfo = mapper.selectOrderInfoByOrderId(orderId);
-        log.info("orderInfo = {}", orderInfo);
-
-        String orderNumber = orderInfo.getOrderNumber();
 
         if (orderInfo == null) {
-            throw new RuntimeException("주문정보 없음 orderNumber=" + orderNumber);
+            throw new RuntimeException("주문정보 없음 orderId=" + orderId);
         }
+
+        log.info("orderInfo = {}", orderInfo);
+        String orderNumber = orderInfo.getOrderNumber();
 
         // 주문 상품 조회
         List<LsOrderItemInfoDto> items = mapper.selectOrderItemInfos(orderId);
@@ -160,8 +158,7 @@ public class LsCompanyService {
                 log.error("LS 발권 실패 resultCode={} message={}",
                         res.getResultCode(),
                         res.getResultMessage());
-
-               return res;
+                throw new RuntimeException("LS 발권 실패: " + res.getResultMessage());
             }
 
             // 바코드 개수 검증
@@ -309,20 +306,43 @@ public class LsCompanyService {
 
     // 티켓사용처리
     @Transactional
-    public LsTicketUseResDto ticketUse(LsTicketUseReqDto req) {
+    public LsTicketUseResDto ticketUse(LsTicketUseReqDto container) {
+
+        // 0. 최상위 data 객체 및 내부 필드 검증 및 로그
+        if (container == null || container.getData() == null) {
+            log.warn("[LS컴퍼니 사용처리] 요청 바디 또는 'data' 필드 null");
+            return fail("요청 데이터(data) 누락");
+        }
+
+        // 알맹이 데이터(DataFields) 추출
+        LsTicketUseReqDto.DataFields req = container.getData();
+
+        log.info("[LS컴퍼니 사용처리] 주문번호: {}, 티켓ID: {}, 변경코드: {}, 일시: {}",
+                req.getOrderNo(), req.getTransactionId(), req.getCode(), req.getDate());
+
+        // 필수 파라미터가 비어있는지 기본 검증 (NPE 방지)
+        if (req.getTransactionId() == null || req.getCode() == null) {
+            log.warn("[LS컴퍼니 사용처리] 필수 파라미터 누락 - transactionId: {}, code: {}",
+                    req.getTransactionId(), req.getCode());
+            return fail("필수 파라미터 누락");
+        }
+
         // 1. 티켓 조회
         LsOrderTicket ticket = ticketMapper.findByTicketCodeLs(req.getTransactionId());
 
         if (ticket == null) {
+            log.warn("[LS컴퍼니 사용처리] DB에서 티켓을 찾을 수 없음 - 요청 티켓ID: {}", req.getTransactionId());
             return fail("티켓 없음");
         }
 
         // 2. 이미 사용됐는데 사용으로 들어오거나 이미 사용취소인데 사용취소로 들어올경우
-        if (ticket.isTicketUsed() && req.getCode().equals("use")){
+        if (ticket.isTicketUsed() && "use".equals(req.getCode())){
+            log.warn("[LS컴퍼니 사용처리] 이미 사용 처리된 티켓 - 티켓ID: {}", req.getTransactionId());
             return fail("이미 사용된 티켓");
         }
 
-        if (!ticket.isTicketUsed() && req.getCode().equals("useCancle")) {
+        if (!ticket.isTicketUsed() && "useCancel".equals(req.getCode())) {
+            log.warn("[LS컴퍼니 사용처리] 이미 취소 처리된 티켓 - 티켓ID: {}", req.getTransactionId());
             return fail("이미 취소된 티켓");
         }
 
@@ -334,9 +354,11 @@ public class LsCompanyService {
         );
 
         if (updated == 0) {
+            log.error("[LS컴퍼니 사용처리] DB 업데이트 실패 (행 0개) - 티켓ID: {}", req.getTransactionId());
             return fail("사용 처리 실패");
         }
 
+        log.info("[LS컴퍼니 사용처리] 성공 처리 완료 - 티켓ID: {}, 처리코드: {}", req.getTransactionId(), req.getCode());
         return success();
     }
 

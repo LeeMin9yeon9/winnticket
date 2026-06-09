@@ -55,6 +55,8 @@ public class MairService {
 
         List<MairCouponResDto> results = new ArrayList<>();
 
+        int seq = 1; //주문전체 기준 1번
+
         for (MairOrderItemInfoDto item : items) {
             int remain = mapper.countRemainTickets(item.getOrderItemId());
 
@@ -68,8 +70,9 @@ public class MairService {
                 continue;
             }
 
-            for (int i = 0; i < remain; i++) {
-                String trno = orderNumber + "-" + (i + 1);
+
+                for (int i = 0; i < remain; i++) {
+                    String trno = orderNumber + "-" + seq++;
 
                 // 엠에어 발권
                 MairCouponResDto res = client.issue(

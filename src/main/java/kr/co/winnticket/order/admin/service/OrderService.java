@@ -14,9 +14,9 @@ import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResDto;
-import kr.co.winnticket.integration.payletter.dto.PayletterCancelResult;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
+import kr.co.winnticket.integration.mair.service.MairService;
+import kr.co.winnticket.integration.tosspayments.dto.TossCancelResult;
+import kr.co.winnticket.integration.tosspayments.service.TossPaymentsService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
@@ -44,7 +44,7 @@ import java.util.*;
 public class OrderService {
     private final OrderMapper mapper;
     private final OrderShopMapper orderShopMapper;
-    private final PayletterService payletterService;
+    private final TossPaymentsService tossPaymentsService;
     private final ObjectMapper objectMapper;
     private final BenepiaOrderService benepiaOrderService;
     private final OrderPostPaymentService orderPostPaymentService;
@@ -62,6 +62,7 @@ public class OrderService {
     private final KcpService kcpService;
     private final BenepiaCredentialStore benepiaCredentialStore;
     private final LsCompanyService lsCompanyService;
+    private final MairService mairService;
 
     @Transactional(readOnly = true)
     public OrderAdminStatusGetResDto selectOrderAdminStatus() {
@@ -76,8 +77,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId, UUID partnerId) {
-        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
+    public List<OrderExportResDto> selectOrderExportList(String asSrchWord, LocalDate asBegDate, LocalDate asEndDate, String status, UUID channelId, UUID partnerId, String partnerName) {
+        return mapper.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId, partnerName);
     }
 
     @Transactional(readOnly = true)
@@ -280,7 +281,7 @@ public class OrderService {
     // 혼합결제 실패 시 카드 수수료 없이 취소 (실패해도 로그만 남기고 진행)
     private void tryCancelCardWithoutFee(UUID orderId) {
         try {
-            payletterService.cancelWithoutFee(orderId);
+            tossPaymentsService.cancel(orderId);
             log.info("[혼합결제] 카드 수수료없는 취소 완료 orderId={}", orderId);
         } catch (Exception e) {
             log.error("[혼합결제] 카드 수수료없는 취소 실패 — 관리자 확인 필요 orderId={}", orderId, e);
@@ -470,6 +471,15 @@ public class OrderService {
             }
         }
 
+//        if (split.isHasMair()){
+//            try{
+//                log.info("[엠에어 취소 시작]");
+//                mairService.cancelByOrder(order.getOrderNumber());
+//            } catch (Exception e){
+//                throw new IllegalStateException("엠에어 주문 취소 실패", e);
+//            }
+//        }
+
         /*
         if (split.isHasCoreworks()) {
             try {
@@ -489,19 +499,46 @@ public class OrderService {
          */
 
         PaymentMethod method = order.getPaymentMethod();
-        PayletterCancelResDto cancel = null;
+        String pgProvider = order.getPgProvider();
+        TossCancelResult tossCancelResult = null;
         int cancelAmount = 0;
         int cancelFee = 0;
 
-       // log.info("[CANCEL POLICY] amount={}, fee={}", cancelAmount, cancelFee);
+        // PG사가 TOSSPAYMENTS면 payment_method와 관계없이 토스 취소 API 호출
+        // (토스 위젯에서 카드/가상계좌/간편결제 등 어떤 방식으로 결제했든 토스 API로 취소)
+        if ("TOSSPAYMENTS".equalsIgnoreCase(pgProvider)) {
 
-        if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            tossCancelResult = tossPaymentsService.cancel(orderId);
+            cancelAmount = tossCancelResult.getCancelAmount();
+            cancelFee = tossCancelResult.getCancelFee();
+
+            log.info("[TOSS CANCEL RESULT] cancelAmount={}, cancelFee={}", cancelAmount, cancelFee);
+
+            // 혼합결제(토스+포인트)인 경우 포인트도 반환
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-
-                    String tno = mapper.selectPointTno(order.getOrderNumber());
-
+                String tno = mapper.selectPointTno(order.getOrderNumber());
                 if (tno != null) {
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(tno);
+                    dto.setCancelReason("혼합결제 취소(포인트 전액반환)");
+                    dto.setModType("STSC");
 
+                    try {
+                        kcpService.cancelPoint(dto);
+                        log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
+                    } catch (Exception e) {
+                        log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
+                    }
+                } else {
+                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
+                }
+            }
+
+        } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
+            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+                String tno = mapper.selectPointTno(order.getOrderNumber());
+                if (tno != null) {
                     KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
                     dto.setTno(tno);
                     dto.setModType("STSC");
@@ -513,67 +550,53 @@ public class OrderService {
                     } catch (Exception e) {
                         log.error("[POINT RETURN FAIL - VA] orderId={}", orderId, e);
                     }
-
                 } else {
-                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
-                }
-                }
-
-        } else if (method == PaymentMethod.CARD || method == PaymentMethod.KAKAOPAY) {
-
-            // 카드 취소 실행 (여기서 카드금액 - 총수수료 계산됨)
-            PayletterCancelResult result = payletterService.cancel(orderId);
-
-            cancel = result.getPgResult();
-            cancelAmount = result.getCancelAmount(); // 카드 환불액
-            cancelFee = result.getCancelFee();      // 수수료
-
-            log.info("[PG CANCEL RESULT] {}", cancel);
-
-            // 혼합결제 포인트 반환
-            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-
-                String tno = mapper.selectPointTno(order.getOrderNumber());
-
-                if (tno != null) {
-
-                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-
-                    dto.setTno(tno);
-                    dto.setCancelReason("혼합결제 취소(포인트 전액반환)");
-                    dto.setModType("STSC");
-
-                    try {
-                        kcpService.cancelPoint(dto);
-                        log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
-                    } catch (Exception e) {
-                        log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
-                    }
-                }else {
                     log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
                 }
             }
 
         } else if (method == PaymentMethod.POINT) {
+
+            log.info(
+                    "[TEST CHECK] benepiaId='{}', isTestTravel={}",
+                    order.getBenepiaId(),
+                    "testtravel".equals(order.getBenepiaId())
+            );
+
+            boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
+
             String tno = mapper.selectPointTno(order.getOrderNumber());
 
             int finalPrice = order.getFinalPrice();
+            int refundAmount;
 
-            // ===== 수수료 계산 =====
-            LocalDateTime orderedAt = order.getOrderedAt();
+            // ===== testtravel 테스트 계정은 수수료 없이 전액 환불 =====
+            if (isTestTravel) {
 
-            long days = java.time.temporal.ChronoUnit.DAYS.between(
-                    orderedAt.toLocalDate(),
-                    LocalDate.now()
-            );
+                cancelFee = 0;
+                refundAmount = finalPrice;
 
-            cancelFee = (days <= 7)
-                    ? 1000
-                    : (int) Math.floor(finalPrice * 0.1);
+                log.info("[TESTTRAVEL POINT CANCEL] full refund orderId={}", orderId);
+                log.info("[TESTTRAVEL POINT CANCEL] skip cancel fee. benepiaId={}", order.getBenepiaId());
 
-            int refundAmount = Math.max(finalPrice - cancelFee, 0);
+            } else {
 
-            log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+                // ===== 수수료 계산 =====
+                LocalDateTime orderedAt = order.getOrderedAt();
+
+                long days = java.time.temporal.ChronoUnit.DAYS.between(
+                        orderedAt.toLocalDate(),
+                        LocalDate.now()
+                );
+
+                cancelFee = (days <= 7)
+                        ? 1000
+                        : (int) Math.floor(finalPrice * 0.1);
+
+                refundAmount = Math.max(finalPrice - cancelFee, 0);
+
+                log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+            }
 
             if (tno != null) {
                 KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
@@ -613,7 +636,10 @@ public class OrderService {
          * =========================
          */
 
-        String payloadJson = cancel != null ? objectMapper.writeValueAsString(cancel) : null;
+        // Toss 취소 응답을 JSON으로 저장 (취소 이력 보관)
+        String payloadJson = tossCancelResult != null
+                ? objectMapper.writeValueAsString(tossCancelResult.getPgResult())
+                : null;
 
         int updated = mapper.updateOrderCancelSuccess(
                 orderId,
@@ -658,6 +684,8 @@ public class OrderService {
             if (restored == 0) {
                 throw new IllegalStateException("쿠폰 복구 실패 (이미 사용되었거나 상태 이상)");
             }
+            // 선사입 쿠폰 주문정보 삭제
+            mapper.deleteOrderItemCouponByCouponId(couponId);
         }
 
         log.info("[COUPON RESTORE] 완료 orderId={}", orderId);

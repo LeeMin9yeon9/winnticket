@@ -50,6 +50,10 @@ public class SmartInfiniService {
             );
         }
 
+        if (res.getCoupon() == null || res.getCoupon().isEmpty()) {
+            throw new RuntimeException("SmartInfini 발권 응답에 쿠폰이 없습니다.");
+        }
+
         for (SIOrderResponse.Coupon c : res.getCoupon()) {
             mapper.updatePartnerOrderInfo(
                     c.getTicketCode(),
