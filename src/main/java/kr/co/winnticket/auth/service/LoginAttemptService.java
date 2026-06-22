@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@org.springframework.context.annotation.Profile("!local")
 public class LoginAttemptService { // 로그인 실패 관리
 
     private final StringRedisTemplate redisTemplate;

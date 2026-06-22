@@ -136,13 +136,17 @@ public class OrderService {
                 && (order.getPaymentMethod() == PaymentMethod.CARD
                     || order.getPaymentMethod() == PaymentMethod.KAKAOPAY);
 
+        // 혼합결제에서 차감한 포인트 tno (이후 단계 실패 시 보상 환불에 사용)
+        // 트랜잭션이 롤백되면 DB의 point_tid가 사라지므로 메모리에 보관해 컨트롤러로 전달한다.
+        String hybridKcpTno = null;
+
         if (isHybrid) {
             String[] creds = benepiaCredentialStore.get(auId);
             if (creds == null) {
                 log.error("[혼합결제] 베네피아 인증 정보 만료 orderId={}", auId);
-                tryCancelCardWithoutFee(auId);
-                cleanupFailedHybridOrder(auId);
-                throw new RuntimeException("베네피아 인증 정보가 만료되었습니다. 카드 결제가 취소되었습니다.");
+                // 포인트 미차감 상태 → 카드만 환불하도록 보상 위임 (kcpTno=null)
+                throw new PaymentCompensationException(auId, null,
+                        "베네피아 인증 정보가 만료되었습니다. 카드 결제가 취소되었습니다.");
             }
 
             List<OrderProductListGetResDto> itemsForPoint = mapper.selectOrderProductList(auId);
@@ -159,13 +163,14 @@ public class OrderService {
 
             try {
                 KcpPointPayResDto pointRes = kcpService.pointPayAndUpdate(pointDto);
-                log.info("[혼합결제] 포인트 차감 완료 orderId={}, tno={}", auId, pointRes.getTno());
+                hybridKcpTno = pointRes.getTno();
+                log.info("[혼합결제] 포인트 차감 완료 orderId={}, tno={}", auId, hybridKcpTno);
             } catch (Exception e) {
                 log.error("[혼합결제] 포인트 차감 실패 orderId={}", auId, e);
                 benepiaCredentialStore.delete(auId);
-                tryCancelCardWithoutFee(auId);
-                cleanupFailedHybridOrder(auId);
-                throw new RuntimeException("포인트 잔액 부족 또는 포인트 결제 오류. 카드 결제가 취소되었습니다.", e);
+                // 포인트 차감 실패(미차감) → 카드만 환불하도록 보상 위임 (kcpTno=null)
+                throw new PaymentCompensationException(auId, null,
+                        "포인트 잔액 부족 또는 포인트 결제 오류. 카드 결제가 취소되었습니다.", e);
             }
 
             benepiaCredentialStore.delete(auId);
@@ -191,108 +196,127 @@ public class OrderService {
         // 티켓 발행
         Map<UUID, List<String>> ticketMap = new HashMap<>();
 
-        for (OrderProductListGetResDto item : items) {
-            UUID productId = item.getProductId();
-            Boolean prePurchased = orderPostPaymentService.selectPrePurchased(productId);
+        // ===== 발권 처리(티켓발행 + 파트너 발권) =====
+        // 이 구간에서 실패하면 카드/포인트는 이미 결제된 상태이므로,
+        // PaymentCompensationException으로 던져 트랜잭션을 롤백시키고
+        // 호출측(컨트롤러)이 롤백 후 카드/포인트를 환불(보상)하도록 한다.
+        try {
+            for (OrderProductListGetResDto item : items) {
+                UUID productId = item.getProductId();
+                Boolean prePurchased = orderPostPaymentService.selectPrePurchased(productId);
 
-            List<String> ticketNumbers = new ArrayList<>();
+                List<String> ticketNumbers = new ArrayList<>();
 
-            Map<String, LocalDate> validity = parse(
-                    item.getUsagePeriod(),
-                    order.getOrderedAt().toLocalDate()
-            );
+                Map<String, LocalDate> validity = parse(
+                        item.getUsagePeriod(),
+                        order.getOrderedAt().toLocalDate()
+                );
 
-            LocalDate validFrom = validity.get("from");
-            LocalDate validTo = validity.get("to");
+                LocalDate validFrom = validity.get("from");
+                LocalDate validTo = validity.get("to");
 
-            if (Boolean.TRUE.equals(prePurchased)) {
-                // 선사입: 주문 생성 시 이미 예약(PENDING)된 쿠폰을 확정(SOLD)하고 티켓 발행
-                log.info("[선사입 - 예약 쿠폰 확정] orderItemId={}", item.getId());
-                try {
+                if (Boolean.TRUE.equals(prePurchased)) {
+                    // 선사입: 주문 생성 시 이미 예약(PENDING)된 쿠폰을 확정(SOLD)하고 티켓 발행
+                    log.info("[선사입 - 예약 쿠폰 확정] orderItemId={}", item.getId());
                     List<String> issued = orderPostPaymentService.issueReservedCoupons(item.getId(), validFrom, validTo);
                     ticketNumbers.addAll(issued);
-                } catch (Exception e) {
-                    log.error("예약 쿠폰 확정 실패 orderItemId={}", item.getId(), e);
-                    throw new RuntimeException("예약 쿠폰 확정 실패", e);
-                }
-            } else {
-                for (int i = 0; i < item.getQuantity(); i++) {
-                    log.info("[선사입 아님]");
-                    String ticketNumber = orderPostPaymentService.generateTicketNumber();
-                    mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
-                    ticketNumbers.add(ticketNumber);
-                }
-            }
-            ticketMap.put(item.getId(), ticketNumbers);
-        }
-
-        log.info("[티켓] = {}", ticketMap);
-
-        // 주문 상태 변경
-        mapper.updateOrderStatus(auId);
-
-        // 베네피아 주문 전송 (실패해도 결제는 성공 처리 - Benepia 전송은 비필수 알림)
-        /*
-        if (order.getBenepiaId() != null) {
-            try {
-                log.info("[BENEPIA 주문 전송] benefitId={}", order.getBenepiaId());
-                benepiaOrderService.sendOrder(order, items);
-            } catch (Exception e) {
-                log.error("[BENEPIA 주문 전송 실패] 결제는 정상 처리됨. 관리자 확인 필요 orderId={}", auId, e);
-            }
-        }
-
-         */
-
-        // 파트너 발권 (실패 시 RuntimeException → 트랜잭션 전체 롤백 → 결제도 취소)
-        PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
-        orderPostPaymentService.callPartnerApis(auId, order, split);
-
-        // SMS는 커밋 확정 후 비동기 발송 (트랜잭션 롤백 시 SMS 발송 방지)
-        final OrderAdminDetailGetResDto orderSnap = order;
-        final Map<UUID, List<String>> ticketMapSnap = ticketMap;
-        final List<OrderProductListGetResDto> itemsSnap = items;
-
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                try {
-                    log.info("[입금완료 SMS 발송] orderId={}", auId);
-                    orderPostPaymentService.sendPaymentConfirmedSms(orderSnap, itemsSnap);
-                } catch (Exception e) {
-                    log.error("[입금완료 SMS 실패] orderId={}", auId, e);
-                }
-
-                try {
-                    if (split.isHasSpavis() || split.isHasNormalProduct()
-                            || split.isHasSmartInfini() || split.isHasAquaplanet()) {
-                        List<OrderProductListGetResDto> normalItems =
-                                orderPostPaymentService.extractNormalProducts(itemsSnap);
-                        log.info("[발권완료 SMS 발송] orderId={}", auId);
-                        orderPostPaymentService.sendTicketIssuedSms(orderSnap, normalItems, ticketMapSnap);
+                } else {
+                    for (int i = 0; i < item.getQuantity(); i++) {
+                        log.info("[선사입 아님]");
+                        String ticketNumber = orderPostPaymentService.generateTicketNumber();
+                        mapper.insertOrderTicket(item.getId(), ticketNumber, validFrom, validTo);
+                        ticketNumbers.add(ticketNumber);
                     }
-                } catch (Exception e) {
-                    log.error("[발권완료 SMS 실패] orderId={}", auId, e);
                 }
+                ticketMap.put(item.getId(), ticketNumbers);
             }
-        });
-    }
 
-    // 혼합결제 실패 시 카드 수수료 없이 취소 (실패해도 로그만 남기고 진행)
-    private void tryCancelCardWithoutFee(UUID orderId) {
-        try {
-            tossPaymentsService.cancel(orderId);
-            log.info("[혼합결제] 카드 수수료없는 취소 완료 orderId={}", orderId);
+            log.info("[티켓] = {}", ticketMap);
+
+            // 주문 상태 변경
+            mapper.updateOrderStatus(auId);
+
+            // 파트너 발권 (실패 시 예외 → 트랜잭션 롤백 → 카드/포인트 환불 보상)
+            final PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
+            orderPostPaymentService.callPartnerApis(auId, order, split);
+
+            // SMS는 커밋 확정 후 비동기 발송 (트랜잭션 롤백 시 SMS 발송 방지)
+            final OrderAdminDetailGetResDto orderSnap = order;
+            final Map<UUID, List<String>> ticketMapSnap = ticketMap;
+            final List<OrderProductListGetResDto> itemsSnap = items;
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        log.info("[입금완료 SMS 발송] orderId={}", auId);
+                        orderPostPaymentService.sendPaymentConfirmedSms(orderSnap, itemsSnap);
+                    } catch (Exception e) {
+                        log.error("[입금완료 SMS 실패] orderId={}", auId, e);
+                    }
+
+                    try {
+                        if (split.isHasSpavis() || split.isHasNormalProduct()
+                                || split.isHasSmartInfini() || split.isHasAquaplanet()) {
+                            List<OrderProductListGetResDto> normalItems =
+                                    orderPostPaymentService.extractNormalProducts(itemsSnap);
+                            log.info("[발권완료 SMS 발송] orderId={}", auId);
+                            orderPostPaymentService.sendTicketIssuedSms(orderSnap, normalItems, ticketMapSnap);
+                        }
+                    } catch (Exception e) {
+                        log.error("[발권완료 SMS 실패] orderId={}", auId, e);
+                    }
+                }
+            });
+        } catch (PaymentCompensationException ce) {
+            throw ce; // 이미 보상 컨텍스트를 가진 예외는 그대로 전파
         } catch (Exception e) {
-            log.error("[혼합결제] 카드 수수료없는 취소 실패 — 관리자 확인 필요 orderId={}", orderId, e);
+            log.error("[결제완료 후처리 실패] 카드/포인트 환불 보상 진행 orderId={}", auId, e);
+            throw new PaymentCompensationException(auId, hybridKcpTno,
+                    "발권 처리 실패로 결제가 취소되었습니다.", e);
         }
     }
 
-    // 혼합결제 실패 후 주문 상태/재고/예약쿠폰 정리 → OrderCleanupService 위임
-    private void cleanupFailedHybridOrder(UUID orderId) {
+    /**
+     * 결제 완료 처리 실패 보상.
+     * completePayment가 카드/포인트 결제 이후 실패해 트랜잭션이 롤백된 뒤,
+     * 호출측(컨트롤러)이 호출한다. 실제로 빠져나간 카드(토스)·포인트(KCP)를 환불하고
+     * 주문을 실패 처리하며 재고/예약쿠폰을 복구한다.
+     *
+     * 롤백된 트랜잭션이 잠금을 모두 해제한 뒤 호출되어야 하므로(잠금 경합 방지)
+     * completePayment 안에서가 아니라 트랜잭션 밖에서 호출한다.
+     *
+     * @param kcpTno 혼합결제에서 차감된 포인트 tno (차감 안 됐으면 null)
+     */
+    public void compensateFailedPayment(UUID orderId, String kcpTno) {
+        log.warn("[결제보상] 시작 orderId={}, kcpTno={}", orderId, kcpTno);
+
+        // 1. 카드 전액 환불 (paymentKey 있을 때만, 수수료 0)
+        try {
+            tossPaymentsService.cancelFullRefund(orderId, "결제 처리 실패 자동 보상");
+        } catch (Exception e) {
+            log.error("[결제보상] 카드 환불 실패 — 관리자 확인 필요 orderId={}", orderId, e);
+        }
+
+        // 2. 포인트 환불 (차감된 경우만)
+        if (kcpTno != null && !kcpTno.isBlank()) {
+            try {
+                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                dto.setTno(kcpTno);
+                dto.setCancelReason("결제 처리 실패 포인트 환불");
+                kcpService.cancelPoint(dto);
+                log.info("[결제보상] 포인트 환불 완료 orderId={}, tno={}", orderId, kcpTno);
+            } catch (Exception e) {
+                log.error("[결제보상] 포인트 환불 실패 — 관리자 확인 필요 orderId={}, tno={}", orderId, kcpTno, e);
+            }
+        }
+
+        // 3. 주문 실패 처리 + 재고/예약쿠폰 복구
         orderCleanupService.cancelToFailedIfRequested(orderId);
         orderCleanupService.restoreStock(orderId);
         orderCleanupService.restoreCoupons(orderId);
+
+        log.warn("[결제보상] 완료 orderId={}", orderId);
     }
 
     // 티켓 유효기간 추출

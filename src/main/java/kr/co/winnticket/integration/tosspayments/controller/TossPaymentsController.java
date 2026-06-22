@@ -8,6 +8,7 @@ import kr.co.winnticket.integration.tosspayments.dto.TossPaymentResDto;
 import kr.co.winnticket.integration.tosspayments.dto.TossWebhookDto;
 import kr.co.winnticket.integration.tosspayments.service.TossPaymentsService;
 import kr.co.winnticket.order.admin.service.OrderService;
+import kr.co.winnticket.order.admin.service.PaymentCompensationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,18 @@ public class TossPaymentsController {
 
             log.info("[TOSS] confirm 완료 orderId={}", orderId);
             return ResponseEntity.ok(ApiResponse.success("결제 완료", orderId.toString()));
+
+        } catch (PaymentCompensationException ce) {
+            // completePayment가 카드/포인트 결제 후 실패해 롤백된 경우:
+            // 트랜잭션은 이미 롤백(잠금 해제)됐으므로 여기서 카드/포인트를 환불(보상)한다.
+            log.error("[TOSS] confirm 실패 - 결제 보상(환불) 진행 orderId={}", ce.getOrderId(), ce);
+            try {
+                orderService.compensateFailedPayment(ce.getOrderId(), ce.getKcpTno());
+            } catch (Exception compEx) {
+                log.error("[TOSS] 결제 보상 실패 - 관리자 확인 필요 orderId={}", ce.getOrderId(), compEx);
+            }
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("결제 승인 실패: " + ce.getMessage()));
 
         } catch (Exception e) {
             log.error("[TOSS] confirm 실패 orderId={}", req.getOrderId(), e);

@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -107,10 +108,20 @@ public class OrderCleanupService {
     }
 
     /**
-     * 카드가 실제 결제된 경우 수수료 없이 전액 환불. card_amount 0 또는 SKIP 응답이면 스킵.
+     * 카드가 실제 결제된 경우 수수료 없이 전액 환불.
+     * 결제가 완료되지 않아 paymentKey(pg_tid)가 없는 주문(결제창 중도 이탈/실패 등)은
+     * 환불할 결제 자체가 없으므로 조용히 스킵한다. (불필요한 ERROR 로그 방지)
      */
     public void refundCardWithoutFee(UUID orderId) {
         try {
+            // 실제 결제 완료(paymentKey 존재) 여부 선검사 - 없으면 환불 대상 아님
+            Map<String, Object> orderInfo = orderMapper.selectOrderPaymentInfo(orderId);
+            String paymentKey = orderInfo != null ? (String) orderInfo.get("pg_tid") : null;
+            if (paymentKey == null || paymentKey.isBlank()) {
+                log.info("[CLEANUP] 카드 환불 스킵 (결제 미완료, paymentKey 없음) orderId={}", orderId);
+                return;
+            }
+
             tossPaymentsService.cancel(orderId);
             log.info("[CLEANUP] 카드 환불 완료 orderId={}", orderId);
         } catch (Exception e) {
