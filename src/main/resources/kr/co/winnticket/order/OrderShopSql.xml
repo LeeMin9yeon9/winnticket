@@ -377,10 +377,10 @@
     <update id="rollbackCanceling">
         UPDATE orders
         SET payment_status =
-                CASE
+                (CASE
                     WHEN payment_method = 'VIRTUAL_ACCOUNT' THEN 'READY'
                     ELSE 'REQUESTED'
-                    END,
+                END)::payment_status,
             updated_at = NOW()
         WHERE order_number = #{orderNumber}
           AND payment_status = 'CANCELING'
