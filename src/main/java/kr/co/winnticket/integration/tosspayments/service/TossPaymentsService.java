@@ -116,6 +116,64 @@ public class TossPaymentsService {
     }
 
     /**
+     * 결제 실패 보상용 전액 환불 (수수료 0).
+     * completePayment 실패로 결제를 되돌려야 할 때 사용한다.
+     * 토스가 실제 받은 금액(= final_price - point_amount - 기취소액)만 환불한다.
+     * (혼합결제에서 토스는 카드 분담금만 받았으므로 final_price 전체를 환불하면 과다 환불/실패가 난다.)
+     *
+     * paymentKey 미설정(결제 미완료)이거나 TOSSPAYMENTS 주문이 아니면 조용히 스킵.
+     */
+    @Transactional
+    public TossCancelResult cancelFullRefund(UUID orderId, String reason) {
+
+        if (orderId == null) throw new IllegalArgumentException("orderId 없음");
+
+        Map<String, Object> orderInfo = orderAdminMapper.selectOrderPaymentInfo(orderId);
+        if (orderInfo == null) {
+            log.warn("[TOSS] cancelFullRefund 스킵 (주문 없음) orderId={}", orderId);
+            return new TossCancelResult(0, 0, null);
+        }
+
+        String pgProvider = (String) orderInfo.get("pg_provider");
+        String paymentKey = (String) orderInfo.get("pg_tid");
+
+        // 결제가 완료되지 않았거나(토스 미승인) 토스 주문이 아니면 환불 대상 없음
+        if (paymentKey == null || paymentKey.isBlank()
+                || !"TOSSPAYMENTS".equalsIgnoreCase(pgProvider)) {
+            log.info("[TOSS] cancelFullRefund 스킵 (결제 미완료/토스 주문 아님) orderId={}", orderId);
+            return new TossCancelResult(0, 0, null);
+        }
+
+        int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
+        int pointAmount = orderInfo.get("point_amount") != null
+                ? ((Number) orderInfo.get("point_amount")).intValue()
+                : 0;
+        int alreadyCanceled = orderInfo.get("cancel_amount") != null
+                ? ((Number) orderInfo.get("cancel_amount")).intValue()
+                : 0;
+
+        // 토스가 실제 받은 금액(카드/간편결제 분담금)
+        int refundAmount = (finalPrice - pointAmount) - alreadyCanceled;
+
+        if (refundAmount <= 0) {
+            log.info("[TOSS] cancelFullRefund 환불액 0 이하 스킵 orderId={}, refund={}", orderId, refundAmount);
+            return new TossCancelResult(0, 0, null);
+        }
+
+        TossPaymentResDto result = tossClient.cancel(paymentKey, reason, refundAmount);
+
+        if (result == null) {
+            throw new IllegalStateException("[TOSS] cancelFullRefund 응답 null");
+        }
+        if (result.isFailed()) {
+            throw new IllegalStateException("[TOSS] cancelFullRefund 실패 code=" + result.getCode() + ", msg=" + result.getMessage());
+        }
+
+        log.info("[TOSS] cancelFullRefund 완료 orderId={}, refund={}", orderId, refundAmount);
+        return new TossCancelResult(refundAmount, 0, result);
+    }
+
+    /**
      * 결제 취소 (관리자 주문 취소 시 호출)
      * OrderService.cancelOrder()에서 CARD/KAKAOPAY 결제 방식일 때 호출됨
      *
