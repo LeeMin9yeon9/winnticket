@@ -10,7 +10,7 @@ server:
 
 spring:
   profiles:
-    active: local
+    active: prod
 
   datasource:
     hikari:
