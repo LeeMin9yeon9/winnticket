@@ -60,6 +60,7 @@ public class OrderShopController {
     public ResponseEntity<ApiResponse<String>> cancelOrder(
             @Parameter(description = "주문ID") @PathVariable("orderId") UUID orderId
     ) throws Exception {
+        log.info("[소비자 취소] orderId={}", orderId);
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료", orderId.toString()));
     }

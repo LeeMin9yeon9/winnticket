@@ -55,7 +55,16 @@
                 a.payment_status, -- 결제상태
                 a.final_price, -- 결제금액
                 a.payment_method, -- 결제수단
-                a.point_amount -- 포인트결제금액
+                a.point_amount, -- 포인트결제금액
+                a.pg_provider, -- PG사
+                CASE
+                    WHEN a.pg_callback_payload IS NOT NULL
+                         AND a.pg_callback_payload::jsonb ->> 'method' = '간편결제'
+                    THEN a.pg_callback_payload::jsonb -> 'easyPay' ->> 'provider'
+                    WHEN a.pg_callback_payload IS NOT NULL
+                    THEN a.pg_callback_payload::jsonb ->> 'method'
+                    ELSE NULL
+                END AS toss_method -- 토스 실제 결제수단 (카드, 가상계좌, 토스페이, 카카오페이 등)
             FROM
                 orders a
             JOIN order_items b
@@ -157,24 +166,53 @@
             a.payment_status                                                                           AS paymentStatus,
             a.final_price                                                                              AS finalPrice,
             a.payment_method                                                                           AS paymentMethod,
-            COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             COALESCE(a.benepia_id, '')                                                                 AS benepiaId,
+            COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             CASE WHEN a.payment_method = 'VIRTUAL_ACCOUNT' THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS bankTransferAmount,
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
-            CASE
-            WHEN ot.partner_order_code IS NOT NULL AND ot.partner_order_code != ''
-            THEN ot.partner_order_code
-            ELSE COALESCE(ot.ticket_number, '')
-            END AS ticketNumber,
-            CASE WHEN ot.ticket_used = true THEN '사용완료' ELSE '미사용' END                            AS ticketUsed
+        -- 티켓번호 한줄 처리
+        COALESCE(
+        (
+        SELECT STRING_AGG(
+        CASE
+        WHEN t.partner_order_code IS NOT NULL
+        AND t.partner_order_code != ''
+        THEN t.partner_order_code
+        ELSE COALESCE(t.ticket_number, '')
+        END,
+        ', '
+        ORDER BY t.ticket_number
+        )
+        FROM order_tickets t
+        WHERE t.order_item_id = b.id
+        ),
+        ''
+        ) AS ticketNumber,
+        -- 티켓사용여부 한줄 처리
+        COALESCE(
+        (
+        SELECT STRING_AGG(
+        CASE
+        WHEN t.ticket_used = true
+        THEN '사용완료'
+        ELSE '미사용'
+        END,
+        ', '
+        ORDER BY t.ticket_number
+        )
+        FROM order_tickets t
+        WHERE t.order_item_id = b.id
+        ),
+        ''
+        ) AS ticketUsed
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
         JOIN products c ON c.id = b.product_id
         LEFT JOIN partners d ON d.id = c.partner_id
         LEFT JOIN channels e ON e.id = a.channel_id
-        LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
+--         LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
         WHERE 1 = 1
           AND a.status != 'PENDING_PAYMENT'
 
@@ -202,8 +240,14 @@
         <if test="status != null and status != '' and status != 'ALL'">
             <choose>
                 <when test="status == 'USED'">
-                    AND ot.ticket_used = true
+                    AND EXISTS (
+                    SELECT 1
+                    FROM order_tickets t
+                    WHERE t.order_item_id = b.id
+                    AND t.ticket_used = true
+                    )
                 </when>
+
                 <otherwise>
                     AND a.STATUS = #{status}::order_status
                 </otherwise>
@@ -218,7 +262,11 @@
             AND c.partner_id = #{partnerId}
         </if>
 
-        ORDER BY a.ordered_at DESC, ot.ticket_number
+        <if test="partnerName != null and partnerName != ''">
+            AND d.name = #{partnerName}
+        </if>
+
+        ORDER BY a.ordered_at DESC
     </select>
 
    
@@ -251,6 +299,7 @@
             a.payment_status, -- 결제상태
             a.final_price, -- 결제금액
             a.payment_method, -- 결제수단
+            a.pg_provider, -- PG사
             a.paid_at,  -- 결제일시
             a.canceled_at,  -- 취소일시
             a.total_price, -- 상품총금액
@@ -552,6 +601,13 @@
         WHERE o.id = #{orderId}::uuid
     </select>
 
+    <!--포인트 결제 금액 조회 (Toss 금액 검증용)-->
+    <select id="selectPointAmount" resultType="int">
+        SELECT COALESCE(point_amount, 0)
+        FROM orders
+        WHERE id = #{orderId}::uuid
+    </select>
+
     <!--주문 취소 성공 처리-->
     <update id="updateOrderCancelSuccess">
         UPDATE orders
@@ -796,6 +852,22 @@
             valid_to = #{validTo}
         WHERE id = #{id}
     </update>
+
+
+    <!--베네피아 KCP 테스트계정 취소 조회 (스케줄러용)-->
+    <select id="selectTesttravelOrderIds" resultType="java.util.UUID">
+        SELECT id
+        FROM orders
+        WHERE benepia_id = 'testtravel'
+          AND payment_status = 'PAID'
+    </select>
+
+
+    <!--선사입 티켓 환불건 주문자,주문번호 삭제-->
+    <delete id="deleteOrderItemCouponByCouponId">
+        DELETE FROM order_item_coupons
+        WHERE ticket_coupon_id = #{couponId}
+    </delete>
 
     <!--환불전용 kcp 부분취소-->
 <!--    <update id="updateOrderCancelPartial">-->

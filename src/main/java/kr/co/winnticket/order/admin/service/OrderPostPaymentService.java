@@ -2,15 +2,15 @@ package kr.co.winnticket.order.admin.service;
 
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
-import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
-import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
 import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
-import kr.co.winnticket.order.admin.dto.*;
+import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
+import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
+import kr.co.winnticket.order.admin.dto.PartnerSplitResult;
 import kr.co.winnticket.order.admin.mapper.OrderMapper;
 import kr.co.winnticket.product.admin.dto.ProductSmsTemplateDto;
 import kr.co.winnticket.product.admin.mapper.ProductMapper;
@@ -267,7 +267,7 @@ public class OrderPostPaymentService {
                 cmid,
                 order.getCustomerPhone(),
                 order.getCustomerName(),
-                "025118691",
+                "0415455681",
                 "윈앤티켓",
                 message
         );
@@ -283,7 +283,7 @@ public class OrderPostPaymentService {
                 cmid,
                 phone,
                 order.getCustomerName(),
-                "025118691",
+                "0415455681",
                 "윈앤티켓",
                 message
         );

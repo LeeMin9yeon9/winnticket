@@ -7,6 +7,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
+@org.springframework.context.annotation.Profile("!local")
 public class RedisConfig {
     //Redis 서버 연결
     @Bean
