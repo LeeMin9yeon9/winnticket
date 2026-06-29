@@ -10,21 +10,21 @@
             resultType="kr.co.winnticket.integration.aquaplanet.dto.AquaPlanetIssueRequest">
         SELECT DISTINCT ON (ot.id)
             ot.id AS "ticketId",
-            CASE pov.code
-            WHEN 'U133192' THEN '4000'
-            WHEN 'U128160' THEN '8000'
-            WHEN 'U134503' THEN '5000'
-            WHEN 'U133189' THEN '6000'
+            CASE p.code
+            WHEN 'PRD68' THEN '4000'
+            WHEN 'PRD67' THEN '8000'
+            WHEN 'PRD69' THEN '5000'
+            WHEN 'PRD70' THEN '6000'
         END AS "corpCd",
-            CASE pov.code
-                WHEN 'U133192' THEN '11900078'
-                WHEN 'U128160' THEN '20001073'
-                WHEN 'U134503' THEN '11900033'
-                WHEN 'U133189' THEN '20000467'
+            CASE p.code
+                WHEN 'PRD68' THEN '11900078'
+                WHEN 'PRD67' THEN '20001073'
+                WHEN 'PRD69' THEN '11900033'
+                WHEN 'PRD70' THEN '20000467'
         END AS "contNo",
             ROW_NUMBER() OVER (ORDER BY ot.id) AS "seq",
             TO_CHAR(NOW(),'YYYYMMDD') AS "issueDate",
-            pov.code AS "goodsNo",
+            p.code AS "goodsNo",
             1 AS "issueQty",
             'N' AS "unityIssueYn",
             o.customer_name AS "rcverNm",
@@ -37,14 +37,12 @@
             ON oi.id = ot.order_item_id
         JOIN orders o
             ON o.id = oi.order_id
-        JOIN order_item_options oio
-            ON oio.order_item_id = oi.id
-        JOIN product_option_values pov
-            ON pov.id = oio.option_value_id
+        JOIN products p
+            ON p.id = oi.product_id
         WHERE o.id = #{orderId}
         AND oi.partner_id = 'd16d7f6f-e432-40ee-9f57-e4aaa2c65751'
         AND ot.partner_order_number IS NULL
-        ORDER BY ot.id, oio.id
+        ORDER BY ot.id
     </select>
 
     <select id="selectCancelTargets"
@@ -53,35 +51,33 @@
 
         SELECT DISTINCT ON (ot.id)
             ot.id AS "ticketId",
-            CASE pov.code
-                WHEN 'U133192' THEN '4000'
-                WHEN 'U128160' THEN '8000'
-                WHEN 'U134503' THEN '5000'
-                WHEN 'U133189' THEN '6000'
-            END AS "corpCd",
-            CASE pov.code
-            WHEN 'U133192' THEN '11900078'
-            WHEN 'U128160' THEN '20001073'
-            WHEN 'U134503' THEN '11900033'
-            WHEN 'U133189' THEN '20000467'
-            END AS "contNo",
+            CASE p.code
+            WHEN 'PRD68' THEN '4000'
+            WHEN 'PRD67' THEN '8000'
+            WHEN 'PRD69' THEN '5000'
+            WHEN 'PRD70' THEN '6000'
+        END AS "corpCd",
+            CASE p.code
+            WHEN 'PRD68' THEN '11900078'
+            WHEN 'PRD67' THEN '20001073'
+            WHEN 'PRD69' THEN '11900033'
+            WHEN 'PRD70' THEN '20000467'
+        END AS "contNo",
             TO_CHAR(o.created_at, 'YYYYMMDD') AS "issueDate",
             ot.partner_order_number AS "reprCponSeq",
             ot.partner_order_code AS "reprCponIndictNo"
         FROM order_tickets ot
         JOIN order_items oi
-        ON oi.id = ot.order_item_id
+            ON oi.id = ot.order_item_id
         JOIN orders o
-        ON o.id = oi.order_id
-        JOIN order_item_options oio
-        ON oio.order_item_id = oi.id
-        JOIN product_option_values pov
-        ON pov.id = oio.option_value_id
+            ON o.id = oi.order_id
+        JOIN products p
+            ON p.id = oi.product_id
         WHERE o.id = #{orderId}
         AND oi.partner_id = 'd16d7f6f-e432-40ee-9f57-e4aaa2c65751'
         AND ot.partner_order_code IS NOT NULL
         AND ot.partner_order_number IS NOT NULL
-        ORDER BY ot.id, oio.id
+        ORDER BY ot.id
     </select>
 
     <update id="updateAquaPlanetTicket">
