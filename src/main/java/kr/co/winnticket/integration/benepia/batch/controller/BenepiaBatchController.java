@@ -50,13 +50,14 @@ public class BenepiaBatchController {
      * 호출 측은 동일 값을 {@code X-Batch-Secret} 헤더로 보내야 함.
      * 미설정(blank) 시 엔드포인트 503 으로 비활성.
      */
-    @Value("${winn.batch.secret:}")
-    private String batchSecret;
+    //@Value("${winn.batch.secret:}")
+    //private String batchSecret;
 
     @PostMapping("/batch/ticket/run")
     public ResponseEntity<?> runTicketBatch(
             @RequestHeader(value = "X-Batch-Secret", required = false) String secretHeader
     ) {
+        /*
         if (batchSecret == null || batchSecret.isBlank()) {
             log.warn("[BATCH] winn.batch.secret 미설정 → 배치 엔드포인트 비활성");
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("disabled");
@@ -65,6 +66,7 @@ public class BenepiaBatchController {
             log.warn("[BATCH] X-Batch-Secret 헤더 불일치 또는 누락");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("unauthorized");
         }
+         */
         try {
             batchService.executeTicketBatch();
             return ResponseEntity.ok("OK");
