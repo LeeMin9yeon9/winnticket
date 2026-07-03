@@ -55,7 +55,7 @@ public class BenepiaBatchController {
 
     @PostMapping("/batch/ticket/run")
     public ResponseEntity<?> runTicketBatch(
-            @RequestHeader(value = "X-Batch-Secret", required = false) String secretHeader
+           // @RequestHeader(value = "X-Batch-Secret", required = false) String secretHeader
     ) {
         /*
         if (batchSecret == null || batchSecret.isBlank()) {
