@@ -685,10 +685,32 @@ public class OrderService {
         }
         // 베네피아 주문 취소 전송
         // 실패해도 취소 트랜잭션(재고/쿠폰 복구 등)이 롤백되면 안 되므로 여기서 예외를 흡수한다.
+        // 취소수수료가 차감된 실제 환불액(cancelAmount)을 기준으로 전달해야 함 (원금 그대로 보내면 안 됨)
+        int pointRefundForBenepia;
+        int totalRefundForBenepia;
+
+        if (method == PaymentMethod.POINT) {
+            // 전액 포인트 결제 → cancelAmount 자체가 수수료 차감 후 전체 환불액
+            pointRefundForBenepia = cancelAmount;
+            totalRefundForBenepia = cancelAmount;
+        } else {
+            pointRefundForBenepia = order.getPointAmount() != null ? order.getPointAmount() : 0;
+            int mainRefund = cancelAmount;
+
+            if (method == PaymentMethod.VIRTUAL_ACCOUNT && mainRefund == 0) {
+                // TODO: 무통장 취소는 cancelAmount/cancelFee가 계산되지 않는 기존 로직 문제.
+                // 실제 수기 환불 프로세스와 정합성 확인 필요. 우선 전액 환불 가정으로 전송.
+                mainRefund = order.getFinalPrice() - pointRefundForBenepia;
+            }
+
+            totalRefundForBenepia = pointRefundForBenepia + mainRefund;
+        }
+
         try {
             if (order.getBenepiaId() != null) {
-                log.info("[BENEPIA 주문 취소 전송] benefitId={}", order.getBenepiaId());
-                benepiaOrderService.cancelOrder(order, items);
+                log.info("[BENEPIA 주문 취소 전송] benefitId={}, totalRefund={}",
+                        order.getBenepiaId(), totalRefundForBenepia);
+                benepiaOrderService.cancelOrder(order, items, totalRefundForBenepia, pointRefundForBenepia);
             }
         } catch (Exception e) {
             log.error("[BENEPIA 주문 취소 전송 실패] orderId={}", orderId, e);
