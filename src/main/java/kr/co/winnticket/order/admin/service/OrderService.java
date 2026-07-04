@@ -134,7 +134,7 @@ public class OrderService {
         // 포인트 부족이나 오류 시 카드를 수수료 없이 전액 취소하고 주문 실패 처리.
         boolean isHybrid = order.getPointAmount() != null && order.getPointAmount() > 0
                 && (order.getPaymentMethod() == PaymentMethod.CARD
-                    || order.getPaymentMethod() == PaymentMethod.KAKAOPAY);
+                || order.getPaymentMethod() == PaymentMethod.KAKAOPAY);
 
         // 혼합결제에서 차감한 포인트 tno (이후 단계 실패 시 보상 환불에 사용)
         // 트랜잭션이 롤백되면 DB의 point_tid가 사라지므로 메모리에 보관해 컨트롤러로 전달한다.
@@ -239,6 +239,14 @@ public class OrderService {
             // 파트너 발권 (실패 시 예외 → 트랜잭션 롤백 → 카드/포인트 환불 보상)
             final PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
             orderPostPaymentService.callPartnerApis(auId, order, split);
+
+            // 베네피아 실시간 주문정보 전송
+            // 실패해도 결제/발권 트랜잭션에 영향을 주면 안 되므로 여기서 예외를 흡수한다.
+            try {
+                benepiaOrderService.sendOrder(order, items);
+            } catch (Exception e) {
+                log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
+            }
 
             // SMS는 커밋 확정 후 비동기 발송 (트랜잭션 롤백 시 SMS 발송 방지)
             final OrderAdminDetailGetResDto orderSnap = order;
@@ -676,17 +684,15 @@ public class OrderService {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
         }
         // 베네피아 주문 취소 전송
-        /*
+        // 실패해도 취소 트랜잭션(재고/쿠폰 복구 등)이 롤백되면 안 되므로 여기서 예외를 흡수한다.
         try {
             if (order.getBenepiaId() != null) {
                 log.info("[BENEPIA 주문 취소 전송] benefitId={}", order.getBenepiaId());
                 benepiaOrderService.cancelOrder(order, items);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("[BENEPIA 주문 취소 전송 실패]", e);
+            log.error("[BENEPIA 주문 취소 전송 실패] orderId={}", orderId, e);
         }
-        
-         */
 
         // 재고 복구
         List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
