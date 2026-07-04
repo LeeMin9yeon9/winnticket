@@ -52,11 +52,29 @@ public class BenepiaOrderService {
 
         if(items == null || items.isEmpty()) return;
 
+        // 베네피아 회원이 아닌 일반 주문은 전송 대상이 아님 (필수 파라미터 누락으로 실패하는 것을 방지)
+        if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()) return;
+
+        try {
+            sendOrderInternal(order, items);
+        } catch (Exception e) {
+            // 베네피아 연동 실패가 결제/발권 트랜잭션에 영향을 주지 않도록 여기서 흡수
+            log.error("[BENEPIA] 주문 전송 실패 orderId={}", order.getOrderNumber(), e);
+        }
+    }
+
+    private void sendOrderInternal(
+            OrderAdminDetailGetResDto order,
+            List<OrderProductListGetResDto> items) {
+
         BenepiaOrderRequest req = new BenepiaOrderRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
+        // TODO: 하드코딩된 "5555" 실제값 확인 필요.
+        // 스펙상 coCd는 sitecode 파라미터로 접속 시 전달되는 값이라 benefitId처럼
+        // 주문 저장 시점에 캡처된 값이어야 할 가능성이 큼 (order.getSiteCd() 등으로 대체 검토)
         req.setCoCd("5555");
 
         // =========================
@@ -206,7 +224,12 @@ public class BenepiaOrderService {
         }
 
         req.setProducts(products);
-        validatePrice(req);
+
+        if(!validatePrice(req)){
+            log.error("[BENEPIA] 금액 불일치로 주문 전송 스킵 orderId={}", order.getOrderNumber());
+            return;
+        }
+
         createJsonFile(req);
 
         client.sendOrder(req);
@@ -217,15 +240,33 @@ public class BenepiaOrderService {
     // =========================
     public void cancelOrder(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items){
+            List<OrderProductListGetResDto> items,
+            int totalRefundAmount,
+            int pointRefundAmount){
 
-        if(order.getBenepiaId() == null || items == null || items.isEmpty()) return;
+        if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()
+                || items == null || items.isEmpty()) return;
+
+        try {
+            cancelOrderInternal(order, items, totalRefundAmount, pointRefundAmount);
+        } catch (Exception e) {
+            // 베네피아 연동 실패가 취소 트랜잭션(재고/쿠폰 복구 등)에 영향을 주지 않도록 여기서 흡수
+            log.error("[BENEPIA] 주문 취소 전송 실패 orderId={}", order.getOrderNumber(), e);
+        }
+    }
+
+    private void cancelOrderInternal(
+            OrderAdminDetailGetResDto order,
+            List<OrderProductListGetResDto> items,
+            int totalRefundAmount,
+            int pointRefundAmount){
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
+        // TODO: 하드코딩된 "5555" 실제값 확인 필요 (sendOrder의 동일 TODO 참고)
         req.setCoCd("5555");
 
         BenepiaCancelRequest.OrderCancel cancel = new BenepiaCancelRequest.OrderCancel();
@@ -239,8 +280,9 @@ public class BenepiaOrderService {
 
         cancel.setOrdNm(orderName);
 
-        cancel.setCnclPrc(nvl(order.getFinalPrice()));
-        cancel.setOrgnCnclPrc(nvl(order.getFinalPrice()));
+        cancel.setCnclPrc(totalRefundAmount);
+        // 매입금액(선택항목) - 정확한 매입원가 추적이 없어 실환불액으로 근사치 사용
+        cancel.setOrgnCnclPrc(totalRefundAmount);
 
         cancel.setCnclDt(
                 LocalDateTime.now()
@@ -251,29 +293,27 @@ public class BenepiaOrderService {
 
 
         // =========================
-        // 결제 정보
+        // 결제 정보 (수수료 차감 후 실제 환불액 기준)
         // =========================
         List<BenepiaCancelRequest.Payment> payments = new ArrayList<>();
 
-        int totalPrice = nvl(order.getFinalPrice());
-        int pointAmount = nvl(order.getPointAmount());
-        int remainAmount = totalPrice - pointAmount;
+        int remainRefund = totalRefundAmount - pointRefundAmount;
 
         // =========================
-        // 1. 포인트 결제
+        // 1. 포인트 환불
         // =========================
-        if(pointAmount > 0){
+        if(pointRefundAmount > 0){
             BenepiaCancelRequest.Payment pointPayment = new BenepiaCancelRequest.Payment();
             pointPayment.setSttlMeanId("10"); // 포인트
-            pointPayment.setSttlPrc(pointAmount);
+            pointPayment.setSttlPrc(pointRefundAmount);
 
             payments.add(pointPayment);
         }
 
         // =========================
-        // 2. 실제 결제수단
+        // 2. 그 외 결제수단 환불 (수수료 차감 후 금액)
         // =========================
-        if(remainAmount > 0){
+        if(remainRefund > 0){
             BenepiaCancelRequest.Payment mainPayment = new BenepiaCancelRequest.Payment();
 
             switch (order.getPaymentMethod()){
@@ -283,7 +323,7 @@ public class BenepiaOrderService {
                 default -> mainPayment.setSttlMeanId("9");
             }
 
-            mainPayment.setSttlPrc(remainAmount);
+            mainPayment.setSttlPrc(remainRefund);
 
             payments.add(mainPayment);
         }
@@ -300,7 +340,8 @@ public class BenepiaOrderService {
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getProductName()));
+            // 옵션명 자리에 상품명이 잘못 들어가던 버그 수정 (getProductName -> getOptionName)
+            product.setPrdOptNm(nvl(p.getOptionName()));
 
             product.setQty(nvl(p.getQuantity()));
             product.setPrdPrc(nvl(p.getTotalPrice()));
@@ -330,7 +371,11 @@ public class BenepiaOrderService {
 
         req.setProducts(products);
 
-        validateCancelPrice(req);
+        if(!validateCancelPrice(req)){
+            log.error("[BENEPIA] 취소 금액 불일치로 취소 전송 스킵 orderId={}", order.getOrderNumber());
+            return;
+        }
+
         createJsonFile(req);
 
         client.cancelOrder(req, order.getOrderNumber());
@@ -401,7 +446,7 @@ public class BenepiaOrderService {
     // =========================
     // 검증
     // =========================
-    private void validatePrice(BenepiaOrderRequest req){
+    private boolean validatePrice(BenepiaOrderRequest req){
 
         int paymentSum =
                 req.getPayments()
@@ -409,12 +454,10 @@ public class BenepiaOrderService {
                         .mapToInt(p -> p.getSttlPrc())
                         .sum();
 
-        if(paymentSum != req.getOrder().getOrdPrc()){
-            throw new RuntimeException("베네피아 금액 불일치");
-        }
+        return paymentSum == req.getOrder().getOrdPrc();
     }
 
-    private void validateCancelPrice(BenepiaCancelRequest req){
+    private boolean validateCancelPrice(BenepiaCancelRequest req){
 
         int paymentSum =
                 req.getPayments()
@@ -422,8 +465,6 @@ public class BenepiaOrderService {
                         .mapToInt(p -> p.getSttlPrc())
                         .sum();
 
-        if(paymentSum != req.getOrderCancel().getCnclPrc()){
-            throw new RuntimeException("베네피아 취소 금액 불일치");
-        }
+        return paymentSum == req.getOrderCancel().getCnclPrc();
     }
 }
