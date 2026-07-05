@@ -707,11 +707,7 @@ public class OrderService {
         }
 
         try {
-            if (order.getBenepiaId() != null) {
-                log.info("[BENEPIA 주문 취소 전송] benefitId={}, totalRefund={}",
-                        order.getBenepiaId(), totalRefundForBenepia);
                 benepiaOrderService.cancelOrder(order, items, totalRefundForBenepia, pointRefundForBenepia);
-            }
         } catch (Exception e) {
             log.error("[BENEPIA 주문 취소 전송 실패] orderId={}", orderId, e);
         }
