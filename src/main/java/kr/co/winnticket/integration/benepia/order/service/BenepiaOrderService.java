@@ -44,38 +44,63 @@ public class BenepiaOrderService {
     }
 
     // =========================
-    // CASE6 대응: 동일 상품+동일 옵션(prdId+prdOptNm)이 주문 내 여러 줄로
-    // 나뉘어 있는 경우 qty/금액을 합산해서 1건으로 만든다.
-    // (스펙: "동일 주문 내에서는 prdId+prdOptNm 조합이 중복되지 않도록 전달")
+    // CASE6 대응:
+    // 1) prdId + optionIds(실제 옵션 고유 식별값)가 완전히 같은 라인만 qty/금액을 합산
+    // 2) 같은 prdId 내에서 옵션명은 같아 보이지만 optionIds가 서로 다른 경우
+    //    (이름만 같고 실제로는 다른 옵션인 케이스) → "옵션명&prdOptId=옵션ID"로 구분해서 전송
     // =========================
     private static class MergedProductLine {
         ProductDetailGetResDto detail;
-        String prdOptNm;
+        String displayOptionName; // 원본 옵션명 (DB 표시값)
+        String optionIds;         // 실제 옵션 고유 식별값 (병합 판단 기준)
+        String prdOptNm;          // 베네피아로 실제 전송할 옵션명 (충돌 시 &prdOptId= 접미)
         int qty;
         int prdPrc;
     }
 
     private List<MergedProductLine> mergeDuplicateOptions(List<OrderProductListGetResDto> items) {
         Map<String, MergedProductLine> merged = new LinkedHashMap<>();
+        // prdId -> (옵션명 -> 그 옵션명으로 나타난 서로 다른 optionIds 집합) : 이름 충돌 감지용
+        Map<String, Map<String, Set<String>>> nameCollisionCheck = new HashMap<>();
 
         for (OrderProductListGetResDto p : items) {
             ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
 
             String prdId = nvl(detail.getCode());
-            String prdOptNm = nvl(p.getOptionName());
-            // prdId + prdOptNm 조합을 유니크 키로 사용
-            String key = prdId + "\u0001" + prdOptNm;
+            String optionName = nvl(p.getOptionName());
+            String optionIds = nvl(p.getOptionIds());
 
-            MergedProductLine line = merged.get(key);
+            // 진짜 동일한 상품+옵션(prdId+optionIds)인 경우에만 병합 (스펙 2번 케이스)
+            String mergeKey = prdId + "&prdOptId=" + optionIds;
+
+            MergedProductLine line = merged.get(mergeKey);
             if (line == null) {
                 line = new MergedProductLine();
                 line.detail = detail;
-                line.prdOptNm = prdOptNm;
-                merged.put(key, line);
+                line.displayOptionName = optionName;
+                line.optionIds = optionIds;
+                merged.put(mergeKey, line);
             }
 
             line.qty += nvl(p.getQuantity());
             line.prdPrc += nvl(p.getTotalPrice());
+
+            nameCollisionCheck
+                    .computeIfAbsent(prdId, k -> new HashMap<>())
+                    .computeIfAbsent(optionName, k -> new HashSet<>())
+                    .add(optionIds);
+        }
+
+        // 같은 prdId 내에서 옵션명이 같은데 optionIds가 서로 다르면 (스펙 1번 케이스) 구분값 부여
+        for (MergedProductLine line : merged.values()) {
+            String prdId = nvl(line.detail.getCode());
+            Set<String> idsForThisName = nameCollisionCheck.get(prdId).get(line.displayOptionName);
+
+            if (idsForThisName.size() > 1 && !line.optionIds.isBlank()) {
+                line.prdOptNm = line.displayOptionName + "&prdOptId=" + line.optionIds;
+            } else {
+                line.prdOptNm = line.displayOptionName;
+            }
         }
 
         return new ArrayList<>(merged.values());
@@ -89,7 +114,7 @@ public class BenepiaOrderService {
             List<OrderProductListGetResDto> items) {
 
         if(items == null || items.isEmpty()) return;
-
+        order.setBenepiaId("testtravel");
         // 베네피아 회원이 아닌 일반 주문은 전송 대상이 아님 (필수 파라미터 누락으로 실패하는 것을 방지)
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()) return;
 
@@ -110,9 +135,6 @@ public class BenepiaOrderService {
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
-        // TODO: 하드코딩된 "5555" 실제값 확인 필요.
-        // 스펙상 coCd는 sitecode 파라미터로 접속 시 전달되는 값이라 benefitId처럼
-        // 주문 저장 시점에 캡처된 값이어야 할 가능성이 큼 (order.getSiteCd() 등으로 대체 검토)
         req.setCoCd("5555");
 
         // =========================
@@ -281,6 +303,7 @@ public class BenepiaOrderService {
             int totalRefundAmount,
             int pointRefundAmount){
 
+        order.setBenepiaId("testtravel");
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()
                 || items == null || items.isEmpty()) return;
 
@@ -303,7 +326,6 @@ public class BenepiaOrderService {
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
-        // TODO: 하드코딩된 "5555" 실제값 확인 필요 (sendOrder의 동일 TODO 참고)
         req.setCoCd("5555");
 
         BenepiaCancelRequest.OrderCancel cancel = new BenepiaCancelRequest.OrderCancel();
