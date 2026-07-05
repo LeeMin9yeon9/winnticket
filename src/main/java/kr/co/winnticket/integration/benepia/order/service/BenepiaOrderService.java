@@ -243,7 +243,7 @@ public class BenepiaOrderService {
             List<OrderProductListGetResDto> items,
             int totalRefundAmount,
             int pointRefundAmount){
-
+        order.setBenepiaId("testtravel");
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()
                 || items == null || items.isEmpty()) return;
 
@@ -266,7 +266,6 @@ public class BenepiaOrderService {
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
-        // TODO: 하드코딩된 "5555" 실제값 확인 필요 (sendOrder의 동일 TODO 참고)
         req.setCoCd("5555");
 
         BenepiaCancelRequest.OrderCancel cancel = new BenepiaCancelRequest.OrderCancel();
