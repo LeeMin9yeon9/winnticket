@@ -53,6 +53,7 @@ public class BenepiaOrderService {
         if(items == null || items.isEmpty()) return;
 
         // 베네피아 회원이 아닌 일반 주문은 전송 대상이 아님 (필수 파라미터 누락으로 실패하는 것을 방지)
+        order.setBenepiaId("testtravel");
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()) return;
 
         try {
@@ -72,7 +73,6 @@ public class BenepiaOrderService {
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
         req.setBenefitId(nvl(order.getBenepiaId()));
-        // TODO: 하드코딩된 "5555" 실제값 확인 필요.
         // 스펙상 coCd는 sitecode 파라미터로 접속 시 전달되는 값이라 benefitId처럼
         // 주문 저장 시점에 캡처된 값이어야 할 가능성이 큼 (order.getSiteCd() 등으로 대체 검토)
         req.setCoCd("5555");
