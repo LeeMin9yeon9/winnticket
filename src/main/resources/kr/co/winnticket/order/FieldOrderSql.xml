@@ -59,7 +59,7 @@
         AND pr.partner_id = #{partnerId}
         AND o.status != 'PENDING_PAYMENT'
 
-        <if test="srchWord != null and srchWord.trim() != ''">
+        <if test="srchWord != null and srchWord != ''">
             AND (
             o.order_number ILIKE '%' || #{srchWord} || '%'
             OR o.customer_name ILIKE '%' || #{srchWord} || '%'
