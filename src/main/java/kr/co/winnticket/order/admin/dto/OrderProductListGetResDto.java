@@ -39,6 +39,9 @@ public class OrderProductListGetResDto {
     @Schema(description = "옵션명")
     private String optionName;
 
+    @Schema(description = "옵션코드")
+    private String optionIds;
+
     @Schema(description = "수량")
     private Integer quantity;
 

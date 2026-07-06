@@ -361,6 +361,7 @@
             d.name partner_name,  -- 파트너명
             d.id partner_id,  -- 파트너id
             STRING_AGG(e.option_value, ' ' ORDER BY e.id) option_name,  -- 옵션명
+            STRING_AGG(f.code, ',' ORDER BY e.id) option_ids, -- 옵션코드
             a.quantity,
             a.unit_price,
             a.total_price,
@@ -376,6 +377,8 @@
         ON d.id = c.partner_id
         LEFT JOIN order_item_options e
         ON e.order_item_id = a.id
+        LEFT JOIN product_option_values f
+        ON f.id = e.option_value_id
         Where 1 = 1
           And a.order_id = #{id}
         GROUP BY
