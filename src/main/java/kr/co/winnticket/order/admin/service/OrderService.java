@@ -594,7 +594,7 @@ public class OrderService {
                         ? 1000
                         : (int) Math.floor(finalPriceVa * 0.1);
 
-                cancelAmount = Math.max(finalPriceVa - cancelFee, 0);
+                cancelAmount = Math.max(finalPriceVa -1000 - 1000, 0);
 
                 log.info("[VA CANCEL] total={}, fee={}, refund={}", finalPriceVa, cancelFee, cancelAmount);
             }
