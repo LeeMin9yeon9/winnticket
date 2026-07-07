@@ -339,9 +339,9 @@ public class BenepiaOrderService {
 
         cancel.setOrdNm(orderName);
 
-        cancel.setCnclPrc(62900);
+        cancel.setCnclPrc(totalRefundAmount);
         // 매입금액(선택항목) - 정확한 매입원가 추적이 없어 실환불액으로 근사치 사용
-        cancel.setOrgnCnclPrc(62900);
+        cancel.setOrgnCnclPrc(totalRefundAmount);
 
         cancel.setCnclDt(
                 LocalDateTime.now()
@@ -364,7 +364,7 @@ public class BenepiaOrderService {
         if(pointRefundAmount > 0){
             BenepiaCancelRequest.Payment pointPayment = new BenepiaCancelRequest.Payment();
             pointPayment.setSttlMeanId("10"); // 포인트
-            pointPayment.setSttlPrc(0);
+            pointPayment.setSttlPrc(pointRefundAmount);
 
             payments.add(pointPayment);
         }
@@ -382,7 +382,7 @@ public class BenepiaOrderService {
                 default -> mainPayment.setSttlMeanId("9");
             }
 
-            mainPayment.setSttlPrc(62900);
+            mainPayment.setSttlPrc(remainRefund);
 
             payments.add(mainPayment);
         }
