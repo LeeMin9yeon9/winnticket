@@ -62,7 +62,7 @@ cdn:
 # 채널 연동 (베네피아 운영)
 benepia:
   seed-key: ${BENEPIA_SEED_KEY}
-  cust-co-cd: z819
+  cust-co-cd: z381
   confirm-url: https://auth.benepia.co.kr/api/token/confirm
   token-create-url: https://auth.benepia.co.kr/api/token/request
   batch-base-url: https://collections.benepia.co.kr
