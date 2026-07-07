@@ -39,7 +39,7 @@ file:
 # 채널 연동 (베네피아)
 benepia:
   seed-key: 5906575fb31548aa
-  cust-co-cd: z819
+  cust-co-cd: z381
   confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
   token-create-url: https://stg-auth.benepia.co.kr/api/token/request
   batch-base-url: https://stg-collections.benepia.co.kr
