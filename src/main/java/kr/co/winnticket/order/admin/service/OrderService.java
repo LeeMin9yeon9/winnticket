@@ -569,37 +569,7 @@ public class OrderService {
             }
 
         } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
-            // 자체 무통장입금 (토스 아닌 경우)
-            // POINT 케이스와 동일한 취소 수수료 정책 적용: 7일 이내 1,000원 고정, 이후 10%
-            boolean isTestTravelVa = "testtravel".equals(order.getBenepiaId());
-            int finalPriceVa = order.getFinalPrice();
-
-            if (isTestTravelVa) {
-
-                cancelFee = 0;
-                cancelAmount = finalPriceVa;
-
-                log.info("[TESTTRAVEL VA CANCEL] full refund orderId={}", orderId);
-
-            } else {
-
-                LocalDateTime orderedAtVa = order.getOrderedAt();
-
-                long daysVa = java.time.temporal.ChronoUnit.DAYS.between(
-                        orderedAtVa.toLocalDate(),
-                        LocalDate.now()
-                );
-
-                cancelFee = (daysVa <= 7)
-                        ? 1000
-                        : (int) Math.floor(finalPriceVa * 0.1);
-
-                cancelAmount = Math.max(finalPriceVa -1000 - 1000, 0);
-
-                log.info("[VA CANCEL] total={}, fee={}, refund={}", finalPriceVa, cancelFee, cancelAmount);
-            }
-
-            // 포인트 혼합 시 포인트 반환 (기존 로직 그대로 유지)
+            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
                 String tno = mapper.selectPointTno(order.getOrderNumber());
                 if (tno != null) {
@@ -618,6 +588,7 @@ public class OrderService {
                     log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
                 }
             }
+
         } else if (method == PaymentMethod.POINT) {
 
             log.info(
