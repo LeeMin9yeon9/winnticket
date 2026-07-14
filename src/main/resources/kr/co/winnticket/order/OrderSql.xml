@@ -182,6 +182,7 @@
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
+            TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt,
         -- 티켓번호 한줄 처리
         COALESCE(
         (

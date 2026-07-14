@@ -9,8 +9,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,16 +34,32 @@ public class PlusNClient {
         HttpEntity<Object> entity = new HttpEntity<>(req, headers);
 
         // 먼저 String으로 받음
-        ResponseEntity<String> response =
-                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+//        ResponseEntity<String> response =
+//                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+//
+//        log.info("[PLUSN] url={}, request={}", url, req);
+//        log.debug("[PLUSN] response={}", response.getBody());
+//
+//        try {
+//            return objectMapper.readValue(response.getBody(), responseType);
+//        } catch (Exception e) {
+//            throw new RuntimeException("PLUSN JSON PARSE ERROR", e);
+//        }
+        ResponseEntity<byte[]> response =
+                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+
+        String body = response.getBody() == null
+                ? ""
+                : new String(response.getBody(), java.nio.charset.StandardCharsets.UTF_8);
 
         log.info("[PLUSN] url={}, request={}", url, req);
-        log.debug("[PLUSN] response={}", response.getBody());
+        log.info("[PLUSN] status={}", response.getStatusCode());
+        log.info("[PLUSN] body={}", body);
 
         try {
-            return objectMapper.readValue(response.getBody(), responseType);
+            return objectMapper.readValue(body, responseType);
         } catch (Exception e) {
-            throw new RuntimeException("PLUSN JSON PARSE ERROR", e);
+            throw new RuntimeException("PLUSN JSON PARSE ERROR\nBODY=" + body, e);
         }
     }
 

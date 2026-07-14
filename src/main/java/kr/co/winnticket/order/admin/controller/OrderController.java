@@ -7,7 +7,6 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.order.admin.dto.*;
-
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.hssf.usermodel.*;
@@ -91,10 +90,10 @@ public class OrderController {
                 "수령자 이름", "수령자 전화번호",
                 "상품번호", "주문상품", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
-                "결제상태", "결제금액", "결제수단",
+                "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
                 "무통장 결제금액", "신용카드 결제금액", "이용권",
-                "결제일시", "티켓번호", "티켓사용여부"
+                "결제상태","결제일시","취소일시", "티켓번호", "티켓사용여부"
         };
 
         HSSFRow headerRow = sheet.createRow(0);
@@ -148,27 +147,34 @@ public class OrderController {
             row.createCell(14).setCellValue(first.getUnitPrice() != null ? first.getUnitPrice() : 0);
             row.createCell(15).setCellValue(first.getSupplyPrice() != null ? first.getSupplyPrice() : 0);
             row.createCell(16).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
-            String psDisplay = "";
-            if (first.getPaymentStatus() != null) {
-                try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
-                catch (Exception e) { psDisplay = first.getPaymentStatus(); }
-            }
-            row.createCell(17).setCellValue(psDisplay);
-            row.createCell(18).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
+//            String psDisplay = "";
+//            if (first.getPaymentStatus() != null) {
+//                try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
+//                catch (Exception e) { psDisplay = first.getPaymentStatus(); }
+//            }
+//            row.createCell(17).setCellValue(psDisplay);
+            row.createCell(17).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
             String pmDisplay = "";
             if (first.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(first.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = first.getPaymentMethod(); }
             }
-            row.createCell(19).setCellValue(pmDisplay);
-            row.createCell(20).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
-            row.createCell(21).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
-            row.createCell(22).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
-            row.createCell(23).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
-            row.createCell(24).setCellValue("");
-            row.createCell(25).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : "");
-            row.createCell(26).setCellValue(ticketNumbers);
-            row.createCell(27).setCellValue(ticketUsedList);
+            row.createCell(18).setCellValue(pmDisplay);
+            row.createCell(19).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
+            row.createCell(20).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
+            row.createCell(21).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
+            row.createCell(22).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
+            row.createCell(23).setCellValue("");
+            String psDisplay = "";
+            if (first.getPaymentStatus() != null) {
+                try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
+                catch (Exception e) { psDisplay = first.getPaymentStatus(); }
+            }
+            row.createCell(24).setCellValue(psDisplay);  // 결제 상태
+            row.createCell(25).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
+            row.createCell(26).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
+            row.createCell(27).setCellValue(ticketNumbers);
+            row.createCell(28).setCellValue(ticketUsedList);
         }
 
         // 열 너비 자동 조정
