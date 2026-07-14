@@ -7,7 +7,7 @@
     <!-- 베네피아 배치 상품id 조회 -->
     <select id="selectBenepiaIds" resultType="map">
         SELECT
-            'z819' AS "coopCoCd",
+            'z381' AS "coopCoCd",
             p.code AS "prdId"
         FROM products p
         WHERE p.visible = true
@@ -18,7 +18,7 @@
     <select id="selectBenepiaProducts" resultType="map">
         <![CDATA[
         SELECT
-            'z819' AS "custCoCd",
+            'z381' AS "custCoCd",
             p.code AS "prdId",
             p.name AS "prdNm",
             p.price AS "orgnPrc",
