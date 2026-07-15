@@ -147,7 +147,8 @@
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
             a.DISPLAY_ORDER,  -- 표시순서
-            a.PARTNER_SUB_CODE  -- 파트너별도코드
+            a.PARTNER_SUB_CODE,  -- 파트너별도코드
+            a.AGE_CATEGORY  -- 연령구분
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -167,7 +168,8 @@
             a.ADDITIONAL_PRICE,  -- 추가가격
             a.BASE_PRICE,  -- 원가
             a.DISPLAY_ORDER,  -- 정렬순서
-            a.PARTNER_SUB_CODE  -- 파트너별도코드
+            a.PARTNER_SUB_CODE,  -- 파트너별도코드
+            a.AGE_CATEGORY  -- 연령구분
         FROM
             PRODUCT_OPTION_VALUES a
         Where 1 = 1
@@ -524,6 +526,7 @@
             ADDITIONAL_PRICE,
             BASE_PRICE,
             PARTNER_SUB_CODE,
+            AGE_CATEGORY,
             DISPLAY_ORDER
         )
         Values
@@ -535,6 +538,7 @@
             #{model.additionalPrice},
             #{model.basePrice},
             #{model.partnerSubCode},
+            #{model.ageCategory},
             COALESCE(#{model.displayOrder}, 0)
         )
     </insert>
@@ -564,6 +568,7 @@
                 DISPLAY_ORDER = #{model.displayOrder},
             </if>
             PARTNER_SUB_CODE = #{model.partnerSubCode},
+            AGE_CATEGORY = #{model.ageCategory},
             UPDATED_AT = CURRENT_TIMESTAMP
         </set>
         Where 1 = 1

@@ -1,6 +1,7 @@
 package kr.co.winnticket.product.admin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import kr.co.winnticket.common.enums.AgeCategory;
 import lombok.Data;
 import lombok.ToString;
 
@@ -28,4 +29,7 @@ public class ProductOptionValuePostReqDto {
 
     @Schema(description = "파트너별도코드")
     private String partnerSubCode;
+
+    @Schema(description = "연령구분")
+    private AgeCategory ageCategory;
 }
