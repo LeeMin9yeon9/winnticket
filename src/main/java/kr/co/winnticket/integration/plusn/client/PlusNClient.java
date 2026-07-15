@@ -33,24 +33,12 @@ public class PlusNClient {
 
         HttpEntity<Object> entity = new HttpEntity<>(req, headers);
 
-        // 먼저 String으로 받음
-//        ResponseEntity<String> response =
-//                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-//
-//        log.info("[PLUSN] url={}, request={}", url, req);
-//        log.debug("[PLUSN] response={}", response.getBody());
-//
-//        try {
-//            return objectMapper.readValue(response.getBody(), responseType);
-//        } catch (Exception e) {
-//            throw new RuntimeException("PLUSN JSON PARSE ERROR", e);
-//        }
-        ResponseEntity<byte[]> response =
-                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+        // String으로 받아 직접 파싱 (byte[]로 받으면 Content-Type: application/json 응답이
+        // Jackson 컨버터로 넘어가면서 byte[] 역직렬화 오류가 남 - 응답이 JSON 객체라 base64/배열이 아니기 때문)
+        ResponseEntity<String> response =
+                plusNRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-        String body = response.getBody() == null
-                ? ""
-                : new String(response.getBody(), java.nio.charset.StandardCharsets.UTF_8);
+        String body = response.getBody() == null ? "" : response.getBody();
 
         log.info("[PLUSN] url={}, request={}", url, req);
         log.info("[PLUSN] status={}", response.getStatusCode());
