@@ -116,7 +116,7 @@ public class BenepiaOrderBatchService {
                     .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
             String fileName =
-                    props.getKcpCoCd() + "_03_orders_" + date + "_" + fileSeq + ".json";
+                    props.getKcpCoCd() + "_ticket_orders_" + date + "_" + fileSeq + ".json";
 
             String path = System.getProperty("user.dir") + "/benepia/" + fileName;
 
