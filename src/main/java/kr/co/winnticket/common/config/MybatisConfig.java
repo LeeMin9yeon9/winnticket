@@ -2,6 +2,7 @@ package kr.co.winnticket.common.config;
 
 import kr.co.winnticket.common.typehandler.EnumTypeHandler;
 import kr.co.winnticket.common.typehandler.UUIDTypeHandler;
+import kr.co.winnticket.common.enums.AgeCategory;
 import kr.co.winnticket.common.enums.PostType;
 import kr.co.winnticket.common.enums.QnaStatus;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
@@ -23,6 +24,9 @@ public class MybatisConfig {
                     .register(PostType.class, new EnumTypeHandler<>(PostType.class));
             configuration.getTypeHandlerRegistry() // QnaStatus
                     .register(QnaStatus.class, new EnumTypeHandler<>(QnaStatus.class));
+            // 상품 옵션값 연령구분
+            configuration.getTypeHandlerRegistry() // AgeCategory
+                    .register(AgeCategory.class, new EnumTypeHandler<>(AgeCategory.class));
         };
     }
 }
