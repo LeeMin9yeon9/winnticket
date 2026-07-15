@@ -157,4 +157,13 @@
                a.unit_price,
                a.total_price
     </select>
+
+    <select id="selectAgeCategoriesByOptionCodes" resultType="map">
+        SELECT code, age_category
+        FROM product_option_values
+        WHERE code IN
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+    </select>
 </mapper>

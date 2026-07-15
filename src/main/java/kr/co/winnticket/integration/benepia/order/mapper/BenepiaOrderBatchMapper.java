@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper
@@ -19,4 +20,7 @@ public interface BenepiaOrderBatchMapper {
 
     // 주문별 상품
     List<OrderProductListGetResDto> selectOrderItems(UUID orderId);
+
+    // optionValueId -> ageCategory("성인"/"청소년"/"아동") 매핑 조회
+    List<Map<String, Object>> selectAgeCategoriesByOptionCodes(@Param("codes") List<String> codes);
 }

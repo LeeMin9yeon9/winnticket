@@ -10,17 +10,17 @@ import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
-import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +28,10 @@ import java.util.List;
 public class BenepiaOrderBatchService {
 
     private final BenepiaOrderBatchMapper mapper;
-    private final BenepiaOrderService orderService;
     private final BenepiaOrderBatchApiClient client;
     private final BenepiaProperties props;
     private final ObjectMapper objectMapper;
-    private final ProductMapper productMapper;
+    private final BenepiaProductMappingService mappingService;
 
     private static final int MAX_SIZE = 10000;
 
@@ -40,17 +39,25 @@ public class BenepiaOrderBatchService {
 
         List<Object> body = new ArrayList<>();
 
+        // 하루치 배치 전체에서 재사용할 상품상세 캐시 (동일 상품이 여러 주문에 반복 등장할 때 N+1 방지)
+        Map<String, ProductDetailGetResDto> productDetailCache = new HashMap<>();
+
         // =========================
         // 1. 주문 먼저
         // =========================
         List<OrderAdminDetailGetResDto> orders = mapper.selectBatchOrders(targetDate);
 
         for (OrderAdminDetailGetResDto order : orders) {
-            List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
+            try {
+                List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
 
-            BenepiaOrderRequest req = buildOrderRequest(order, items);
-            if (req != null) {
-                body.add(req);
+                BenepiaOrderRequest req = buildOrderRequest(order, items, productDetailCache);
+                if (req != null) {
+                    body.add(req);
+                }
+            } catch (Exception e) {
+                // 주문 1건 실패가 하루치 배치 전체를 막지 않도록 스킵
+                log.error("[BENEPIA BATCH] 주문 처리 실패, 스킵 orderId={}", order.getOrderNumber(), e);
             }
         }
 
@@ -60,11 +67,16 @@ public class BenepiaOrderBatchService {
         List<OrderAdminDetailGetResDto> cancels = mapper.selectBatchCancels(targetDate);
 
         for (OrderAdminDetailGetResDto order : cancels) {
-            List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
+            try {
+                List<OrderProductListGetResDto> items = mapper.selectOrderItems(order.getId());
 
-            BenepiaCancelRequest req = buildCancelRequest(order, items);
-            if (req != null) {
-                body.add(req);
+                BenepiaCancelRequest req = buildCancelRequest(order, items, productDetailCache);
+                if (req != null) {
+                    body.add(req);
+                }
+            } catch (Exception e) {
+                // 취소 1건 실패가 하루치 배치 전체를 막지 않도록 스킵
+                log.error("[BENEPIA BATCH] 취소 처리 실패, 스킵 orderId={}", order.getOrderNumber(), e);
             }
         }
 
@@ -143,12 +155,14 @@ public class BenepiaOrderBatchService {
     // =========================
     public BenepiaOrderRequest buildOrderRequest(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items) {
+            List<OrderProductListGetResDto> items,
+            Map<String, ProductDetailGetResDto> productDetailCache) {
 
         BenepiaOrderRequest req = new BenepiaOrderRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
+        order.setBenepiaId("testtravel");
         req.setBenefitId(nvl(order.getBenepiaId()));
         req.setCoCd("5555");
 
@@ -211,18 +225,20 @@ public class BenepiaOrderBatchService {
 
         List<BenepiaOrderRequest.Product> products = new ArrayList<>();
 
-        for (OrderProductListGetResDto p : items) {
-            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
+        for (BenepiaProductMappingService.MergedProductLine m
+                : mappingService.mergeDuplicateOptions(items, productDetailCache)) {
+
+            ProductDetailGetResDto detail = m.detail;
 
             BenepiaOrderRequest.Product product = new BenepiaOrderRequest.Product();
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getOptionName()));
+            product.setPrdOptNm(m.prdOptNm);
 
-            product.setQty(nvl(p.getQuantity()));
-            product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
+            product.setQty(m.qty);
+            product.setPrdPrc(m.prdPrc);
+            product.setPrdOrgnPrc(m.prdPrc);
 
             String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 
@@ -245,9 +261,9 @@ public class BenepiaOrderBatchService {
             product.setUseFrDy("");
             product.setUseToDy("");
             product.setRoomTypNm("");
-            product.setAdultCnt(0);
-            product.setYouthCnt(0);
-            product.setChildCnt(0);
+            product.setAdultCnt(m.adultCnt);
+            product.setYouthCnt(m.youthCnt);
+            product.setChildCnt(m.childCnt);
             product.setNightCnt(0);
             product.setWeekendYn("");
             product.setSeasonYn("");
@@ -286,12 +302,14 @@ public class BenepiaOrderBatchService {
     // =========================
     public BenepiaCancelRequest buildCancelRequest(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items) {
+            List<OrderProductListGetResDto> items,
+            Map<String, ProductDetailGetResDto> productDetailCache) {
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
+        order.setBenepiaId("testtravel");
         req.setBenefitId(nvl(order.getBenepiaId()));
         req.setCoCd("5555");
 
@@ -349,18 +367,20 @@ public class BenepiaOrderBatchService {
 
         List<BenepiaCancelRequest.Product> products = new ArrayList<>();
 
-        for (OrderProductListGetResDto p : items) {
-            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
+        for (BenepiaProductMappingService.MergedProductLine m
+                : mappingService.mergeDuplicateOptions(items, productDetailCache)) {
+
+            ProductDetailGetResDto detail = m.detail;
 
             BenepiaCancelRequest.Product product = new BenepiaCancelRequest.Product();
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getOptionName()));
+            product.setPrdOptNm(m.prdOptNm);
 
-            product.setQty(nvl(p.getQuantity()));
-            product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
+            product.setQty(m.qty);
+            product.setPrdPrc(m.prdPrc);
+            product.setPrdOrgnPrc(m.prdPrc);
 
             String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 

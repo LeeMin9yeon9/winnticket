@@ -133,7 +133,7 @@ public class BenepiaBatchService {
             product.put("prdNm", row.get("prdNm"));
             product.put("orgnPrc", toInt(row.get("orgnPrc")));
             product.put("salePrc", toInt(row.get("salePrc")));
-            product.put("prdImgUrl", row.get("prdImgUrl"));
+            product.put("prdImgUrl", firstImageUrl(row.get("prdImgUrl")));
             product.put("prdDtlUrlTyp", "L");
             product.put("prdDtlUrl", row.get("prdDtlUrl"));
             product.put("prdMobDtlUrlTyp", "L");
@@ -153,7 +153,7 @@ public class BenepiaBatchService {
             travel.put("prdGb", "03"); // 티켓 :contentReference[oaicite:5]{index=5}
             travel.put("nationalCd", "KR");
             travel.put("regionCd", nz(row.get("regionCd")));
-            travel.put("districCd", "");
+            travel.put("districtCd", "");
             travel.put("telNo", "");
             travel.put("zipCd", "");
             travel.put("addr1", "");
@@ -187,6 +187,32 @@ public class BenepiaBatchService {
         );
     }
 
+    /** image_url(jsonb) 값이 어떤 형태로 오든 순수 이미지 URL 문자열 하나만 추출 */
+    private String firstImageUrl(Object v) {
+        if (v == null) return "";
+
+        // 이미 List/Collection으로 매핑된 경우 (배열 jsonb)
+        if (v instanceof List<?> list) {
+            return list.isEmpty() ? "" : String.valueOf(list.get(0));
+        }
+
+        String s = String.valueOf(v).trim();
+        if (s.isEmpty() || "null".equals(s)) return "";
+
+        try {
+            // jsonb 컬럼이라 "..." 또는 [...] 형태의 JSON 원문일 수 있음 -> 파싱 시도
+            Object parsed = objectMapper.readValue(s, Object.class);
+            if (parsed instanceof List<?> list) {
+                return list.isEmpty() ? "" : String.valueOf(list.get(0));
+            }
+            return String.valueOf(parsed); // 따옴표 감싼 단일 문자열이었던 경우 -> 순수 문자열로
+        } catch (Exception e) {
+            // JSON 파싱 실패 시: 대괄호/따옴표만 방어적으로 제거
+            String stripped = s.replaceAll("^\\[|\\]$", "").trim();
+            String[] parts = stripped.split(",");
+            return parts.length == 0 ? "" : parts[0].replaceAll("^\"|\"$", "").trim();
+        }
+    }
     /** 공통: rootKey 배열을 maxFileBytes에 맞춰 쪼개서 파일 생성 */
     private <T> List<File> splitBySizeAndWriteJsonArray(
             List<T> allItems,
