@@ -1,26 +1,22 @@
 package kr.co.winnticket.integration.benepia.order.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.winnticket.integration.benepia.crypto.BenepiaSeedEcbCrypto;
 import kr.co.winnticket.integration.benepia.order.client.BenepiaClient;
 import kr.co.winnticket.integration.benepia.order.dto.*;
 import kr.co.winnticket.integration.benepia.props.BenepiaProperties;
-import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.product.admin.dto.ProductDetailGetResDto;
-import kr.co.winnticket.product.admin.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +25,8 @@ public class BenepiaOrderService {
 
     private final BenepiaClient client;
     private final BenepiaProperties props;
-    private final ProductMapper productMapper;
     private final ObjectMapper objectMapper;
+    private final BenepiaProductMappingService mappingService;
 
     // =========================
     // null 방어 유틸
@@ -41,69 +37,6 @@ public class BenepiaOrderService {
 
     private Integer nvl(Integer val){
         return val == null ? 0 : val;
-    }
-
-    // =========================
-    // CASE6 대응:
-    // 1) prdId + optionIds(실제 옵션 고유 식별값)가 완전히 같은 라인만 qty/금액을 합산
-    // 2) 같은 prdId 내에서 옵션명은 같아 보이지만 optionIds가 서로 다른 경우
-    //    (이름만 같고 실제로는 다른 옵션인 케이스) → "옵션명&prdOptId=옵션ID"로 구분해서 전송
-    // =========================
-    private static class MergedProductLine {
-        ProductDetailGetResDto detail;
-        String displayOptionName; // 원본 옵션명 (DB 표시값)
-        String optionIds;         // 실제 옵션 고유 식별값 (병합 판단 기준)
-        String prdOptNm;          // 베네피아로 실제 전송할 옵션명 (충돌 시 &prdOptId= 접미)
-        int qty;
-        int prdPrc;
-    }
-
-    private List<MergedProductLine> mergeDuplicateOptions(List<OrderProductListGetResDto> items) {
-        Map<String, MergedProductLine> merged = new LinkedHashMap<>();
-        // prdId -> (옵션명 -> 그 옵션명으로 나타난 서로 다른 optionIds 집합) : 이름 충돌 감지용
-        Map<String, Map<String, Set<String>>> nameCollisionCheck = new HashMap<>();
-
-        for (OrderProductListGetResDto p : items) {
-            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
-
-            String prdId = nvl(detail.getCode());
-            String optionName = nvl(p.getOptionName());
-            String optionIds = nvl(p.getOptionIds());
-
-            // 진짜 동일한 상품+옵션(prdId+optionIds)인 경우에만 병합 (스펙 2번 케이스)
-            String mergeKey = prdId + "&prdOptId=" + optionIds;
-
-            MergedProductLine line = merged.get(mergeKey);
-            if (line == null) {
-                line = new MergedProductLine();
-                line.detail = detail;
-                line.displayOptionName = optionName;
-                line.optionIds = optionIds;
-                merged.put(mergeKey, line);
-            }
-
-            line.qty += nvl(p.getQuantity());
-            line.prdPrc += nvl(p.getTotalPrice());
-
-            nameCollisionCheck
-                    .computeIfAbsent(prdId, k -> new HashMap<>())
-                    .computeIfAbsent(optionName, k -> new HashSet<>())
-                    .add(optionIds);
-        }
-
-        // 같은 prdId 내에서 옵션명이 같은데 optionIds가 서로 다르면 (스펙 1번 케이스) 구분값 부여
-        for (MergedProductLine line : merged.values()) {
-            String prdId = nvl(line.detail.getCode());
-            Set<String> idsForThisName = nameCollisionCheck.get(prdId).get(line.displayOptionName);
-
-            if (idsForThisName.size() > 1 && !line.optionIds.isBlank()) {
-                line.prdOptNm = line.displayOptionName + "&prdOptId=" + line.optionIds;
-            } else {
-                line.prdOptNm = line.displayOptionName;
-            }
-        }
-
-        return new ArrayList<>(merged.values());
     }
 
     // =========================
@@ -215,7 +148,7 @@ public class BenepiaOrderService {
         // =========================
         List<BenepiaOrderRequest.Product> products = new ArrayList<>();
 
-        for(MergedProductLine m : mergeDuplicateOptions(items)){
+        for(BenepiaProductMappingService.MergedProductLine m : mappingService.mergeDuplicateOptions(items)){
             ProductDetailGetResDto detail = m.detail;
 
             BenepiaOrderRequest.Product product = new BenepiaOrderRequest.Product();
@@ -251,9 +184,9 @@ public class BenepiaOrderService {
             product.setUseFrDy("");
             product.setUseToDy("");
             product.setRoomTypNm("");
-            product.setAdultCnt(0);
-            product.setYouthCnt(0);
-            product.setChildCnt(0);
+            product.setAdultCnt(m.adultCnt);
+            product.setYouthCnt(m.youthCnt);
+            product.setChildCnt(m.childCnt);
             product.setNightCnt(0);
             product.setWeekendYn("");
             product.setSeasonYn("");
@@ -391,7 +324,7 @@ public class BenepiaOrderService {
 
         List<BenepiaCancelRequest.Product> products = new ArrayList<>();
 
-        for(MergedProductLine m : mergeDuplicateOptions(items)){
+        for(BenepiaProductMappingService.MergedProductLine m : mappingService.mergeDuplicateOptions(items)){
             ProductDetailGetResDto detail = m.detail;
 
             BenepiaCancelRequest.Product product = new BenepiaCancelRequest.Product();

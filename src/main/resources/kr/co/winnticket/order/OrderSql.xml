@@ -160,7 +160,17 @@
             '모바일자동'                                                                                 AS ticketType,
             b.quantity                                                                                 AS quantity,
             b.unit_price                                                                               AS unitPrice,
-            CAST(b.unit_price * (100 - COALESCE(d.commission_rate, 0)) / 100.0 AS INTEGER)             AS supplyPrice,
+            COALESCE(
+                (
+                    SELECT pov.base_price
+                    FROM order_item_options oio
+                    JOIN product_option_values pov
+                    ON pov.id = oio.option_value_id
+                    WHERE oio.order_item_id = b.id
+                    LIMIT 1
+                ),
+                0
+            )                                                                                          AS supplyPrice,
             0                                                                                          AS shippingFee,
             a.total_price                                                                              AS totalOrderAmount,
             a.payment_status                                                                           AS paymentStatus,
@@ -172,6 +182,7 @@
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
+            TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt,
         -- 티켓번호 한줄 처리
         COALESCE(
         (

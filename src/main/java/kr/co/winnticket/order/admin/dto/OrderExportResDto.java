@@ -33,6 +33,7 @@ public class OrderExportResDto {
     private Integer shippingFee;      // 배송비
     private Integer totalOrderAmount; // 총 주문금액
     private String paymentStatus;     // 결제상태
+    private String canceledAt;        // 결제취소일시
     private Integer finalPrice;       // 결제금액
     private String paymentMethod;     // 결제수단
     private Integer pointAmount;      // 베네피아 포인트 결제금액

@@ -242,11 +242,13 @@ public class OrderService {
 
             // 베네피아 실시간 주문정보 전송
             // 실패해도 결제/발권 트랜잭션에 영향을 주면 안 되므로 여기서 예외를 흡수한다.
+            /*
             try {
                 benepiaOrderService.sendOrder(order, items);
             } catch (Exception e) {
                 log.error("[BENEPIA 주문 전송 실패] orderId={}", auId, e);
             }
+            */
 
             // SMS는 커밋 확정 후 비동기 발송 (트랜잭션 롤백 시 SMS 발송 방지)
             final OrderAdminDetailGetResDto orderSnap = order;
@@ -683,9 +685,7 @@ public class OrderService {
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");
         }
-        // 베네피아 주문 취소 전송
-        // 실패해도 취소 트랜잭션(재고/쿠폰 복구 등)이 롤백되면 안 되므로 여기서 예외를 흡수한다.
-        // 취소수수료가 차감된 실제 환불액(cancelAmount)을 기준으로 전달해야 함 (원금 그대로 보내면 안 됨)
+        
         int pointRefundForBenepia;
         int totalRefundForBenepia;
 
@@ -705,13 +705,14 @@ public class OrderService {
 
             totalRefundForBenepia = pointRefundForBenepia + mainRefund;
         }
-
+         // 베네피아 주문 취소 전송
+        /*
         try {
                 benepiaOrderService.cancelOrder(order, items, totalRefundForBenepia, pointRefundForBenepia);
         } catch (Exception e) {
             log.error("[BENEPIA 주문 취소 전송 실패] orderId={}", orderId, e);
         }
-
+        */
         // 재고 복구
         List<OrderItemOptionDto> options = mapper.selectOrderItemOptions(orderId);
 
