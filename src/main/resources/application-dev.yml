@@ -40,8 +40,8 @@ file:
 benepia:
   seed-key: 5906575fb31548aa
   cust-co-cd: z381
-  confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm
-  token-create-url: https://stg-auth.benepia.co.kr/api/token/request
+  confirm-url: https://stg-auth.benepia.co.kr/api/token/confirm.json
+  token-create-url: https://stg-auth.benepia.co.kr/api/token/request.json
   batch-base-url: https://stg-collections.benepia.co.kr
   prdgb-file: ticket
   order-base-url: https://stg-collections.benepia.co.kr

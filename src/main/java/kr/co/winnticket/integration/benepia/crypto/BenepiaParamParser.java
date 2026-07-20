@@ -4,12 +4,15 @@ import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 import org.springframework.stereotype.Component;
 
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class BenepiaParamParser {
+
+    // 베네피아가 encParam 안의 값들을 EUC-KR로 percent-encoding해서 보냄 (UTF-8 아님)
+    private static final Charset EUC_KR = Charset.forName("EUC-KR");
 
     public BenepiaDecryptedParamDto parse(String decrypted) {
 
@@ -20,7 +23,7 @@ public class BenepiaParamParser {
             if (i > 0) {
                 map.put(
                         p.substring(0, i),
-                        URLDecoder.decode(p.substring(i + 1), StandardCharsets.UTF_8)
+                        URLDecoder.decode(p.substring(i + 1), EUC_KR)
                 );
             }
         }

@@ -62,7 +62,7 @@ public class KcpService {
             body.put("pt_txtype", "97000000");
             body.put("pt_idno", dto.getBenepiaId());
             body.put("pt_pwd", dto.getBenepiaPwd());
-            body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());
+            body.put("pt_memcorp_cd", dto.getMemcorpCd());
 
             String json = objectMapper.writeValueAsString(body);
 
@@ -139,7 +139,8 @@ public class KcpService {
             body.put("pt_idno", dto.getBenepiaId());                // 베네피아ID
             body.put("pt_pwd", dto.getBenepiaPwd());                // 베네피아PW
 
-            body.put("pt_memcorp_cd", properties.getKcp().getPtMemcorpCd());    // 소속사코드
+
+            body.put("pt_memcorp_cd", dto.getMemcorpCd());    // 소속사코드 (SSO 세션의 sitecode)
             body.put("pt_mny", String.valueOf(dto.getAmount()));     // 포인트결제금액 : amount 금액과 동일해야함
             body.put("pt_paycode", "04");                           // 결제코드:04
 
