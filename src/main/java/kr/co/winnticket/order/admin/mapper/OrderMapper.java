@@ -32,7 +32,8 @@ public interface OrderMapper {
             @Param("endDate") LocalDate asEndDate,
             @Param("status") String status,
             @Param("channelId") UUID channelId,
-            @Param("partnerId") UUID partnerId
+            @Param("partnerId") UUID partnerId,
+            @Param("partnerName") String partnerName
     );
 
     // 주문 상세 조회(관리자)
@@ -90,10 +91,13 @@ public interface OrderMapper {
     void updateOrderCompleted(UUID orderId);
 
 
-    // 페이레터 주문정보 조회
+    // 주문 결제 정보 조회 (PG 검증/취소용)
     Map<String, Object> selectOrderPaymentInfo(UUID orderId);
 
-    // 페이레터 취소 성공
+    // 포인트 결제 금액 조회 (Toss 금액 검증용)
+    int selectPointAmount(@Param("orderId") UUID orderId);
+
+    // 주문 취소 성공 처리
     int updateOrderCancelSuccess(
             @Param("orderId") UUID orderId,
             @Param("cancelAmount") int cancelAmount,
@@ -179,6 +183,12 @@ public interface OrderMapper {
             @Param("validFrom") LocalDate validFrom,
             @Param("validTo") LocalDate validTo
     );
+
+    // 베네피아 테스트 계정 조회(스케줄러 취소용)
+    List<UUID> selectTesttravelOrderIds();
+
+    // 취소된 주문 선사입티켓 주문자,주문번호 삭제
+    void deleteOrderItemCouponByCouponId(UUID couponId);
 
 
 }

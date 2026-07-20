@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@org.springframework.context.annotation.Profile("!local")
 public class FieldSessionService {
     private final StringRedisTemplate redisTemplate;
 

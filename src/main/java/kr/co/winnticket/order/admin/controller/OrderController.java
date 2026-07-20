@@ -1,22 +1,18 @@
 package kr.co.winnticket.order.admin.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
-import kr.co.winnticket.integration.payletter.service.PayletterService;
-import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminListGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminStatusGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderAdminTicketCheckGetResDto;
-import kr.co.winnticket.order.admin.dto.OrderExportResDto;
+import kr.co.winnticket.order.admin.dto.*;
+
 import kr.co.winnticket.order.admin.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +33,6 @@ import java.util.UUID;
 
 public class OrderController {
     private final OrderService service;
-    private final PayletterService payletterService;
 
     // 주문 상태별 카운트 조회
     @GetMapping("/status")
@@ -74,9 +69,10 @@ public class OrderController {
             @Parameter(description = "종료일자") @RequestParam(value = "endDate", required = false) LocalDate asEndDate,
             @Parameter(description = "상태") @RequestParam(value = "status", required = false) String status,
             @Parameter(description = "채널Id") @RequestParam(value = "channelId", required = false) UUID channelId,
-            @Parameter(description = "파트너Id") @RequestParam(value = "partnerId", required = false) UUID partnerId
+            @Parameter(description = "파트너Id") @RequestParam(value = "partnerId", required = false) UUID partnerId,
+            @Parameter(description = "파트너명") @RequestParam(value = "partnerName", required = false) String partnerName
     ) throws Exception {
-        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId);
+        List<OrderExportResDto> rows = service.selectOrderExportList(asSrchWord, asBegDate, asEndDate, status, channelId, partnerId, partnerName);
 
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("주문목록");
@@ -93,7 +89,7 @@ public class OrderController {
                 "채널명", "파트너 이름", "주문일", "주문번호", "회사명",
                 "주문자 이름", "주문자 전화번호", "주문자 이메일",
                 "수령자 이름", "수령자 전화번호",
-                "상품번호", "주문상품", "예약일자", "상품종류", "티켓종류",
+                "상품번호", "주문상품", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
                 "결제상태", "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
@@ -108,52 +104,71 @@ public class OrderController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 데이터 행
-        int rowNum = 1;
+        // 같은 주문번호끼리 그룹핑하여 한 줄로 합침 (상품명은 / 로 연결)
+        java.util.LinkedHashMap<String, java.util.List<OrderExportResDto>> grouped = new java.util.LinkedHashMap<>();
         for (OrderExportResDto r : rows) {
+            grouped.computeIfAbsent(r.getOrderNumber(), k -> new java.util.ArrayList<>()).add(r);
+        }
+
+        int rowNum = 1;
+        for (java.util.Map.Entry<String, java.util.List<OrderExportResDto>> entry : grouped.entrySet()) {
+            java.util.List<OrderExportResDto> items = entry.getValue();
+            OrderExportResDto first = items.get(0);
+
+            String productNames = items.stream()
+                    .map(i -> i.getProductDisplayName() != null ? i.getProductDisplayName() : "")
+                    .collect(java.util.stream.Collectors.joining("/"));
+            String productCodes = items.stream()
+                    .map(i -> i.getProductCode() != null ? i.getProductCode() : "")
+                    .collect(java.util.stream.Collectors.joining("/"));
+            int totalQty = items.stream().mapToInt(i -> i.getQuantity() != null ? i.getQuantity() : 0).sum();
+            String ticketNumbers = items.stream()
+                    .map(i -> i.getTicketNumber() != null ? i.getTicketNumber() : "")
+                    .filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            String ticketUsedList = items.stream()
+                    .map(i -> i.getTicketUsed() != null ? i.getTicketUsed() : "미사용")
+                    .collect(java.util.stream.Collectors.joining(", "));
+
             HSSFRow row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(r.getChannelName() != null ? r.getChannelName() : "");       // 채널명
-            row.createCell(1).setCellValue(r.getPartnerName() != null ? r.getPartnerName() : "");       // 파트너 이름
-            row.createCell(2).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");           // 주문일
-            row.createCell(3).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");       // 주문번호
-            row.createCell(4).setCellValue(r.getCompanyName() != null ? r.getCompanyName() : "");       // 회사명
-            row.createCell(5).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");     // 주문자
-            row.createCell(6).setCellValue(r.getCustomerPhone() != null ? r.getCustomerPhone() : "");   // 주문자 전화번호
-            row.createCell(7).setCellValue(r.getCustomerEmail() != null ? r.getCustomerEmail() : "");   // 이메일
-            row.createCell(8).setCellValue(r.getRecipientName() != null ? r.getRecipientName() : "");   // 수령자
-            row.createCell(9).setCellValue(r.getRecipientPhone() != null ? r.getRecipientPhone() : ""); // 수령자 번호
-            row.createCell(10).setCellValue(r.getProductCode() != null ? r.getProductCode() : "");      // 상품번호
-            row.createCell(11).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : ""); // 주문상품
-            row.createCell(12).setCellValue("");                                                         // 예약일자
-            row.createCell(13).setCellValue("");                                                         // 상품종류
-            row.createCell(14).setCellValue(r.getTicketType() != null ? r.getTicketType() : "");        // 티켓종류
-            row.createCell(15).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);             // 수량
-            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);           // 단가
-            row.createCell(17).setCellValue(r.getSupplyPrice() != null ? r.getSupplyPrice() : 0);       // 공급가
-            row.createCell(18).setCellValue(r.getTotalOrderAmount() != null ? r.getTotalOrderAmount() : 0); // 총 주문금액
-            // 결제상태 한글 변환
+            row.createCell(0).setCellValue(first.getChannelName() != null ? first.getChannelName() : "");
+            row.createCell(1).setCellValue(first.getPartnerName() != null ? first.getPartnerName() : "");
+            row.createCell(2).setCellValue(first.getOrderedAt() != null ? first.getOrderedAt() : "");
+            row.createCell(3).setCellValue(first.getOrderNumber() != null ? first.getOrderNumber() : "");
+            row.createCell(4).setCellValue(first.getCompanyName() != null ? first.getCompanyName() : "");
+            row.createCell(5).setCellValue(first.getCustomerName() != null ? first.getCustomerName() : "");
+            row.createCell(6).setCellValue(formatPhoneNumber(first.getCustomerPhone()));
+            row.createCell(7).setCellValue(first.getCustomerEmail() != null ? first.getCustomerEmail() : "");
+            row.createCell(8).setCellValue(first.getRecipientName() != null ? first.getRecipientName() : "");
+            row.createCell(9).setCellValue(formatPhoneNumber(first.getRecipientPhone()));
+            row.createCell(10).setCellValue(productCodes);
+            row.createCell(11).setCellValue(productNames);
+            row.createCell(12).setCellValue(first.getTicketType() != null ? first.getTicketType() : "");
+            row.createCell(13).setCellValue(totalQty);
+            row.createCell(14).setCellValue(first.getUnitPrice() != null ? first.getUnitPrice() : 0);
+            row.createCell(15).setCellValue(first.getSupplyPrice() != null ? first.getSupplyPrice() : 0);
+            row.createCell(16).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
             String psDisplay = "";
-            if (r.getPaymentStatus() != null) {
-                try { psDisplay = PaymentStatus.valueOf(r.getPaymentStatus()).getDisplayName(); }
-                catch (Exception e) { psDisplay = r.getPaymentStatus(); }
+            if (first.getPaymentStatus() != null) {
+                try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
+                catch (Exception e) { psDisplay = first.getPaymentStatus(); }
             }
-            row.createCell(19).setCellValue(psDisplay);                                                  // 결제상태
-            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);          // 결제금액
-            // 결제수단 한글 변환
+            row.createCell(17).setCellValue(psDisplay);
+            row.createCell(18).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
             String pmDisplay = "";
-            if (r.getPaymentMethod() != null) {
-                try { pmDisplay = PaymentMethod.valueOf(r.getPaymentMethod()).getDisplayName(); }
-                catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
+            if (first.getPaymentMethod() != null) {
+                try { pmDisplay = PaymentMethod.valueOf(first.getPaymentMethod()).getDisplayName(); }
+                catch (Exception e) { pmDisplay = first.getPaymentMethod(); }
             }
-            row.createCell(21).setCellValue(pmDisplay);                                                  // 결제수단
-            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);        // 베네피아 포인트
-            row.createCell(23).setCellValue(r.getBenepiaId() != null ? r.getBenepiaId() : "");           // 베네피아 아이디
-            row.createCell(24).setCellValue(r.getBankTransferAmount() != null ? r.getBankTransferAmount() : 0); // 무통장 결제금액
-            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);          // 카드 결제금액
-            row.createCell(26).setCellValue("");                                                          // 베네피아 이용권
-            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");                 // 결제일시
-            row.createCell(28).setCellValue(r.getTicketNumber() != null ? r.getTicketNumber() : "");     // 티켓번호
-            row.createCell(29).setCellValue(r.getTicketUsed() != null ? r.getTicketUsed() : "미사용");   // 티켓사용여부
+            row.createCell(19).setCellValue(pmDisplay);
+            row.createCell(20).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
+            row.createCell(21).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
+            row.createCell(22).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
+            row.createCell(23).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
+            row.createCell(24).setCellValue("");
+            row.createCell(25).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : "");
+            row.createCell(26).setCellValue(ticketNumbers);
+            row.createCell(27).setCellValue(ticketUsedList);
         }
 
         // 열 너비 자동 조정
@@ -242,6 +257,33 @@ public class OrderController {
     ) throws Exception {
         service.resendTicketSms(orderId);
         return ResponseEntity.ok(ApiResponse.success("재전송 완료",orderId.toString()));
+    }
+
+    private String formatPhoneNumber(String phone) {
+
+        if (phone == null || phone.isBlank()) {
+            return "";
+        }
+
+        String onlyNumber = phone.replaceAll("[^0-9]", "");
+
+        // 01012341234 -> 010-1234-1234
+        if (onlyNumber.length() == 11) {
+            return onlyNumber.replaceFirst(
+                    "(\\d{3})(\\d{4})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        // 0212345678 -> 021-234-5678
+        if (onlyNumber.length() == 10) {
+            return onlyNumber.replaceFirst(
+                    "(\\d{3})(\\d{3})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        return phone;
     }
 
 

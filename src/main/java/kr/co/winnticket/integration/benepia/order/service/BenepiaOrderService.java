@@ -44,6 +44,69 @@ public class BenepiaOrderService {
     }
 
     // =========================
+    // CASE6 대응:
+    // 1) prdId + optionIds(실제 옵션 고유 식별값)가 완전히 같은 라인만 qty/금액을 합산
+    // 2) 같은 prdId 내에서 옵션명은 같아 보이지만 optionIds가 서로 다른 경우
+    //    (이름만 같고 실제로는 다른 옵션인 케이스) → "옵션명&prdOptId=옵션ID"로 구분해서 전송
+    // =========================
+    private static class MergedProductLine {
+        ProductDetailGetResDto detail;
+        String displayOptionName; // 원본 옵션명 (DB 표시값)
+        String optionIds;         // 실제 옵션 고유 식별값 (병합 판단 기준)
+        String prdOptNm;          // 베네피아로 실제 전송할 옵션명 (충돌 시 &prdOptId= 접미)
+        int qty;
+        int prdPrc;
+    }
+
+    private List<MergedProductLine> mergeDuplicateOptions(List<OrderProductListGetResDto> items) {
+        Map<String, MergedProductLine> merged = new LinkedHashMap<>();
+        // prdId -> (옵션명 -> 그 옵션명으로 나타난 서로 다른 optionIds 집합) : 이름 충돌 감지용
+        Map<String, Map<String, Set<String>>> nameCollisionCheck = new HashMap<>();
+
+        for (OrderProductListGetResDto p : items) {
+            ProductDetailGetResDto detail = productMapper.selectProductDetail(p.getProductId());
+
+            String prdId = nvl(detail.getCode());
+            String optionName = nvl(p.getOptionName());
+            String optionIds = nvl(p.getOptionIds());
+
+            // 진짜 동일한 상품+옵션(prdId+optionIds)인 경우에만 병합 (스펙 2번 케이스)
+            String mergeKey = prdId + "&prdOptId=" + optionIds;
+
+            MergedProductLine line = merged.get(mergeKey);
+            if (line == null) {
+                line = new MergedProductLine();
+                line.detail = detail;
+                line.displayOptionName = optionName;
+                line.optionIds = optionIds;
+                merged.put(mergeKey, line);
+            }
+
+            line.qty += nvl(p.getQuantity());
+            line.prdPrc += nvl(p.getTotalPrice());
+
+            nameCollisionCheck
+                    .computeIfAbsent(prdId, k -> new HashMap<>())
+                    .computeIfAbsent(optionName, k -> new HashSet<>())
+                    .add(optionIds);
+        }
+
+        // 같은 prdId 내에서 옵션명이 같은데 optionIds가 서로 다르면 (스펙 1번 케이스) 구분값 부여
+        for (MergedProductLine line : merged.values()) {
+            String prdId = nvl(line.detail.getCode());
+            Set<String> idsForThisName = nameCollisionCheck.get(prdId).get(line.displayOptionName);
+
+            if (idsForThisName.size() > 1 && !line.optionIds.isBlank()) {
+                line.prdOptNm = line.displayOptionName + "&prdOptId=" + line.optionIds;
+            } else {
+                line.prdOptNm = line.displayOptionName;
+            }
+        }
+
+        return new ArrayList<>(merged.values());
+    }
+
+    // =========================
     // 주문 전송
     // =========================
     public void sendOrder(
@@ -51,6 +114,21 @@ public class BenepiaOrderService {
             List<OrderProductListGetResDto> items) {
 
         if(items == null || items.isEmpty()) return;
+        order.setBenepiaId("testtravel");
+        // 베네피아 회원이 아닌 일반 주문은 전송 대상이 아님 (필수 파라미터 누락으로 실패하는 것을 방지)
+        if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()) return;
+
+        try {
+            sendOrderInternal(order, items);
+        } catch (Exception e) {
+            // 베네피아 연동 실패가 결제/발권 트랜잭션에 영향을 주지 않도록 여기서 흡수
+            log.error("[BENEPIA] 주문 전송 실패 orderId={}", order.getOrderNumber(), e);
+        }
+    }
+
+    private void sendOrderInternal(
+            OrderAdminDetailGetResDto order,
+            List<OrderProductListGetResDto> items) {
 
         BenepiaOrderRequest req = new BenepiaOrderRequest();
 
@@ -137,19 +215,18 @@ public class BenepiaOrderService {
         // =========================
         List<BenepiaOrderRequest.Product> products = new ArrayList<>();
 
-        for(OrderProductListGetResDto p : items){
-            ProductDetailGetResDto detail =
-                    productMapper.selectProductDetail(p.getProductId());
+        for(MergedProductLine m : mergeDuplicateOptions(items)){
+            ProductDetailGetResDto detail = m.detail;
 
             BenepiaOrderRequest.Product product = new BenepiaOrderRequest.Product();
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getOptionName()));
+            product.setPrdOptNm(m.prdOptNm);
 
-            product.setQty(nvl(p.getQuantity()));
-            product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
+            product.setQty(m.qty);
+            product.setPrdPrc(m.prdPrc);
+            product.setPrdOrgnPrc(m.prdPrc);
 
             String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 
@@ -206,7 +283,12 @@ public class BenepiaOrderService {
         }
 
         req.setProducts(products);
-        validatePrice(req);
+
+        if(!validatePrice(req)){
+            log.error("[BENEPIA] 금액 불일치로 주문 전송 스킵 orderId={}", order.getOrderNumber());
+            return;
+        }
+
         createJsonFile(req);
 
         client.sendOrder(req);
@@ -217,9 +299,27 @@ public class BenepiaOrderService {
     // =========================
     public void cancelOrder(
             OrderAdminDetailGetResDto order,
-            List<OrderProductListGetResDto> items){
+            List<OrderProductListGetResDto> items,
+            int totalRefundAmount,
+            int pointRefundAmount){
 
-        if(order.getBenepiaId() == null || items == null || items.isEmpty()) return;
+        order.setBenepiaId("testtravel");
+        if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()
+                || items == null || items.isEmpty()) return;
+
+        try {
+            cancelOrderInternal(order, items, totalRefundAmount, pointRefundAmount);
+        } catch (Exception e) {
+            // 베네피아 연동 실패가 취소 트랜잭션(재고/쿠폰 복구 등)에 영향을 주지 않도록 여기서 흡수
+            log.error("[BENEPIA] 주문 취소 전송 실패 orderId={}", order.getOrderNumber(), e);
+        }
+    }
+
+    private void cancelOrderInternal(
+            OrderAdminDetailGetResDto order,
+            List<OrderProductListGetResDto> items,
+            int totalRefundAmount,
+            int pointRefundAmount){
 
         BenepiaCancelRequest req = new BenepiaCancelRequest();
 
@@ -239,8 +339,9 @@ public class BenepiaOrderService {
 
         cancel.setOrdNm(orderName);
 
-        cancel.setCnclPrc(nvl(order.getFinalPrice()));
-        cancel.setOrgnCnclPrc(nvl(order.getFinalPrice()));
+        cancel.setCnclPrc(totalRefundAmount);
+        // 매입금액(선택항목) - 정확한 매입원가 추적이 없어 실환불액으로 근사치 사용
+        cancel.setOrgnCnclPrc(totalRefundAmount);
 
         cancel.setCnclDt(
                 LocalDateTime.now()
@@ -251,29 +352,27 @@ public class BenepiaOrderService {
 
 
         // =========================
-        // 결제 정보
+        // 결제 정보 (수수료 차감 후 실제 환불액 기준)
         // =========================
         List<BenepiaCancelRequest.Payment> payments = new ArrayList<>();
 
-        int totalPrice = nvl(order.getFinalPrice());
-        int pointAmount = nvl(order.getPointAmount());
-        int remainAmount = totalPrice - pointAmount;
+        int remainRefund = totalRefundAmount - pointRefundAmount;
 
         // =========================
-        // 1. 포인트 결제
+        // 1. 포인트 환불
         // =========================
-        if(pointAmount > 0){
+        if(pointRefundAmount > 0){
             BenepiaCancelRequest.Payment pointPayment = new BenepiaCancelRequest.Payment();
             pointPayment.setSttlMeanId("10"); // 포인트
-            pointPayment.setSttlPrc(pointAmount);
+            pointPayment.setSttlPrc(pointRefundAmount);
 
             payments.add(pointPayment);
         }
 
         // =========================
-        // 2. 실제 결제수단
+        // 2. 그 외 결제수단 환불 (수수료 차감 후 금액)
         // =========================
-        if(remainAmount > 0){
+        if(remainRefund > 0){
             BenepiaCancelRequest.Payment mainPayment = new BenepiaCancelRequest.Payment();
 
             switch (order.getPaymentMethod()){
@@ -283,7 +382,7 @@ public class BenepiaOrderService {
                 default -> mainPayment.setSttlMeanId("9");
             }
 
-            mainPayment.setSttlPrc(remainAmount);
+            mainPayment.setSttlPrc(remainRefund);
 
             payments.add(mainPayment);
         }
@@ -292,19 +391,18 @@ public class BenepiaOrderService {
 
         List<BenepiaCancelRequest.Product> products = new ArrayList<>();
 
-        for(OrderProductListGetResDto p : items){
-            ProductDetailGetResDto detail =
-                    productMapper.selectProductDetail(p.getProductId());
+        for(MergedProductLine m : mergeDuplicateOptions(items)){
+            ProductDetailGetResDto detail = m.detail;
 
             BenepiaCancelRequest.Product product = new BenepiaCancelRequest.Product();
 
             product.setPrdId(nvl(detail.getCode()));
             product.setPrdNm(nvl(detail.getName()));
-            product.setPrdOptNm(nvl(p.getProductName()));
+            product.setPrdOptNm(m.prdOptNm);
 
-            product.setQty(nvl(p.getQuantity()));
-            product.setPrdPrc(nvl(p.getTotalPrice()));
-            product.setPrdOrgnPrc(nvl(p.getTotalPrice()));
+            product.setQty(m.qty);
+            product.setPrdPrc(m.prdPrc);
+            product.setPrdOrgnPrc(m.prdPrc);
 
             String productUrl = "/product/" + detail.getCode() + "?channel=BENE";
 
@@ -330,7 +428,11 @@ public class BenepiaOrderService {
 
         req.setProducts(products);
 
-        validateCancelPrice(req);
+        if(!validateCancelPrice(req)){
+            log.error("[BENEPIA] 취소 금액 불일치로 취소 전송 스킵 orderId={}", order.getOrderNumber());
+            return;
+        }
+
         createJsonFile(req);
 
         client.cancelOrder(req, order.getOrderNumber());
@@ -401,7 +503,7 @@ public class BenepiaOrderService {
     // =========================
     // 검증
     // =========================
-    private void validatePrice(BenepiaOrderRequest req){
+    private boolean validatePrice(BenepiaOrderRequest req){
 
         int paymentSum =
                 req.getPayments()
@@ -409,12 +511,10 @@ public class BenepiaOrderService {
                         .mapToInt(p -> p.getSttlPrc())
                         .sum();
 
-        if(paymentSum != req.getOrder().getOrdPrc()){
-            throw new RuntimeException("베네피아 금액 불일치");
-        }
+        return paymentSum == req.getOrder().getOrdPrc();
     }
 
-    private void validateCancelPrice(BenepiaCancelRequest req){
+    private boolean validateCancelPrice(BenepiaCancelRequest req){
 
         int paymentSum =
                 req.getPayments()
@@ -422,8 +522,6 @@ public class BenepiaOrderService {
                         .mapToInt(p -> p.getSttlPrc())
                         .sum();
 
-        if(paymentSum != req.getOrderCancel().getCnclPrc()){
-            throw new RuntimeException("베네피아 취소 금액 불일치");
-        }
+        return paymentSum == req.getOrderCancel().getCnclPrc();
     }
 }

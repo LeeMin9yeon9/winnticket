@@ -47,6 +47,7 @@ public class KcpPointController {
         log.info("[KCP][POINT][REQ] orderNo={}, amount={}, benepiaId={}, memcorpCd={}",
                 dto.getOrderNo(), dto.getAmount(), dto.getBenepiaId(), dto.getMemcorpCd());
 
+
         KcpPointResDto res = service.getPoint(dto);
 
         return ResponseEntity.ok(ApiResponse.success("포인트 조회 성공", res));

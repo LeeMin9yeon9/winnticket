@@ -2,8 +2,12 @@ package kr.co.winnticket.order.admin.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class OrderExportResDto {
+
+    private UUID orderItemId;           // 주문ID
     private String channelName;       // 채널명
     private String orderedAt;         // 주문일
     private String orderNumber;       // 주문번호

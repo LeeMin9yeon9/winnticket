@@ -79,6 +79,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "포인트금액")
     private Integer pointAmount;
 
+    @Schema(description = "PG사")
+    private String pgProvider;
+
     @Schema(description = "티켓사용여부")
     private boolean allTicketUsed;
 

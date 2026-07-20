@@ -61,17 +61,12 @@ benepia-batch:
   retry-sleep-ms: 2000
   work-dir: /home/ubuntu/benepia     # 서버에 쓰기 가능한 경로
 
-# 신용카드 연동
-payletter:
-  base-url: https://testpgapi.payletter.com #운영 : https://pgapi.payletter.com/
-  client-id: pay_test
-  payment-api-key: MTFBNTAzNTEwNDAxQUIyMjlCQzgwNTg1MkU4MkZENDA=
-  search-api-key: MUI3MjM0RUExQTgyRDA1ODZGRDUyOEM4OTY2QTVCN0Y=
-  service-name: 페이레터
-
-  return-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/return
-  callback-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/callback
-  cancel-url:  https://rodger-uncandled-glycolytically.ngrok-free.dev/api/payletter/cancel
+# 토스페이먼츠 연동
+toss:
+  client-key: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  success-url: http://localhost:3000/payment/callback
+  fail-url: http://localhost:3000/payment/fail
 
 # 파트너 연동 (플러스앤)
 plusn:
