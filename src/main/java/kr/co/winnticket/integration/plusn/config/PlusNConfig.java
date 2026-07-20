@@ -20,12 +20,13 @@ public class PlusNConfig {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        // 1) String 컨버터 (text/html 읽기용)
+        // 1) String 컨버터 (PlusNClient가 String으로 받아 직접 objectMapper로 파싱하므로
+        //    application/json도 포함해야 함 - 없으면 Jackson 컨버터로 넘어가 String.class 역직렬화 오류 발생)
         StringHttpMessageConverter stringConverter =
                 new StringHttpMessageConverter(StandardCharsets.UTF_8);
 
         stringConverter.setSupportedMediaTypes(
-                List.of(MediaType.TEXT_HTML, MediaType.TEXT_PLAIN)
+                List.of(MediaType.TEXT_HTML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON)
         );
 
         // 2) Jackson 컨버터 (JSON 파싱용)
