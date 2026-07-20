@@ -25,9 +25,9 @@
             COALESCE(p.discount_price, p.price) AS "salePrc",
             p.image_url AS "prdImgUrl",
             'L' AS "prdDtlUrlTyp",
-            CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdDtlUrl",
+            CONCAT('https://www.winnticket.store/product/', p.code, '?channel=BENE') AS "prdDtlUrl",
             'L' AS "prdMobDtlUrlTyp",
-            CONCAT('https://www.winnticket.store/?channel=BENE&code=', p.code) AS "prdMobDtlUrl",
+            CONCAT('https://www.winnticket.store/product/', p.code, '?channel=BENE') AS "prdMobDtlUrl",
             '10' AS "prdType",        -- 여행상품
             COALESCE(p.detail_content, p.description, '') AS "prdDesc",
             to_char(p.created_at, 'YYYYMMDDHH24MISS') AS "regDate",
