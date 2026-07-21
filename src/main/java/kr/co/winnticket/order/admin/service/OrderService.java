@@ -12,6 +12,7 @@ import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
 import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
 import kr.co.winnticket.integration.benepia.order.service.BenepiaOrderService;
+import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import kr.co.winnticket.integration.coreworks.service.CoreWorksService;
 import kr.co.winnticket.integration.lscompany.service.LsCompanyService;
 import kr.co.winnticket.integration.mair.service.MairService;
@@ -61,6 +62,7 @@ public class OrderService {
     private final AquaPlanetService aquaplanetService;
     private final KcpService kcpService;
     private final BenepiaCredentialStore benepiaCredentialStore;
+    private final PointVoucherService pointVoucherService;
     private final LsCompanyService lsCompanyService;
     private final MairService mairService;
 
@@ -176,6 +178,28 @@ public class OrderService {
             benepiaCredentialStore.delete(auId);
         }
 
+        // ===== 카드+이용권 혼합결제: 카드 확정 후 이용권 차감 =====
+        // 이용권은 외부 시스템이 아닌 내부 잔액이라 credential store가 필요 없고,
+        // voucher_number/voucher_amount는 주문 생성 시점에 이미 orders 테이블에 저장돼 있다.
+        boolean hasVoucher = order.getVoucherAmount() != null && order.getVoucherAmount() > 0
+                && (order.getPaymentMethod() == PaymentMethod.CARD
+                || order.getPaymentMethod() == PaymentMethod.KAKAOPAY);
+
+        boolean voucherRedeemed = false;
+
+        if (hasVoucher) {
+            try {
+                pointVoucherService.redeem(order.getVoucherNumber(), order.getVoucherAmount(), order.getOrderNumber());
+                voucherRedeemed = true;
+                log.info("[혼합결제] 이용권 차감 완료 orderId={}, voucherNumber={}", auId, order.getVoucherNumber());
+            } catch (Exception e) {
+                log.error("[혼합결제] 이용권 차감 실패 orderId={}", auId, e);
+                // 포인트가 이미 차감된 상태일 수 있으므로 hybridKcpTno도 함께 전달해 카드+포인트 보상
+                throw new PaymentCompensationException(auId, hybridKcpTno,
+                        "이용권 잔액 부족 또는 이용권 사용 오류. 결제가 취소되었습니다.", e);
+            }
+        }
+
         // 결제 상태 / 결제일시 업데이트
         // SQL 조건: payment_status != 'PAID' → 동시에 두 콜백이 들어와도 한쪽만 성공
         // 이미 다른 스레드가 처리했으면 0건 반환 → 후속 처리(쿠폰발행/SMS) 중복 방지
@@ -277,11 +301,14 @@ public class OrderService {
                 }
             });
         } catch (PaymentCompensationException ce) {
+            ce.setVoucherRedeemed(voucherRedeemed);
             throw ce; // 이미 보상 컨텍스트를 가진 예외는 그대로 전파
         } catch (Exception e) {
-            log.error("[결제완료 후처리 실패] 카드/포인트 환불 보상 진행 orderId={}", auId, e);
-            throw new PaymentCompensationException(auId, hybridKcpTno,
+            log.error("[결제완료 후처리 실패] 카드/포인트/이용권 환불 보상 진행 orderId={}", auId, e);
+            PaymentCompensationException ce = new PaymentCompensationException(auId, hybridKcpTno,
                     "발권 처리 실패로 결제가 취소되었습니다.", e);
+            ce.setVoucherRedeemed(voucherRedeemed);
+            throw ce;
         }
     }
 
@@ -295,9 +322,10 @@ public class OrderService {
      * completePayment 안에서가 아니라 트랜잭션 밖에서 호출한다.
      *
      * @param kcpTno 혼합결제에서 차감된 포인트 tno (차감 안 됐으면 null)
+     * @param voucherRedeemed 혼합결제에서 이용권이 실제로 차감됐는지 (차감 안 됐으면 false)
      */
-    public void compensateFailedPayment(UUID orderId, String kcpTno) {
-        log.warn("[결제보상] 시작 orderId={}, kcpTno={}", orderId, kcpTno);
+    public void compensateFailedPayment(UUID orderId, String kcpTno, boolean voucherRedeemed) {
+        log.warn("[결제보상] 시작 orderId={}, kcpTno={}, voucherRedeemed={}", orderId, kcpTno, voucherRedeemed);
 
         // 1. 카드 전액 환불 (paymentKey 있을 때만, 수수료 0)
         try {
@@ -319,7 +347,20 @@ public class OrderService {
             }
         }
 
-        // 3. 주문 실패 처리 + 재고/예약쿠폰 복구
+        // 3. 이용권 복원 (차감된 경우만) - voucher_number/amount는 주문 생성 시점에 저장돼 롤백돼도 남아있음
+        if (voucherRedeemed) {
+            try {
+                OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
+                if (order != null && order.getVoucherNumber() != null && order.getVoucherAmount() != null) {
+                    pointVoucherService.restore(order.getVoucherNumber(), order.getVoucherAmount(), order.getOrderNumber());
+                    log.info("[결제보상] 이용권 복원 완료 orderId={}", orderId);
+                }
+            } catch (Exception e) {
+                log.error("[결제보상] 이용권 복원 실패 — 관리자 확인 필요 orderId={}", orderId, e);
+            }
+        }
+
+        // 4. 주문 실패 처리 + 재고/예약쿠폰 복구
         orderCleanupService.cancelToFailedIfRequested(orderId);
         orderCleanupService.restoreStock(orderId);
         orderCleanupService.restoreCoupons(orderId);

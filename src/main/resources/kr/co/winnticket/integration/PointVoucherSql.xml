@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.winnticket.integration.benepia.pointVoucher.mapper.PointVoucherMapper">
+
+    <!-- 기존 미인증 코드 무효화 (만료 처리) -->
+    <update id="invalidatePendingVerifications">
+        UPDATE phone_verification
+        SET expires_at = now()
+        WHERE phone = #{phone}
+          AND purpose = #{purpose}
+          AND verified_at IS NULL
+    </update>
+
+    <!-- 인증번호 저장 -->
+    <insert id="insertPhoneVerification">
+        INSERT INTO phone_verification
+        (
+            id,
+            phone,
+            code,
+            purpose,
+            expires_at,
+            customer_name,
+            benepia_id,
+            created_at
+        )
+        VALUES
+        (
+            #{id},
+            #{phone},
+            #{code},
+            #{purpose},
+            #{expiresAt},
+            #{customerName},
+            #{benepiaId},
+            now()
+        )
+    </insert>
+
+    <!-- 유효한(미인증, 미만료, 코드일치) 인증 레코드 조회 -->
+    <select id="findValidVerificationId" resultType="java.util.UUID">
+        SELECT id
+        FROM phone_verification
+        WHERE phone = #{phone}
+          AND purpose = #{purpose}
+          AND code = #{code}
+          AND verified_at IS NULL
+          AND expires_at >= now()
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 인증 완료 처리 -->
+    <update id="markVerificationVerified">
+        UPDATE phone_verification
+        SET verified_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 최근 인증완료 이력 존재 여부 확인용 카운트 -->
+    <select id="countRecentVerifiedPhone" resultType="int">
+        SELECT COUNT(1)
+        FROM phone_verification
+        WHERE phone = #{phone}
+          AND purpose = #{purpose}
+          AND verified_at IS NOT NULL
+          AND verified_at >= #{since}
+    </select>
+
+    <!-- 이용권번호 중복 체크 -->
+    <select id="findVoucherIdByNumber" resultType="java.util.UUID">
+        SELECT id
+        FROM point_voucher
+        WHERE voucher_number = #{voucherNumber}
+    </select>
+
+    <!-- 이용권 발급 -->
+    <insert id="insertVoucher">
+        INSERT INTO point_voucher
+        (
+            id,
+            voucher_number,
+            benepia_id,
+            customer_name,
+            phone,
+            channel_id,
+            total_amount,
+            used_amount,
+            remaining_amount,
+            valid_from,
+            valid_until,
+            status,
+            created_at,
+            updated_at
+        )
+        VALUES
+        (
+            #{id},
+            #{voucherNumber},
+            #{benepiaId},
+            #{customerName},
+            #{phone},
+            #{channelId},
+            #{totalAmount},
+            #{usedAmount},
+            #{remainingAmount},
+            #{validFrom},
+            #{validUntil},
+            'ACTIVE',
+            now(),
+            now()
+        )
+    </insert>
+
+    <!-- 이용권 상세 조회 (사용/차감 처리용) -->
+    <select id="findVoucherDetailByNumber" resultType="kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherDetailDto">
+        SELECT
+            id,
+            voucher_number,
+            benepia_id,
+            customer_name,
+            phone,
+            total_amount,
+            used_amount,
+            remaining_amount,
+            status,
+            valid_from,
+            valid_until
+        FROM point_voucher
+        WHERE voucher_number = #{voucherNumber}
+    </select>
+
+    <!-- 이용권 차감 (동시성 가드: remaining_amount가 충분할 때만 적용) -->
+    <update id="deductVoucherAmount">
+        UPDATE point_voucher
+        SET used_amount = used_amount + #{amount},
+            remaining_amount = remaining_amount - #{amount},
+            updated_at = now()
+        WHERE id = #{id}
+          AND remaining_amount >= #{amount}
+    </update>
+
+    <!-- 이용권 복원 (보상 처리 시 차감을 되돌림) -->
+    <update id="restoreVoucherAmount">
+        UPDATE point_voucher
+        SET used_amount = used_amount - #{amount},
+            remaining_amount = remaining_amount + #{amount},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 특정 주문에 대한 사용이력 삭제 (보상 처리 시) -->
+    <delete id="deleteVoucherUsageByOrderNumber">
+        DELETE FROM point_voucher_usage
+        WHERE voucher_id = #{voucherId}
+          AND order_number = #{orderNumber}
+    </delete>
+
+    <!-- 이용권 사용이력 기록 -->
+    <insert id="insertVoucherUsage">
+        INSERT INTO point_voucher_usage
+        (
+            id,
+            voucher_id,
+            voucher_number,
+            customer_name,
+            benepia_id,
+            order_number,
+            used_at,
+            amount_before,
+            used_amount,
+            amount_after
+        )
+        VALUES
+        (
+            #{id},
+            #{voucherId},
+            #{voucherNumber},
+            #{customerName},
+            #{benepiaId},
+            #{orderNumber},
+            now(),
+            #{amountBefore},
+            #{usedAmount},
+            #{amountAfter}
+        )
+    </insert>
+
+</mapper>
