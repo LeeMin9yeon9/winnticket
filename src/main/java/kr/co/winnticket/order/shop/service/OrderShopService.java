@@ -242,6 +242,10 @@ public class OrderShopService {
         }
 
         if (voucherAmount > 0) {
+            // 이용권도 포인트와 마찬가지로 베네피아 채널에서만 사용 가능
+            if (!Boolean.TRUE.equals(usePoint)) {
+                throw new IllegalArgumentException("해당 채널에서는 이용권 결제가 불가능합니다.");
+            }
             if (voucherNumber == null || voucherNumber.isBlank()) {
                 throw new IllegalArgumentException("이용권 번호가 필요합니다.");
             }
