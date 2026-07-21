@@ -33,7 +33,7 @@ public class S3FileService implements FileStorageService {
     private static final List<String> ALLOWED_EXT =
             List.of("jpg", "jpeg", "png", "gif", "webp");
 
-    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024; // 10MB
+    private static final long MAX_FILE_SIZE = 30L * 1024 * 1024; // 30MB (프론트 검증 기준과 일치)
 
 
     @Override
@@ -114,7 +114,7 @@ public class S3FileService implements FileStorageService {
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("파일 크기 초과 (최대 10MB)");
+            throw new IllegalArgumentException("파일 크기 초과 (최대 30MB)");
         }
 
         String originalName = file.getOriginalFilename();
