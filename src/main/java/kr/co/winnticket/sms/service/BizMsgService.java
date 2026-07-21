@@ -28,9 +28,15 @@ public class BizMsgService {
                         String sendName,
                         String message) {
 
+        log.info("[SMS 발송 진입] thread={}, cmid={}, destPhone={}",
+                Thread.currentThread().getName(), cmid, destPhone);
+
         try {
             // 중복 방지: cmid가 이미 있으면 스킵
-            if (existsCmid(cmid)) return;
+            if (existsCmid(cmid)) {
+                log.info("[SMS 발송 스킵] 이미 존재하는 cmid={}", cmid);
+                return;
+            }
 
             int msgType = decideMsgType(message);
 
@@ -45,7 +51,7 @@ public class BizMsgService {
                 VALUES (?, ?, 0, NOW(), NOW(), ?, ?, ?, ?, ?)
             """;
 
-            jdbcTemplate.update(sql,
+            int updated = jdbcTemplate.update(sql,
                     cmid,
                     msgType,
                     destPhone,
@@ -54,6 +60,8 @@ public class BizMsgService {
                     sendName,
                     message
             );
+
+            log.info("[SMS 발송 INSERT 완료] cmid={}, updatedRows={}", cmid, updated);
         } catch (Exception e) {
             // @Async 메서드의 예외는 호출자에게 전파되지 않음
             // 로그만 남기고 종료 (SMS 실패가 시스템 장애로 이어지지 않도록)
