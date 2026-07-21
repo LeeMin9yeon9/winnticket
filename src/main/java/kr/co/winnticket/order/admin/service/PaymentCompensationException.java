@@ -17,6 +17,7 @@ public class PaymentCompensationException extends RuntimeException {
 
     private final UUID orderId;
     private final String kcpTno; // 혼합결제에서 차감된 포인트 tno (없으면 null)
+    private boolean voucherRedeemed = false; // 혼합결제에서 이용권이 실제로 차감됐는지 (보상 시 복원 필요 여부)
 
     public PaymentCompensationException(UUID orderId, String kcpTno, String message) {
         super(message);
@@ -36,5 +37,13 @@ public class PaymentCompensationException extends RuntimeException {
 
     public String getKcpTno() {
         return kcpTno;
+    }
+
+    public boolean isVoucherRedeemed() {
+        return voucherRedeemed;
+    }
+
+    public void setVoucherRedeemed(boolean voucherRedeemed) {
+        this.voucherRedeemed = voucherRedeemed;
     }
 }

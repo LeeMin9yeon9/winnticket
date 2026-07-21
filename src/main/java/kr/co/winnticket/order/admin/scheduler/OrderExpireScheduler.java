@@ -4,6 +4,7 @@ import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.lock.SchedulerLock;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderItemOptionDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
@@ -21,6 +22,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
@@ -33,6 +35,7 @@ public class OrderExpireScheduler {
     private final OrderShopMapper mapper;
     private final OrderMapper orderMapper;
     private final KcpService kcpService;
+    private final PointVoucherService pointVoucherService;
     private final TicketCouponService ticketCouponService;
     private final OrderPostPaymentService orderPostPaymentService;
     private final SchedulerLock schedulerLock;
@@ -82,6 +85,16 @@ public class OrderExpireScheduler {
                     kcpService.cancelPoint(dto);
 
                     log.info("포인트 환불 완료 order={}", orderNumber);
+                }
+
+                // 이용권 환불(복원)
+                Map<String, Object> voucherInfo = orderMapper.selectOrderVoucherInfo(orderNumber);
+                String voucherNumber = voucherInfo != null ? (String) voucherInfo.get("voucherNumber") : null;
+                Integer voucherAmount = voucherInfo != null ? (Integer) voucherInfo.get("voucherAmount") : null;
+
+                if (voucherNumber != null && voucherAmount != null && voucherAmount > 0) {
+                    pointVoucherService.restore(voucherNumber, voucherAmount, orderNumber);
+                    log.info("이용권 환불 완료 order={}", orderNumber);
                 }
 
                 // 재고 + 예약 쿠폰 복구 (orderId 필요)

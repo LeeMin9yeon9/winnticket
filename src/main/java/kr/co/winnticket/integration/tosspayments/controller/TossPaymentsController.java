@@ -66,7 +66,7 @@ public class TossPaymentsController {
             // 트랜잭션은 이미 롤백(잠금 해제)됐으므로 여기서 카드/포인트를 환불(보상)한다.
             log.error("[TOSS] confirm 실패 - 결제 보상(환불) 진행 orderId={}", ce.getOrderId(), ce);
             try {
-                orderService.compensateFailedPayment(ce.getOrderId(), ce.getKcpTno());
+                orderService.compensateFailedPayment(ce.getOrderId(), ce.getKcpTno(), ce.isVoucherRedeemed());
             } catch (Exception compEx) {
                 log.error("[TOSS] 결제 보상 실패 - 관리자 확인 필요 orderId={}", ce.getOrderId(), compEx);
             }

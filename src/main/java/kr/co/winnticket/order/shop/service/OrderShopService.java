@@ -11,6 +11,7 @@ import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
 import kr.co.winnticket.integration.benepia.kcp.service.BenepiaCredentialStore;
 import kr.co.winnticket.integration.benepia.kcp.service.KcpService;
+import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import kr.co.winnticket.integration.benepia.sso.dto.BenepiaDecryptedParamDto;
 // Toss Payments - 카드/간편결제 PG 연동
 // Payletter는 제거됨
@@ -67,6 +68,7 @@ public class OrderShopService {
     private final TicketCouponMapper ticketCouponMapper;
     private final kr.co.winnticket.ticketCoupon.service.TicketCouponService ticketCouponService;
     private final SiteInfoService siteInfoService;
+    private final PointVoucherService pointVoucherService;
 
     @Transactional(readOnly = true)
     public OrderShopGetResDto selectOrderShop(UUID channelId, String orderNumber) {
@@ -225,15 +227,46 @@ public class OrderShopService {
         log.info("==== 토탈가격 - orderTotalPrice={}", orderTotalPrice);
         log.info("==== 최종가격 - finalPrice={}", finalPrice);
 
-        // 최종 결제금액 - 포인트 금액
-        int pgAmount = finalPrice - pointAmount;
+        // 이용권 사용 금액
+        // 허용 조합: 카드+포인트 / 카드+이용권 / 포인트+이용권 / 무통장+이용권 / 무통장+포인트
+        // 금지: 카드(또는 무통장)+포인트+이용권 3중 혼합 - 포인트+이용권 조합은 paymentMethod=POINT일 때만 허용
+        int voucherAmount = reqDto.getVoucherAmount() == null ? 0 : reqDto.getVoucherAmount();
+        String voucherNumber = reqDto.getVoucherNumber();
+
+        if (pointAmount > 0 && voucherAmount > 0 && paymentMethod != PaymentMethod.POINT) {
+            throw new IllegalArgumentException("포인트와 이용권은 동시에 사용할 수 없습니다.");
+        }
+
+        if (paymentMethod == PaymentMethod.POINT && voucherAmount > 0 && pointAmount + voucherAmount != finalPrice) {
+            throw new IllegalArgumentException("포인트+이용권 합계가 결제금액과 일치하지 않습니다.");
+        }
+
+        if (voucherAmount > 0) {
+            if (voucherNumber == null || voucherNumber.isBlank()) {
+                throw new IllegalArgumentException("이용권 번호가 필요합니다.");
+            }
+            // 사전 검증 - 카드는 승인 콜백 이후(completePayment) 실제 차감, 무통장/포인트는 아래에서 바로 차감
+            var voucherInfo = pointVoucherService.lookup(voucherNumber);
+            if (!"ACTIVE".equals(voucherInfo.getStatus())) {
+                throw new IllegalArgumentException("사용할 수 없는 이용권입니다.");
+            }
+            if (voucherInfo.getValidUntil() != null && voucherInfo.getValidUntil().isBefore(LocalDateTime.now())) {
+                throw new IllegalArgumentException("사용기한이 지난 이용권입니다.");
+            }
+            if (voucherInfo.getRemainingAmount() < voucherAmount) {
+                throw new IllegalArgumentException("이용권 잔여금액이 부족합니다.");
+            }
+        }
+
+        // 최종 결제금액 - 포인트 금액 - 이용권 금액
+        int pgAmount = finalPrice - pointAmount - voucherAmount;
 
         if (pointAmount > finalPrice) {
             throw new IllegalArgumentException("포인트가 결제금액보다 큽니다.");
         }
 
         if (pgAmount < 0) {
-            throw new IllegalArgumentException("포인트 금액 오류");
+            throw new IllegalArgumentException("포인트/이용권 금액 오류");
         }
 
         int bankAmount = 0;
@@ -247,9 +280,9 @@ public class OrderShopService {
         ) {
             cardAmount = pgAmount;
         }
-        mapper.updateOrderPrice(orderId, finalPrice, pointAmount,bankAmount, cardAmount);
+        mapper.updateOrderPrice(orderId, finalPrice, pointAmount, bankAmount, cardAmount, voucherNumber, voucherAmount);
 
-        log.info("결제금액 구조 finalPrice={}, pointAmount={}, pgAmount={}", finalPrice, pointAmount, pgAmount);
+        log.info("결제금액 구조 finalPrice={}, pointAmount={}, voucherAmount={}, pgAmount={}", finalPrice, pointAmount, voucherAmount, pgAmount);
 
         OrderCreateResDto resDto = new OrderCreateResDto();
         resDto.setOrderId(orderId);
@@ -295,6 +328,19 @@ public class OrderShopService {
                 } catch (Exception e) {
                     log.error("[무통장+포인트] 포인트 차감 실패 orderId={}", orderId, e);
                     throw new RuntimeException("포인트 결제 실패");
+                }
+            }
+
+            // 이용권 사용 시 즉시 차감 (무통장은 입금 대기 중에도 이용권을 먼저 차감)
+            // 입금기한 초과 시 OrderExpireScheduler가 이용권을 자동 복원
+            // (createOrder 전체가 하나의 트랜잭션이라 이후 단계 실패 시 이 차감은 자동 롤백됨)
+            if (voucherAmount > 0) {
+                try {
+                    pointVoucherService.redeem(voucherNumber, voucherAmount, orderNumber);
+                    log.info("[무통장+이용권] 이용권 선차감 완료 orderId={}", orderId);
+                } catch (Exception e) {
+                    log.error("[무통장+이용권] 이용권 차감 실패 orderId={}", orderId, e);
+                    throw new RuntimeException("이용권 결제 실패");
                 }
             }
 
@@ -373,6 +419,28 @@ public class OrderShopService {
 
             String kcpTno = pointPayRes.getTno();
             log.info("[POINT] 포인트 단독결제 성공 orderId={}, tno={}", orderId, kcpTno);
+
+            // 포인트+이용권 조합인 경우 이용권도 차감 (실패 시 이미 차감된 포인트를 롤백)
+            if (voucherAmount > 0) {
+                try {
+                    pointVoucherService.redeem(voucherNumber, voucherAmount, orderNumber);
+                    log.info("[포인트+이용권] 이용권 차감 완료 orderId={}", orderId);
+                } catch (Exception e) {
+                    log.error("[포인트+이용권] 이용권 차감 실패, 포인트 롤백 시도 orderId={}", orderId, e);
+                    if (kcpTno != null) {
+                        try {
+                            KcpPointCancelReqDto cancelDto = new KcpPointCancelReqDto();
+                            cancelDto.setTno(kcpTno);
+                            cancelDto.setCancelReason("이용권 차감 실패 롤백");
+                            kcpService.cancelPoint(cancelDto);
+                            log.info("[POINT ROLLBACK] 포인트 자동 복구 완료 orderId={}, tno={}", orderId, kcpTno);
+                        } catch (Exception rollbackError) {
+                            log.error("[POINT ROLLBACK FAIL] 관리자 확인 필요 orderId={}, tno={}", orderId, kcpTno, rollbackError);
+                        }
+                    }
+                    throw new RuntimeException("이용권 결제 실패");
+                }
+            }
 
             try {
                 orderService.completePayment(orderId);

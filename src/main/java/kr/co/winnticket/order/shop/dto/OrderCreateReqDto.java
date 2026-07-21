@@ -64,6 +64,12 @@ public class OrderCreateReqDto {
     private String benepiaId;
     private String benepiaPwd;
 
+    @Schema(description = "사용할 이용권 번호 (카드 결제와만 함께 사용 가능)")
+    private String voucherNumber;
+
+    @Schema(description = "이용권 사용 금액", example = "0")
+    private Integer voucherAmount;
+
 
     //@Schema(description = "PG 결제수단 코드(CARD일 때만 사용)", example = "creditcard")
     //private String pgCode;

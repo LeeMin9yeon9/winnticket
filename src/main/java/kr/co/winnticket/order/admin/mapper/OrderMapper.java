@@ -149,6 +149,9 @@ public interface OrderMapper {
     // 포인트 취소시 tno(주문번호) 조회
     String selectPointTno(@Param("orderNumber") String orderNumber);
 
+    // 이용권 환불(복원)을 위한 이용권번호/사용금액 조회
+    Map<String, Object> selectOrderVoucherInfo(@Param("orderNumber") String orderNumber);
+
     // 입금 완료 시 deadline 제거
     void clearDepositDeadline(@Param("orderId") UUID orderId);
 
