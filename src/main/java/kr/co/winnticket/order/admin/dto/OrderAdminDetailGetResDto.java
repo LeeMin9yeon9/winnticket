@@ -79,6 +79,12 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "포인트금액")
     private Integer pointAmount;
 
+    @Schema(description = "사용한 이용권 번호")
+    private String voucherNumber;
+
+    @Schema(description = "이용권 사용 금액")
+    private Integer voucherAmount;
+
     @Schema(description = "PG사")
     private String pgProvider;
 

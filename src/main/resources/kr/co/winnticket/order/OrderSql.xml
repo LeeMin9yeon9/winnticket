@@ -338,6 +338,8 @@
             ) USED_TICKET_CNT,  -- 사용티켓수
             a.benepia_id,  -- 베네피아id
             a.point_amount,  -- 포인트결제금액
+            a.voucher_number, -- 사용한 이용권 번호
+            a.voucher_amount, -- 이용권 사용금액
             a.memo, -- 요청사항
             (
                 SELECT p.name FROM partners p
@@ -790,6 +792,15 @@
     <!--포인트 취소 시 주문번호 조회-->
     <select id="selectPointTno" resultType="string">
         SELECT point_tid
+        FROM orders
+        WHERE order_number = #{orderNumber}
+    </select>
+
+    <!-- 이용권 환불(복원)을 위한 이용권번호/사용금액 조회 -->
+    <select id="selectOrderVoucherInfo" resultType="map">
+        SELECT
+            voucher_number AS "voucherNumber",
+            voucher_amount AS "voucherAmount"
         FROM orders
         WHERE order_number = #{orderNumber}
     </select>
