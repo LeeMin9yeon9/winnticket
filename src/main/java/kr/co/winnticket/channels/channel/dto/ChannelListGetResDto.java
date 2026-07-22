@@ -42,5 +42,10 @@ public class ChannelListGetResDto {
     @Schema(description = "포인트 사용 여부" ,example = "false")
     private Boolean usePoint;
 
+    @Schema(description = "포인트 변경 페이지 사용 여부", example = "false")
+    private Boolean usePointChange;
+
+    @Schema(description = "이용권 발급 후 관리자가 취소 가능한 기간(일). null이면 취소 불가")
+    private Integer voucherCancelDays;
 
 }
