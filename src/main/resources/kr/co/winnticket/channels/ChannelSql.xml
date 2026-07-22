@@ -16,7 +16,8 @@
         c.domain,
         COALESCE(c.use_card, false) AS useCard,
         COALESCE(c.use_point, false) AS usePoint,
-        COALESCE(c.use_point_change, false) AS usePointChange
+        COALESCE(c.use_point_change, false) AS usePointChange,
+        c.voucher_cancel_days AS voucherCancelDays
 
         FROM channels c
 
@@ -91,6 +92,10 @@
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
             COALESCE(use_point_change, false) AS usePointChange,
+            voucher_cancel_days AS voucherCancelDays,
+            voucher_banner_url AS voucherBannerUrl,
+            voucher_usage_guide AS voucherUsageGuide,
+            voucher_sms_template AS voucherSmsTemplate,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
@@ -117,6 +122,10 @@
             <if test="model.useCard != null">USE_CARD = #{model.useCard},</if>
             <if test="model.usePoint != null">USE_POINT = #{model.usePoint},</if>
             <if test="model.usePointChange != null">USE_POINT_CHANGE = #{model.usePointChange},</if>
+            <if test="model.voucherCancelDays != null">VOUCHER_CANCEL_DAYS = #{model.voucherCancelDays},</if>
+            <if test="model.voucherBannerUrl != null">VOUCHER_BANNER_URL = #{model.voucherBannerUrl},</if>
+            <if test="model.voucherUsageGuide != null">VOUCHER_USAGE_GUIDE = #{model.voucherUsageGuide},</if>
+            <if test="model.voucherSmsTemplate != null">VOUCHER_SMS_TEMPLATE = #{model.voucherSmsTemplate},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
@@ -188,6 +197,10 @@
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
             COALESCE(use_point_change, false) AS usePointChange,
+            voucher_cancel_days AS voucherCancelDays,
+            voucher_banner_url AS voucherBannerUrl,
+            voucher_usage_guide AS voucherUsageGuide,
+            voucher_sms_template AS voucherSmsTemplate,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels

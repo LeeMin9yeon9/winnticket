@@ -85,6 +85,15 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "이용권 사용 금액")
     private Integer voucherAmount;
 
+    @Schema(description = "이용권 소유자 이름 (결제자와 다를 수 있음)")
+    private String voucherOwnerName;
+
+    @Schema(description = "이용권 소유자 베네피아 아이디")
+    private String voucherOwnerBenepiaId;
+
+    @Schema(description = "이용권 잔여금액 (이번 주문 결제 이후 기준)")
+    private Integer voucherRemainingAmount;
+
     @Schema(description = "PG사")
     private String pgProvider;
 
