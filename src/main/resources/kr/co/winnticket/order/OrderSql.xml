@@ -329,6 +329,15 @@
             a.point_amount,  -- 포인트결제금액
             a.voucher_number, -- 사용한 이용권 번호
             a.voucher_amount, -- 이용권 사용금액
+            (
+                SELECT v.customer_name FROM point_voucher v WHERE v.voucher_number = a.voucher_number
+            ) AS voucher_owner_name, -- 이용권 소유자 이름
+            (
+                SELECT v.benepia_id FROM point_voucher v WHERE v.voucher_number = a.voucher_number
+            ) AS voucher_owner_benepia_id, -- 이용권 소유자 베네피아 아이디
+            (
+                SELECT v.remaining_amount FROM point_voucher v WHERE v.voucher_number = a.voucher_number
+            ) AS voucher_remaining_amount, -- 이용권 잔여금액
             a.memo, -- 요청사항
             (
                 SELECT p.name FROM partners p

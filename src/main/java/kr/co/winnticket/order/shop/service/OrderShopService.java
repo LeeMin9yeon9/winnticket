@@ -241,6 +241,11 @@ public class OrderShopService {
             throw new IllegalArgumentException("포인트+이용권 합계가 결제금액과 일치하지 않습니다.");
         }
 
+        // 이용권 단독결제(GIFT): 포인트 없이 이용권 금액만으로 결제금액 전액을 충당해야 함
+        if (paymentMethod == PaymentMethod.GIFT && (pointAmount > 0 || voucherAmount != finalPrice)) {
+            throw new IllegalArgumentException("이용권 단독결제는 이용권 금액이 결제금액과 정확히 일치해야 합니다.");
+        }
+
         if (voucherAmount > 0) {
             // 이용권도 포인트와 마찬가지로 베네피아 채널에서만 사용 가능
             if (!Boolean.TRUE.equals(usePoint)) {
@@ -380,6 +385,29 @@ public class OrderShopService {
                     }
             );
 
+
+            return resDto;
+        }
+        if (paymentMethod == PaymentMethod.GIFT) {
+
+            // 이용권 단독결제 - 포인트/카드/무통장 없이 이용권 금액만으로 전액 결제
+            // createOrder 전체가 하나의 트랜잭션이라 completePayment 실패 시 이 차감은 자동 롤백됨
+            try {
+                pointVoucherService.redeem(voucherNumber, voucherAmount, orderNumber);
+                log.info("[이용권 단독결제] 이용권 차감 완료 orderId={}", orderId);
+            } catch (Exception e) {
+                log.error("[이용권 단독결제] 이용권 차감 실패 orderId={}", orderId, e);
+                throw new RuntimeException("이용권 결제 실패");
+            }
+
+            try {
+                orderService.completePayment(orderId);
+            } catch (Exception e) {
+                log.error("[이용권 단독결제] completePayment 실패 orderId={}", orderId, e);
+                throw new RuntimeException("이용권 결제 실패");
+            }
+
+            resDto.setPaymentStatus("PAID");
 
             return resDto;
         }

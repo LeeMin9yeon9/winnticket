@@ -27,4 +27,7 @@ public class PointVoucherDetailDto {
     private String status;
     private LocalDateTime validFrom;
     private LocalDateTime validUntil;
+    private String pointTid;
+    private UUID channelId;
+    private Integer voucherCancelDays;
 }
