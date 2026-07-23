@@ -21,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/benepia/voucher")
-@Tag(name = "ADMIN 베네피아 이용권 관리", description = "")
+@Tag(name = "이용권 - 관리자", description = "발급된 이용권 목록/상세 조회 및 취소. 관리자 JWT(ROLE001) 필요")
 public class PointVoucherAdminController {
 
     private final PointVoucherService pointVoucherService;

@@ -70,7 +70,7 @@ public class ChannelAdminController {
     }
 
     @PatchMapping("/{id}/info")
-    @Operation(summary = "채널 정보 수정" ,description = "채널의 정보를 수정합니다.")
+    @Operation(summary = "채널 정보 수정", description = "채널의 정보를 부분 수정합니다(보낸 필드만 반영). 이용권 관련 설정(voucherCancelDays, voucherBannerUrl, voucherUsageGuide, voucherSmsTemplate)도 이 API로 수정합니다. voucherSmsTemplate에는 {고객명}/{이용권번호}/{이용권금액}/{유효기간} 변수를 사용할 수 있습니다.")
     public ResponseEntity<ApiResponse<Void>> patchChannel(
             @Parameter(description = "채널_ID")
             @PathVariable UUID id,

@@ -41,7 +41,7 @@ public class OrderShopController {
 
     // 주문 생성
     @PostMapping
-    @Operation(summary = "주문 생성", description = "장바구니 정보를 기반으로 주문을 생성합니다.")
+    @Operation(summary = "주문 생성", description = "장바구니 정보를 기반으로 주문을 생성합니다. paymentMethod에 POINT(포인트 단독/포인트+이용권)·GIFT(이용권 단독결제, voucherAmount가 결제금액과 정확히 일치해야 함) 사용 가능. 이용권 결제 시 voucherNumber/voucherAmount 필수. 포인트+이용권 조합은 paymentMethod=POINT일 때만 허용되며, 카드/무통장과 포인트+이용권을 동시에 쓰는 3중 혼합은 금지됩니다.")
     public ResponseEntity<ApiResponse<OrderCreateResDto>> createOrder(
             @RequestBody @Valid OrderCreateReqDto model,
             HttpSession session
