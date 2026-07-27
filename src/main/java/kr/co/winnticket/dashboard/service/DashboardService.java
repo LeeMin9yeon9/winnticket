@@ -48,10 +48,10 @@ public class DashboardService {
         // 주문 취소 수 (기간 필터)
         res.setCancelOrderCount(mapper.selectCancelOrderCount(period));
 
-        // 이번달 주문 수 → 기간 필터와 동일하게
-        res.setThisMonthTotalOrderCount(mapper.selectTotalOrderCount(period));
-        res.setThisMonthOrderCount(mapper.selectOrderCount(period));
-        res.setThisMonthCancelOrderCount(mapper.selectCancelOrderCount(period));
+        // 이번달 주문 수 - 화면 상단의 기간(주간/월간/연간) 선택과 무관하게 항상 "이번 달"이어야 함
+        res.setThisMonthTotalOrderCount(mapper.selectTotalOrderCount("month"));
+        res.setThisMonthOrderCount(mapper.selectOrderCount("month"));
+        res.setThisMonthCancelOrderCount(mapper.selectCancelOrderCount("month"));
 
 
         // 파트너 별 매출 현황

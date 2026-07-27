@@ -28,11 +28,11 @@
     </select>
 
 
-    <!-- 전체 파트너 -->
+    <!-- 전체 파트너 (삭제 제외) -->
     <select id="selectPartnerCount" resultType="int">
         SELECT COUNT(*)
         FROM partners
-        WHERE status = 'ACTIVE'
+        WHERE status != 'DELETED'
     </select>
 
 
@@ -41,7 +41,6 @@
         SELECT COUNT(*)
         FROM partners
         WHERE status = 'ACTIVE'
-        AND visible = true
     </select>
 
 
@@ -49,8 +48,7 @@
     <select id="selectInactivePartnerCount" resultType="int">
         SELECT COUNT(*)
         FROM partners
-        WHERE status = 'ACTIVE'
-          AND visible = false
+        WHERE status = 'INACTIVE'
     </select>
 
 
@@ -120,7 +118,7 @@
         SELECT
             p.name AS partnerName,
             COUNT(DISTINCT pr.id) AS productCount,
-            COALESCE(SUM(oi.quantity),0) AS orderCount,
+            COUNT(DISTINCT o.id) AS orderCount,
             COALESCE(SUM(oi.total_price), 0) AS salesAmount,
             COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit
 
@@ -224,16 +222,16 @@
 
         SELECT
         DATE(o.created_at) AS date,
-        COALESCE(SUM(oi.quantity),0) AS orderCount,
+        COUNT(DISTINCT o.id) AS orderCount,
         COALESCE(SUM(oi.total_price), 0) AS salesAmount,
-        COALESCE(SUM(oi.total_price) - SUM(pov.base_price * oi.quantity), 0) AS netProfit
+        COALESCE(SUM(oi.total_price) - SUM(COALESCE(pov.base_price, 0) * oi.quantity), 0) AS netProfit
 
         FROM orders o
         JOIN order_items oi
         ON oi.order_id = o.id
-        JOIN order_item_options oio
+        LEFT JOIN order_item_options oio
         ON oio.order_item_id = oi.id
-        JOIN product_option_values pov
+        LEFT JOIN product_option_values pov
         ON pov.id = oio.option_value_id
 
         WHERE o.status = 'COMPLETED'
