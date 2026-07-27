@@ -49,6 +49,9 @@ public class OrderAdminListGetResDto {
     @Schema(description = "상품총금액")
     private int totalPrice;
 
+    @Schema(description = "상품(옵션)별 단가, 콤마로 구분 (예: 단일 상품이면 \"15000\", 옵션이 여러개면 \"15000,20000\")")
+    private String unitPrices;
+
     @Schema(description = "주문금액")
     private int discountPrice;
 

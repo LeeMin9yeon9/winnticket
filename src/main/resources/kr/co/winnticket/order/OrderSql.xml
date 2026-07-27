@@ -50,6 +50,7 @@
                 STRING_AGG(DISTINCT b.product_name, ', ') AS product_name,
                 SUM(b.quantity) AS product_cnt,
                 a.total_price, -- 상품총금액
+                STRING_AGG(DISTINCT b.unit_price::text, ',' ORDER BY b.unit_price::text) AS unit_prices, -- 상품(옵션)별 단가
                 a.discount_price, -- 할인금액
                 a.status, -- 주문상태
                 a.payment_status, -- 결제상태
