@@ -91,19 +91,21 @@ public class PopupService {
 
         popup = popupRepository.save(popup);
 
-        // 채널 매핑
-        if (dto.getChannelIds() != null) {
-            for (String channelId : dto.getChannelIds()) {
+        // 채널 매핑 (프론트는 채널코드를 보내므로 UUID로 변환해서 저장)
+        if (dto.getChannelCodes() != null) {
+            for (String channelCode : dto.getChannelCodes()) {
+                UUID channelId = channelMapper.selectChannelIdByCode(channelCode);
+                if (channelId == null) continue;
                 PopupChannel ch = new PopupChannel();
                 ch.setPopup(popup);
-                ch.setChannelId(UUID.fromString(channelId));
+                ch.setChannelId(channelId);
                 popupChannelRepository.save(ch);
             }
         }
 
         // 페이지 매핑
-        if (dto.getPagePatterns() != null) {
-            for (String path : dto.getPagePatterns()) {
+        if (dto.getPagePaths() != null) {
+            for (String path : dto.getPagePaths()) {
                 PopupPage pg = new PopupPage();
                 pg.setPopup(popup);
                 pg.setPathPattern(path);
@@ -137,23 +139,25 @@ public class PopupService {
         if (dto.getLinkUrl() != null) popup.setLinkUrl(dto.getLinkUrl());
         if (dto.getLinkTarget() != null) popup.setLinkTarget(dto.getLinkTarget());
 
-        // 채널 매핑 갱신
-        if (dto.getChannelIds() != null) {
+        // 채널 매핑 갱신 (프론트는 채널코드를 보내므로 UUID로 변환해서 저장)
+        if (dto.getChannelCodes() != null) {
             popup.getChannels().clear();
             popupRepository.flush();
-            for (String channelId : dto.getChannelIds()) {
+            for (String channelCode : dto.getChannelCodes()) {
+                UUID channelId = channelMapper.selectChannelIdByCode(channelCode);
+                if (channelId == null) continue;
                 PopupChannel ch = new PopupChannel();
                 ch.setPopup(popup);
-                ch.setChannelId(UUID.fromString(channelId));
+                ch.setChannelId(channelId);
                 popup.getChannels().add(ch);
             }
         }
 
         // 페이지 매핑 갱신
-        if (dto.getPagePatterns() != null) {
+        if (dto.getPagePaths() != null) {
             popup.getPages().clear();
             popupRepository.flush();
-            for (String path : dto.getPagePatterns()) {
+            for (String path : dto.getPagePaths()) {
                 PopupPage pg = new PopupPage();
                 pg.setPopup(popup);
                 pg.setPathPattern(path);
@@ -346,13 +350,14 @@ public class PopupService {
         dto.setCreatedAt(popup.getCreatedAt());
         dto.setUpdatedAt(popup.getUpdatedAt());
 
-        dto.setChannelIds(
+        dto.setChannelCodes(
                 popup.getChannels().stream()
-                        .map(pc -> pc.getChannelId().toString())
+                        .map(pc -> channelMapper.selectChannelCodeById(pc.getChannelId()))
+                        .filter(code -> code != null)
                         .collect(Collectors.toList())
         );
 
-        dto.setPagePatterns(
+        dto.setPagePaths(
                 popup.getPages().stream()
                         .map(PopupPage::getPathPattern)
                         .collect(Collectors.toList())

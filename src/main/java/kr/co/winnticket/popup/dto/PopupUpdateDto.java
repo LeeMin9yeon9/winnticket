@@ -33,6 +33,6 @@ public class PopupUpdateDto {
     private String linkUrl;
     private String linkTarget;
 
-    private List<String> channelIds;
-    private List<String> pagePatterns;
+    private List<String> channelCodes;
+    private List<String> pagePaths;
 }
