@@ -38,8 +38,8 @@ public class PopupDto {
     private Long viewCount;
     private Long clickCount;
 
-    private List<String> channelIds;
-    private List<String> pagePatterns;
+    private List<String> channelCodes;
+    private List<String> pagePaths;
 
     private PopupStatus status;
     private LocalDateTime createdAt;
