@@ -167,6 +167,13 @@
           AND status != 'DELETED'
     </select>
 
+    <!-- 채널id로 code 찾기 -->
+    <select id="selectChannelCodeById" resultType="java.lang.String">
+        SELECT code
+        FROM channels
+        WHERE id = #{id}
+    </select>
+
     <!-- 기본채널찾기 -->
     <select id="selectDefaultChannelId" resultType="java.util.UUID">
         SELECT id
