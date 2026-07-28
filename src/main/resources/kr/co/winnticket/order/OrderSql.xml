@@ -216,6 +216,7 @@
 --         LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
         WHERE 1 = 1
           AND a.status != 'PENDING_PAYMENT'
+          AND a.payment_status != 'FAILED'
 
         <if test="srchWord != null and srchWord != ''">
             AND (
