@@ -8,6 +8,7 @@ import kr.co.winnticket.integration.playstory.service.PlaystoryService;
 import kr.co.winnticket.integration.plusn.service.PlusNService;
 import kr.co.winnticket.integration.smartinfini.service.SmartInfiniService;
 import kr.co.winnticket.integration.woongjin.service.WoongjinService;
+import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import kr.co.winnticket.order.admin.dto.OrderAdminDetailGetResDto;
 import kr.co.winnticket.order.admin.dto.OrderProductListGetResDto;
 import kr.co.winnticket.order.admin.dto.PartnerSplitResult;
@@ -48,6 +49,7 @@ public class OrderPostPaymentService {
     private final SmsTemplateFinder smsTemplateFinder;
     private final TemplateRenderService templateRenderService;
     private final SiteInfoService siteInfoService;
+    private final PointVoucherService pointVoucherService;
 
     // 파트너 서비스
     private final WoongjinService woongjinService;
@@ -163,9 +165,27 @@ public class OrderPostPaymentService {
                 "주문수량", String.valueOf(order.getAllCnt()),
                 "주문금액", String.valueOf(order.getTotalPrice()),
                 "입금계좌", buildAccountLines(),
-                "고객센터", selectCallNumber()
+                "고객센터", selectCallNumber(),
+                "이용권정보", buildVoucherRemainingLine(order)
         ));
         sendSms(order, message);
+    }
+
+    // 이 주문에 이용권이 사용됐으면 잔여 이용권 금액 안내 줄을 만들어 반환, 아니면 빈 문자열.
+    // order에 실려있는 voucherRemainingAmount는 조회 시점 스냅샷이라 혼합결제(카드+이용권)에서
+    // 이용권 차감 타이밍에 따라 오래된 값일 수 있어, 여기서 이용권을 다시 조회해 최신값을 사용.
+    private String buildVoucherRemainingLine(OrderAdminDetailGetResDto order) {
+        if (order.getVoucherAmount() == null || order.getVoucherAmount() <= 0
+                || order.getVoucherNumber() == null || order.getVoucherNumber().isBlank()) {
+            return "";
+        }
+        try {
+            var voucher = pointVoucherService.lookup(order.getVoucherNumber());
+            return "\n잔여 이용권: " + voucher.getRemainingAmount() + "원";
+        } catch (Exception e) {
+            log.error("[입금완료 SMS] 이용권 잔액 조회 실패 voucherNumber={}", order.getVoucherNumber(), e);
+            return "";
+        }
     }
 
     /** 발권완료 문자 발송 */
