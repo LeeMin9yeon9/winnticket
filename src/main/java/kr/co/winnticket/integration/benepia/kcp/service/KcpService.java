@@ -51,11 +51,17 @@ public class KcpService {
 
             String url = properties.getKcp().getBaseUrl() + "/gw/hub/v1/payment";
 
+            // 포인트 조회 시점엔 실제 주문이 아직 없어 orderNo가 null일 수 있음.
+            // ordr_idxx는 KCP 가이드상 조회 요청에도 필수 파라미터라 임시 주문번호로 대체.
+            String inquiryOrderNo = (dto.getOrderNo() != null)
+                    ? dto.getOrderNo()
+                    : "PT" + System.currentTimeMillis();
+
             Map<String, Object> body = new HashMap<>();
             body.put("site_cd", properties.getKcp().getSiteCd());
             body.put("kcp_cert_info", certInfo);
             body.put("pay_method", "POINT");
-            //body.put("ordr_idxx", dto.getOrderNo()); 빼도되는거같음
+            body.put("ordr_idxx", inquiryOrderNo);
             body.put("amount", dto.getAmount());
 
             body.put("pt_issue", "SCWB");
