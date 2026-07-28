@@ -96,6 +96,9 @@
             voucher_banner_url AS voucherBannerUrl,
             voucher_usage_guide AS voucherUsageGuide,
             voucher_sms_template AS voucherSmsTemplate,
+            voucher_validity_type AS voucherValidityType,
+            voucher_valid_days AS voucherValidDays,
+            voucher_valid_until_date AS voucherValidUntilDate,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels
@@ -126,6 +129,9 @@
             <if test="model.voucherBannerUrl != null">VOUCHER_BANNER_URL = #{model.voucherBannerUrl},</if>
             <if test="model.voucherUsageGuide != null">VOUCHER_USAGE_GUIDE = #{model.voucherUsageGuide},</if>
             <if test="model.voucherSmsTemplate != null">VOUCHER_SMS_TEMPLATE = #{model.voucherSmsTemplate},</if>
+            <if test="model.voucherValidityType != null">VOUCHER_VALIDITY_TYPE = #{model.voucherValidityType},</if>
+            <if test="model.voucherValidDays != null">VOUCHER_VALID_DAYS = #{model.voucherValidDays},</if>
+            <if test="model.voucherValidUntilDate != null">VOUCHER_VALID_UNTIL_DATE = #{model.voucherValidUntilDate},</if>
             UPDATED_AT = NOW()
         </set>
         WHERE ID = #{id}
@@ -208,6 +214,9 @@
             voucher_banner_url AS voucherBannerUrl,
             voucher_usage_guide AS voucherUsageGuide,
             voucher_sms_template AS voucherSmsTemplate,
+            voucher_validity_type AS voucherValidityType,
+            voucher_valid_days AS voucherValidDays,
+            voucher_valid_until_date AS voucherValidUntilDate,
             created_at AS createdAt,
             updated_at AS updatedAt
         FROM channels

@@ -69,6 +69,15 @@ public class ChannelPatchReqDto {
     @Schema(description = "이용권 발급 시 발송되는 SMS 문구 템플릿")
     private String voucherSmsTemplate;
 
+    @Schema(description = "이용권 유효기간 방식: NONE/FIXED_DATE/RELATIVE_DAYS")
+    private String voucherValidityType;
+
+    @Schema(description = "이용권 유효기간(RELATIVE_DAYS일 때) - 발급일로부터 n일")
+    private Integer voucherValidDays;
+
+    @Schema(description = "이용권 유효기간(FIXED_DATE일 때) - 이 날짜까지 사용 가능")
+    private java.time.LocalDate voucherValidUntilDate;
+
     public void setCode(String code) {
         if (code != null) {
             this.code = code.toUpperCase(); // 소문자로 들어와도 대문자로 변환

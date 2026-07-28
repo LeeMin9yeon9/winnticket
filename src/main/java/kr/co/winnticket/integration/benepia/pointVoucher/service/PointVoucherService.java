@@ -85,7 +85,7 @@ public class PointVoucherService {
 
         String voucherNumber = generateUniqueVoucherNumber();
         LocalDateTime validFrom = LocalDateTime.now();
-        LocalDateTime validUntil = validFrom.plusMonths(VOUCHER_VALID_MONTHS);
+        LocalDateTime validUntil = calculateValidUntil(req.getChannelId(), validFrom);
 
         try {
             mapper.insertVoucher(
@@ -289,6 +289,25 @@ public class PointVoucherService {
         } catch (Exception e) {
             log.error("[PointVoucher] 이용권 발급 SMS 발송 실패 voucherNumber={}", voucherNumber, e);
         }
+    }
+
+    // 채널의 이용권 유효기간 설정에 따라 만료 시각을 계산.
+    // valid_until 컬럼이 NOT NULL이라 "없음(제한없음)"은 100년 뒤 날짜로 대체.
+    private LocalDateTime calculateValidUntil(UUID channelId, LocalDateTime validFrom) {
+        ChannelInfoResGetDto channel = channelId != null ? channelMapper.selectChannel(channelId) : null;
+        String validityType = channel != null ? channel.getVoucherValidityType() : null;
+
+        if ("NONE".equals(validityType)) {
+            return validFrom.plusYears(100);
+        }
+        if ("FIXED_DATE".equals(validityType) && channel.getVoucherValidUntilDate() != null) {
+            return channel.getVoucherValidUntilDate().atTime(23, 59, 59);
+        }
+        if ("RELATIVE_DAYS".equals(validityType) && channel.getVoucherValidDays() != null) {
+            return validFrom.plusDays(channel.getVoucherValidDays());
+        }
+        // 채널 설정이 없으면 기존 기본값(발급일+12개월) 유지
+        return validFrom.plusMonths(VOUCHER_VALID_MONTHS);
     }
 
     private String generateUniqueVoucherNumber() {
