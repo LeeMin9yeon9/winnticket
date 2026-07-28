@@ -227,13 +227,13 @@ public class PointVoucherService {
         if (voucher.getUsedAmount() != null && voucher.getUsedAmount() > 0) {
             throw new IllegalStateException("이미 사용된 이용권은 취소할 수 없습니다.");
         }
-        if (voucher.getVoucherCancelDays() == null) {
+        if (voucher.getVoucherCancelDeadline() == null) {
             throw new IllegalStateException("이 채널은 이용권 취소가 허용되지 않습니다.");
         }
 
-        LocalDateTime deadline = voucher.getValidFrom().plusDays(voucher.getVoucherCancelDays());
+        LocalDateTime deadline = voucher.getVoucherCancelDeadline().plusDays(1).atStartOfDay().minusSeconds(1);
         if (LocalDateTime.now().isAfter(deadline)) {
-            throw new IllegalStateException("이용권 변경(취소) 가능 기간이 지났습니다. (기한: " + deadline + ")");
+            throw new IllegalStateException("이용권 취소 가능 기한이 지났습니다. (기한: " + voucher.getVoucherCancelDeadline() + ")");
         }
 
         if (voucher.getPointTid() == null || voucher.getPointTid().isBlank()) {

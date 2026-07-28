@@ -57,8 +57,8 @@ public class ChannelPatchReqDto {
     @Schema(description = "포인트 변경 페이지 사용 여부", example = "false")
     private Boolean usePointChange;
 
-    @Schema(description = "이용권 발급 후 관리자가 취소 가능한 기간(일). null이면 취소 불가")
-    private Integer voucherCancelDays;
+    @Schema(description = "이용권 취소 가능 기한(절대 날짜). 이 날짜까지 미사용 이용권 취소 가능. null이면 취소 불가")
+    private java.time.LocalDate voucherCancelDeadline;
 
     @Schema(description = "이용권 전환 페이지 배너 이미지 URL")
     private String voucherBannerUrl;

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,5 +30,5 @@ public class PointVoucherDetailDto {
     private LocalDateTime validUntil;
     private String pointTid;
     private UUID channelId;
-    private Integer voucherCancelDays;
+    private LocalDate voucherCancelDeadline;
 }

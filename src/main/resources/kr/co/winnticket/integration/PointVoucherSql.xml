@@ -149,7 +149,7 @@
             v.valid_until,
             v.point_tid,
             v.channel_id,
-            c.voucher_cancel_days
+            c.voucher_cancel_deadline AS voucherCancelDeadline
         FROM point_voucher v
         LEFT JOIN channels c ON c.id = v.channel_id
         WHERE v.id = #{id}
@@ -236,12 +236,12 @@
             (
                 v.status = 'ACTIVE'
                 AND v.used_amount = 0
-                AND c.voucher_cancel_days IS NOT NULL
-                AND now() &lt;= v.valid_from + (c.voucher_cancel_days || ' days')::interval
+                AND c.voucher_cancel_deadline IS NOT NULL
+                AND now() &lt; (c.voucher_cancel_deadline + INTERVAL '1 day')
             ) AS cancelable,
             CASE
-                WHEN c.voucher_cancel_days IS NOT NULL
-                THEN v.valid_from + (c.voucher_cancel_days || ' days')::interval
+                WHEN c.voucher_cancel_deadline IS NOT NULL
+                THEN (c.voucher_cancel_deadline + INTERVAL '1 day' - INTERVAL '1 second')
                 ELSE NULL
             END AS cancelDeadline
         FROM point_voucher v
