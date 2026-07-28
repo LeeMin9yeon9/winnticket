@@ -58,11 +58,11 @@ public class KcpService {
                     : "PT" + System.currentTimeMillis();
 
             // 조회 단계는 아직 결제금액이 정해지기 전이라 프론트에서 0을 보내는데,
-            // KCP는 amount를 "정확한 결제금액"으로 요구해 0이면 포맷에러(8056)로 거절함.
-            // 잔액 조회 결과(rsv_pnt)는 이 값과 무관하므로 최소 placeholder로 대체.
-            int inquiryAmount = (dto.getAmount() != null && dto.getAmount() > 0)
+            // KCP는 amount를 "정확한 결제금액"으로 요구하고 최소 100원 이상이어야 함.
+            // 잔액 조회 결과(rsv_pnt)는 이 값과 무관하므로 최소 placeholder(100원)로 대체.
+            int inquiryAmount = (dto.getAmount() != null && dto.getAmount() >= 100)
                     ? dto.getAmount()
-                    : 1;
+                    : 100;
 
             Map<String, Object> body = new HashMap<>();
             body.put("site_cd", properties.getKcp().getSiteCd());
