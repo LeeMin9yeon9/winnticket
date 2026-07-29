@@ -41,6 +41,7 @@ public class OrderExportResDto {
     private Integer bankTransferAmount; // 무통장 결제금액
     private Integer cardAmount;       // 신용카드 결제금액
     private String voucherInfo;       // 이용권
+    private String siteCode;          // 베네피아 회원 소속사코드(sitecode/pt_memcorp_cd) - 이용권 발급 시점 값
     private String partnerName;       // 파트너명
     private String paidAt;            // 결제일시
     private String ticketNumber;      // 티켓번호

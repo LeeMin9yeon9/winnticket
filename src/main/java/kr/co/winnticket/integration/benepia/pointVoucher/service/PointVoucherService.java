@@ -100,7 +100,8 @@ public class PointVoucherService {
                     req.getAmount(),
                     validFrom,
                     validUntil,
-                    payRes.getTno()
+                    payRes.getTno(),
+                    memcorpCd
             );
         } catch (Exception e) {
             // 이미 차감된 포인트를 그대로 두면 고객이 손해를 보므로, 이용권 발급 실패 시 차감을 되돌림

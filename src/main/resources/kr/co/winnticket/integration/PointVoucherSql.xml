@@ -92,6 +92,7 @@
             valid_until,
             status,
             point_tid,
+            memcorp_cd,
             created_at,
             updated_at
         )
@@ -110,6 +111,7 @@
             #{validUntil},
             'ACTIVE',
             #{pointTid},
+            #{memcorpCd},
             now(),
             now()
         )

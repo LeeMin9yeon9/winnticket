@@ -61,7 +61,8 @@ public interface PointVoucherMapper {
             @Param("remainingAmount") int remainingAmount,
             @Param("validFrom") LocalDateTime validFrom,
             @Param("validUntil") LocalDateTime validUntil,
-            @Param("pointTid") String pointTid
+            @Param("pointTid") String pointTid,
+            @Param("memcorpCd") String memcorpCd
     );
 
     // 이용권 번호로 상세 조회 (사용/차감 처리용, PII 포함)
