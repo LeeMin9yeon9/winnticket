@@ -48,6 +48,9 @@ public interface PointVoucherMapper {
     // 이용권번호 중복 체크용
     UUID findVoucherIdByNumber(@Param("voucherNumber") String voucherNumber);
 
+    // 이용권번호로 회원 소속사코드(memcorp_cd)만 조회 - 주문에 복사해 저장할 때 사용
+    String findVoucherMemcorpCdByNumber(@Param("voucherNumber") String voucherNumber);
+
     // 이용권 발급
     void insertVoucher(
             @Param("id") UUID id,

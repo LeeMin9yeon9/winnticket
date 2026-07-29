@@ -144,6 +144,11 @@ public class PointVoucherService {
                 .build();
     }
 
+    // 이용권 발급 시점의 회원 소속사코드 조회 - 이용권으로 결제된 주문에 복사해 저장할 때 사용 (엑셀 내보내기용)
+    public String lookupMemcorpCd(String voucherNumber) {
+        return mapper.findVoucherMemcorpCdByNumber(voucherNumber);
+    }
+
     // 이용권 사용(차감) - 결제 금액 일부/전액을 이용권으로 차감하고 사용이력을 남김
     @Transactional
     public PointVoucherLookupResDto redeem(String voucherNumber, int amount, String orderNumber) {

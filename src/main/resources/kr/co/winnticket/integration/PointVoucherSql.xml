@@ -75,6 +75,13 @@
         WHERE voucher_number = #{voucherNumber}
     </select>
 
+    <!-- 이용권번호로 회원 소속사코드만 조회 -->
+    <select id="findVoucherMemcorpCdByNumber" resultType="java.lang.String">
+        SELECT memcorp_cd
+        FROM point_voucher
+        WHERE voucher_number = #{voucherNumber}
+    </select>
+
     <!-- 이용권 발급 -->
     <insert id="insertVoucher">
         INSERT INTO point_voucher

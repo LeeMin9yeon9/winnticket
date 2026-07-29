@@ -289,7 +289,9 @@ public class OrderShopService {
         ) {
             cardAmount = pgAmount;
         }
-        mapper.updateOrderPrice(orderId, finalPrice, pointAmount, bankAmount, cardAmount, voucherNumber, voucherAmount);
+        // 이용권 사용 주문이면 발급 시점의 회원 소속사코드를 주문에도 복사 저장 (엑셀 내보내기용)
+        String memcorpCd = voucherAmount > 0 ? pointVoucherService.lookupMemcorpCd(voucherNumber) : null;
+        mapper.updateOrderPrice(orderId, finalPrice, pointAmount, bankAmount, cardAmount, voucherNumber, voucherAmount, memcorpCd);
 
         log.info("결제금액 구조 finalPrice={}, pointAmount={}, voucherAmount={}, pgAmount={}", finalPrice, pointAmount, voucherAmount, pgAmount);
 

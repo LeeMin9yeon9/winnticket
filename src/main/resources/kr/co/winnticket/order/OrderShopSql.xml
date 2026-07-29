@@ -198,7 +198,8 @@
             BANK_AMOUNT   = #{bankAmount},
             CARD_AMOUNT   = #{cardAmount},
             VOUCHER_NUMBER = #{voucherNumber},
-            VOUCHER_AMOUNT = #{voucherAmount}
+            VOUCHER_AMOUNT = #{voucherAmount},
+            MEMCORP_CD = #{memcorpCd}
         Where 1 = 1
         And id = #{orderId}
     </update>

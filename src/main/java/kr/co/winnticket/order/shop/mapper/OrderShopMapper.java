@@ -62,7 +62,8 @@ public interface OrderShopMapper {
             @Param("bankAmount") int bankAmount,
             @Param("cardAmount") int cardAmount,
             @Param("voucherNumber") String voucherNumber,
-            @Param("voucherAmount") int voucherAmount
+            @Param("voucherAmount") int voucherAmount,
+            @Param("memcorpCd") String memcorpCd
     );
 
     // Toss 결제 초기화 (주문 생성 시 pg_provider = TOSSPAYMENTS 설정)

@@ -182,7 +182,7 @@
             CASE WHEN a.payment_method = 'VIRTUAL_ACCOUNT' THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS bankTransferAmount,
             CASE WHEN a.payment_method IN ('CARD', 'KAKAOPAY') THEN a.final_price - COALESCE(a.point_amount, 0) ELSE 0 END AS cardAmount,
             ''                                                                                         AS voucherInfo,
-            COALESCE(pv.memcorp_cd, '')                                                                AS siteCode,
+            COALESCE(a.memcorp_cd, '')                                                                 AS siteCode,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt,
         -- 티켓번호 한줄 처리
@@ -225,7 +225,6 @@
         JOIN products c ON c.id = b.product_id
         LEFT JOIN partners d ON d.id = c.partner_id
         LEFT JOIN channels e ON e.id = a.channel_id
-        LEFT JOIN point_voucher pv ON pv.voucher_number = a.voucher_number
 --         LEFT JOIN order_tickets ot ON ot.order_item_id = b.id
         WHERE 1 = 1
           AND a.status != 'PENDING_PAYMENT'
