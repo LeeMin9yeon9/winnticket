@@ -162,6 +162,7 @@ public class OrderService {
             pointDto.setBuyerPhone(order.getCustomerPhone());
             pointDto.setBenepiaId(creds[0]);
             pointDto.setBenepiaPwd(creds[1]);
+            pointDto.setMemcorpCd(creds[2]);
 
             try {
                 KcpPointPayResDto pointRes = kcpService.pointPayAndUpdate(pointDto);

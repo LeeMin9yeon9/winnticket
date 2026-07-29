@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
@@ -509,7 +510,14 @@ public class OrderShopService {
                 throw new IllegalArgumentException("베네피아 ID/PW 필요");
             }
 
-            benepiaCredentialStore.save(orderId, benepiaId, benepiaPwd);
+            String pointMemcorpCd = Optional.ofNullable(
+                            (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
+                    )
+                    .map(BenepiaDecryptedParamDto::getSitecode)
+                    .filter(StringUtils::hasText)
+                    .orElseThrow(() -> new IllegalStateException("베네피아 웹 진입 후 주문해야 합니다."));
+
+            benepiaCredentialStore.save(orderId, benepiaId, benepiaPwd, pointMemcorpCd);
             log.info("[혼합결제] 베네피아 인증 정보 임시 저장 orderId={}", orderId);
         }
 

@@ -24,12 +24,14 @@ public class BenepiaCredentialStore {
 
     private static final String ID_PREFIX  = "benepia:pay:id:";
     private static final String PWD_PREFIX = "benepia:pay:pwd:";
+    private static final String MEMCORP_PREFIX = "benepia:pay:memcorp:";
     private static final long TTL_HOURS = 24;
 
-    public void save(UUID orderId, String benepiaId, String benepiaPwd) {
+    public void save(UUID orderId, String benepiaId, String benepiaPwd, String memcorpCd) {
         try {
             stringRedisTemplate.opsForValue().set(ID_PREFIX  + orderId, benepiaId,  TTL_HOURS, TimeUnit.HOURS);
             stringRedisTemplate.opsForValue().set(PWD_PREFIX + orderId, benepiaPwd, TTL_HOURS, TimeUnit.HOURS);
+            stringRedisTemplate.opsForValue().set(MEMCORP_PREFIX + orderId, memcorpCd, TTL_HOURS, TimeUnit.HOURS);
             log.info("[BENEPIA CRED] Redis 저장 orderId={} ttl={}h", orderId, TTL_HOURS);
         } catch (Exception e) {
             log.error("[BENEPIA CRED] Redis 저장 실패 orderId={} - 결제 진행 시 콜백 처리에 영향 가능", orderId, e);
@@ -37,17 +39,18 @@ public class BenepiaCredentialStore {
         }
     }
 
-    /** @return [benepiaId, benepiaPwd] 또는 null (만료/없음/Redis 장애) */
+    /** @return [benepiaId, benepiaPwd, memcorpCd] 또는 null (만료/없음/Redis 장애) */
     public String[] get(UUID orderId) {
         try {
             String id  = stringRedisTemplate.opsForValue().get(ID_PREFIX  + orderId);
             String pwd = stringRedisTemplate.opsForValue().get(PWD_PREFIX + orderId);
+            String memcorpCd = stringRedisTemplate.opsForValue().get(MEMCORP_PREFIX + orderId);
             if (id == null || pwd == null) {
                 log.warn("[BENEPIA CRED] Redis 조회 결과 없음 orderId={} idPresent={} pwdPresent={}",
                         orderId, id != null, pwd != null);
                 return null;
             }
-            return new String[]{id, pwd};
+            return new String[]{id, pwd, memcorpCd};
         } catch (Exception e) {
             log.error("[BENEPIA CRED] Redis 조회 실패 orderId={}", orderId, e);
             return null;
@@ -58,6 +61,7 @@ public class BenepiaCredentialStore {
         try {
             stringRedisTemplate.delete(ID_PREFIX  + orderId);
             stringRedisTemplate.delete(PWD_PREFIX + orderId);
+            stringRedisTemplate.delete(MEMCORP_PREFIX + orderId);
             log.info("[BENEPIA CRED] Redis 삭제 orderId={}", orderId);
         } catch (Exception e) {
             log.error("[BENEPIA CRED] Redis 삭제 실패 orderId={}", orderId, e);
