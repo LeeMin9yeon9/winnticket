@@ -3,14 +3,17 @@ package kr.co.winnticket.integration.benepia.pointVoucher.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.winnticket.common.dto.ApiResponse;
+import jakarta.validation.Valid;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminDetailResDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminListResDto;
+import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherValidUntilUpdateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,5 +50,14 @@ public class PointVoucherAdminController {
     public ResponseEntity<ApiResponse<Void>> cancel(@PathVariable UUID id) {
         pointVoucherService.cancelVoucher(id);
         return ResponseEntity.ok(ApiResponse.success("이용권이 취소되었습니다.", null));
+    }
+
+    @Operation(summary = "이용권 사용기한 변경", description = "ACTIVE 상태 이용권만 가능. 이미 기한이 지난 이용권도 연장하면 즉시 다시 사용 가능해짐.")
+    @PatchMapping("/{id}/valid-until")
+    public ResponseEntity<ApiResponse<Void>> updateValidUntil(
+            @PathVariable UUID id,
+            @Valid @RequestBody PointVoucherValidUntilUpdateReqDto reqDto) {
+        pointVoucherService.updateValidUntil(id, reqDto.getValidUntil());
+        return ResponseEntity.ok(ApiResponse.success("이용권 사용기한이 변경되었습니다.", null));
     }
 }

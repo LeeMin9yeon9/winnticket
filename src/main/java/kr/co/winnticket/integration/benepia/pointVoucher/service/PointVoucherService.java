@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -256,6 +257,27 @@ public class PointVoucherService {
 
         log.info("[PointVoucher] 관리자 취소 완료 voucherId={} voucherNumber={} pointTid={}",
                 id, voucher.getVoucherNumber(), voucher.getPointTid());
+    }
+
+    // 이용권 사용기한 변경 (관리자가 기한을 늘려주거나 조정) - ACTIVE 상태만 가능, 이미 지난 기한도 연장해 즉시 재사용 가능
+    @Transactional
+    public void updateValidUntil(UUID id, LocalDate newValidUntilDate) {
+        PointVoucherDetailDto voucher = mapper.findVoucherDetailById(id);
+        if (voucher == null) {
+            throw new IllegalArgumentException("존재하지 않는 이용권입니다.");
+        }
+        if (!"ACTIVE".equals(voucher.getStatus())) {
+            throw new IllegalStateException("사용 가능한(ACTIVE) 이용권만 기한을 변경할 수 있습니다. (상태: " + voucher.getStatus() + ")");
+        }
+        if (newValidUntilDate == null) {
+            throw new IllegalArgumentException("변경할 사용기한을 입력해주세요.");
+        }
+
+        LocalDateTime newValidUntil = newValidUntilDate.atTime(23, 59, 59);
+        mapper.updateVoucherValidUntil(id, newValidUntil);
+
+        log.info("[PointVoucher] 관리자 사용기한 변경 voucherId={} voucherNumber={} validUntil={}",
+                id, voucher.getVoucherNumber(), newValidUntil);
     }
 
     // 관리자 이용권 목록 조회
