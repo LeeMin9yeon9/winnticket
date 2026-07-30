@@ -73,6 +73,9 @@ public interface PointVoucherMapper {
     // 이용권 상태 변경 (관리자 취소 등)
     void updateVoucherStatus(@Param("id") UUID id, @Param("status") String status);
 
+    // 이용권 사용기한 변경 (관리자가 기한 연장/조정)
+    void updateVoucherValidUntil(@Param("id") UUID id, @Param("validUntil") LocalDateTime validUntil);
+
     // 이용권 차감 (remaining_amount가 충분할 때만 적용되는 동시성 가드 포함, 적용된 row 수 반환)
     int deductVoucherAmount(
             @Param("id") UUID id,
