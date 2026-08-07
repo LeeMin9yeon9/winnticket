@@ -25,9 +25,6 @@ public class FieldOrderListGetResDto {
     @Schema(description = "예약일자")
     private LocalDateTime orderedAt;
 
-    @Schema(description = "판매가")
-    private Integer unitPrice;
-
     @Schema(description = "공급가")
     private Integer supplyPrice;
 

@@ -15,7 +15,6 @@
         o.order_number          AS orderNumber,
         oi.product_name         AS productName,
         o.ordered_at            AS orderedAt,
-        oi.unit_price           AS unitPrice,
         COALESCE(
         (
         SELECT pov.base_price
@@ -138,7 +137,6 @@
         SELECT
             COUNT(DISTINCT o.id)    AS totalOrderCnt,
             COUNT(t.id)             AS totalTicketCnt,
-            COALESCE(SUM(oi.unit_price), 0)  AS totalSalesPrice,
         COALESCE(
         SUM(
         COALESCE(

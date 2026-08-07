@@ -13,9 +13,6 @@ public class FieldOrderStatusGetResDto {
     @Schema(description = "총 수량")
     private int totalTicketCnt;
 
-    @Schema(description = "총 판매가")
-    private long totalSalesPrice;
-
     @Schema(description = "총 공급가")
     private long totalSupplyPrice;
 }
