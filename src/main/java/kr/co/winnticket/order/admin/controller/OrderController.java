@@ -164,7 +164,7 @@ public class OrderController {
             row.createCell(20).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
             row.createCell(21).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
             row.createCell(22).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
-            row.createCell(23).setCellValue("");
+            row.createCell(23).setCellValue(first.getVoucherInfo() != null ? first.getVoucherInfo() : "");
             String psDisplay = "";
             if (first.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
