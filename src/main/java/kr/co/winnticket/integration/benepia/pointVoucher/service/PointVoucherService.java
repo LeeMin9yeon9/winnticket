@@ -334,7 +334,7 @@ public class PointVoucherService {
 
             String message = templateRenderService.render(template, Map.of(
                     "고객명", customerName,
-                    "이용권번호", voucherNumber,
+                    "이용권번호", formatVoucherNumber(voucherNumber),
                     "이용권금액", String.valueOf(amount),
                     "유효기간", validUntil.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             ));
@@ -344,6 +344,21 @@ public class PointVoucherService {
         } catch (Exception e) {
             log.error("[PointVoucher] 이용권 발급 SMS 발송 실패 voucherNumber={}", voucherNumber, e);
         }
+    }
+
+    // 이용권 번호를 4자리씩 하이픈으로 구분해 문자 메시지에서 읽기 쉽게 표시 (프론트 formatVoucherNumber와 동일 규칙)
+    private static String formatVoucherNumber(String voucherNumber) {
+        if (voucherNumber == null || voucherNumber.isBlank()) {
+            return voucherNumber;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < voucherNumber.length(); i += 4) {
+            if (i > 0) {
+                sb.append("-");
+            }
+            sb.append(voucherNumber, i, Math.min(i + 4, voucherNumber.length()));
+        }
+        return sb.toString();
     }
 
     // 채널의 이용권 유효기간 설정에 따라 만료 시각을 계산.
