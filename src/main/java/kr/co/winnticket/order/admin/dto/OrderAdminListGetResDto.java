@@ -70,6 +70,9 @@ public class OrderAdminListGetResDto {
     @Schema(description = "포인트 결제 금액")
     private Integer pointAmount;
 
+    @Schema(description = "이용권 결제 금액")
+    private Integer voucherAmount;
+
     @Schema(description = "PG사")
     private String pgProvider;
 

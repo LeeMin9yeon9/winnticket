@@ -57,6 +57,7 @@
                 a.final_price, -- 결제금액
                 a.payment_method, -- 결제수단
                 a.point_amount, -- 포인트결제금액
+                a.voucher_amount, -- 이용권결제금액
                 a.pg_provider, -- PG사
                 CASE
                     WHEN a.pg_callback_payload IS NOT NULL
