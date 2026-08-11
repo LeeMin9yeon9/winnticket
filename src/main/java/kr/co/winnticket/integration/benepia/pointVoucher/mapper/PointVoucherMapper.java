@@ -96,8 +96,8 @@ public interface PointVoucherMapper {
     // 이용권 복원 (카드 결제 실패 등 보상 처리 시 차감을 되돌림)
     void restoreVoucherAmount(@Param("id") UUID id, @Param("amount") int amount);
 
-    // 특정 주문에 대한 사용이력 삭제 (보상 처리 시 사용이력도 되돌림)
-    void deleteVoucherUsageByOrderNumber(@Param("voucherId") UUID voucherId, @Param("orderNumber") String orderNumber);
+    // 특정 주문에 대한 사용이력을 취소 처리 (삭제하지 않고 status만 CANCELLED로 변경해 이력 보존)
+    void cancelVoucherUsageByOrderNumber(@Param("voucherId") UUID voucherId, @Param("orderNumber") String orderNumber);
 
     // 관리자 이용권 목록 조회 (이름/베네피아아이디/휴대폰번호/이용권번호 통합검색 + 상태 필터)
     List<PointVoucherAdminListResDto> selectVoucherAdminList(

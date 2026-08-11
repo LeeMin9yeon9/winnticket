@@ -30,4 +30,10 @@ public class PointVoucherUsageResDto {
 
     @Schema(description = "사용후잔여금액")
     private Integer amountAfter;
+
+    @Schema(description = "상태 (USED: 사용됨, CANCELLED: 주문취소/결제실패로 취소됨)")
+    private String status;
+
+    @Schema(description = "취소일시 (status가 CANCELLED인 경우만)")
+    private LocalDateTime cancelledAt;
 }

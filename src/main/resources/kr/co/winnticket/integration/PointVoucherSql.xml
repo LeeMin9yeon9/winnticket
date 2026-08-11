@@ -208,12 +208,15 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 특정 주문에 대한 사용이력 삭제 (보상 처리 시) -->
-    <delete id="deleteVoucherUsageByOrderNumber">
-        DELETE FROM point_voucher_usage
+    <!-- 특정 주문에 대한 사용이력 취소 처리 (주문취소/결제실패 보상 시 삭제하지 않고 상태만 변경해 이력 보존) -->
+    <update id="cancelVoucherUsageByOrderNumber">
+        UPDATE point_voucher_usage
+        SET status = 'CANCELLED',
+            cancelled_at = now()
         WHERE voucher_id = #{voucherId}
           AND order_number = #{orderNumber}
-    </delete>
+          AND status != 'CANCELLED'
+    </update>
 
     <!-- 관리자 이용권 목록 조회 -->
     <select id="selectVoucherAdminList" resultType="kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminListResDto">
@@ -284,7 +287,9 @@
             u.used_at,
             u.amount_before,
             u.used_amount,
-            u.amount_after
+            u.amount_after,
+            u.status,
+            u.cancelled_at
         FROM point_voucher_usage u
         LEFT JOIN orders o ON o.order_number = u.order_number
         WHERE u.voucher_id = #{voucherId}

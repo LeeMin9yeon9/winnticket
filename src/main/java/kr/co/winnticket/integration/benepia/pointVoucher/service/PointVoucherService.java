@@ -208,7 +208,8 @@ public class PointVoucherService {
                 .build();
     }
 
-    // 이용권 복원 (보상 처리용) - 카드 결제 실패 등으로 이미 차감한 이용권을 되돌릴 때
+    // 이용권 복원 (보상 처리용) - 카드 결제 실패, 주문취소 등으로 이미 차감한 이용권을 되돌릴 때
+    // 사용이력은 삭제하지 않고 status를 CANCELLED로 남겨서 관리자가 이용권 관리 > 사용내역에서 확인할 수 있게 함
     @Transactional
     public void restore(String voucherNumber, int amount, String orderNumber) {
         PointVoucherDetailDto voucher = mapper.findVoucherDetailByNumber(voucherNumber);
@@ -218,7 +219,7 @@ public class PointVoucherService {
         }
 
         mapper.restoreVoucherAmount(voucher.getId(), amount);
-        mapper.deleteVoucherUsageByOrderNumber(voucher.getId(), orderNumber);
+        mapper.cancelVoucherUsageByOrderNumber(voucher.getId(), orderNumber);
 
         log.info("[PointVoucher] 이용권 복원 완료 voucherNumber={} amount={} orderNumber={}",
                 voucherNumber, amount, orderNumber);
