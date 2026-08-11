@@ -708,6 +708,22 @@ public class OrderService {
 
         /*
          * =========================
+         * 2.5 이용권 환불 (결제수단과 무관하게 혼합결제로 이용권을 사용한 경우 복원)
+         * =========================
+         */
+        if (order.getVoucherAmount() != null && order.getVoucherAmount() > 0
+                && order.getVoucherNumber() != null && !order.getVoucherNumber().isBlank()) {
+            try {
+                pointVoucherService.restore(order.getVoucherNumber(), order.getVoucherAmount(), order.getOrderNumber());
+                log.info("[VOUCHER RETURN] 주문 취소 시 이용권 복원 완료 orderId={}, voucherNumber={}, amount={}",
+                        orderId, order.getVoucherNumber(), order.getVoucherAmount());
+            } catch (Exception e) {
+                log.error("[VOUCHER RETURN FAIL] orderId={} → 보정 필요", orderId, e);
+            }
+        }
+
+        /*
+         * =========================
          * 3. DB 상태 변경
          * =========================
          */
@@ -826,6 +842,17 @@ public class OrderService {
                 kcpService.cancelPoint(dto);
 
                 log.info("[POINT RETURN] 입금 전 주문 포인트 반환 완료 orderId={}", orderId);
+            }
+        }
+
+        // 이용권 사용 시 반환 (무통장+이용권은 입금 대기 중에도 이용권을 먼저 차감하므로 취소 시 복원 필요)
+        if (order.getVoucherAmount() != null && order.getVoucherAmount() > 0
+                && order.getVoucherNumber() != null && !order.getVoucherNumber().isBlank()) {
+            try {
+                pointVoucherService.restore(order.getVoucherNumber(), order.getVoucherAmount(), order.getOrderNumber());
+                log.info("[VOUCHER RETURN] 입금 전 주문 이용권 반환 완료 orderId={}", orderId);
+            } catch (Exception e) {
+                log.error("[VOUCHER RETURN FAIL] 입금 전 주문 orderId={} → 보정 필요", orderId, e);
             }
         }
 
