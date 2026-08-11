@@ -53,6 +53,10 @@ public class PointVoucherService {
 
     public PointVoucherExchangeResDto exchange(PointVoucherExchangeReqDto req, String memcorpCd) {
         String phone = req.getPhone().replaceAll("[^0-9]", "");
+        // 이름은 선택 입력 - 미입력 시 KCP/DB에 넘길 기본값으로 대체
+        String customerName = (req.getCustomerName() != null && !req.getCustomerName().isBlank())
+                ? req.getCustomerName().trim()
+                : "고객";
 
         int verifiedCount = mapper.countRecentVerifiedPhone(
                 phone,
@@ -73,7 +77,7 @@ public class PointVoucherService {
                 .memcorpCd(memcorpCd)
                 .productName("포인트 이용권 구입")
                 .productCode("POINT_VOUCHER_EXCHANGE")
-                .buyerName(req.getCustomerName())
+                .buyerName(customerName)
                 .buyerPhone(phone)
                 .build();
 
@@ -93,7 +97,7 @@ public class PointVoucherService {
                     UUID.randomUUID(),
                     voucherNumber,
                     req.getBenepiaId(),
-                    req.getCustomerName(),
+                    customerName,
                     phone,
                     req.getChannelId(),
                     req.getAmount(),
@@ -119,7 +123,7 @@ public class PointVoucherService {
             throw new IllegalStateException("이용권 발급 중 오류가 발생했습니다.", e);
         }
 
-        sendVoucherIssuedSms(req.getChannelId(), phone, req.getCustomerName(), voucherNumber, req.getAmount(), validUntil);
+        sendVoucherIssuedSms(req.getChannelId(), phone, customerName, voucherNumber, req.getAmount(), validUntil);
 
         return PointVoucherExchangeResDto.builder()
                 .voucherNumber(voucherNumber)

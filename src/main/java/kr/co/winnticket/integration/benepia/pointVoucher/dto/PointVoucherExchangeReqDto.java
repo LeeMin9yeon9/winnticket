@@ -24,8 +24,7 @@ public class PointVoucherExchangeReqDto {
     @Schema(description = "휴대폰번호 (사전에 인증 완료되어 있어야 함)")
     private String phone;
 
-    @NotBlank
-    @Schema(description = "주문자명")
+    @Schema(description = "주문자명 (선택 입력 - 미입력 시 서버에서 기본값 처리)")
     private String customerName;
 
     @NotNull
