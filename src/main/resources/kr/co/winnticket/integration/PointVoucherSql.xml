@@ -180,6 +180,15 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 이용권 잔여금액 변경 (관리자가 직접 조정, total_amount도 함께 재계산) -->
+    <update id="updateVoucherRemainingAmount">
+        UPDATE point_voucher
+        SET total_amount = #{totalAmount},
+            remaining_amount = #{remainingAmount},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
     <!-- 이용권 차감 (동시성 가드: remaining_amount가 충분할 때만 적용) -->
     <update id="deductVoucherAmount">
         UPDATE point_voucher

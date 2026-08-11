@@ -80,6 +80,13 @@ public interface PointVoucherMapper {
     // 이용권 사용기한 변경 (관리자가 기한 연장/조정)
     void updateVoucherValidUntil(@Param("id") UUID id, @Param("validUntil") LocalDateTime validUntil);
 
+    // 이용권 잔여금액 변경 (관리자가 직접 조정) - used_amount는 그대로 두고 total_amount를 재계산해 정합성 유지
+    void updateVoucherRemainingAmount(
+            @Param("id") UUID id,
+            @Param("totalAmount") int totalAmount,
+            @Param("remainingAmount") int remainingAmount
+    );
+
     // 이용권 차감 (remaining_amount가 충분할 때만 적용되는 동시성 가드 포함, 적용된 row 수 반환)
     int deductVoucherAmount(
             @Param("id") UUID id,

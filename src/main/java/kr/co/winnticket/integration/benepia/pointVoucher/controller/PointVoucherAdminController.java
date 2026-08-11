@@ -6,6 +6,7 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminDetailResDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminListResDto;
+import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherRemainingAmountUpdateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherValidUntilUpdateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
 import lombok.RequiredArgsConstructor;
@@ -59,5 +60,14 @@ public class PointVoucherAdminController {
             @Valid @RequestBody PointVoucherValidUntilUpdateReqDto reqDto) {
         pointVoucherService.updateValidUntil(id, reqDto.getValidUntil());
         return ResponseEntity.ok(ApiResponse.success("이용권 사용기한이 변경되었습니다.", null));
+    }
+
+    @Operation(summary = "이용권 잔여금액 변경", description = "ACTIVE 상태 이용권만 가능. 사용이력(used_amount)은 유지한 채 잔여금액과 총액을 재계산.")
+    @PatchMapping("/{id}/remaining-amount")
+    public ResponseEntity<ApiResponse<Void>> updateRemainingAmount(
+            @PathVariable UUID id,
+            @Valid @RequestBody PointVoucherRemainingAmountUpdateReqDto reqDto) {
+        pointVoucherService.updateRemainingAmount(id, reqDto.getRemainingAmount());
+        return ResponseEntity.ok(ApiResponse.success("이용권 잔여금액이 변경되었습니다.", null));
     }
 }

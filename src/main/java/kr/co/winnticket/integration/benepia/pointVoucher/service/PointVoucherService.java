@@ -280,6 +280,29 @@ public class PointVoucherService {
                 id, voucher.getVoucherNumber(), newValidUntil);
     }
 
+    // 이용권 잔여금액 변경 (관리자가 직접 조정) - ACTIVE 상태만 가능
+    // used_amount(실제 사용이력)는 그대로 두고, total_amount = used_amount + 새 잔여금액으로 재계산해 정합성 유지
+    @Transactional
+    public void updateRemainingAmount(UUID id, int newRemainingAmount) {
+        PointVoucherDetailDto voucher = mapper.findVoucherDetailById(id);
+        if (voucher == null) {
+            throw new IllegalArgumentException("존재하지 않는 이용권입니다.");
+        }
+        if (!"ACTIVE".equals(voucher.getStatus())) {
+            throw new IllegalStateException("사용 가능한(ACTIVE) 이용권만 잔여금액을 변경할 수 있습니다. (상태: " + voucher.getStatus() + ")");
+        }
+        if (newRemainingAmount < 0) {
+            throw new IllegalArgumentException("잔여금액은 0 이상이어야 합니다.");
+        }
+
+        int usedAmount = voucher.getUsedAmount() != null ? voucher.getUsedAmount() : 0;
+        int newTotalAmount = usedAmount + newRemainingAmount;
+        mapper.updateVoucherRemainingAmount(id, newTotalAmount, newRemainingAmount);
+
+        log.info("[PointVoucher] 관리자 잔여금액 변경 voucherId={} voucherNumber={} usedAmount={} remainingAmount={} -> {}",
+                id, voucher.getVoucherNumber(), usedAmount, voucher.getRemainingAmount(), newRemainingAmount);
+    }
+
     // 관리자 이용권 목록 조회
     public List<PointVoucherAdminListResDto> adminList(String keyword, String status) {
         return mapper.selectVoucherAdminList(keyword, status);
