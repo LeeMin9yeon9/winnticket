@@ -476,10 +476,10 @@ public class OrderService {
             throw new IllegalStateException("결제 완료 또는 입금 전 주문만 취소할 수 있습니다.");
         }
 
-        // 사용된 티켓 확인
-        int usedTicketCount = mapper.countUsedTickets(orderId);
-        if (usedTicketCount > 0) {
-            throw new IllegalStateException("사용된 티켓이 포함된 주문은 취소할 수 없습니다.");
+        // 사용됐거나 유효기간이 지난 티켓 확인 (하나라도 있으면 주문 전체 취소 불가 - 이미 소진된 가치이므로 환불 대상 아님)
+        int ineligibleTicketCount = mapper.countUsedOrExpiredTickets(orderId);
+        if (ineligibleTicketCount > 0) {
+            throw new IllegalStateException("이미 사용했거나 사용기한이 지난 티켓이 포함된 주문은 취소할 수 없습니다.");
         }
 
         // 상품 조회
