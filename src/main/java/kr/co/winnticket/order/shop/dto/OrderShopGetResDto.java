@@ -66,6 +66,12 @@ public class OrderShopGetResDto {
     @Schema(description = "요청사항")
     private String memo;
 
+    @Schema(description = "고객 자가취소 가능 여부 (결제완료 + 취소/취소신청 아님 + 사용/기한만료 티켓 없음)")
+    private boolean cancelable;
+
+    @Schema(description = "취소 시 환불계좌 입력이 필요한지 여부 (무통장입금 포함 결제)")
+    private boolean refundAccountRequired;
+
     @Schema(description = "주문상품")
     private List<OrderProductListGetResDto> products = new ArrayList<>();
 }

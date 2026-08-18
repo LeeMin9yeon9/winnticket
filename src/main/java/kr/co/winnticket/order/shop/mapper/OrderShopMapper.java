@@ -136,4 +136,12 @@ public interface OrderShopMapper {
 
     // 토스 결제 승인 후 실제 결제수단 업데이트 (카드/가상계좌/계좌이체 등)
     int updatePaymentMethod(@Param("orderId") UUID orderId, @Param("paymentMethod") String paymentMethod);
+
+    // 고객 취소 요청 - 상태를 취소신청으로 변경. 무통장입금이면 환불계좌 정보도 함께 저장 (그 외 결제수단은 null로 호출)
+    int updateCancelRequest(
+            @Param("orderId") UUID orderId,
+            @Param("bankName") String bankName,
+            @Param("accountNumber") String accountNumber,
+            @Param("accountHolder") String accountHolder
+    );
 }

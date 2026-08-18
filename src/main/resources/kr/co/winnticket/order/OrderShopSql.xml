@@ -438,4 +438,17 @@
         WHERE id = #{orderId}::uuid
     </update>
 
+    <!-- 고객 취소 요청 - 상태를 취소신청으로 변경. 무통장입금이면 환불계좌 정보도 함께 저장 -->
+    <update id="updateCancelRequest">
+        UPDATE orders
+        SET status = 'CANCEL_REQUESTED'::order_status,
+            updated_at = CURRENT_TIMESTAMP
+            <if test="bankName != null">, refund_bank_name = #{bankName}</if>
+            <if test="accountNumber != null">, refund_account_number = #{accountNumber}</if>
+            <if test="accountHolder != null">, refund_account_holder = #{accountHolder}</if>
+        WHERE id = #{orderId}::uuid
+          AND status NOT IN ('CANCELED', 'CANCEL_REQUESTED')
+          AND payment_status = 'PAID'
+    </update>
+
 </mapper>

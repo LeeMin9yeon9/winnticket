@@ -108,6 +108,9 @@ public interface OrderMapper {
     // 사용된 티켓 확인
     int countUsedTickets(UUID orderId);
 
+    // 고객 자가취소 가능 여부 판단용 - 사용됐거나 유효기간이 지난 티켓 수
+    int countUsedOrExpiredTickets(@Param("orderId") UUID orderId);
+
     // orderItemId로 productOptionValueId 조회
    // UUID findProductOptionValueIdByOrderItem(@Param("orderItemId") UUID orderItemId);
 

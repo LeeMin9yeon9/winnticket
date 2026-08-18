@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.co.winnticket.common.dto.ApiResponse;
 import kr.co.winnticket.order.admin.service.OrderService;
+import kr.co.winnticket.order.shop.dto.OrderCancelRequestReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateReqDto;
 import kr.co.winnticket.order.shop.dto.OrderCreateResDto;
 import kr.co.winnticket.order.shop.dto.OrderShopGetResDto;
@@ -54,15 +55,31 @@ public class OrderShopController {
         );
     }
 
-    // 주문 취소 (쇼핑몰)
+    // 주문 취소 (관리자/내부용) - 실제 취소를 즉시 처리. 고객 자가취소는 더 이상 이 API를 쓰지 않고 /cancel-request로 "요청"만 함
     @PostMapping("/{orderId}/cancel")
-    @Operation(summary = "주문 취소(쇼핑몰)", description = "고객이 직접 주문을 취소합니다.")
+    @Operation(summary = "주문 취소(쇼핑몰)", description = "주문을 즉시 취소 처리합니다.")
     public ResponseEntity<ApiResponse<String>> cancelOrder(
             @Parameter(description = "주문ID") @PathVariable("orderId") UUID orderId
     ) throws Exception {
         log.info("[소비자 취소] orderId={}", orderId);
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료", orderId.toString()));
+    }
+
+    // 주문 취소 요청 (쇼핑몰) - 고객은 취소를 "요청"만 하고, 관리자가 확인 후 실제 취소를 진행함.
+    // 무통장입금이 포함된 결제는 환불계좌 정보가 필수(자동 환불 불가), 그 외 결제수단은 계좌 정보 없이 요청만 접수.
+    @PostMapping("/{orderId}/cancel-request")
+    @Operation(summary = "주문 취소 요청(쇼핑몰)", description = "고객이 주문 취소를 요청합니다 (상태만 취소신청으로 전환, 실제 취소는 관리자가 확인 후 처리). 무통장입금 포함 결제는 bankName/accountNumber/accountHolder가 필수입니다.")
+    public ResponseEntity<ApiResponse<String>> cancelOrderRequest(
+            @Parameter(description = "주문ID") @PathVariable("orderId") UUID orderId,
+            @RequestBody(required = false) OrderCancelRequestReqDto reqDto
+    ) {
+        log.info("[소비자 취소요청] orderId={}", orderId);
+        String bankName = reqDto != null ? reqDto.getBankName() : null;
+        String accountNumber = reqDto != null ? reqDto.getAccountNumber() : null;
+        String accountHolder = reqDto != null ? reqDto.getAccountHolder() : null;
+        service.requestCancel(orderId, bankName, accountNumber, accountHolder);
+        return ResponseEntity.ok(ApiResponse.success("취소 요청이 접수되었습니다. 담당자 확인 후 처리됩니다.", orderId.toString()));
     }
 
     // QR 쿠폰 조회

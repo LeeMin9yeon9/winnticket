@@ -3,7 +3,9 @@ package kr.co.winnticket.order.shop.service;
 import jakarta.servlet.http.HttpSession;
 import kr.co.winnticket.cart.service.ShopCartService;
 import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
+import kr.co.winnticket.common.enums.OrderStatus;
 import kr.co.winnticket.common.enums.PaymentMethod;
+import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.common.enums.SmsTemplateCode;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
@@ -80,7 +82,62 @@ public class OrderShopService {
         }
 
         model.setProducts(mapper.selectOrderProductList(model.getId()));
+
+        // 고객 취소요청 가능 여부: 결제완료 + 아직 취소/취소신청 아님 + 사용했거나 기한 지난 티켓 없음
+        // (실제 취소 처리는 관리자가 확인 후 진행 - 고객은 "요청"만 가능)
+        boolean statusOk = model.getStatus() != OrderStatus.CANCELED
+                && model.getStatus() != OrderStatus.CANCEL_REQUESTED;
+        boolean paymentOk = model.getPaymentStatus() == PaymentStatus.PAID;
+        boolean noIneligibleTickets = orderMapper.countUsedOrExpiredTickets(model.getId()) == 0;
+        model.setCancelable(statusOk && paymentOk && noIneligibleTickets);
+
+        // 무통장입금이 포함된 결제는 취소요청 시 환불계좌 입력이 필요 (자동 환불 API가 없어 관리자가 수기로 처리)
+        model.setRefundAccountRequired(
+                model.getPaymentMethod() != null && model.getPaymentMethod().contains("VIRTUAL_ACCOUNT")
+        );
+
         return model;
+    }
+
+    // 고객 취소 요청 - 실제 취소는 하지 않고 상태만 취소신청(CANCEL_REQUESTED)으로 전환, 관리자가 확인 후 승인 처리.
+    // 무통장입금 결제는 환불계좌 정보가 필수, 그 외(카드/포인트/이용권 등)는 계좌 정보 없이 요청만 접수.
+    @Transactional
+    public void requestCancel(UUID orderId, String bankName, String accountNumber, String accountHolder) {
+        OrderAdminDetailGetResDto order = orderMapper.selectOrderAdminDetail(orderId);
+        if (order == null) {
+            throw new IllegalArgumentException("주문이 존재하지 않습니다.");
+        }
+        if (order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalStateException("결제완료된 주문만 취소 요청할 수 있습니다.");
+        }
+        if (order.getStatus() == OrderStatus.CANCELED || order.getStatus() == OrderStatus.CANCEL_REQUESTED) {
+            throw new IllegalStateException("이미 취소되었거나 취소 요청된 주문입니다.");
+        }
+        int ineligible = orderMapper.countUsedOrExpiredTickets(orderId);
+        if (ineligible > 0) {
+            throw new IllegalStateException("이미 사용했거나 사용기한이 지난 티켓이 포함된 주문은 취소할 수 없습니다.");
+        }
+
+        boolean requiresRefundAccount = order.getPaymentMethod() == PaymentMethod.VIRTUAL_ACCOUNT;
+        String savedBankName = null;
+        String savedAccountNumber = null;
+        String savedAccountHolder = null;
+
+        if (requiresRefundAccount) {
+            if (!StringUtils.hasText(bankName) || !StringUtils.hasText(accountNumber) || !StringUtils.hasText(accountHolder)) {
+                throw new IllegalArgumentException("환불받으실 은행명, 계좌번호, 예금주명을 모두 입력해주세요.");
+            }
+            savedBankName = bankName.trim();
+            savedAccountNumber = accountNumber.trim();
+            savedAccountHolder = accountHolder.trim();
+        }
+
+        int updated = mapper.updateCancelRequest(orderId, savedBankName, savedAccountNumber, savedAccountHolder);
+        if (updated != 1) {
+            throw new IllegalStateException("취소 요청 처리에 실패했습니다.");
+        }
+
+        log.info("[고객 취소요청] orderId={}, requiresRefundAccount={}", orderId, requiresRefundAccount);
     }
 
     // 주문생성

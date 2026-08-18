@@ -326,6 +326,9 @@
             a.canceled_at,  -- 취소일시
             a.total_price, -- 상품총금액
             a.discount_price, -- 할인금액
+            a.refund_bank_name,  -- 환불계좌 은행명
+            a.refund_account_number,  -- 환불계좌 번호
+            a.refund_account_holder,  -- 환불계좌 예금주명
             a.all_ticket_used,  -- 모든티켓사용여부
             (
                 select
@@ -687,6 +690,16 @@
                       ON oi.id = t.order_item_id
         WHERE oi.order_id = #{orderId}::uuid
       AND t.ticket_used = true
+    </select>
+
+    <!-- 고객 자가취소 가능 여부 판단용 - 사용됐거나 유효기간이 지난 티켓 수 -->
+    <select id="countUsedOrExpiredTickets" resultType="int">
+        SELECT COUNT(1)
+        FROM order_tickets t
+                 JOIN order_items oi
+                      ON oi.id = t.order_item_id
+        WHERE oi.order_id = #{orderId}::uuid
+          AND (t.ticket_used = true OR (t.valid_to IS NOT NULL AND t.valid_to &lt; now()))
     </select>
 
     <!-- 주문아이템 기준 옵션값ID 조회 -->

@@ -144,7 +144,9 @@
             tc.created_at AS createdAt,
             tc.updated_at AS updatedAt,
             o.order_number AS orderNumber,
-            o.customer_name AS customerName
+            o.customer_name AS customerName,
+            o.customer_phone AS customerPhone,
+            o.ordered_at AS orderedAt
         FROM ticket_coupons tc
                  JOIN ticket_coupon_groups tg
                       ON tg.id = tc.group_id

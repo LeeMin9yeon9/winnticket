@@ -109,6 +109,15 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "요청사항")
     private String memo;
 
+    @Schema(description = "환불계좌 은행명 (고객이 무통장입금 취소 요청 시 입력)")
+    private String refundBankName;
+
+    @Schema(description = "환불계좌 번호")
+    private String refundAccountNumber;
+
+    @Schema(description = "환불계좌 예금주명")
+    private String refundAccountHolder;
+
     @Hidden
     @Schema(description = "신용카드 승인번호")
     private String tid;

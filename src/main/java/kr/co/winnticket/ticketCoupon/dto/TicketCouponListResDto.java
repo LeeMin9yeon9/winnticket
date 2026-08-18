@@ -45,4 +45,10 @@ public class TicketCouponListResDto {
 
     @Schema(description = "주문자 이름")
     private String customerName;
+
+    @Schema(description = "주문자 휴대폰번호")
+    private String customerPhone;
+
+    @Schema(description = "주문일시")
+    private LocalDateTime orderedAt;
 }
