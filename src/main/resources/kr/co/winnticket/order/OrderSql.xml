@@ -190,6 +190,8 @@
             COALESCE(a.memcorp_cd, '')                                                                 AS siteCode,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt,
+            COALESCE(a.cancel_amount, 0)                                                                AS cancelAmount,
+            COALESCE(a.cancel_fee, 0)                                                                   AS cancelFee,
         -- 티켓번호 한줄 처리
         COALESCE(
         (

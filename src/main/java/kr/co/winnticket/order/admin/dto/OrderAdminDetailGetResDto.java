@@ -118,6 +118,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "환불계좌 예금주명")
     private String refundAccountHolder;
 
+    @Schema(description = "관리자 취소 가능 여부 (결제완료 + 미취소 + 사용/기한만료 티켓 없음)")
+    private boolean cancelable;
+
     @Hidden
     @Schema(description = "신용카드 승인번호")
     private String tid;

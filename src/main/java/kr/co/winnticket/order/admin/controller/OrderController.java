@@ -93,7 +93,7 @@ public class OrderController {
                 "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
                 "무통장 결제금액", "신용카드 결제금액", "이용권",
-                "결제상태","결제일시","취소일시", "티켓번호", "티켓사용여부", "소속사코드"
+                "결제상태","결제일시","취소일시", "취소금액", "취소수수료", "티켓번호", "티켓사용여부", "소속사코드"
         };
 
         HSSFRow headerRow = sheet.createRow(0);
@@ -173,9 +173,11 @@ public class OrderController {
             row.createCell(24).setCellValue(psDisplay);  // 결제 상태
             row.createCell(25).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
             row.createCell(26).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
-            row.createCell(27).setCellValue(ticketNumbers);
-            row.createCell(28).setCellValue(ticketUsedList);
-            row.createCell(29).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
+            row.createCell(27).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액
+            row.createCell(28).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료
+            row.createCell(29).setCellValue(ticketNumbers);
+            row.createCell(30).setCellValue(ticketUsedList);
+            row.createCell(31).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
         }
 
         // 열 너비 자동 조정
