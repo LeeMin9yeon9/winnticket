@@ -18,6 +18,14 @@
                 Where 1 = 1
                   And x.id = a.channel_id
             ) channel_name, -- 채널명
+            (
+                Select
+                    COALESCE(x.use_order_lookup, true)
+                From
+                    channels x
+                Where 1 = 1
+                  And x.id = a.channel_id
+            ) use_order_lookup, -- 채널의 주문조회 페이지 사용 여부
             a.status, -- 주문상태
             a.customer_name, -- 주문자
             a.customer_phone, -- 주문자 연락처

@@ -17,6 +17,7 @@
         COALESCE(c.use_card, false) AS useCard,
         COALESCE(c.use_point, false) AS usePoint,
         COALESCE(c.use_point_change, false) AS usePointChange,
+        COALESCE(c.use_order_lookup, true) AS useOrderLookup,
         c.voucher_cancel_deadline AS voucherCancelDeadline
 
         FROM channels c
@@ -92,6 +93,7 @@
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
             COALESCE(use_point_change, false) AS usePointChange,
+            COALESCE(use_order_lookup, true) AS useOrderLookup,
             voucher_cancel_deadline AS voucherCancelDeadline,
             voucher_banner_url AS voucherBannerUrl,
             voucher_usage_guide AS voucherUsageGuide,
@@ -125,6 +127,7 @@
             <if test="model.useCard != null">USE_CARD = #{model.useCard},</if>
             <if test="model.usePoint != null">USE_POINT = #{model.usePoint},</if>
             <if test="model.usePointChange != null">USE_POINT_CHANGE = #{model.usePointChange},</if>
+            <if test="model.useOrderLookup != null">USE_ORDER_LOOKUP = #{model.useOrderLookup},</if>
             <if test="model.voucherCancelDeadline != null">VOUCHER_CANCEL_DEADLINE = #{model.voucherCancelDeadline},</if>
             <if test="model.voucherBannerUrl != null">VOUCHER_BANNER_URL = #{model.voucherBannerUrl},</if>
             <if test="model.voucherUsageGuide != null">VOUCHER_USAGE_GUIDE = #{model.voucherUsageGuide},</if>
@@ -210,6 +213,7 @@
             COALESCE(use_card, false) AS useCard,
             COALESCE(use_point, false) AS usePoint,
             COALESCE(use_point_change, false) AS usePointChange,
+            COALESCE(use_order_lookup, true) AS useOrderLookup,
             voucher_cancel_deadline AS voucherCancelDeadline,
             voucher_banner_url AS voucherBannerUrl,
             voucher_usage_guide AS voucherUsageGuide,

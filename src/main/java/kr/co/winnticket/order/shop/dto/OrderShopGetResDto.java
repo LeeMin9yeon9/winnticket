@@ -30,6 +30,9 @@ public class OrderShopGetResDto {
     @Schema(description = "채널명")
     private String channelName;
 
+    @Schema(description = "채널의 주문조회 페이지 사용 여부")
+    private boolean useOrderLookup;
+
     @Schema(description = "주문상태")
     private OrderStatus status;
 

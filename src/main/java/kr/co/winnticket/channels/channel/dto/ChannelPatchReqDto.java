@@ -57,6 +57,9 @@ public class ChannelPatchReqDto {
     @Schema(description = "포인트 변경 페이지 사용 여부", example = "false")
     private Boolean usePointChange;
 
+    @Schema(description = "주문조회 페이지 사용 여부", example = "true")
+    private Boolean useOrderLookup;
+
     @Schema(description = "이용권 취소 가능 기한(절대 날짜). 이 날짜까지 미사용 이용권 취소 가능. null이면 취소 불가")
     private java.time.LocalDate voucherCancelDeadline;
 
