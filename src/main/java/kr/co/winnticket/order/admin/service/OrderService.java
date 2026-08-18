@@ -89,10 +89,10 @@ public class OrderService {
         model.setProducts(mapper.selectOrderProductList(auId));
         model.setTickets(mapper.selectOrderTicketList(auId));
 
-        // 관리자 취소 가능 여부: 결제완료 + 아직 취소/취소신청 아님 + 사용했거나 기한 지난 티켓 없음
-        // (실제 cancelOrder()의 취소 가능 조건과 동일한 기준 - 버튼을 미리 비활성화해서 클릭 후 에러로 알리지 않도록 함)
-        boolean statusOk = model.getStatus() != OrderStatus.CANCELED
-                && model.getStatus() != OrderStatus.CANCEL_REQUESTED;
+        // 관리자 취소(직접취소/취소신청 승인 공통) 가능 여부: 결제완료 + 아직 취소 확정 안됨 + 사용했거나 기한 지난 티켓 없음
+        // (실제 cancelOrder()의 취소 가능 조건과 동일한 기준 - 버튼을 미리 비활성화해서 클릭 후 에러로 알리지 않도록 함.
+        //  CANCEL_REQUESTED는 승인 대상이므로 여기서 제외하지 않음 - "취소 승인" 버튼도 이 값으로 활성화 여부 판단)
+        boolean statusOk = model.getStatus() != OrderStatus.CANCELED;
         boolean paymentOk = model.getPaymentStatus() == PaymentStatus.PAID;
         boolean noIneligibleTickets = mapper.countUsedOrExpiredTickets(auId) == 0;
         model.setCancelable(statusOk && paymentOk && noIneligibleTickets);
