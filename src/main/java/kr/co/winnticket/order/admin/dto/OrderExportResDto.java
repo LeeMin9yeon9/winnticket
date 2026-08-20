@@ -46,6 +46,7 @@ public class OrderExportResDto {
     private String siteCode;          // 베네피아 회원 소속사코드(sitecode/pt_memcorp_cd) - 이용권 발급 시점 값
     private String partnerName;       // 파트너명
     private String paidAt;            // 결제일시
+    private String closingDate;       // 마감일 - 결제일(paidAt) 기준, 취소된 주문이면 취소일(canceledAt)로 대체
     private String ticketNumber;      // 티켓번호
     private String ticketUsed;        // 티켓사용여부
 }
