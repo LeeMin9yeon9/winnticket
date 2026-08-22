@@ -40,6 +40,12 @@ public class OrderAdminListGetResDto {
     @Schema(description = "연락처")
     private String customerPhone;
 
+    @Schema(description = "수령자")
+    private String recipientName;
+
+    @Schema(description = "수령자 연락처")
+    private String recipientPhone;
+
     @Schema(description = "상품명")
     private String productName;
 
