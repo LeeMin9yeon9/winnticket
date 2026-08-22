@@ -66,6 +66,16 @@ public class ProductService {
         mapper.insertProduct(model);
     }
 
+    // 상품 복사 (옵션 제외 - 이미지/기본정보만 복사, 비활성화 상태로 등록)
+    @Transactional
+    public UUID copyProduct(UUID id) throws Exception {
+        ProductDetailGetResDto source = mapper.selectProductDetail(id);
+        if (source == null) {
+            throw new IllegalArgumentException("복사할 상품이 존재하지 않습니다.");
+        }
+        return mapper.copyProduct(id);
+    }
+
     // 상품 기본정보 수정
     @Transactional
     public void updateProductBasic(UUID auId, ProductBasicPatchReqDto model) throws Exception {

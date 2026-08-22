@@ -293,6 +293,39 @@
     </insert>
 
     <!--
+    - 상품 복사 (옵션/섹션/채널가격/SMS템플릿 등은 복사하지 않고 상품 기본정보+이미지만 복사)
+    - 새 상품은 비활성화(visible=false) 상태로 등록되고, display_order는 맨 뒤로 배치
+    -->
+    <select id="copyProduct" resultType="java.util.UUID">
+        <![CDATA[
+        INSERT INTO products (
+            id, code, partner_id, name, category_id, price, discount_price,
+            sales_status, sales_start_date, sales_end_date, stock, description,
+            image_url, detail_images, detail_content, visible, display_order,
+            shipping_info, warranty_info, return_info, type, usage_period,
+            region_code, ticket_type, pre_purchased, is_reservation,
+            created_at, updated_at
+        )
+        SELECT
+            uuid_generate_v4(),
+            'PRD' || nextval('product_code_seq'),
+            partner_id,
+            name || ' (복사본)',
+            category_id, price, discount_price,
+            sales_status, sales_start_date, sales_end_date, stock, description,
+            image_url, detail_images, detail_content,
+            false, -- 비활성화로 등록
+            (SELECT COALESCE(MAX(display_order), 0) + 1 FROM products),
+            shipping_info, warranty_info, return_info, type, usage_period,
+            region_code, ticket_type, pre_purchased, is_reservation,
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        FROM products
+        WHERE id = #{id}
+        RETURNING id
+        ]]>
+    </select>
+
+    <!--
     - 상품 기본정보 수정
     -->
     <update id="updateProductBasic">

@@ -62,6 +62,21 @@ public class ProductController {
         );
     }
 
+    // 상품 복사 (옵션 제외 - 이미지/기본정보만 복사, 비활성화 상태로 등록)
+    @PostMapping("/{id}/copy")
+    @ResponseBody
+    @Tag(name = "상품_관리자", description = "상품 관리")
+    @Operation(summary = "상품 복사", description = "전달받은 id 상품의 이미지/기본정보만 복사해 새 상품(비활성화)으로 등록합니다. 옵션은 복사하지 않습니다.")
+    public ResponseEntity<ApiResponse<UUID>> copyProduct (
+            @Parameter(description = "복사할 상품 ID") @PathVariable("id") UUID id
+    ) throws Exception {
+        UUID newId = service.copyProduct(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("복사 성공", newId)
+        );
+    }
+
     // 상품 기본정보 수정
     @PatchMapping("/{id}/basic")
     @ResponseBody

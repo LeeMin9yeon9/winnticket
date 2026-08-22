@@ -41,6 +41,9 @@ public interface ProductMapper {
     // 상품 등록
     void insertProduct(ProductPostReqDto model);
 
+    // 상품 복사 (옵션 제외, 이미지/기본정보만 복사, 비활성화 상태로 등록) - 새로 생성된 상품 ID 반환
+    UUID copyProduct(@Param("id") UUID id);
+
     // 상품 display_order shift
     void shiftProductDisplayOrderForInsert(@Param("newOrder") int newOrder);
     void shiftProductDisplayOrderForMoveUp(@Param("newOrder") int newOrder, @Param("oldOrder") int oldOrder, @Param("productId") UUID productId);
