@@ -350,6 +350,7 @@
             a.pg_provider, -- PG사
             a.paid_at,  -- 결제일시
             a.canceled_at,  -- 취소일시
+            a.cancel_requested_at,  -- 취소요청일시
             a.total_price, -- 상품총금액
             a.discount_price, -- 할인금액
             a.refund_bank_name,  -- 환불계좌 은행명
@@ -687,6 +688,19 @@
             pg_cancel_payload = CAST(#{payloadJson} AS jsonb),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
+    </update>
+
+    <!-- 취소신청 철회 - 주문처리완료로 복귀, 취소요청 시각/환불계좌 정보 초기화 -->
+    <update id="withdrawCancelRequest">
+        UPDATE orders
+        SET status = 'COMPLETED'::order_status,
+            cancel_requested_at = NULL,
+            refund_bank_name = NULL,
+            refund_account_number = NULL,
+            refund_account_holder = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{orderId}::uuid
+          AND status = 'CANCEL_REQUESTED'::order_status
     </update>
 
 

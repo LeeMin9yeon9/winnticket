@@ -450,6 +450,7 @@
     <update id="updateCancelRequest">
         UPDATE orders
         SET status = 'CANCEL_REQUESTED'::order_status,
+            cancel_requested_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
             <if test="bankName != null">, refund_bank_name = #{bankName}</if>
             <if test="accountNumber != null">, refund_account_number = #{accountNumber}</if>

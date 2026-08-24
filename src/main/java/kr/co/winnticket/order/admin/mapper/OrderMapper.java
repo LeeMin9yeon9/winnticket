@@ -105,6 +105,9 @@ public interface OrderMapper {
             @Param("payloadJson") String payloadJson
     );
 
+    // 취소신청 철회 - 주문상태를 주문처리완료로 되돌리고 취소요청 관련 정보 초기화
+    int withdrawCancelRequest(@Param("orderId") UUID orderId);
+
     // 사용된 티켓 확인
     int countUsedTickets(UUID orderId);
 

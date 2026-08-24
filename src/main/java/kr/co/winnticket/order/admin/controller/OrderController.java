@@ -260,6 +260,15 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("주문 취소 완료",orderId.toString()));
     }
 
+    @PostMapping("{id}/cancel-request/withdraw")
+    @Operation(summary = "취소신청 철회(관리자)", description = "고객이 요청한 취소를 관리자가 반려하고 주문을 주문처리완료 상태로 되돌립니다.")
+    public ResponseEntity<ApiResponse<String>> withdrawCancelRequest(
+            @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
+    ) throws Exception {
+        service.withdrawCancelRequest(orderId);
+        return ResponseEntity.ok(ApiResponse.success("취소신청이 철회되었습니다.", orderId.toString()));
+    }
+
     @PostMapping("{id}/sms/resend-ticket")
     @Operation(summary = "문자 재전송(관리자)", description = "관리자가 티켓정보를 재전송합니다.")
     public ResponseEntity<ApiResponse<String>> resendTicketSms(

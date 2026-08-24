@@ -852,6 +852,26 @@ public class OrderService {
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
     }
 
+    // 취소신청 철회 - 고객이 요청한 취소를 관리자가 반려하고 주문을 주문처리완료(COMPLETED) 상태로 되돌림.
+    // 결제/티켓 등은 건드리지 않고 상태와 취소요청 관련 정보(요청시각, 환불계좌)만 초기화한다.
+    @Transactional
+    public void withdrawCancelRequest(UUID orderId) throws Exception {
+        OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
+        if (order == null) {
+            throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
+        }
+        if (order.getStatus() != OrderStatus.CANCEL_REQUESTED) {
+            throw new IllegalStateException("취소신청 상태의 주문만 철회할 수 있습니다.");
+        }
+
+        int updated = mapper.withdrawCancelRequest(orderId);
+        if (updated != 1) {
+            throw new IllegalStateException("취소신청 철회 처리에 실패했습니다.");
+        }
+
+        log.info("[취소신청 철회] orderId={}", orderId);
+    }
+
     // 입금 전 주문 취소 (READY 상태)
     private void cancelPendingOrder(UUID orderId, OrderAdminDetailGetResDto order) throws Exception {
 
