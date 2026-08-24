@@ -620,8 +620,25 @@ public class OrderService {
             }
 
         } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+            // 무통장은 PG 자동취소가 없어 관리자가 계좌로 수기 환불하지만, 취소금액/수수료 자체는
+            // 기록으로 남겨야 하므로 포인트 결제와 동일한 취소수수료 정책(7일 이내 1000원, 이후 10%)을
+            // 적용해 계산한다. 포인트가 섞인 경우 포인트 부분은 제외한 계좌이체 부분 기준으로 계산
+            // (카드/토스 취소의 cancelAmount가 포인트 제외 금액인 것과 동일한 기준).
+            int vaPointPortion = order.getPointAmount() != null ? order.getPointAmount() : 0;
+            int vaBankPortion = order.getFinalPrice() - vaPointPortion;
+
+            long vaDays = java.time.temporal.ChronoUnit.DAYS.between(
+                    order.getOrderedAt().toLocalDate(),
+                    LocalDate.now()
+            );
+            cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(vaBankPortion * 0.1);
+            cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
+
+            log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
+                    order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
+
             // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
-            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+            if (vaPointPortion > 0) {
                 String tno = mapper.selectPointTno(order.getOrderNumber());
                 if (tno != null) {
                     KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
