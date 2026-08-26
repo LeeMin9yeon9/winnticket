@@ -347,8 +347,19 @@ public class OrderShopService {
         ) {
             cardAmount = pgAmount;
         }
-        // 이용권 사용 주문이면 발급 시점의 회원 소속사코드를 주문에도 복사 저장 (엑셀 내보내기용)
-        String memcorpCd = voucherAmount > 0 ? pointVoucherService.lookupMemcorpCd(voucherNumber) : null;
+        // 이용권 사용 주문이면 발급 시점의 회원 소속사코드를, 포인트 사용 주문(단독/카드 혼합 모두)이면
+        // 베네피아 SSO 세션의 소속사코드를 주문에 복사 저장 (엑셀 내보내기용)
+        String memcorpCd = null;
+        if (voucherAmount > 0) {
+            memcorpCd = pointVoucherService.lookupMemcorpCd(voucherNumber);
+        } else if (pointAmount > 0) {
+            memcorpCd = Optional.ofNullable(
+                            (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
+                    )
+                    .map(BenepiaDecryptedParamDto::getSitecode)
+                    .filter(StringUtils::hasText)
+                    .orElse(null);
+        }
         mapper.updateOrderPrice(orderId, finalPrice, pointAmount, bankAmount, cardAmount, voucherNumber, voucherAmount, memcorpCd);
 
         log.info("결제금액 구조 finalPrice={}, pointAmount={}, voucherAmount={}, pgAmount={}", finalPrice, pointAmount, voucherAmount, pgAmount);

@@ -192,7 +192,7 @@
                 THEN TO_CHAR(a.voucher_amount, 'FM999,999,999') || '원 (' || COALESCE(a.voucher_number, '') || ')'
                 ELSE ''
             END                                                                                        AS voucherInfo,
-            COALESCE(a.memcorp_cd, '')                                                                 AS siteCode,
+            COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt,
             TO_CHAR(COALESCE(a.canceled_at, a.paid_at), 'YYYY-MM-DD HH24:MI')                        AS closingDate,

@@ -85,15 +85,14 @@ public class OrderController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         String[] headers = {
-                "채널명", "파트너 이름", "주문일", "주문번호", "회사명",
+                "채널명", "파트너 이름", "마감일", "주문일", "주문번호", "회사명",
                 "주문자 이름", "주문자 전화번호", "주문자 이메일",
                 "수령자 이름", "수령자 전화번호",
                 "상품번호", "주문상품", "티켓종류",
                 "수량", "단가", "공급가", "총 주문금액",
                 "결제금액", "결제수단",
-                "베네피아 포인트 결제금액", "베네피아 아이디",
-                "무통장 결제금액", "신용카드 결제금액", "이용권",
-                "결제상태","결제일시","취소일시", "마감일", "취소금액", "취소수수료", "환불수단", "티켓번호", "티켓사용여부", "소속사코드"
+                "무통장 결제금액", "신용카드 결제금액", "이용권", "베네피아 포인트 결제금액", "베네피아 아이디",
+                "결제상태","결제일시","취소일시", "취소금액", "취소수수료", "환불수단", "티켓번호", "티켓사용여부", "소속사코드"
         };
 
         HSSFRow headerRow = sheet.createRow(0);
@@ -132,48 +131,42 @@ public class OrderController {
             HSSFRow row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(first.getChannelName() != null ? first.getChannelName() : "");
             row.createCell(1).setCellValue(first.getPartnerName() != null ? first.getPartnerName() : "");
-            row.createCell(2).setCellValue(first.getOrderedAt() != null ? first.getOrderedAt() : "");
-            row.createCell(3).setCellValue(first.getOrderNumber() != null ? first.getOrderNumber() : "");
-            row.createCell(4).setCellValue(first.getCompanyName() != null ? first.getCompanyName() : "");
-            row.createCell(5).setCellValue(first.getCustomerName() != null ? first.getCustomerName() : "");
-            row.createCell(6).setCellValue(formatPhoneNumber(first.getCustomerPhone()));
-            row.createCell(7).setCellValue(first.getCustomerEmail() != null ? first.getCustomerEmail() : "");
-            row.createCell(8).setCellValue(first.getRecipientName() != null ? first.getRecipientName() : "");
-            row.createCell(9).setCellValue(formatPhoneNumber(first.getRecipientPhone()));
-            row.createCell(10).setCellValue(productCodes);
-            row.createCell(11).setCellValue(productNames);
-            row.createCell(12).setCellValue(first.getTicketType() != null ? first.getTicketType() : "");
-            row.createCell(13).setCellValue(totalQty);
-            row.createCell(14).setCellValue(first.getUnitPrice() != null ? first.getUnitPrice() : 0);
-            row.createCell(15).setCellValue(first.getSupplyPrice() != null ? first.getSupplyPrice() : 0);
-            row.createCell(16).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
-//            String psDisplay = "";
-//            if (first.getPaymentStatus() != null) {
-//                try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
-//                catch (Exception e) { psDisplay = first.getPaymentStatus(); }
-//            }
-//            row.createCell(17).setCellValue(psDisplay);
-            row.createCell(17).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
+            row.createCell(2).setCellValue(first.getClosingDate() != null ? first.getClosingDate() : ""); // 마감일 (결제일 기준, 취소 시 취소일로 대체)
+            row.createCell(3).setCellValue(first.getOrderedAt() != null ? first.getOrderedAt() : "");
+            row.createCell(4).setCellValue(first.getOrderNumber() != null ? first.getOrderNumber() : "");
+            row.createCell(5).setCellValue(first.getCompanyName() != null ? first.getCompanyName() : "");
+            row.createCell(6).setCellValue(first.getCustomerName() != null ? first.getCustomerName() : "");
+            row.createCell(7).setCellValue(formatPhoneNumber(first.getCustomerPhone()));
+            row.createCell(8).setCellValue(first.getCustomerEmail() != null ? first.getCustomerEmail() : "");
+            row.createCell(9).setCellValue(first.getRecipientName() != null ? first.getRecipientName() : "");
+            row.createCell(10).setCellValue(formatPhoneNumber(first.getRecipientPhone()));
+            row.createCell(11).setCellValue(productCodes);
+            row.createCell(12).setCellValue(productNames);
+            row.createCell(13).setCellValue(first.getTicketType() != null ? first.getTicketType() : "");
+            row.createCell(14).setCellValue(totalQty);
+            row.createCell(15).setCellValue(first.getUnitPrice() != null ? first.getUnitPrice() : 0);
+            row.createCell(16).setCellValue(first.getSupplyPrice() != null ? first.getSupplyPrice() : 0);
+            row.createCell(17).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
+            row.createCell(18).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
             String pmDisplay = "";
             if (first.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(first.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = first.getPaymentMethod(); }
             }
-            row.createCell(18).setCellValue(pmDisplay);
-            row.createCell(19).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
-            row.createCell(20).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
-            row.createCell(21).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
-            row.createCell(22).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
-            row.createCell(23).setCellValue(first.getVoucherInfo() != null ? first.getVoucherInfo() : "");
+            row.createCell(19).setCellValue(pmDisplay);
+            row.createCell(20).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
+            row.createCell(21).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
+            row.createCell(22).setCellValue(first.getVoucherInfo() != null ? first.getVoucherInfo() : "");
+            row.createCell(23).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
+            row.createCell(24).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
             String psDisplay = "";
             if (first.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
                 catch (Exception e) { psDisplay = first.getPaymentStatus(); }
             }
-            row.createCell(24).setCellValue(psDisplay);  // 결제 상태
-            row.createCell(25).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
-            row.createCell(26).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
-            row.createCell(27).setCellValue(first.getClosingDate() != null ? first.getClosingDate() : ""); // 마감일 (결제일 기준, 취소 시 취소일로 대체)
+            row.createCell(25).setCellValue(psDisplay);  // 결제 상태
+            row.createCell(26).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
+            row.createCell(27).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
             row.createCell(28).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액 (마이너스)
             row.createCell(29).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (마이너스)
             // 환불수단 - 실제로 취소된 주문(취소일시가 있는 경우)만 결제수단과 동일하게 표시 (무통장/카드/포인트/이용권)
