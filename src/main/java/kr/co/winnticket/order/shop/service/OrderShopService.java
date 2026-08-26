@@ -347,12 +347,14 @@ public class OrderShopService {
         ) {
             cardAmount = pgAmount;
         }
-        // 이용권 사용 주문이면 발급 시점의 회원 소속사코드를, 포인트 사용 주문(단독/카드 혼합 모두)이면
-        // 베네피아 SSO 세션의 소속사코드를 주문에 복사 저장 (엑셀 내보내기용)
+        // 이용권 사용 주문이면 발급 시점의 회원 소속사코드를 저장.
+        // 그 외에는 결제수단(카드/무통장/포인트)과 무관하게, 베네피아 SSO로 진입한 세션이면
+        // 세션의 소속사코드를 그대로 복사 저장 (엑셀 내보내기용) - 포인트를 안 쓰고 무통장/카드로만
+        // 결제해도 베네피아를 통해 들어온 주문이면 소속사코드가 필요함
         String memcorpCd = null;
         if (voucherAmount > 0) {
             memcorpCd = pointVoucherService.lookupMemcorpCd(voucherNumber);
-        } else if (pointAmount > 0) {
+        } else {
             memcorpCd = Optional.ofNullable(
                             (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
                     )
