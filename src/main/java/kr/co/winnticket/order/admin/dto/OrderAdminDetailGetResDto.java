@@ -88,6 +88,12 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "포인트금액")
     private Integer pointAmount;
 
+    @Schema(description = "무통장 결제금액 (혼합결제 중 무통장 부분)")
+    private Integer bankAmount;
+
+    @Schema(description = "카드 결제금액 (혼합결제 중 카드 부분)")
+    private Integer cardAmount;
+
     @Schema(description = "사용한 이용권 번호")
     private String voucherNumber;
 
