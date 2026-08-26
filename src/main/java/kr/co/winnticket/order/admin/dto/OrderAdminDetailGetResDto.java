@@ -73,6 +73,12 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "취소요청일시 (고객이 취소요청을 접수한 시각)")
     private LocalDateTime cancelRequestedAt;
 
+    @Schema(description = "환불(취소) 금액 - 포인트로 결제된 부분은 제외")
+    private int cancelAmount;
+
+    @Schema(description = "취소 수수료")
+    private int cancelFee;
+
     @Schema(description = "상품총금액")
     private int totalPrice;
 

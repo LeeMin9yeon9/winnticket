@@ -351,6 +351,8 @@
             a.paid_at,  -- 결제일시
             a.canceled_at,  -- 취소일시
             a.cancel_requested_at,  -- 취소요청일시
+            COALESCE(a.cancel_amount, 0) AS cancelAmount,  -- 환불금액
+            COALESCE(a.cancel_fee, 0) AS cancelFee,  -- 취소수수료
             a.total_price, -- 상품총금액
             a.discount_price, -- 할인금액
             a.refund_bank_name,  -- 환불계좌 은행명

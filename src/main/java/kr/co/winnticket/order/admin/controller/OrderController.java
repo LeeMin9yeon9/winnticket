@@ -93,7 +93,7 @@ public class OrderController {
                 "결제금액", "결제수단",
                 "베네피아 포인트 결제금액", "베네피아 아이디",
                 "무통장 결제금액", "신용카드 결제금액", "이용권",
-                "결제상태","결제일시","취소일시", "마감일", "취소금액", "취소수수료", "티켓번호", "티켓사용여부", "소속사코드"
+                "결제상태","결제일시","취소일시", "마감일", "취소금액", "취소수수료", "환불수단", "티켓번호", "티켓사용여부", "소속사코드"
         };
 
         HSSFRow headerRow = sheet.createRow(0);
@@ -176,9 +176,12 @@ public class OrderController {
             row.createCell(27).setCellValue(first.getClosingDate() != null ? first.getClosingDate() : ""); // 마감일 (결제일 기준, 취소 시 취소일로 대체)
             row.createCell(28).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액 (마이너스)
             row.createCell(29).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (마이너스)
-            row.createCell(30).setCellValue(ticketNumbers);
-            row.createCell(31).setCellValue(ticketUsedList);
-            row.createCell(32).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
+            // 환불수단 - 실제로 취소된 주문(취소일시가 있는 경우)만 결제수단과 동일하게 표시 (무통장/카드/포인트/이용권)
+            boolean isCanceled = first.getCanceledAt() != null && !first.getCanceledAt().isEmpty();
+            row.createCell(30).setCellValue(isCanceled ? pmDisplay : "");
+            row.createCell(31).setCellValue(ticketNumbers);
+            row.createCell(32).setCellValue(ticketUsedList);
+            row.createCell(33).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
         }
 
         // 열 너비 자동 조정
