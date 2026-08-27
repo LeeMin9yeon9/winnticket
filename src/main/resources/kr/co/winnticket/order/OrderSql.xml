@@ -1010,6 +1010,7 @@
             COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             COALESCE(a.voucher_amount, 0)                                                              AS voucherAmount,
             CASE WHEN COALESCE(a.cancel_amount, 0) &gt; 0 THEN -a.cancel_amount ELSE 0 END              AS cancelAmount,
+            CASE WHEN COALESCE(a.cancel_fee, 0) &gt; 0 THEN -a.cancel_fee ELSE 0 END                     AS cancelFee,
             COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             b.product_name || ' / ' || COALESCE(
                 (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)

@@ -226,7 +226,7 @@ public class OrderController {
                 "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
                 "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
                 "상품별\n결제금액", "개별판매가", "주문상품", "수량", "카테고리",
-                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액",
+                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
@@ -243,19 +243,27 @@ public class OrderController {
         for (OrderBenepiaSettlementResDto r : rows) {
             orderTotals.putIfAbsent(r.getOrderId(), r);
 
-            // 상품별 결제금액은 취소 여부와 상관없이 항상 양수 (단가 * 수량의 절대값)
-            int quantityAbs = Math.abs(r.getQuantity() != null ? r.getQuantity() : 0);
-            int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * quantityAbs;
+            // 상품별 결제금액 - 취소된 주문이면 수량이 음수이므로 자연히 마이너스로 표시됨
+            int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * (r.getQuantity() != null ? r.getQuantity() : 0);
             // 주문의 무통장/카드/포인트/이용권 금액을 이 상품이 차지하는 비율(상품별 결제금액 / 총 결제금액)만큼 배분.
-            // 취소된 주문이면 SK 결제금액/수수료만 마이너스로 표시 (상품별 결제금액 자체는 건드리지 않음)
+            // lineTotal이 이미 취소 시 마이너스이므로 ratio 자체가 부호를 그대로 갖고 내려간다.
             double ratio = (r.getFinalPrice() != null && r.getFinalPrice() != 0)
                     ? (double) lineTotal / r.getFinalPrice() : 0;
-            double cancelSign = "CANCELED".equals(r.getStatus()) ? -1 : 1;
 
-            double bankAlloc = (r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio * cancelSign;
-            double cardAlloc = (r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio * cancelSign;
-            double pointAlloc = (r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio * cancelSign;
-            double voucherAlloc = (r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio * cancelSign;
+            // 취소 시 무통장/카드는 취소수수료가 빠진 실제 환불액(취소금액)만큼만 SK 결제금액에 반영되어야
+            // 하므로, 원금 대비 실제 환불 비율(취소금액 / (무통장+카드))을 추가로 곱해준다.
+            // 포인트/이용권은 취소금액에 포함되지 않고 별도로 전액 환급되므로 그대로 둔다.
+            double bankCardGross = (r.getBankAmount() != null ? r.getBankAmount() : 0)
+                    + (r.getCardAmount() != null ? r.getCardAmount() : 0);
+            double feeAdjustFactor = 1.0;
+            if ("CANCELED".equals(r.getStatus()) && bankCardGross != 0 && r.getCancelAmount() != null) {
+                feeAdjustFactor = Math.abs(r.getCancelAmount()) / bankCardGross;
+            }
+
+            double bankAlloc = (r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio * feeAdjustFactor;
+            double cardAlloc = (r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio * feeAdjustFactor;
+            double pointAlloc = (r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio;
+            double voucherAlloc = (r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio;
 
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
@@ -295,11 +303,12 @@ public class OrderController {
             row.createCell(23).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
             row.createCell(24).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
             row.createCell(25).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
-            row.createCell(26).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
-            row.createCell(27).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
-            row.createCell(28).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
-            row.createCell(29).setCellValue(statusDisplay);
-            row.createCell(30).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+            row.createCell(26).setCellValue(r.getCancelFee() != null ? r.getCancelFee() : 0);
+            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(29).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(30).setCellValue(statusDisplay);
+            row.createCell(31).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
