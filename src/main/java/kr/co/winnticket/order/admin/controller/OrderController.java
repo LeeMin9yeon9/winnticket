@@ -287,11 +287,12 @@ public class OrderController {
             row.createCell(7).setCellValue(cardAlloc);
             row.createCell(8).setCellValue(pointAlloc);
             row.createCell(9).setCellValue(voucherAlloc);
-            // 수수료는 취소 여부와 무관하게 항상 양수 (얼마가 부과됐는지 나타내는 값이지, 환불 방향을 나타내는 값이 아님)
-            row.createCell(10).setCellValue(Math.abs(bankAlloc) * SALES_FEE_RATE);
-            row.createCell(11).setCellValue(Math.abs(cardAlloc) * SALES_FEE_RATE);
-            row.createCell(12).setCellValue(Math.abs(pointAlloc) * (SALES_FEE_RATE + POINT_FEE_RATE));
-            row.createCell(13).setCellValue(Math.abs(voucherAlloc) * SALES_FEE_RATE);
+            // SK 수수료는 SK 결제금액(위 무통장/카드/포인트/이용권 배분액)에 대한 비율이므로
+            // 그 금액과 같은 부호를 가져야 함 - 환불(마이너스)이면 수수료도 마이너스(환급)
+            row.createCell(10).setCellValue(bankAlloc * SALES_FEE_RATE);
+            row.createCell(11).setCellValue(cardAlloc * SALES_FEE_RATE);
+            row.createCell(12).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
+            row.createCell(13).setCellValue(voucherAlloc * SALES_FEE_RATE);
             row.createCell(14).setCellValue(lineTotal);
             row.createCell(15).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
             row.createCell(16).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
@@ -329,9 +330,10 @@ public class OrderController {
             totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
                     + (o.getCardAmount() != null ? o.getCardAmount() : 0));
         }
-        // 수수료는 취소로 인한 마이너스 여부와 무관하게 항상 양수로 표시
-        double salesFee = Math.abs(totalPoint + totalBankCard) * SALES_FEE_RATE;
-        double pointFee = Math.abs(totalPoint) * POINT_FEE_RATE;
+        // 판매수수료/복지포인트수수료는 총 결제액에 대한 비율이므로 그 금액과 같은 부호를 가짐 -
+        // 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
+        double salesFee = (totalPoint + totalBankCard) * SALES_FEE_RATE;
+        double pointFee = totalPoint * POINT_FEE_RATE;
         double totalFee = salesFee + pointFee;
         double payoutAmount = totalPoint - totalFee;
 
