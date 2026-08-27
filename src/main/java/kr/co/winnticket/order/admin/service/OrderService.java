@@ -84,6 +84,11 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<OrderBenepiaSettlementResDto> selectBenepiaSettlementList(UUID channelId, LocalDate begDate, LocalDate endDate) {
+        return mapper.selectBenepiaSettlementList(channelId, begDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
     public OrderAdminDetailGetResDto selectOrderAdminDetail(UUID auId) {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));

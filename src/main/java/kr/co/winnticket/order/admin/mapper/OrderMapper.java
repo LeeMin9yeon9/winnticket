@@ -36,6 +36,13 @@ public interface OrderMapper {
             @Param("partnerName") String partnerName
     );
 
+    // 베네피아 정산용 내보내기 목록 조회 (마감일자 기준)
+    List<OrderBenepiaSettlementResDto> selectBenepiaSettlementList(
+            @Param("channelId") UUID channelId,
+            @Param("begDate") LocalDate begDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     // 주문 상세 조회(관리자)
     OrderAdminDetailGetResDto selectOrderAdminDetail(
             @Param("id") UUID auId

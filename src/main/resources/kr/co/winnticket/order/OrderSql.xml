@@ -989,4 +989,53 @@
 <!--            END-->
 <!--        WHERE id = #{orderId}-->
 <!--    </update>-->
+
+    <!--
+        베네피아 정산용 엑셀 내보내기 - 주문상품(아이템) 단위 상세 목록.
+        마감일자(결제완료일, 취소된 주문이면 취소일) 기준으로 기간을 필터링한다.
+        일반 주문목록 내보내기(selectOrderExportList)는 주문일(ordered_at) 기준이라 이 용도로는 안 맞음.
+    -->
+    <select id="selectBenepiaSettlementList" resultType="kr.co.winnticket.order.admin.dto.OrderBenepiaSettlementResDto">
+        SELECT
+            a.id                                                                                        AS orderId,
+            TO_CHAR(a.ordered_at, 'YYYY-MM-DD')                                                        AS orderedDate,
+            TO_CHAR(a.ordered_at, 'YYYY-MM-DD HH24:MI')                                                AS orderedAt,
+            TO_CHAR(COALESCE(a.canceled_at, a.paid_at), 'YYYY-MM-DD')                                  AS closingDate,
+            a.order_number                                                                              AS orderNumber,
+            a.customer_name                                                                            AS customerName,
+            a.payment_method                                                                            AS paymentMethod,
+            a.status                                                                                    AS status,
+            a.final_price                                                                              AS finalPrice,
+            COALESCE(a.bank_amount, 0)                                                                 AS bankAmount,
+            COALESCE(a.card_amount, 0)                                                                 AS cardAmount,
+            COALESCE(a.point_amount, 0)                                                                AS pointAmount,
+            COALESCE(a.voucher_amount, 0)                                                              AS voucherAmount,
+            b.product_name || ' / ' || COALESCE(
+                (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)
+                 FROM order_item_options opt WHERE opt.order_item_id = b.id), ''
+            )                                                                                          AS productDisplayName,
+            (
+                SELECT x.name FROM menu_categories x
+                JOIN products y ON x.id = y.category_id
+                WHERE y.id = b.product_id
+            )                                                                                          AS categoryName,
+            b.unit_price                                                                               AS unitPrice,
+            CASE WHEN a.status = 'CANCELED' THEN -b.quantity ELSE b.quantity END                        AS quantity,
+            TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
+            TO_CHAR(a.cancel_requested_at, 'YYYY-MM-DD HH24:MI')                                       AS cancelRequestedAt,
+            TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt
+        FROM orders a
+        JOIN order_items b ON b.order_id = a.id
+        WHERE a.channel_id = #{channelId}
+          AND a.status != 'PENDING_PAYMENT'
+          AND a.payment_status != 'FAILED'
+          AND COALESCE(a.canceled_at, a.paid_at) IS NOT NULL
+          <if test="begDate != null">
+              <![CDATA[ AND COALESCE(a.canceled_at, a.paid_at)::date >= #{begDate} ]]>
+          </if>
+          <if test="endDate != null">
+              <![CDATA[ AND COALESCE(a.canceled_at, a.paid_at)::date <= #{endDate} ]]>
+          </if>
+        ORDER BY a.ordered_at, a.order_number, b.id
+    </select>
 </mapper>

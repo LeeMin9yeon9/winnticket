@@ -195,6 +195,210 @@ public class OrderController {
                 .body(baos.toByteArray());
     }
 
+    // 베네피아 정산용 Excel 내보내기
+    @GetMapping("/export/benepia-settlement")
+    @Operation(summary = "베네피아 정산용 Excel 내보내기", description = "선택한 채널의 마감일자(결제완료일, 취소된 주문이면 취소일) 기준 기간에 대한 베네피아 정산 내역서를 Excel로 다운로드합니다.")
+    public ResponseEntity<byte[]> exportBenepiaSettlementExcel(
+            @Parameter(description = "채널 ID") @RequestParam("channelId") UUID channelId,
+            @Parameter(description = "채널명 (파일명/시트 제목 표시용)") @RequestParam(value = "channelName", required = false) String channelName,
+            @Parameter(description = "시작일 (마감일자 기준)") @RequestParam(value = "begDate", required = false) LocalDate begDate,
+            @Parameter(description = "종료일 (마감일자 기준)") @RequestParam(value = "endDate", required = false) LocalDate endDate
+    ) throws Exception {
+        List<OrderBenepiaSettlementResDto> rows = service.selectBenepiaSettlementList(channelId, begDate, endDate);
+
+        // 고정 수수료율 - 판매수수료(무통장/카드/이용권)와 복지포인트수수료(포인트 결제분에 추가로 붙음)
+        final double SALES_FEE_RATE = 0.033;
+        final double POINT_FEE_RATE = 0.022;
+
+        HSSFWorkbook workbook = new HSSFWorkbook();
+
+        HSSFCellStyle headerStyle = workbook.createCellStyle();
+        HSSFFont headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        // ===== "order" 상세 시트 - 주문상품(아이템) 단위 =====
+        HSSFSheet orderSheet = workbook.createSheet("order");
+        String[] orderHeaders = {
+                "주문일", "주문일시", "마감일자", "주문번호", "주문자 이름", "티켓종류", "결제수단",
+                "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제", "SK 결제금액\n프로모션",
+                "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제", "SK 수수료\n프로모션",
+                "상품별\n결제금액", "개별판매가", "배송비", "주문상품", "수량", "카테고리",
+                "총 결제금액", "무통장", "카드", "포인트", "이용권", "강원여행", "결제금액",
+                "결제일시", "취소접수", "취소완료", "주문상태"
+        };
+        HSSFRow orderHeaderRow = orderSheet.createRow(2);
+        for (int i = 0; i < orderHeaders.length; i++) {
+            HSSFCell cell = orderHeaderRow.createCell(i);
+            cell.setCellValue(orderHeaders[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // 주문 단위 합계 집계용 (요약 시트에서 사용 - 아이템 반복 때문에 중복 합산되지 않도록 주문당 1건만 보관)
+        java.util.Map<UUID, OrderBenepiaSettlementResDto> orderTotals = new java.util.LinkedHashMap<>();
+
+        int rowNum = 3;
+        for (OrderBenepiaSettlementResDto r : rows) {
+            orderTotals.putIfAbsent(r.getOrderId(), r);
+
+            int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * (r.getQuantity() != null ? r.getQuantity() : 0);
+            // 주문의 무통장/카드/포인트/이용권 금액을 이 상품이 차지하는 비율(상품별 결제금액 / 총 결제금액)만큼 배분
+            double ratio = (r.getFinalPrice() != null && r.getFinalPrice() != 0)
+                    ? (double) lineTotal / r.getFinalPrice() : 0;
+
+            double bankAlloc = (r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio;
+            double cardAlloc = (r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio;
+            double pointAlloc = (r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio;
+            double voucherAlloc = (r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio;
+
+            String pmDisplay = "";
+            if (r.getPaymentMethod() != null) {
+                try { pmDisplay = PaymentMethod.valueOf(r.getPaymentMethod()).getDisplayName(); }
+                catch (Exception e) { pmDisplay = r.getPaymentMethod(); }
+            }
+            String statusDisplay = "";
+            if (r.getStatus() != null) {
+                try { statusDisplay = kr.co.winnticket.common.enums.OrderStatus.valueOf(r.getStatus()).getDisplayName(); }
+                catch (Exception e) { statusDisplay = r.getStatus(); }
+            }
+
+            HSSFRow row = orderSheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(r.getOrderedDate() != null ? r.getOrderedDate() : "");
+            row.createCell(1).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
+            row.createCell(2).setCellValue(r.getClosingDate() != null ? r.getClosingDate() : "");
+            row.createCell(3).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");
+            row.createCell(4).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");
+            row.createCell(5).setCellValue("모바일자동");
+            row.createCell(6).setCellValue(pmDisplay);
+            row.createCell(7).setCellValue(bankAlloc);
+            row.createCell(8).setCellValue(cardAlloc);
+            row.createCell(9).setCellValue(pointAlloc);
+            row.createCell(10).setCellValue(voucherAlloc);
+            row.createCell(11).setCellValue(0); // 프로모션 - 매핑되는 결제수단이 없어 항상 0
+            row.createCell(12).setCellValue(bankAlloc * SALES_FEE_RATE);
+            row.createCell(13).setCellValue(cardAlloc * SALES_FEE_RATE);
+            row.createCell(14).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
+            row.createCell(15).setCellValue(voucherAlloc * SALES_FEE_RATE);
+            row.createCell(16).setCellValue(0);
+            row.createCell(17).setCellValue(lineTotal);
+            row.createCell(18).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
+            row.createCell(19).setCellValue(0);
+            row.createCell(20).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
+            row.createCell(21).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
+            row.createCell(22).setCellValue(r.getCategoryName() != null ? r.getCategoryName() : "");
+            row.createCell(23).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(24).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
+            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
+            row.createCell(26).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
+            row.createCell(27).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
+            row.createCell(28).setCellValue(0);
+            row.createCell(29).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(30).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(31).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(32).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(33).setCellValue(statusDisplay);
+        }
+
+        for (int i = 0; i < orderHeaders.length; i++) {
+            orderSheet.autoSizeColumn(i);
+        }
+
+        // ===== "-" 요약 시트 =====
+        HSSFSheet summarySheet = workbook.createSheet("-");
+        workbook.setSheetOrder("-", 0);
+
+        long totalPoint = 0;
+        long totalBankCard = 0;
+        for (OrderBenepiaSettlementResDto o : orderTotals.values()) {
+            totalPoint += (o.getPointAmount() != null ? o.getPointAmount() : 0);
+            totalBankCard += (o.getBankAmount() != null ? o.getBankAmount() : 0)
+                    + (o.getCardAmount() != null ? o.getCardAmount() : 0);
+        }
+        double salesFee = (totalPoint + totalBankCard) * SALES_FEE_RATE;
+        double pointFee = totalPoint * POINT_FEE_RATE;
+        double totalFee = salesFee + pointFee;
+        double payoutAmount = totalPoint - totalFee;
+
+        HSSFCellStyle titleStyle = workbook.createCellStyle();
+        HSSFFont titleFont = workbook.createFont();
+        titleFont.setBold(true);
+        titleFont.setFontHeightInPoints((short) 14);
+        titleStyle.setFont(titleFont);
+
+        HSSFRow titleRow = summarySheet.createRow(1);
+        HSSFCell titleCell = titleRow.createCell(1);
+        titleCell.setCellValue((channelName != null && !channelName.isBlank() ? channelName : "") + "_베네피아 정산 내역서");
+        titleCell.setCellStyle(titleStyle);
+
+        summarySheet.createRow(3).createCell(1)
+                .setCellValue(endDate != null ? endDate.toString() : LocalDate.now().toString());
+
+        HSSFRow headRow = summarySheet.createRow(4);
+        String[] summaryHeaders = {"구분", "수수료(vat포함)", "kcp 결제", "KCP 외 타 결제", "총 결제액", "수수료"};
+        for (int i = 0; i < summaryHeaders.length; i++) {
+            HSSFCell cell = headRow.createCell(i + 2);
+            cell.setCellValue(summaryHeaders[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        HSSFRow subHeadRow = summarySheet.createRow(5);
+        subHeadRow.createCell(4).setCellValue("복지포인트");
+        subHeadRow.createCell(5).setCellValue("카드/무통장");
+
+        HSSFRow row7 = summarySheet.createRow(6);
+        row7.createCell(1).setCellValue("kcp 결제\n(복지포인트) ");
+        row7.createCell(2).setCellValue("판매수수료");
+        row7.createCell(3).setCellValue(SALES_FEE_RATE);
+        row7.createCell(4).setCellValue(totalPoint);
+        row7.createCell(5).setCellValue(totalBankCard);
+        row7.createCell(6).setCellValue(totalPoint + totalBankCard);
+        row7.createCell(7).setCellValue(salesFee);
+
+        HSSFRow row8 = summarySheet.createRow(7);
+        row8.createCell(2).setCellValue("복지포인트수수료");
+        row8.createCell(3).setCellValue(POINT_FEE_RATE);
+        row8.createCell(4).setCellValue(totalPoint);
+        row8.createCell(6).setCellValue(totalPoint);
+        row8.createCell(7).setCellValue(pointFee);
+
+        HSSFRow row9 = summarySheet.createRow(8);
+        row9.createCell(2).setCellValue("수수료 세금계산서 발행액");
+        row9.createCell(7).setCellValue(totalFee);
+
+        HSSFRow row10 = summarySheet.createRow(9);
+        row10.createCell(2).setCellValue("복지포인트 지급액 (=청구액)");
+        row10.createCell(7).setCellValue(payoutAmount);
+
+        // 정산 은행/계좌 - 회사 고정 계좌 (필요 시 값만 교체하면 됨)
+        HSSFRow row12 = summarySheet.createRow(11);
+        row12.createCell(1).setCellValue("정산 은행");
+        row12.createCell(3).setCellValue("하나은행");
+
+        HSSFRow row13 = summarySheet.createRow(12);
+        row13.createCell(1).setCellValue("정산 계좌");
+        row13.createCell(3).setCellValue("47691002132304");
+
+        for (int i = 0; i <= 7; i++) {
+            summarySheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        workbook.write(baos);
+        workbook.close();
+
+        String safeChannelName = (channelName != null && !channelName.isBlank()) ? channelName : "채널";
+        String filename = safeChannelName + "_베네피아_정산내역서_"
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xls";
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(baos.toByteArray());
+    }
+
     // 주문 상세조회 (관리자)
     @GetMapping("/{id}")
     @Operation(summary = "주문 상세 조회(관리자)", description = "전달받은 id의 주문을 조회합니다.")
