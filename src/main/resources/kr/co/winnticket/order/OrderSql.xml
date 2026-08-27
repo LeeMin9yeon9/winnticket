@@ -998,7 +998,6 @@
     <select id="selectBenepiaSettlementList" resultType="kr.co.winnticket.order.admin.dto.OrderBenepiaSettlementResDto">
         SELECT
             a.id                                                                                        AS orderId,
-            TO_CHAR(a.ordered_at, 'YYYY-MM-DD')                                                        AS orderedDate,
             TO_CHAR(a.ordered_at, 'YYYY-MM-DD HH24:MI')                                                AS orderedAt,
             TO_CHAR(COALESCE(a.canceled_at, a.paid_at), 'YYYY-MM-DD')                                  AS closingDate,
             a.order_number                                                                              AS orderNumber,
@@ -1010,6 +1009,8 @@
             COALESCE(a.card_amount, 0)                                                                 AS cardAmount,
             COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             COALESCE(a.voucher_amount, 0)                                                              AS voucherAmount,
+            CASE WHEN COALESCE(a.cancel_amount, 0) &gt; 0 THEN -a.cancel_amount ELSE 0 END              AS cancelAmount,
+            COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             b.product_name || ' / ' || COALESCE(
                 (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)
                  FROM order_item_options opt WHERE opt.order_item_id = b.id), ''
@@ -1026,6 +1027,9 @@
             TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
+        -- 이용권 결제는 베네피아 ID/PW 없이 진행되어 orders.memcorp_cd가 비어있을 수 있으므로,
+        -- 사용된 이용권의 발급 계정(point_voucher.memcorp_cd)을 대신 보여주기 위해 조인
+        LEFT JOIN point_voucher pv ON pv.voucher_number = a.voucher_number
         WHERE a.channel_id = #{channelId}
           AND a.status != 'PENDING_PAYMENT'
           AND a.payment_status != 'FAILED'

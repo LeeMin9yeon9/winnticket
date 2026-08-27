@@ -16,9 +16,6 @@ public class OrderBenepiaSettlementResDto {
     @Schema(description = "주문 ID")
     private UUID orderId;
 
-    @Schema(description = "주문일 (yyyy-MM-dd)")
-    private String orderedDate;
-
     @Schema(description = "주문일시")
     private String orderedAt;
 
@@ -51,6 +48,12 @@ public class OrderBenepiaSettlementResDto {
 
     @Schema(description = "주문 전체 이용권 결제금액")
     private Integer voucherAmount;
+
+    @Schema(description = "취소(환불) 금액 - 취소된 주문이면 음수, 아니면 0")
+    private Integer cancelAmount;
+
+    @Schema(description = "소속사코드")
+    private String siteCode;
 
     @Schema(description = "상품명(옵션 포함)")
     private String productDisplayName;
