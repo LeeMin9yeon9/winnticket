@@ -223,10 +223,10 @@ public class OrderController {
         HSSFSheet orderSheet = workbook.createSheet("order");
         String[] orderHeaders = {
                 "주문일", "주문일시", "마감일자", "주문번호", "주문자 이름", "티켓종류", "결제수단",
-                "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제", "SK 결제금액\n프로모션",
-                "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제", "SK 수수료\n프로모션",
-                "상품별\n결제금액", "개별판매가", "배송비", "주문상품", "수량", "카테고리",
-                "총 결제금액", "무통장", "카드", "포인트", "이용권", "강원여행", "결제금액",
+                "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
+                "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
+                "상품별\n결제금액", "개별판매가", "주문상품", "수량", "카테고리",
+                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액",
                 "결제일시", "취소접수", "취소완료", "주문상태"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
@@ -276,29 +276,25 @@ public class OrderController {
             row.createCell(8).setCellValue(cardAlloc);
             row.createCell(9).setCellValue(pointAlloc);
             row.createCell(10).setCellValue(voucherAlloc);
-            row.createCell(11).setCellValue(0); // 프로모션 - 매핑되는 결제수단이 없어 항상 0
-            row.createCell(12).setCellValue(bankAlloc * SALES_FEE_RATE);
-            row.createCell(13).setCellValue(cardAlloc * SALES_FEE_RATE);
-            row.createCell(14).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
-            row.createCell(15).setCellValue(voucherAlloc * SALES_FEE_RATE);
-            row.createCell(16).setCellValue(0);
-            row.createCell(17).setCellValue(lineTotal);
-            row.createCell(18).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
-            row.createCell(19).setCellValue(0);
-            row.createCell(20).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
-            row.createCell(21).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
-            row.createCell(22).setCellValue(r.getCategoryName() != null ? r.getCategoryName() : "");
-            row.createCell(23).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(24).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
-            row.createCell(25).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-            row.createCell(26).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-            row.createCell(27).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
-            row.createCell(28).setCellValue(0);
-            row.createCell(29).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(30).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
-            row.createCell(31).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
-            row.createCell(32).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
-            row.createCell(33).setCellValue(statusDisplay);
+            row.createCell(11).setCellValue(bankAlloc * SALES_FEE_RATE);
+            row.createCell(12).setCellValue(cardAlloc * SALES_FEE_RATE);
+            row.createCell(13).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
+            row.createCell(14).setCellValue(voucherAlloc * SALES_FEE_RATE);
+            row.createCell(15).setCellValue(lineTotal);
+            row.createCell(16).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
+            row.createCell(17).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
+            row.createCell(18).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
+            row.createCell(19).setCellValue(r.getCategoryName() != null ? r.getCategoryName() : "");
+            row.createCell(20).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(21).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
+            row.createCell(22).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
+            row.createCell(23).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
+            row.createCell(24).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
+            row.createCell(25).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(26).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(27).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(28).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(29).setCellValue(statusDisplay);
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -312,9 +308,11 @@ public class OrderController {
         long totalPoint = 0;
         long totalBankCard = 0;
         for (OrderBenepiaSettlementResDto o : orderTotals.values()) {
-            totalPoint += (o.getPointAmount() != null ? o.getPointAmount() : 0);
-            totalBankCard += (o.getBankAmount() != null ? o.getBankAmount() : 0)
-                    + (o.getCardAmount() != null ? o.getCardAmount() : 0);
+            // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함
+            int sign = "CANCELED".equals(o.getStatus()) ? -1 : 1;
+            totalPoint += sign * (o.getPointAmount() != null ? o.getPointAmount() : 0);
+            totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
+                    + (o.getCardAmount() != null ? o.getCardAmount() : 0));
         }
         double salesFee = (totalPoint + totalBankCard) * SALES_FEE_RATE;
         double pointFee = totalPoint * POINT_FEE_RATE;
