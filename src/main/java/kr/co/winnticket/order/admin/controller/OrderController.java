@@ -168,7 +168,7 @@ public class OrderController {
             row.createCell(26).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
             row.createCell(27).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
             row.createCell(28).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액 (마이너스)
-            row.createCell(29).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (마이너스)
+            row.createCell(29).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (항상 양수)
             // 환불수단 - 실제로 취소된 주문(취소일시가 있는 경우)만 결제수단과 동일하게 표시 (무통장/카드/포인트/이용권)
             boolean isCanceled = first.getCanceledAt() != null && !first.getCanceledAt().isEmpty();
             row.createCell(30).setCellValue(isCanceled ? pmDisplay : "");
@@ -287,10 +287,11 @@ public class OrderController {
             row.createCell(7).setCellValue(cardAlloc);
             row.createCell(8).setCellValue(pointAlloc);
             row.createCell(9).setCellValue(voucherAlloc);
-            row.createCell(10).setCellValue(bankAlloc * SALES_FEE_RATE);
-            row.createCell(11).setCellValue(cardAlloc * SALES_FEE_RATE);
-            row.createCell(12).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
-            row.createCell(13).setCellValue(voucherAlloc * SALES_FEE_RATE);
+            // 수수료는 취소 여부와 무관하게 항상 양수 (얼마가 부과됐는지 나타내는 값이지, 환불 방향을 나타내는 값이 아님)
+            row.createCell(10).setCellValue(Math.abs(bankAlloc) * SALES_FEE_RATE);
+            row.createCell(11).setCellValue(Math.abs(cardAlloc) * SALES_FEE_RATE);
+            row.createCell(12).setCellValue(Math.abs(pointAlloc) * (SALES_FEE_RATE + POINT_FEE_RATE));
+            row.createCell(13).setCellValue(Math.abs(voucherAlloc) * SALES_FEE_RATE);
             row.createCell(14).setCellValue(lineTotal);
             row.createCell(15).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
             row.createCell(16).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
@@ -328,8 +329,9 @@ public class OrderController {
             totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
                     + (o.getCardAmount() != null ? o.getCardAmount() : 0));
         }
-        double salesFee = (totalPoint + totalBankCard) * SALES_FEE_RATE;
-        double pointFee = totalPoint * POINT_FEE_RATE;
+        // 수수료는 취소로 인한 마이너스 여부와 무관하게 항상 양수로 표시
+        double salesFee = Math.abs(totalPoint + totalBankCard) * SALES_FEE_RATE;
+        double pointFee = Math.abs(totalPoint) * POINT_FEE_RATE;
         double totalFee = salesFee + pointFee;
         double payoutAmount = totalPoint - totalFee;
 
