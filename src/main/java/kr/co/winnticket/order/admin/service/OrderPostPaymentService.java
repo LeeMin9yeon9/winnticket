@@ -287,7 +287,7 @@ public class OrderPostPaymentService {
                 cmid,
                 order.getCustomerPhone(),
                 order.getCustomerName(),
-                "0415455681",
+                "0225118691",
                 "윈앤티켓",
                 message
         );
@@ -303,7 +303,7 @@ public class OrderPostPaymentService {
                 cmid,
                 phone,
                 order.getCustomerName(),
-                "0415455681",
+                "0225118691",
                 "윈앤티켓",
                 message
         );

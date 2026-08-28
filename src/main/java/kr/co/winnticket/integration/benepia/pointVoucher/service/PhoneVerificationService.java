@@ -50,7 +50,7 @@ public class PhoneVerificationService {
                 cmid,
                 phone,
                 "",
-                "0415455681",
+                "0225118691",
                 "윈앤티켓",
                 message
         );
