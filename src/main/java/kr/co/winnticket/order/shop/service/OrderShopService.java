@@ -671,7 +671,7 @@ public class OrderShopService {
                 cmid,
                 order.getCustomerPhone(),
                 order.getCustomerName(),
-                "0225118691",   // 발신번호
+                "0415455681",   // 발신번호
                 "윈앤티켓",
                 message
         );

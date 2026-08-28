@@ -341,7 +341,7 @@ public class PointVoucherService {
             ));
 
             String cmid = UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-            bizMsgService.sendSms(cmid, phone, customerName, "0225118691", "윈앤티켓", message);
+            bizMsgService.sendSms(cmid, phone, customerName, "0415455681", "윈앤티켓", message);
         } catch (Exception e) {
             log.error("[PointVoucher] 이용권 발급 SMS 발송 실패 voucherNumber={}", voucherNumber, e);
         }
