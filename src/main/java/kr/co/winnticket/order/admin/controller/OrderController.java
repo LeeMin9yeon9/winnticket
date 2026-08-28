@@ -330,10 +330,11 @@ public class OrderController {
             totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
                     + (o.getCardAmount() != null ? o.getCardAmount() : 0));
         }
-        // 판매수수료/복지포인트수수료는 총 결제액에 대한 비율이므로 그 금액과 같은 부호를 가짐 -
-        // 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
-        double salesFee = (totalPoint + totalBankCard) * SALES_FEE_RATE;
-        double pointFee = totalPoint * POINT_FEE_RATE;
+        // 판매수수료(3.3%)는 무통장/카드 금액에, 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에
+        // 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.
+        // 부호는 각 금액과 같이 가짐 - 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
+        double salesFee = totalBankCard * SALES_FEE_RATE;
+        double pointFee = totalPoint * (SALES_FEE_RATE + POINT_FEE_RATE);
         double totalFee = salesFee + pointFee;
         double payoutAmount = totalPoint - totalFee;
 
@@ -366,7 +367,7 @@ public class OrderController {
         HSSFRow row7 = summarySheet.createRow(6);
         row7.createCell(1).setCellValue("kcp 결제\n(복지포인트) ");
         row7.createCell(2).setCellValue("판매수수료");
-        row7.createCell(3).setCellValue(SALES_FEE_RATE);
+        row7.createCell(3).setCellValue("3.3%");
         row7.createCell(4).setCellValue(totalPoint);
         row7.createCell(5).setCellValue(totalBankCard);
         row7.createCell(6).setCellValue(totalPoint + totalBankCard);
@@ -374,7 +375,7 @@ public class OrderController {
 
         HSSFRow row8 = summarySheet.createRow(7);
         row8.createCell(2).setCellValue("복지포인트수수료");
-        row8.createCell(3).setCellValue(POINT_FEE_RATE);
+        row8.createCell(3).setCellValue("5.5%");
         row8.createCell(4).setCellValue(totalPoint);
         row8.createCell(6).setCellValue(totalPoint);
         row8.createCell(7).setCellValue(pointFee);
