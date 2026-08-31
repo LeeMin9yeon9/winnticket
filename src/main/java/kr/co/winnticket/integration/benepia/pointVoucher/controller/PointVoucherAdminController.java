@@ -6,6 +6,7 @@ import kr.co.winnticket.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminDetailResDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherAdminListResDto;
+import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherManualCreateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherRemainingAmountUpdateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherValidUntilUpdateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.service.PointVoucherService;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +31,14 @@ import java.util.UUID;
 public class PointVoucherAdminController {
 
     private final PointVoucherService pointVoucherService;
+
+    @Operation(summary = "이용권 수동 등록", description = "관리자가 이용권을 직접 등록합니다. 실제 KCP 포인트 차감 없이 이용권 레코드만 생성됩니다. (타 시스템 이관, 고객 응대 목적 등)")
+    @PostMapping
+    public ResponseEntity<ApiResponse<PointVoucherAdminDetailResDto>> create(
+            @Valid @RequestBody PointVoucherManualCreateReqDto reqDto) {
+        PointVoucherAdminDetailResDto result = pointVoucherService.manualCreate(reqDto);
+        return ResponseEntity.ok(ApiResponse.success("이용권이 등록되었습니다.", result));
+    }
 
     @Operation(summary = "이용권 목록 조회", description = "이름/베네피아아이디/휴대폰번호/이용권번호 통합검색 + 상태 필터")
     @GetMapping

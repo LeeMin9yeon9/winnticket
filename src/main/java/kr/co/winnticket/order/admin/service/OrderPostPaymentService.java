@@ -195,42 +195,50 @@ public class OrderPostPaymentService {
         Set<String> sentProducts = new HashSet<>();
 
         for (OrderProductListGetResDto item : items) {
-            UUID productId = item.getProductId();
-            ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.TICKET_ISSUED);
-            if (template == null || template.getContent() == null) continue;
+            // 옵션(주문상품) 하나 처리 중 오류가 나도 나머지 옵션들의 문자는 정상 발송되도록,
+            // 아이템 단위로 예외를 잡아서 로그만 남기고 다음 아이템으로 계속 진행한다.
+            // (예전엔 여기서 예외가 나면 for문 전체가 중단되어, 뒤에 남은 옵션들의 발권완료 문자가
+            //  통째로 안 나가는 문제가 있었음 - 예: 2옵션 구매 시 1옵션 처리 중 실패하면 2옵션 문자 누락)
+            try {
+                UUID productId = item.getProductId();
+                ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.TICKET_ISSUED);
+                if (template == null || template.getContent() == null) continue;
 
-            Map<String, String> vars = new HashMap<>();
-            vars.put("주문자명", order.getCustomerName());
-            vars.put("상품명", item.getProductName());
-            vars.put("주문번호", order.getOrderNumber());
-            vars.put("주문금액", String.valueOf(order.getTotalPrice()));
-            vars.put("입금계좌", buildAccountLines());
-            vars.put("고객센터", selectCallNumber());
+                Map<String, String> vars = new HashMap<>();
+                vars.put("주문자명", order.getCustomerName());
+                vars.put("상품명", item.getProductName());
+                vars.put("주문번호", order.getOrderNumber());
+                vars.put("주문금액", String.valueOf(order.getTotalPrice()));
+                vars.put("입금계좌", buildAccountLines());
+                vars.put("고객센터", selectCallNumber());
 
-            List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
-            String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
-            String couponText;
+                List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
+                String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
+                String couponText;
 
-            if ("QR".equals(ticketCodeType)) {
-                if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
-                sentProducts.add(String.valueOf(item.getPartnerId()));
-                couponText = QR_URL + order.getOrderNumber();
-            } else if ("BARCODE".equals(ticketCodeType)) {
-                if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
-                sentProducts.add(String.valueOf(item.getPartnerId()));
-                couponText = BARCODE_URL + order.getOrderNumber();
-            } else {
-                couponText = String.join("\n", tickets);
+                if ("QR".equals(ticketCodeType)) {
+                    if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
+                    sentProducts.add(String.valueOf(item.getPartnerId()));
+                    couponText = QR_URL + order.getOrderNumber();
+                } else if ("BARCODE".equals(ticketCodeType)) {
+                    if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
+                    sentProducts.add(String.valueOf(item.getPartnerId()));
+                    couponText = BARCODE_URL + order.getOrderNumber();
+                } else {
+                    couponText = String.join("\n", tickets);
+                }
+
+                vars.put("티켓링크", couponText);
+                vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
+                vars.put("주문수량", String.valueOf(item.getQuantity()));
+
+                String message = templateRenderService.render(template.getContent(), vars);
+
+                // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
+                sendCouponSms(order, message);
+            } catch (Exception e) {
+                log.error("[발권완료 SMS 실패] orderItemId={} productId={}", item.getId(), item.getProductId(), e);
             }
-
-            vars.put("티켓링크", couponText);
-            vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
-            vars.put("주문수량", String.valueOf(item.getQuantity()));
-
-            String message = templateRenderService.render(template.getContent(), vars);
-
-            // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
-            sendCouponSms(order, message);
         }
     }
 

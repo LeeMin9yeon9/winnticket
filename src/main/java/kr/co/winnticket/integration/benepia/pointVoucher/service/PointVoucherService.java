@@ -11,6 +11,7 @@ import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherDetailD
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherExchangeReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherExchangeResDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherLookupResDto;
+import kr.co.winnticket.integration.benepia.pointVoucher.dto.PointVoucherManualCreateReqDto;
 import kr.co.winnticket.integration.benepia.pointVoucher.mapper.PointVoucherMapper;
 import kr.co.winnticket.channels.channel.dto.ChannelInfoResGetDto;
 import kr.co.winnticket.channels.channel.mapper.ChannelMapper;
@@ -130,6 +131,43 @@ public class PointVoucherService {
                 .totalAmount(req.getAmount())
                 .validUntil(validUntil)
                 .build();
+    }
+
+    // 관리자 수동 이용권 등록 - 실제 KCP 포인트 차감 없이 이용권 레코드만 직접 생성
+    // (예: 타 시스템에서 이미 발급된 이용권을 이관 등록하거나, 고객 응대 목적으로 직접 발급하는 경우)
+    @Transactional
+    public PointVoucherAdminDetailResDto manualCreate(PointVoucherManualCreateReqDto req) {
+        if (req.getUsedAmount() > req.getTotalAmount()) {
+            throw new IllegalArgumentException("사용금액이 총금액보다 클 수 없습니다.");
+        }
+        if (req.getValidUntil().isBefore(req.getValidFrom())) {
+            throw new IllegalArgumentException("사용기한은 발급일보다 이전일 수 없습니다.");
+        }
+
+        String voucherNumber = generateUniqueVoucherNumber();
+        int remainingAmount = req.getTotalAmount() - req.getUsedAmount();
+        UUID id = UUID.randomUUID();
+
+        mapper.insertVoucher(
+                id,
+                voucherNumber,
+                req.getBenepiaId(),
+                req.getCustomerName(),
+                req.getPhone().replaceAll("[^0-9]", ""),
+                req.getChannelId(),
+                req.getTotalAmount(),
+                req.getUsedAmount(),
+                remainingAmount,
+                req.getValidFrom(),
+                req.getValidUntil(),
+                null, // pointTid - 관리자 수동등록이라 실제 KCP 포인트 거래가 없음
+                req.getMemcorpCd()
+        );
+
+        log.info("[PointVoucher] 관리자 수동 등록 voucherNumber={} customerName={} totalAmount={} usedAmount={}",
+                voucherNumber, req.getCustomerName(), req.getTotalAmount(), req.getUsedAmount());
+
+        return adminDetail(id);
     }
 
     // 이용권 조회 (베네피아 계정 불필요 - 이용권 번호만으로 조회)
