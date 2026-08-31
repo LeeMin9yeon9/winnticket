@@ -247,15 +247,22 @@ public class OrderController {
             int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * (r.getQuantity() != null ? r.getQuantity() : 0);
             // 주문의 무통장/카드/포인트/이용권 금액을 이 상품이 차지하는 비율(상품별 결제금액 / 총 결제금액)만큼 배분.
             // lineTotal이 이미 취소 시 마이너스이므로 ratio 자체가 부호를 그대로 갖고 내려간다.
-            // 수수료가 빠진 순액이 아니라 실제 결제/환불된 원 금액 그대로를 반영한다 - 수수료는
-            // 별도의 "SK 수수료" 컬럼과 "취소수수료" 컬럼으로만 표시한다.
             double ratio = (r.getFinalPrice() != null && r.getFinalPrice() != 0)
                     ? (double) lineTotal / r.getFinalPrice() : 0;
 
-            long bankAlloc = Math.round((r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio);
-            long cardAlloc = Math.round((r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio);
-            long pointAlloc = Math.round((r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio);
-            long voucherAlloc = Math.round((r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio);
+            // 취소된 주문은 실제로는 취소수수료를 뗀 순액(취소금액, = final_price - cancel_fee)만
+            // 환불되므로, SK 결제금액도 그 순액을 기준으로 배분해야 "취소금액" 컬럼과 정확히 일치한다.
+            // (그대로 두면 취소금액은 순액인데 SK 결제금액은 원 결제금액 그대로 나가서 서로 안 맞는 문제가 있었음)
+            double netAdjust = 1.0;
+            if ("CANCELED".equals(r.getStatus()) && r.getFinalPrice() != null && r.getFinalPrice() != 0) {
+                long cancelAmount = r.getCancelAmount() != null ? r.getCancelAmount() : 0;
+                netAdjust = (double) Math.abs(cancelAmount) / r.getFinalPrice();
+            }
+
+            long bankAlloc = Math.round((r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio * netAdjust);
+            long cardAlloc = Math.round((r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio * netAdjust);
+            long pointAlloc = Math.round((r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio * netAdjust);
+            long voucherAlloc = Math.round((r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio * netAdjust);
 
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
@@ -320,11 +327,18 @@ public class OrderController {
         long totalPoint = 0;
         long totalBankCard = 0;
         for (OrderBenepiaSettlementResDto o : orderTotals.values()) {
-            // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함
+            // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함.
+            // 이때도 상세 시트와 동일하게 취소수수료를 뗀 순액(취소금액) 기준으로 차감해야
+            // "취소금액" 합계와 이 요약 합계가 서로 어긋나지 않는다.
             int sign = "CANCELED".equals(o.getStatus()) ? -1 : 1;
-            totalPoint += sign * (o.getPointAmount() != null ? o.getPointAmount() : 0);
-            totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
-                    + (o.getCardAmount() != null ? o.getCardAmount() : 0));
+            double netAdjust = 1.0;
+            if ("CANCELED".equals(o.getStatus()) && o.getFinalPrice() != null && o.getFinalPrice() != 0) {
+                long cancelAmount = o.getCancelAmount() != null ? o.getCancelAmount() : 0;
+                netAdjust = (double) Math.abs(cancelAmount) / o.getFinalPrice();
+            }
+            totalPoint += Math.round(sign * (o.getPointAmount() != null ? o.getPointAmount() : 0) * netAdjust);
+            totalBankCard += Math.round(sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
+                    + (o.getCardAmount() != null ? o.getCardAmount() : 0)) * netAdjust);
         }
         // 판매수수료(3.3%)는 무통장/카드 금액에, 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에
         // 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.

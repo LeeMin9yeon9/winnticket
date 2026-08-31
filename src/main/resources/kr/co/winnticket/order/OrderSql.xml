@@ -1015,7 +1015,14 @@
             COALESCE(a.card_amount, 0)                                                                 AS cardAmount,
             COALESCE(a.point_amount, 0)                                                                AS pointAmount,
             COALESCE(a.voucher_amount, 0)                                                              AS voucherAmount,
-            CASE WHEN COALESCE(a.cancel_amount, 0) &gt; 0 THEN -a.cancel_amount ELSE 0 END              AS cancelAmount,
+            <!--
+                취소금액은 orders.cancel_amount 원본 컬럼을 믿지 않고 final_price - cancel_fee로 직접 계산한다.
+                무통장 취소 등 일부 취소 경로에서 cancel_amount가 채워지지 않는 기존 로직 문제가 있어(OrderService
+                TODO 참고), 그 컬럼을 그대로 쓰면 SK 결제금액(코드에서 final_price 기준으로 재계산)과 취소금액이
+                서로 안 맞는 값으로 나가게 된다. final_price/cancel_fee는 항상 채워지므로 이걸로 계산해야
+                두 금액이 항상 일치한다.
+            -->
+            CASE WHEN a.status = 'CANCELED' THEN -(a.final_price - COALESCE(a.cancel_fee, 0)) ELSE 0 END AS cancelAmount,
             COALESCE(a.cancel_fee, 0)                                                                  AS cancelFee,
             COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             b.product_name || ' / ' || COALESCE(
