@@ -219,13 +219,13 @@ public class OrderController {
         headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        // ===== "order" 상세 시트 - 주문상품(아이템) 단위 =====
+        // ===== "order" 상세 시트 - 주문 단위(한 주문 = 한 행). 옵션/상품이 여러 개여도 한 줄로 합쳐서 표시 =====
         HSSFSheet orderSheet = workbook.createSheet("order");
         String[] orderHeaders = {
                 "주문일", "마감일자", "주문번호", "주문자 이름", "티켓종류", "결제수단",
                 "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
                 "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
-                "상품별\n결제금액", "개별판매가", "주문상품", "수량", "카테고리",
+                "주문상품", "수량", "카테고리",
                 "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료", "취소수단",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
         };
@@ -236,33 +236,48 @@ public class OrderController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 주문 단위 합계 집계용 (요약 시트에서 사용 - 아이템 반복 때문에 중복 합산되지 않도록 주문당 1건만 보관)
-        java.util.Map<UUID, OrderBenepiaSettlementResDto> orderTotals = new java.util.LinkedHashMap<>();
+        // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
+        // 여기서 주문(orderId) 단위로 다시 묶어서 시트에는 주문당 정확히 한 행만 쓴다.
+        java.util.Map<UUID, java.util.List<OrderBenepiaSettlementResDto>> byOrder = new java.util.LinkedHashMap<>();
+        for (OrderBenepiaSettlementResDto r : rows) {
+            byOrder.computeIfAbsent(r.getOrderId(), k -> new java.util.ArrayList<>()).add(r);
+        }
 
         int rowNum = 3;
-        for (OrderBenepiaSettlementResDto r : rows) {
-            orderTotals.putIfAbsent(r.getOrderId(), r);
+        for (java.util.List<OrderBenepiaSettlementResDto> items : byOrder.values()) {
+            OrderBenepiaSettlementResDto r = items.get(0); // 주문 단위 필드(금액/상태 등)는 모든 아이템 행에 동일하게 내려옴
 
-            // 상품별 결제금액 - 취소된 주문이면 수량이 음수이므로 자연히 마이너스로 표시됨
-            int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * (r.getQuantity() != null ? r.getQuantity() : 0);
-            // 주문의 무통장/카드/포인트/이용권 금액을 이 상품이 차지하는 비율(상품별 결제금액 / 총 결제금액)만큼 배분.
-            // lineTotal이 이미 취소 시 마이너스이므로 ratio 자체가 부호를 그대로 갖고 내려간다.
-            double ratio = (r.getFinalPrice() != null && r.getFinalPrice() != 0)
-                    ? (double) lineTotal / r.getFinalPrice() : 0;
+            // 여러 상품/옵션을 "상품명 x수량" 형태로 이어붙이고, 카테고리도 중복 없이 모아서 표시
+            StringBuilder productSb = new StringBuilder();
+            StringBuilder categorySb = new StringBuilder();
+            java.util.Set<String> seenCategories = new java.util.LinkedHashSet<>();
+            long totalQuantity = 0;
+            for (OrderBenepiaSettlementResDto item : items) {
+                int qty = item.getQuantity() != null ? item.getQuantity() : 0;
+                totalQuantity += qty;
+                if (productSb.length() > 0) productSb.append(", ");
+                productSb.append(item.getProductDisplayName() != null ? item.getProductDisplayName() : "")
+                        .append(" x").append(Math.abs(qty));
+                if (item.getCategoryName() != null && !item.getCategoryName().isBlank()
+                        && seenCategories.add(item.getCategoryName())) {
+                    if (categorySb.length() > 0) categorySb.append(", ");
+                    categorySb.append(item.getCategoryName());
+                }
+            }
 
             // 취소된 주문은 실제로는 취소수수료를 뗀 순액(취소금액, = final_price - cancel_fee)만
-            // 환불되므로, SK 결제금액도 그 순액을 기준으로 배분해야 "취소금액" 컬럼과 정확히 일치한다.
-            // (그대로 두면 취소금액은 순액인데 SK 결제금액은 원 결제금액 그대로 나가서 서로 안 맞는 문제가 있었음)
+            // 환불되므로, SK 결제금액도 그 순액을 기준으로 계산해야 "취소금액" 컬럼과 정확히 일치한다.
+            int sign = "CANCELED".equals(r.getStatus()) ? -1 : 1;
             double netAdjust = 1.0;
             if ("CANCELED".equals(r.getStatus()) && r.getFinalPrice() != null && r.getFinalPrice() != 0) {
                 long cancelAmount = r.getCancelAmount() != null ? r.getCancelAmount() : 0;
                 netAdjust = (double) Math.abs(cancelAmount) / r.getFinalPrice();
             }
 
-            long bankAlloc = Math.round((r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio * netAdjust);
-            long cardAlloc = Math.round((r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio * netAdjust);
-            long pointAlloc = Math.round((r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio * netAdjust);
-            long voucherAlloc = Math.round((r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio * netAdjust);
+            long bankAlloc = Math.round((r.getBankAmount() != null ? r.getBankAmount() : 0) * sign * netAdjust);
+            long cardAlloc = Math.round((r.getCardAmount() != null ? r.getCardAmount() : 0) * sign * netAdjust);
+            long pointAlloc = Math.round((r.getPointAmount() != null ? r.getPointAmount() : 0) * sign * netAdjust);
+            long voucherAlloc = Math.round((r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * sign * netAdjust);
 
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
@@ -288,32 +303,30 @@ public class OrderController {
             row.createCell(7).setCellValue(cardAlloc);
             row.createCell(8).setCellValue(pointAlloc);
             row.createCell(9).setCellValue(voucherAlloc);
-            // SK 수수료는 SK 결제금액(위 무통장/카드/포인트/이용권 배분액)에 대한 비율이므로
+            // SK 수수료는 SK 결제금액(위 무통장/카드/포인트/이용권 금액)에 대한 비율이므로
             // 그 금액과 같은 부호를 가져야 함 - 환불(마이너스)이면 수수료도 마이너스(환급).
             // 소수점 없이 원 단위로 반올림해서 표시.
             row.createCell(10).setCellValue(Math.round(bankAlloc * SALES_FEE_RATE));
             row.createCell(11).setCellValue(Math.round(cardAlloc * SALES_FEE_RATE));
             row.createCell(12).setCellValue(Math.round(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE)));
             row.createCell(13).setCellValue(Math.round(voucherAlloc * SALES_FEE_RATE));
-            row.createCell(14).setCellValue(lineTotal);
-            row.createCell(15).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
-            row.createCell(16).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
-            row.createCell(17).setCellValue(r.getQuantity() != null ? r.getQuantity() : 0);
-            row.createCell(18).setCellValue(r.getCategoryName() != null ? r.getCategoryName() : "");
-            row.createCell(19).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(20).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
-            row.createCell(21).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-            row.createCell(22).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-            row.createCell(23).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
-            row.createCell(24).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(25).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
-            row.createCell(26).setCellValue(r.getCancelFee() != null ? r.getCancelFee() : 0);
-            row.createCell(27).setCellValue(cancelMethodDisplay);
-            row.createCell(28).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
-            row.createCell(29).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
-            row.createCell(30).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
-            row.createCell(31).setCellValue(statusDisplay);
-            row.createCell(32).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+            row.createCell(14).setCellValue(productSb.toString());
+            row.createCell(15).setCellValue(totalQuantity);
+            row.createCell(16).setCellValue(categorySb.toString());
+            row.createCell(17).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(18).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
+            row.createCell(19).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
+            row.createCell(20).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
+            row.createCell(21).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
+            row.createCell(22).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(23).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
+            row.createCell(24).setCellValue(r.getCancelFee() != null ? r.getCancelFee() : 0);
+            row.createCell(25).setCellValue(cancelMethodDisplay);
+            row.createCell(26).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(27).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(28).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(29).setCellValue(statusDisplay);
+            row.createCell(30).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -326,7 +339,8 @@ public class OrderController {
 
         long totalPoint = 0;
         long totalBankCard = 0;
-        for (OrderBenepiaSettlementResDto o : orderTotals.values()) {
+        for (java.util.List<OrderBenepiaSettlementResDto> items : byOrder.values()) {
+            OrderBenepiaSettlementResDto o = items.get(0);
             // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함.
             // 이때도 상세 시트와 동일하게 취소수수료를 뗀 순액(취소금액) 기준으로 차감해야
             // "취소금액" 합계와 이 요약 합계가 서로 어긋나지 않는다.
