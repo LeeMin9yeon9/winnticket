@@ -226,7 +226,7 @@ public class OrderController {
                 "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
                 "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
                 "상품별\n결제금액", "개별판매가", "주문상품", "수량", "카테고리",
-                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료",
+                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료", "취소수단",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
@@ -247,23 +247,15 @@ public class OrderController {
             int lineTotal = (r.getUnitPrice() != null ? r.getUnitPrice() : 0) * (r.getQuantity() != null ? r.getQuantity() : 0);
             // 주문의 무통장/카드/포인트/이용권 금액을 이 상품이 차지하는 비율(상품별 결제금액 / 총 결제금액)만큼 배분.
             // lineTotal이 이미 취소 시 마이너스이므로 ratio 자체가 부호를 그대로 갖고 내려간다.
+            // 수수료가 빠진 순액이 아니라 실제 결제/환불된 원 금액 그대로를 반영한다 - 수수료는
+            // 별도의 "SK 수수료" 컬럼과 "취소수수료" 컬럼으로만 표시한다.
             double ratio = (r.getFinalPrice() != null && r.getFinalPrice() != 0)
                     ? (double) lineTotal / r.getFinalPrice() : 0;
 
-            // 취소 시 무통장/카드는 취소수수료가 빠진 실제 환불액(취소금액)만큼만 SK 결제금액에 반영되어야
-            // 하므로, 원금 대비 실제 환불 비율(취소금액 / (무통장+카드))을 추가로 곱해준다.
-            // 포인트/이용권은 취소금액에 포함되지 않고 별도로 전액 환급되므로 그대로 둔다.
-            double bankCardGross = (r.getBankAmount() != null ? r.getBankAmount() : 0)
-                    + (r.getCardAmount() != null ? r.getCardAmount() : 0);
-            double feeAdjustFactor = 1.0;
-            if ("CANCELED".equals(r.getStatus()) && bankCardGross != 0 && r.getCancelAmount() != null) {
-                feeAdjustFactor = Math.abs(r.getCancelAmount()) / bankCardGross;
-            }
-
-            double bankAlloc = (r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio * feeAdjustFactor;
-            double cardAlloc = (r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio * feeAdjustFactor;
-            double pointAlloc = (r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio;
-            double voucherAlloc = (r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio;
+            long bankAlloc = Math.round((r.getBankAmount() != null ? r.getBankAmount() : 0) * ratio);
+            long cardAlloc = Math.round((r.getCardAmount() != null ? r.getCardAmount() : 0) * ratio);
+            long pointAlloc = Math.round((r.getPointAmount() != null ? r.getPointAmount() : 0) * ratio);
+            long voucherAlloc = Math.round((r.getVoucherAmount() != null ? r.getVoucherAmount() : 0) * ratio);
 
             String pmDisplay = "";
             if (r.getPaymentMethod() != null) {
@@ -275,6 +267,8 @@ public class OrderController {
                 try { statusDisplay = kr.co.winnticket.common.enums.OrderStatus.valueOf(r.getStatus()).getDisplayName(); }
                 catch (Exception e) { statusDisplay = r.getStatus(); }
             }
+            // 취소수단 - 실제로 취소된 주문일 때만 결제수단과 동일하게 표시
+            String cancelMethodDisplay = "CANCELED".equals(r.getStatus()) ? pmDisplay : "";
 
             HSSFRow row = orderSheet.createRow(rowNum++);
             row.createCell(0).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
@@ -288,11 +282,12 @@ public class OrderController {
             row.createCell(8).setCellValue(pointAlloc);
             row.createCell(9).setCellValue(voucherAlloc);
             // SK 수수료는 SK 결제금액(위 무통장/카드/포인트/이용권 배분액)에 대한 비율이므로
-            // 그 금액과 같은 부호를 가져야 함 - 환불(마이너스)이면 수수료도 마이너스(환급)
-            row.createCell(10).setCellValue(bankAlloc * SALES_FEE_RATE);
-            row.createCell(11).setCellValue(cardAlloc * SALES_FEE_RATE);
-            row.createCell(12).setCellValue(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE));
-            row.createCell(13).setCellValue(voucherAlloc * SALES_FEE_RATE);
+            // 그 금액과 같은 부호를 가져야 함 - 환불(마이너스)이면 수수료도 마이너스(환급).
+            // 소수점 없이 원 단위로 반올림해서 표시.
+            row.createCell(10).setCellValue(Math.round(bankAlloc * SALES_FEE_RATE));
+            row.createCell(11).setCellValue(Math.round(cardAlloc * SALES_FEE_RATE));
+            row.createCell(12).setCellValue(Math.round(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE)));
+            row.createCell(13).setCellValue(Math.round(voucherAlloc * SALES_FEE_RATE));
             row.createCell(14).setCellValue(lineTotal);
             row.createCell(15).setCellValue(r.getUnitPrice() != null ? r.getUnitPrice() : 0);
             row.createCell(16).setCellValue(r.getProductDisplayName() != null ? r.getProductDisplayName() : "");
@@ -306,11 +301,12 @@ public class OrderController {
             row.createCell(24).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
             row.createCell(25).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
             row.createCell(26).setCellValue(r.getCancelFee() != null ? r.getCancelFee() : 0);
-            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
-            row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
-            row.createCell(29).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
-            row.createCell(30).setCellValue(statusDisplay);
-            row.createCell(31).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+            row.createCell(27).setCellValue(cancelMethodDisplay);
+            row.createCell(28).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(29).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(30).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(31).setCellValue(statusDisplay);
+            row.createCell(32).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -333,10 +329,10 @@ public class OrderController {
         // 판매수수료(3.3%)는 무통장/카드 금액에, 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에
         // 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.
         // 부호는 각 금액과 같이 가짐 - 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
-        double salesFee = totalBankCard * SALES_FEE_RATE;
-        double pointFee = totalPoint * (SALES_FEE_RATE + POINT_FEE_RATE);
-        double totalFee = salesFee + pointFee;
-        double payoutAmount = totalPoint - totalFee;
+        long salesFee = Math.round(totalBankCard * SALES_FEE_RATE);
+        long pointFee = Math.round(totalPoint * (SALES_FEE_RATE + POINT_FEE_RATE));
+        long totalFee = salesFee + pointFee;
+        long payoutAmount = totalPoint - totalFee;
 
         HSSFCellStyle titleStyle = workbook.createCellStyle();
         HSSFFont titleFont = workbook.createFont();
