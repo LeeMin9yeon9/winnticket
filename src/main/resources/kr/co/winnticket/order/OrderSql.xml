@@ -736,14 +736,20 @@
       AND t.ticket_used = true
     </select>
 
-    <!-- 고객 자가취소 가능 여부 판단용 - 사용됐거나 유효기간이 지난 티켓 수 -->
+    <!--
+        고객 자가취소/관리자 취소 가능 여부 판단용 - 사용됐거나 유효기간이 지난 티켓 수.
+        valid_to는 DATE 컬럼(시간 없음)인데 예전엔 now()(현재 시각)와 비교해서,
+        유효기간이 "오늘까지"인 티켓이 오늘 00:00:00 이후부터 하루 종일 이미 만료된
+        것으로 잘못 판정되어 당일 취소가 막히는 문제가 있었음. CURRENT_DATE와
+        비교해서 오늘까지는 만료가 아니도록 수정 (FieldOrderSql.xml의 기존 패턴과 동일).
+    -->
     <select id="countUsedOrExpiredTickets" resultType="int">
         SELECT COUNT(1)
         FROM order_tickets t
                  JOIN order_items oi
                       ON oi.id = t.order_item_id
         WHERE oi.order_id = #{orderId}::uuid
-          AND (t.ticket_used = true OR (t.valid_to IS NOT NULL AND t.valid_to &lt; now()))
+          AND (t.ticket_used = true OR (t.valid_to IS NOT NULL AND t.valid_to &lt; CURRENT_DATE))
     </select>
 
     <!-- 주문아이템 기준 옵션값ID 조회 -->
