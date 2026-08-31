@@ -656,6 +656,7 @@ public class OrderShopService {
         vars.put("주문금액", String.valueOf(order.getTotalPrice()));
         vars.put("입금계좌", buildAccountLines());
         vars.put("고객센터", selectCallNumber());
+        vars.put("채널명", resolveBrandName(order));
 
         // 3. 템플릿 치환
         String message = templateRenderService.render(template.getContent(), vars);
@@ -672,9 +673,15 @@ public class OrderShopService {
                 order.getCustomerPhone(),
                 order.getCustomerName(),
                 "0415455681",   // 발신번호
-                "윈앤티켓",
+                resolveBrandName(order),
                 message
         );
+    }
+
+    // 문자에 표시할 브랜드명 - 주문이 속한 채널명을 그대로 쓰고, 채널명이 없으면 기본값 사용
+    private String resolveBrandName(OrderAdminDetailGetResDto order) {
+        String channelName = order.getChannelName();
+        return (channelName != null && !channelName.isBlank()) ? channelName : "윈앤티켓";
     }
 
     // 상품 + 옵션 + 수량

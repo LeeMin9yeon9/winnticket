@@ -158,7 +158,7 @@ public class OrderPostPaymentService {
         ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.PAYMENT_CONFIRMED);
         if (template == null || template.getContent() == null) return;
 
-        String message = templateRenderService.render(template.getContent(), Map.of(
+        Map<String, String> vars = new HashMap<>(Map.of(
                 "주문자명", order.getCustomerName(),
                 "주문번호", order.getOrderNumber(),
                 "상품명", buildProductLines(items),
@@ -168,6 +168,8 @@ public class OrderPostPaymentService {
                 "고객센터", selectCallNumber(),
                 "이용권정보", buildVoucherRemainingLine(order)
         ));
+        vars.put("채널명", resolveBrandName(order));
+        String message = templateRenderService.render(template.getContent(), vars);
         sendSms(order, message);
     }
 
@@ -231,6 +233,7 @@ public class OrderPostPaymentService {
                     vars.put("티켓링크", couponText);
                     vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
                     vars.put("주문수량", String.valueOf(item.getQuantity()));
+                    vars.put("채널명", resolveBrandName(order));
 
                     String message = templateRenderService.render(template.getContent(), vars);
                     sendCouponSms(order, message);
@@ -272,6 +275,7 @@ public class OrderPostPaymentService {
                 vars.put("티켓링크", String.join("\n", allTickets));
                 vars.put("옵션명", String.join(", ", optionNames));
                 vars.put("주문수량", String.valueOf(totalQuantity));
+                vars.put("채널명", resolveBrandName(order));
 
                 String message = templateRenderService.render(template.getContent(), vars);
 
@@ -292,7 +296,7 @@ public class OrderPostPaymentService {
         ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.ORDER_CANCELLED);
         if (template == null || template.getContent() == null) return;
 
-        String message = templateRenderService.render(template.getContent(), Map.of(
+        Map<String, String> vars = new HashMap<>(Map.of(
                 "주문자명", order.getCustomerName(),
                 "주문번호", order.getOrderNumber(),
                 "상품명", buildProductLines(items),
@@ -301,6 +305,8 @@ public class OrderPostPaymentService {
                 "입금계좌", buildAccountLines(),
                 "고객센터", selectCallNumber()
         ));
+        vars.put("채널명", resolveBrandName(order));
+        String message = templateRenderService.render(template.getContent(), vars);
         sendSms(order, message);
     }
 
@@ -329,6 +335,12 @@ public class OrderPostPaymentService {
         }
     }
 
+    // 문자에 표시할 브랜드명 - 주문이 속한 채널명을 그대로 쓰고, 채널명이 없으면 기본값 사용
+    private String resolveBrandName(OrderAdminDetailGetResDto order) {
+        String channelName = order.getChannelName();
+        return (channelName != null && !channelName.isBlank()) ? channelName : "윈앤티켓";
+    }
+
     // 문자 발송 공통부 (BizMsgService @Async → 비동기 발송)
     private void sendSms(OrderAdminDetailGetResDto order, String message) {
         String cmid = UUID.randomUUID().toString().replace("-", "").substring(0, 20);
@@ -337,7 +349,7 @@ public class OrderPostPaymentService {
                 order.getCustomerPhone(),
                 order.getCustomerName(),
                 "0415455681",
-                "윈앤티켓",
+                resolveBrandName(order),
                 message
         );
     }
@@ -353,7 +365,7 @@ public class OrderPostPaymentService {
                 phone,
                 order.getCustomerName(),
                 "0415455681",
-                "윈앤티켓",
+                resolveBrandName(order),
                 message
         );
     }
