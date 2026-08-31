@@ -188,56 +188,97 @@ public class OrderPostPaymentService {
         }
     }
 
-    /** 발권완료 문자 발송 */
+    /**
+     * 발권완료 문자 발송
+     * - QR/바코드형(파트너 단위 주문번호 조회 방식)은 같은 파트너면 1건만 발송.
+     * - 그 외(문자에 티켓번호를 직접 표기하는 일반형)는, 같은 상품을 옵션만 다르게
+     *   여러 개 주문했어도 옵션별로 문자를 따로 보내지 않고 상품 단위로 묶어
+     *   옵션명/티켓번호를 전부 합쳐서 1건으로 보낸다.
+     *   (예전엔 옵션(주문상품)마다 별도 문자를 보냈는데, 그중 하나라도 실패하면
+     *   그 뒤 옵션들의 문자가 통째로 안 나가는 문제가 있었고, 정상적으로 다 나가더라도
+     *   같은 상품인데 문자가 여러 건으로 쪼개져서 고객이 혼란스러워하는 문제가 있었음)
+     */
     public void sendTicketIssuedSms(OrderAdminDetailGetResDto order,
                                     List<OrderProductListGetResDto> items,
                                     Map<UUID, List<String>> ticketMap) {
-        Set<String> sentProducts = new HashSet<>();
+        Set<String> sentQrBarcodePartners = new HashSet<>();
+        Map<UUID, List<OrderProductListGetResDto>> normalGroups = new LinkedHashMap<>();
 
+        // QR/바코드형과 일반형을 분리 - QR/바코드형은 파트너 단위, 일반형은 상품 단위로 묶어야 하므로
         for (OrderProductListGetResDto item : items) {
-            // 옵션(주문상품) 하나 처리 중 오류가 나도 나머지 옵션들의 문자는 정상 발송되도록,
-            // 아이템 단위로 예외를 잡아서 로그만 남기고 다음 아이템으로 계속 진행한다.
-            // (예전엔 여기서 예외가 나면 for문 전체가 중단되어, 뒤에 남은 옵션들의 발권완료 문자가
-            //  통째로 안 나가는 문제가 있었음 - 예: 2옵션 구매 시 1옵션 처리 중 실패하면 2옵션 문자 누락)
+            String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
+            if ("QR".equals(ticketCodeType) || "BARCODE".equals(ticketCodeType)) {
+                try {
+                    String partnerKey = String.valueOf(item.getPartnerId());
+                    if (sentQrBarcodePartners.contains(partnerKey)) continue;
+
+                    ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(item.getProductId(), SmsTemplateCode.TICKET_ISSUED);
+                    if (template == null || template.getContent() == null) continue;
+
+                    sentQrBarcodePartners.add(partnerKey);
+
+                    String couponText = "QR".equals(ticketCodeType)
+                            ? QR_URL + order.getOrderNumber()
+                            : BARCODE_URL + order.getOrderNumber();
+
+                    Map<String, String> vars = new HashMap<>();
+                    vars.put("주문자명", order.getCustomerName());
+                    vars.put("상품명", item.getProductName());
+                    vars.put("주문번호", order.getOrderNumber());
+                    vars.put("주문금액", String.valueOf(order.getTotalPrice()));
+                    vars.put("입금계좌", buildAccountLines());
+                    vars.put("고객센터", selectCallNumber());
+                    vars.put("티켓링크", couponText);
+                    vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
+                    vars.put("주문수량", String.valueOf(item.getQuantity()));
+
+                    String message = templateRenderService.render(template.getContent(), vars);
+                    sendCouponSms(order, message);
+                } catch (Exception e) {
+                    log.error("[발권완료 SMS 실패-QR/BARCODE] orderItemId={} productId={}", item.getId(), item.getProductId(), e);
+                }
+            } else {
+                normalGroups.computeIfAbsent(item.getProductId(), k -> new ArrayList<>()).add(item);
+            }
+        }
+
+        for (Map.Entry<UUID, List<OrderProductListGetResDto>> entry : normalGroups.entrySet()) {
+            UUID productId = entry.getKey();
+            List<OrderProductListGetResDto> group = entry.getValue();
+            OrderProductListGetResDto first = group.get(0);
+
             try {
-                UUID productId = item.getProductId();
                 ProductSmsTemplateDto template = smsTemplateFinder.findTemplate(productId, SmsTemplateCode.TICKET_ISSUED);
                 if (template == null || template.getContent() == null) continue;
 
+                List<String> allTickets = new ArrayList<>();
+                List<String> optionNames = new ArrayList<>();
+                int totalQuantity = 0;
+                for (OrderProductListGetResDto item : group) {
+                    allTickets.addAll(ticketMap.getOrDefault(item.getId(), new ArrayList<>()));
+                    if (item.getOptionName() != null && !item.getOptionName().isBlank()) {
+                        optionNames.add(item.getOptionName());
+                    }
+                    totalQuantity += item.getQuantity();
+                }
+
                 Map<String, String> vars = new HashMap<>();
                 vars.put("주문자명", order.getCustomerName());
-                vars.put("상품명", item.getProductName());
+                vars.put("상품명", first.getProductName());
                 vars.put("주문번호", order.getOrderNumber());
                 vars.put("주문금액", String.valueOf(order.getTotalPrice()));
                 vars.put("입금계좌", buildAccountLines());
                 vars.put("고객센터", selectCallNumber());
-
-                List<String> tickets = ticketMap.getOrDefault(item.getId(), new ArrayList<>());
-                String ticketCodeType = mapper.selectTicketCodeType(item.getPartnerId());
-                String couponText;
-
-                if ("QR".equals(ticketCodeType)) {
-                    if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
-                    sentProducts.add(String.valueOf(item.getPartnerId()));
-                    couponText = QR_URL + order.getOrderNumber();
-                } else if ("BARCODE".equals(ticketCodeType)) {
-                    if (sentProducts.contains(String.valueOf(item.getPartnerId()))) continue;
-                    sentProducts.add(String.valueOf(item.getPartnerId()));
-                    couponText = BARCODE_URL + order.getOrderNumber();
-                } else {
-                    couponText = String.join("\n", tickets);
-                }
-
-                vars.put("티켓링크", couponText);
-                vars.put("옵션명", item.getOptionName() == null ? "" : item.getOptionName());
-                vars.put("주문수량", String.valueOf(item.getQuantity()));
+                vars.put("티켓링크", String.join("\n", allTickets));
+                vars.put("옵션명", String.join(", ", optionNames));
+                vars.put("주문수량", String.valueOf(totalQuantity));
 
                 String message = templateRenderService.render(template.getContent(), vars);
 
                 // 수령자 번호가 있으면 수령자에게, 없으면 주문자에게 발송
                 sendCouponSms(order, message);
             } catch (Exception e) {
-                log.error("[발권완료 SMS 실패] orderItemId={} productId={}", item.getId(), item.getProductId(), e);
+                log.error("[발권완료 SMS 실패] productId={}", productId, e);
             }
         }
     }
