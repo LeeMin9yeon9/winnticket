@@ -144,6 +144,7 @@ public class ProductService {
 
         if (model.getValuesInsert() != null && !model.getValuesInsert().isEmpty()) {
             for (ProductOptionValuePostReqDto valueDto : model.getValuesInsert()) {
+                valueDto.setCode(stripSpaces(valueDto.getCode()));
                 mapper.insertOptionValue(model.getOptionId(), valueDto);
             }
         };
@@ -160,6 +161,7 @@ public class ProductService {
 
         if (model.getValuesInsert() != null && !model.getValuesInsert().isEmpty()) {
             for (ProductOptionValuePostReqDto valueDto : model.getValuesInsert()) {
+                valueDto.setCode(stripSpaces(valueDto.getCode()));
                 mapper.insertOptionValue(auId, valueDto);
             }
         };
@@ -177,7 +179,14 @@ public class ProductService {
 
     // 옵션값 수정
     public void updateProductOptionValue(UUID auId, ProductOptionValuePatchReqDto model) {
+        model.setCode(stripSpaces(model.getCode()));
         mapper.updateProductOptionValue(auId, model);
+    }
+
+    // 옵션코드에 공백이 섞여 들어가면 아쿠아플라넷 등 외부 파트너 API 연동 시 코드가 안 맞아서
+    // "쿠폰마스터 정보가 없습니다" 같은 원인 불명의 발행 실패로 이어짐 - 저장 전에 공백 제거
+    private String stripSpaces(String code) {
+        return code == null ? null : code.replaceAll("\\s", "");
     }
 
     // 상품 기간등록
