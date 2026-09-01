@@ -37,7 +37,7 @@ public class PointVoucherController {
     private String resolveMemcorpCd(HttpSession session) {
         BenepiaDecryptedParamDto decrypted = (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED");
         if (decrypted == null || !StringUtils.hasText(decrypted.getSitecode())) {
-            throw new IllegalStateException("베네피아 웹 진입 후 호출해야 함");
+            throw new IllegalStateException("베네피아 로그인 후 레저특가몰로 접속하셔야 포인트 사용이 가능합니다.");
         }
         return decrypted.getSitecode();
     }
