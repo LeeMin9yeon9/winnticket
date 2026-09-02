@@ -162,7 +162,6 @@ public class BenepiaOrderBatchService {
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
-        order.setBenepiaId("testtravel");
         req.setBenefitId(nvl(order.getBenepiaId()));
         req.setCoCd("5555");
 
@@ -309,7 +308,6 @@ public class BenepiaOrderBatchService {
 
         req.setKcpCoCd(nvl(props.getKcpCoCd()));
         req.setCoopCoCd(nvl(props.getCustCoCd()));
-        order.setBenepiaId("testtravel");
         req.setBenefitId(nvl(order.getBenepiaId()));
         req.setCoCd("5555");
 
