@@ -226,7 +226,8 @@ public class OrderController {
                 "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
                 "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
                 "주문상품", "수량", "카테고리",
-                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료", "취소수단",
+                "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료",
+                "취소수수료\nSK수수료", "취소수단",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
@@ -316,13 +317,18 @@ public class OrderController {
             row.createCell(21).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
             row.createCell(22).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
             row.createCell(23).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
-            row.createCell(24).setCellValue(r.getCancelFee() != null ? r.getCancelFee() : 0);
-            row.createCell(25).setCellValue(cancelMethodDisplay);
-            row.createCell(26).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
-            row.createCell(27).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
-            row.createCell(28).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
-            row.createCell(29).setCellValue(statusDisplay);
-            row.createCell(30).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+            long cancelFee = r.getCancelFee() != null ? r.getCancelFee() : 0;
+            row.createCell(24).setCellValue(cancelFee);
+            // 취소수수료는 고객에게 환불 안 되고 우리가 갖는 매출이라, 이 금액에 대해서도
+            // 베네피아/SK 수수료를 정산해줘야 함 - 무통장/카드분에서 떼는 수수료라 판매수수료율 적용.
+            // (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨)
+            row.createCell(25).setCellValue(Math.round(cancelFee * SALES_FEE_RATE));
+            row.createCell(26).setCellValue(cancelMethodDisplay);
+            row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
+            row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
+            row.createCell(29).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
+            row.createCell(30).setCellValue(statusDisplay);
+            row.createCell(31).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -335,6 +341,7 @@ public class OrderController {
 
         long totalPoint = 0;
         long totalBankCard = 0;
+        long totalCancelFee = 0;
         for (java.util.List<OrderBenepiaSettlementResDto> items : byOrder.values()) {
             OrderBenepiaSettlementResDto o = items.get(0);
             // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함.
@@ -344,11 +351,13 @@ public class OrderController {
             totalPoint += sign * (o.getPointAmount() != null ? o.getPointAmount() : 0);
             totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
                     + (o.getCardAmount() != null ? o.getCardAmount() : 0));
+            // 취소수수료는 환불 안 되고 우리 매출로 남는 돈이라, 판매수수료 정산 대상에 별도로 더해줌
+            totalCancelFee += o.getCancelFee() != null ? o.getCancelFee() : 0;
         }
-        // 판매수수료(3.3%)는 무통장/카드 금액에, 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에
-        // 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.
+        // 판매수수료(3.3%)는 무통장/카드 금액 + 취소수수료(우리 매출로 남은 몫)에, 복지포인트수수료
+        // (3.3%+2.2%=5.5%)는 포인트 금액에 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.
         // 부호는 각 금액과 같이 가짐 - 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
-        long salesFee = Math.round(totalBankCard * SALES_FEE_RATE);
+        long salesFee = Math.round((totalBankCard + totalCancelFee) * SALES_FEE_RATE);
         long pointFee = Math.round(totalPoint * (SALES_FEE_RATE + POINT_FEE_RATE));
         long totalFee = salesFee + pointFee;
         long payoutAmount = totalPoint - totalFee;
