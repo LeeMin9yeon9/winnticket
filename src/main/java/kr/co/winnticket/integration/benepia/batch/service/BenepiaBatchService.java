@@ -264,7 +264,7 @@ public class BenepiaBatchService {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put(rootKey, items);
 
-        Path path = Path.of(, fileName);
+        Path path = Path.of(workDir, fileName);
         Files.createDirectories(path.getParent());
 
         File file = path.toFile();
