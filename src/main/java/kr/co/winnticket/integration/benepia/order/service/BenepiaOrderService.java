@@ -47,7 +47,6 @@ public class BenepiaOrderService {
             List<OrderProductListGetResDto> items) {
 
         if(items == null || items.isEmpty()) return;
-        order.setBenepiaId("testtravel");
         // 베네피아 회원이 아닌 일반 주문은 전송 대상이 아님 (필수 파라미터 누락으로 실패하는 것을 방지)
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()) return;
 
@@ -235,8 +234,7 @@ public class BenepiaOrderService {
             List<OrderProductListGetResDto> items,
             int totalRefundAmount,
             int pointRefundAmount){
-
-        order.setBenepiaId("testtravel");
+        
         if(order.getBenepiaId() == null || order.getBenepiaId().isBlank()
                 || items == null || items.isEmpty()) return;
 
