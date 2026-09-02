@@ -46,7 +46,7 @@ public class BenepiaBatchService {
     @Value("${benepia-batch.retry-sleep-ms:2000}")
     private long retrySleepMs;
 
-    @Value("${benepia-batch.work-dir:/home/ubuntu/benepia}")
+    @Value("${benepia-batch.work-dir:/home/winnticket/app/benepia}")
     private String workDir;
 
     @Value("${benepia.api-key}")
@@ -264,7 +264,7 @@ public class BenepiaBatchService {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put(rootKey, items);
 
-        Path path = Path.of(workDir, fileName);
+        Path path = Path.of(, fileName);
         Files.createDirectories(path.getParent());
 
         File file = path.toFile();
