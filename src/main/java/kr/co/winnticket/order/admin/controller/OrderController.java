@@ -335,6 +335,10 @@ public class OrderController {
             orderSheet.autoSizeColumn(i);
         }
 
+        // 컬럼이 많아 오른쪽으로 스크롤해도 주문 식별 정보(주문일~주문자 이름)와 헤더 행은
+        // 항상 보이도록 틀 고정 (왼쪽 4개 컬럼 + 헤더까지의 상단 3개 행 고정)
+        orderSheet.createFreezePane(4, 3);
+
         // ===== "-" 요약 시트 =====
         HSSFSheet summarySheet = workbook.createSheet("-");
         workbook.setSheetOrder("-", 0);
@@ -401,15 +405,22 @@ public class OrderController {
         row8.createCell(2).setCellValue("복지포인트수수료");
         row8.createCell(3).setCellValue("5.5%");
         row8.createCell(4).setCellValue(totalPoint);
+        row8.createCell(5).setCellValue(0); // 복지포인트수수료는 카드/무통장에는 안 붙으므로 0
         row8.createCell(6).setCellValue(totalPoint);
         row8.createCell(7).setCellValue(pointFee);
 
         HSSFRow row9 = summarySheet.createRow(8);
         row9.createCell(2).setCellValue("수수료 세금계산서 발행액");
+        row9.createCell(4).setCellValue(totalPoint);
+        row9.createCell(5).setCellValue(totalBankCard);
+        row9.createCell(6).setCellValue(totalPoint + totalBankCard);
         row9.createCell(7).setCellValue(totalFee);
 
         HSSFRow row10 = summarySheet.createRow(9);
         row10.createCell(2).setCellValue("복지포인트 지급액 (=청구액)");
+        row10.createCell(4).setCellValue(totalPoint);
+        row10.createCell(5).setCellValue(0); // 복지포인트 지급액은 카드/무통장과 무관
+        row10.createCell(6).setCellValue(totalPoint);
         row10.createCell(7).setCellValue(payoutAmount);
 
         // 정산 은행/계좌 - 회사 고정 계좌 (필요 시 값만 교체하면 됨)
