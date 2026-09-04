@@ -731,6 +731,13 @@ public class OrderService {
             cancelAmount = refundAmount;
             cancelFee = cancelFee;
 
+        } else if (method == PaymentMethod.GIFT) {
+            // 이용권(GIFT) 단독결제 - PG/포인트 취소 API 호출 없이, 실제 사용된 이용권 금액만큼
+            // 전액 환불(수수료 없음). 이용권 잔액 복원 자체는 바로 아래 "2.5 이용권 환불" 단계에서
+            // order.getVoucherAmount() 기준으로 처리됨.
+            cancelAmount = order.getFinalPrice();
+            cancelFee = 0;
+
         } else {
             throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
         }
