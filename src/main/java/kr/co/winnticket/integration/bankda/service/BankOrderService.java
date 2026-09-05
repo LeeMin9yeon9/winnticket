@@ -37,6 +37,8 @@ public class BankOrderService {
         List<BankOrderResponse.Order> orders =
                 bankOrderMapper.selectBankdaOrders();
 
+        log.info("[뱅크다] 미입금 주문 조회 요청 - count={}", orders.size());
+
         BankOrderResponse res = new BankOrderResponse();
         res.setOrders(orders);
 
@@ -47,6 +49,8 @@ public class BankOrderService {
      * 주문 상세 조회
      */
     public BankOrderDetailResponse getOrderDetail(String orderId) {
+        log.info("[뱅크다] 주문 상세 조회 요청 - orderId={}", orderId);
+
         // 요청 형식 오류
         if (orderId == null || orderId.isBlank()) {
             throw new BankdaException(400, "요청 format 오류");
@@ -57,6 +61,7 @@ public class BankOrderService {
 
         // 존재하지 않는 주문번호
         if (order == null) {
+            log.warn("[뱅크다] 존재하지 않는 주문번호 - orderId={}", orderId);
             throw new BankdaException(415, "존재하지 않는 주문번호");
         }
 
@@ -69,8 +74,12 @@ public class BankOrderService {
     public ResponseEntity<BankConfirmResponse> confirm(
             BankConfirmRequest request
     ) {
+        log.info("[뱅크다] 입금완료 확인 요청 수신 - requests={}",
+                request == null ? null : request.getRequests());
+
         // 400 format 오류
         if (request == null || request.getRequests() == null || request.getRequests().isEmpty()) {
+            log.warn("[뱅크다] 입금완료 확인 요청 format 오류 - request={}", request);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new BankConfirmResponse(
                             400,
@@ -99,6 +108,7 @@ public class BankOrderService {
 
             // 존재하지 않는 주문
             if (orderId == null) {
+                log.warn("[뱅크다] 존재하지 않는 주문번호 - orderNumber={}", orderNumber);
                 results.add(new BankConfirmResponse.OrderResult(
                         orderNumber,
                         "존재하지 않는 주문"
@@ -113,6 +123,8 @@ public class BankOrderService {
             if (order.getPaymentStatus() != PaymentStatus.READY
                     || order.getStatus() != OrderStatus.PENDING_PAYMENT) {
 
+                log.warn("[뱅크다] 입금대기 상태가 아님 - orderNumber={}, paymentStatus={}, status={}",
+                        orderNumber, order.getPaymentStatus(), order.getStatus());
                 results.add(new BankConfirmResponse.OrderResult(
                         orderNumber,
                         "요청된 주문번호가 입금대기 상태가 아님"
@@ -122,6 +134,7 @@ public class BankOrderService {
 
             // 정상 처리
             orderService.completePayment(orderId);
+            log.info("[뱅크다] 입금완료 처리 성공 - orderNumber={}, orderId={}", orderNumber, orderId);
 
             results.add(new BankConfirmResponse.OrderResult(
                     orderNumber,
