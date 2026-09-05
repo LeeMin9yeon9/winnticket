@@ -649,11 +649,17 @@ public class OrderShopService {
         // 2. 변수 구성
         Map<String, String> vars = new HashMap<>();
 
+        // 무통장+포인트 혼합결제인 경우, 실제로 계좌로 입금해야 하는 금액은 무통장 분담액뿐이라
+        // (나머지는 이미 포인트로 차감됨) 총 주문금액이 아니라 무통장 금액을 안내해야 함.
+        int depositAmount = (order.getBankAmount() != null && order.getBankAmount() > 0)
+                ? order.getBankAmount()
+                : order.getTotalPrice();
+
         vars.put("주문자명", order.getCustomerName());
         vars.put("상품명", buildProductLines(items));
         vars.put("주문번호", order.getOrderNumber());
         vars.put("주문수량", String.valueOf(order.getAllCnt()));
-        vars.put("주문금액", String.valueOf(order.getTotalPrice()));
+        vars.put("주문금액", String.valueOf(depositAmount));
         vars.put("입금계좌", buildAccountLines());
         vars.put("고객센터", selectCallNumber());
         vars.put("채널명", resolveBrandName(order));
