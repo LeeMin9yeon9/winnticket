@@ -59,8 +59,12 @@ public class BankOrderService {
         BankOrderDetailResponse.Order order =
                 bankOrderMapper.selectBankOrderDetail(orderId);
 
-        // 존재하지 않는 주문번호
+        // 조회 결과 없음 - 진짜 없는 주문번호인지, 이미 처리돼서 입금대기 상태를 벗어난 건지 구분
         if (order == null) {
+            if (bankOrderMapper.findOrderIdByOrderNumber(orderId) != null) {
+                log.warn("[뱅크다] 이미 처리되어 입금대기 상태가 아닌 주문 - orderId={}", orderId);
+                throw new BankdaException(415, "이미 처리된 주문");
+            }
             log.warn("[뱅크다] 존재하지 않는 주문번호 - orderId={}", orderId);
             throw new BankdaException(415, "존재하지 않는 주문번호");
         }
