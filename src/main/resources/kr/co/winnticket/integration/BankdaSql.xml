@@ -30,7 +30,11 @@
             o.customer_name AS billing_name,
             '123456789' AS bank_account_no,
             '은행' AS bank_code_name,
-            o.final_price AS order_price_amount,
+            <!-- 무통장+포인트 혼합결제는 실제 계좌로 입금되는 금액이 final_price 전체가
+                 아니라 bank_amount(무통장 분담액)뿐이라, 뱅크다 매칭 기준 금액도 이거여야
+                 함(순수 무통장은 bank_amount = final_price라 동일). final_price를 쓰면
+                 뱅크다가 실제 입금액과 매칭을 못 해서 자동 완료 처리가 영영 안 됨 -->
+            COALESCE(o.bank_amount, o.final_price) AS order_price_amount,
             to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
             oi.product_name
         FROM orders o
@@ -70,7 +74,11 @@
             o.customer_name AS billing_name,
             '123456789' AS bank_account_no,
             '은행' AS bank_code_name,
-            o.final_price AS order_price_amount,
+            <!-- 무통장+포인트 혼합결제는 실제 계좌로 입금되는 금액이 final_price 전체가
+                 아니라 bank_amount(무통장 분담액)뿐이라, 뱅크다 매칭 기준 금액도 이거여야
+                 함(순수 무통장은 bank_amount = final_price라 동일). final_price를 쓰면
+                 뱅크다가 실제 입금액과 매칭을 못 해서 자동 완료 처리가 영영 안 됨 -->
+            COALESCE(o.bank_amount, o.final_price) AS order_price_amount,
             to_char(o.ordered_at, 'YYYY-MM-DD HH24:MI:SS') AS order_date,
             oi.product_name
         FROM orders o
