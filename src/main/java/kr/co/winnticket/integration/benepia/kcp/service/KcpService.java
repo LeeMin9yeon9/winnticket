@@ -81,6 +81,7 @@ public class KcpService {
 
             Map<String, Object> logBody = new HashMap<>(body);
             logBody.put("pt_pwd", "****");
+            logBody.put("kcp_cert_info", "(생략)"); // 매 요청마다 안 바뀌는 인증서 원문 - 로그만 지저분해짐
 
             log.info("===== KCP REQUEST START =====");
             log.info("baseUrl = {}", properties.getKcp().getBaseUrl());
@@ -161,6 +162,7 @@ public class KcpService {
 
             Map<String, Object> logBody = new HashMap<>(body);
             logBody.put("pt_pwd", "****");
+            logBody.put("kcp_cert_info", "(생략)"); // 매 요청마다 안 바뀌는 인증서 원문 - 로그만 지저분해짐
 
             log.info("[KCP POINT REQ] {}", objectMapper.writeValueAsString(logBody));
 
@@ -285,7 +287,9 @@ public class KcpService {
 
             String json = objectMapper.writeValueAsString(body);
 
-            log.info("[KCP CANCEL REQ] {}", json);
+            Map<String, Object> logBody = new HashMap<>(body);
+            logBody.put("kcp_cert_info", "(생략)"); // 매 요청마다 안 바뀌는 인증서 원문 - 로그만 지저분해짐
+            log.info("[KCP CANCEL REQ] {}", objectMapper.writeValueAsString(logBody));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
