@@ -362,9 +362,9 @@ public class OrderController {
             orderSheet.autoSizeColumn(i);
         }
 
-        // 컬럼이 많아 오른쪽으로 스크롤해도 주문 식별 정보(주문일~주문자 이름)와 헤더 행은
-        // 항상 보이도록 틀 고정 (왼쪽 4개 컬럼 + 헤더까지의 상단 3개 행 고정)
-        orderSheet.createFreezePane(4, 3);
+        // 컬럼이 많아 오른쪽으로 스크롤해도 주문 식별 정보(주문일~결제수단)와 헤더 행은
+        // 항상 보이도록 틀 고정 (왼쪽 6개 컬럼 + 헤더까지의 상단 3개 행 고정)
+        orderSheet.createFreezePane(6, 3);
         // 수수료 컬럼이 값이 아니라 수식이라, 엑셀에서 파일을 열 때 자동으로 재계산되도록 강제
         orderSheet.setForceFormulaRecalculation(true);
 
@@ -472,6 +472,12 @@ public class OrderController {
         for (int i = 0; i <= 7; i++) {
             summarySheet.autoSizeColumn(i);
         }
+
+        // setForceFormulaRecalculation은 "엑셀에서 열 때" 재계산하라는 표시일 뿐이라, 엑셀이 아닌
+        // 다른 프로그램(구글시트/뷰어 등)으로 열거나 자동 재계산이 꺼져있으면 수식 칸이 0으로 보일
+        // 수 있음 - 그래서 저장 전에 여기서 직접 모든 수식을 계산해 값도 같이 채워넣는다.
+        // (수식 자체는 그대로 남아있어서 관리자가 금액을 고치면 여전히 자동 재계산됨)
+        HSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         workbook.write(baos);
