@@ -301,6 +301,14 @@ public class OrderController {
             // 취소수단 - 실제로 취소된 주문일 때만 결제수단과 동일하게 표시
             String cancelMethodDisplay = "CANCELED".equals(r.getStatus()) ? pmDisplay : "";
 
+            // 취소수수료의 SK수수료율 - 취소수수료가 무통장/카드분에서 떼는 돈인지(3.3%),
+            // 베네피아 포인트 결제 주문의 포인트분에서 떼는 돈인지(5.5%)에 따라 다름
+            // (OrderService.cancelOrder: VIRTUAL_ACCOUNT는 포인트를 뺀 계좌이체분 기준으로,
+            // PaymentMethod.POINT는 전액 포인트 기준으로 취소수수료를 계산함)
+            double cancelFeeSkRate = "POINT".equals(r.getPaymentMethod())
+                    ? (SALES_FEE_RATE + POINT_FEE_RATE)
+                    : SALES_FEE_RATE;
+
             HSSFRow row = orderSheet.createRow(rowNum++);
             int erow = row.getRowNum() + 1; // 엑셀 1-base 행 번호 (수식에서 자기 행 참조용)
             row.createCell(0).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
@@ -333,10 +341,11 @@ public class OrderController {
             long cancelFee = r.getCancelFee() != null ? r.getCancelFee() : 0;
             row.createCell(24).setCellValue(cancelFee);
             // 취소수수료는 고객에게 환불 안 되고 우리가 갖는 매출이라, 이 금액에 대해서도
-            // 베네피아/SK 수수료를 정산해줘야 함 - 무통장/카드분에서 떼는 수수료라 판매수수료율 적용.
-            // (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨) - 취소수수료 컬럼(Y)을 참조하는
-            // 수식으로 넣어서 관리자가 취소수수료를 수정하면 이 값도 자동으로 재계산되게 함.
-            row.createCell(25).setCellFormula("ROUND(Y" + erow + "*" + SALES_FEE_RATE + ",0)");
+            // 베네피아/SK 수수료를 정산해줘야 함 - 위에서 정한 cancelFeeSkRate(무통장/카드 3.3%,
+            // 베네피아 포인트 5.5%) 적용. (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨)
+            // 취소수수료 컬럼(Y)을 참조하는 수식으로 넣어서 관리자가 취소수수료를 수정하면
+            // 이 값도 자동으로 재계산되게 함.
+            row.createCell(25).setCellFormula("ROUND(Y" + erow + "*" + cancelFeeSkRate + ",0)");
             row.createCell(26).setCellValue(cancelMethodDisplay);
             row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
             row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
@@ -371,7 +380,13 @@ public class OrderController {
         String pointRange = "order!I" + orderFirstDataRow + ":I" + orderLastDataRow;
         String bankRange = "order!G" + orderFirstDataRow + ":G" + orderLastDataRow;
         String cardRange = "order!H" + orderFirstDataRow + ":H" + orderLastDataRow;
-        String cancelFeeRange = "order!Y" + orderFirstDataRow + ":Y" + orderLastDataRow;
+        // 취소수수료(Y열)도 무통장/카드분인지 베네피아 포인트분인지에 따라 수수료율이 다르므로,
+        // 결제수단(F열) 기준으로 나눠서 합산 - order 시트의 결제수단 표시값과 동일한 문자열 사용
+        String pointLabel = PaymentMethod.POINT.getDisplayName();
+        String methodRange = "order!F" + orderFirstDataRow + ":F" + orderLastDataRow;
+        String cancelFeeCol = "order!Y" + orderFirstDataRow + ":Y" + orderLastDataRow;
+        String cancelFeeNonPoint = "SUMIF(" + methodRange + ",\"<>" + pointLabel + "\"," + cancelFeeCol + ")";
+        String cancelFeePoint = "SUMIF(" + methodRange + ",\"" + pointLabel + "\"," + cancelFeeCol + ")";
 
         HSSFCellStyle titleStyle = workbook.createCellStyle();
         HSSFFont titleFont = workbook.createFont();
@@ -409,8 +424,9 @@ public class OrderController {
         row7.createCell(4).setCellFormula("SUM(" + pointRange + ")");
         row7.createCell(5).setCellFormula("SUM(" + bankRange + ")+SUM(" + cardRange + ")");
         row7.createCell(6).setCellFormula("E7+F7");
-        // 판매수수료(3.3%) = 무통장/카드 금액 + 취소수수료(환불 안 되고 우리 매출로 남는 몫)에 적용
-        row7.createCell(7).setCellFormula("ROUND((F7+SUM(" + cancelFeeRange + "))*" + SALES_FEE_RATE + ",0)");
+        // 판매수수료(3.3%) = 무통장/카드 금액 + 무통장/카드 주문의 취소수수료(환불 안 되고
+        // 우리 매출로 남는 몫)에 적용. 베네피아 포인트 주문의 취소수수료는 아래 5.5% 쪽으로 감.
+        row7.createCell(7).setCellFormula("ROUND((F7+" + cancelFeeNonPoint + ")*" + SALES_FEE_RATE + ",0)");
 
         HSSFRow row8 = summarySheet.createRow(7);
         row8.createCell(2).setCellValue("복지포인트수수료");
@@ -418,8 +434,8 @@ public class OrderController {
         row8.createCell(4).setCellFormula("E7");
         row8.createCell(5).setCellValue(0); // 복지포인트수수료는 카드/무통장에는 안 붙으므로 0
         row8.createCell(6).setCellFormula("E8+F8");
-        // 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에 적용
-        row8.createCell(7).setCellFormula("ROUND(E8*" + (SALES_FEE_RATE + POINT_FEE_RATE) + ",0)");
+        // 복지포인트수수료(3.3%+2.2%=5.5%) = 포인트 금액 + 베네피아 포인트 주문의 취소수수료에 적용
+        row8.createCell(7).setCellFormula("ROUND((E8+" + cancelFeePoint + ")*" + (SALES_FEE_RATE + POINT_FEE_RATE) + ",0)");
 
         HSSFRow row9 = summarySheet.createRow(8);
         row9.createCell(2).setCellValue("수수료 세금계산서 발행액");
