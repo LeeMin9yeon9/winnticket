@@ -102,6 +102,10 @@ public class OrderController {
             cell.setCellStyle(headerStyle);
         }
 
+        // 금액 컬럼(단가/공급가/총 주문금액/결제금액/무통장/카드/포인트/취소금액/취소수수료)에 천단위 콤마 표시
+        HSSFCellStyle numberStyle = createNumberStyle(workbook);
+        int[] amountCols = {15, 16, 17, 18, 20, 21, 23, 28, 29};
+
         // 같은 주문번호끼리 그룹핑하여 한 줄로 합침 (상품명은 / 로 연결)
         java.util.LinkedHashMap<String, java.util.List<OrderExportResDto>> grouped = new java.util.LinkedHashMap<>();
         for (OrderExportResDto r : rows) {
@@ -175,6 +179,10 @@ public class OrderController {
             row.createCell(31).setCellValue(ticketNumbers);
             row.createCell(32).setCellValue(ticketUsedList);
             row.createCell(33).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
+
+            for (int col : amountCols) {
+                row.getCell(col).setCellStyle(numberStyle);
+            }
         }
 
         // 열 너비 자동 조정
@@ -237,6 +245,10 @@ public class OrderController {
             cell.setCellStyle(headerStyle);
         }
 
+        // 금액 컬럼 전체에 천단위 콤마 표시
+        HSSFCellStyle numberStyle = createNumberStyle(workbook);
+        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+
         // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
         // 여기서 주문(orderId) 단위로 다시 묶어서 시트에는 주문당 정확히 한 행만 쓴다.
         java.util.Map<UUID, java.util.List<OrderBenepiaSettlementResDto>> byOrder = new java.util.LinkedHashMap<>();
@@ -290,6 +302,7 @@ public class OrderController {
             String cancelMethodDisplay = "CANCELED".equals(r.getStatus()) ? pmDisplay : "";
 
             HSSFRow row = orderSheet.createRow(rowNum++);
+            int erow = row.getRowNum() + 1; // 엑셀 1-base 행 번호 (수식에서 자기 행 참조용)
             row.createCell(0).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
             row.createCell(1).setCellValue(r.getClosingDate() != null ? r.getClosingDate() : "");
             row.createCell(2).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");
@@ -300,13 +313,13 @@ public class OrderController {
             row.createCell(7).setCellValue(cardAlloc);
             row.createCell(8).setCellValue(pointAlloc);
             row.createCell(9).setCellValue(voucherAlloc);
-            // SK 수수료는 SK 결제금액(위 무통장/카드/포인트/이용권 금액)에 대한 비율이므로
-            // 그 금액과 같은 부호를 가져야 함 - 환불(마이너스)이면 수수료도 마이너스(환급).
-            // 소수점 없이 원 단위로 반올림해서 표시.
-            row.createCell(10).setCellValue(Math.round(bankAlloc * SALES_FEE_RATE));
-            row.createCell(11).setCellValue(Math.round(cardAlloc * SALES_FEE_RATE));
-            row.createCell(12).setCellValue(Math.round(pointAlloc * (SALES_FEE_RATE + POINT_FEE_RATE)));
-            row.createCell(13).setCellValue(Math.round(voucherAlloc * SALES_FEE_RATE));
+            // SK 수수료는 SK 결제금액(같은 행의 무통장/카드/포인트/이용권 금액) 셀을 그대로 참조하는
+            // 수식으로 넣어서, 나중에 관리자가 SK 결제금액을 수정하면 수수료도 자동으로 재계산되게 함.
+            // 부호는 참조하는 금액과 같이 감 - 환불(마이너스)이면 수수료도 마이너스(환급)로 표시됨.
+            row.createCell(10).setCellFormula("ROUND(G" + erow + "*" + SALES_FEE_RATE + ",0)");
+            row.createCell(11).setCellFormula("ROUND(H" + erow + "*" + SALES_FEE_RATE + ",0)");
+            row.createCell(12).setCellFormula("ROUND(I" + erow + "*" + (SALES_FEE_RATE + POINT_FEE_RATE) + ",0)");
+            row.createCell(13).setCellFormula("ROUND(J" + erow + "*" + SALES_FEE_RATE + ",0)");
             row.createCell(14).setCellValue(productSb.toString());
             row.createCell(15).setCellValue(totalQuantity);
             row.createCell(16).setCellValue(categorySb.toString());
@@ -321,14 +334,19 @@ public class OrderController {
             row.createCell(24).setCellValue(cancelFee);
             // 취소수수료는 고객에게 환불 안 되고 우리가 갖는 매출이라, 이 금액에 대해서도
             // 베네피아/SK 수수료를 정산해줘야 함 - 무통장/카드분에서 떼는 수수료라 판매수수료율 적용.
-            // (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨)
-            row.createCell(25).setCellValue(Math.round(cancelFee * SALES_FEE_RATE));
+            // (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨) - 취소수수료 컬럼(Y)을 참조하는
+            // 수식으로 넣어서 관리자가 취소수수료를 수정하면 이 값도 자동으로 재계산되게 함.
+            row.createCell(25).setCellFormula("ROUND(Y" + erow + "*" + SALES_FEE_RATE + ",0)");
             row.createCell(26).setCellValue(cancelMethodDisplay);
             row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
             row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
             row.createCell(29).setCellValue(r.getCanceledAt() != null ? r.getCanceledAt() : "");
             row.createCell(30).setCellValue(statusDisplay);
             row.createCell(31).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+
+            for (int col : orderAmountCols) {
+                row.getCell(col).setCellStyle(numberStyle);
+            }
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -338,33 +356,22 @@ public class OrderController {
         // 컬럼이 많아 오른쪽으로 스크롤해도 주문 식별 정보(주문일~주문자 이름)와 헤더 행은
         // 항상 보이도록 틀 고정 (왼쪽 4개 컬럼 + 헤더까지의 상단 3개 행 고정)
         orderSheet.createFreezePane(4, 3);
+        // 수수료 컬럼이 값이 아니라 수식이라, 엑셀에서 파일을 열 때 자동으로 재계산되도록 강제
+        orderSheet.setForceFormulaRecalculation(true);
 
         // ===== "-" 요약 시트 =====
         HSSFSheet summarySheet = workbook.createSheet("-");
         workbook.setSheetOrder("-", 0);
 
-        long totalPoint = 0;
-        long totalBankCard = 0;
-        long totalCancelFee = 0;
-        for (java.util.List<OrderBenepiaSettlementResDto> items : byOrder.values()) {
-            OrderBenepiaSettlementResDto o = items.get(0);
-            // 취소된 주문은 상세 시트에서 마이너스로 표시되므로, 정산 합계에서도 차감되어야 함.
-            // 상세 시트의 SK 결제금액과 동일하게 취소수수료 등 조정 없이 실제 결제/환불 금액
-            // 그대로 합산한다.
-            int sign = "CANCELED".equals(o.getStatus()) ? -1 : 1;
-            totalPoint += sign * (o.getPointAmount() != null ? o.getPointAmount() : 0);
-            totalBankCard += sign * ((o.getBankAmount() != null ? o.getBankAmount() : 0)
-                    + (o.getCardAmount() != null ? o.getCardAmount() : 0));
-            // 취소수수료는 환불 안 되고 우리 매출로 남는 돈이라, 판매수수료 정산 대상에 별도로 더해줌
-            totalCancelFee += o.getCancelFee() != null ? o.getCancelFee() : 0;
-        }
-        // 판매수수료(3.3%)는 무통장/카드 금액 + 취소수수료(우리 매출로 남은 몫)에, 복지포인트수수료
-        // (3.3%+2.2%=5.5%)는 포인트 금액에 적용 - "order" 상세 시트의 SK 수수료 컬럼과 합계가 일치하도록 함.
-        // 부호는 각 금액과 같이 가짐 - 취소로 인해 순감(마이너스)이면 수수료도 마이너스(환급)로 표시
-        long salesFee = Math.round((totalBankCard + totalCancelFee) * SALES_FEE_RATE);
-        long pointFee = Math.round(totalPoint * (SALES_FEE_RATE + POINT_FEE_RATE));
-        long totalFee = salesFee + pointFee;
-        long payoutAmount = totalPoint - totalFee;
+        // 요약시트 합계는 값을 직접 계산해서 넣지 않고, "order" 상세시트를 SUM으로 참조하는 수식으로
+        // 넣는다. 이렇게 하면 나중에 관리자가 order 시트에서 결제금액/포인트 등을 수정했을 때
+        // 요약시트의 합계·수수료도 자동으로 같이 재계산됨.
+        int orderFirstDataRow = 4; // order 시트 데이터 시작 행 (헤더가 3행)
+        int orderLastDataRow = Math.max(rowNum, orderFirstDataRow); // rowNum = 마지막 데이터 행의 엑셀 행 번호
+        String pointRange = "order!I" + orderFirstDataRow + ":I" + orderLastDataRow;
+        String bankRange = "order!G" + orderFirstDataRow + ":G" + orderLastDataRow;
+        String cardRange = "order!H" + orderFirstDataRow + ":H" + orderLastDataRow;
+        String cancelFeeRange = "order!Y" + orderFirstDataRow + ":Y" + orderLastDataRow;
 
         HSSFCellStyle titleStyle = workbook.createCellStyle();
         HSSFFont titleFont = workbook.createFont();
@@ -392,36 +399,50 @@ public class OrderController {
         subHeadRow.createCell(4).setCellValue("복지포인트");
         subHeadRow.createCell(5).setCellValue("카드/무통장");
 
+        // 금액 셀에 천단위 콤마 표시
+        HSSFCellStyle summaryNumberStyle = createNumberStyle(workbook);
+
         HSSFRow row7 = summarySheet.createRow(6);
         row7.createCell(1).setCellValue("kcp 결제\n(복지포인트) ");
         row7.createCell(2).setCellValue("판매수수료");
         row7.createCell(3).setCellValue("3.3%");
-        row7.createCell(4).setCellValue(totalPoint);
-        row7.createCell(5).setCellValue(totalBankCard);
-        row7.createCell(6).setCellValue(totalPoint + totalBankCard);
-        row7.createCell(7).setCellValue(salesFee);
+        row7.createCell(4).setCellFormula("SUM(" + pointRange + ")");
+        row7.createCell(5).setCellFormula("SUM(" + bankRange + ")+SUM(" + cardRange + ")");
+        row7.createCell(6).setCellFormula("E7+F7");
+        // 판매수수료(3.3%) = 무통장/카드 금액 + 취소수수료(환불 안 되고 우리 매출로 남는 몫)에 적용
+        row7.createCell(7).setCellFormula("ROUND((F7+SUM(" + cancelFeeRange + "))*" + SALES_FEE_RATE + ",0)");
 
         HSSFRow row8 = summarySheet.createRow(7);
         row8.createCell(2).setCellValue("복지포인트수수료");
         row8.createCell(3).setCellValue("5.5%");
-        row8.createCell(4).setCellValue(totalPoint);
+        row8.createCell(4).setCellFormula("E7");
         row8.createCell(5).setCellValue(0); // 복지포인트수수료는 카드/무통장에는 안 붙으므로 0
-        row8.createCell(6).setCellValue(totalPoint);
-        row8.createCell(7).setCellValue(pointFee);
+        row8.createCell(6).setCellFormula("E8+F8");
+        // 복지포인트수수료(3.3%+2.2%=5.5%)는 포인트 금액에 적용
+        row8.createCell(7).setCellFormula("ROUND(E8*" + (SALES_FEE_RATE + POINT_FEE_RATE) + ",0)");
 
         HSSFRow row9 = summarySheet.createRow(8);
         row9.createCell(2).setCellValue("수수료 세금계산서 발행액");
-        row9.createCell(4).setCellValue(totalPoint);
-        row9.createCell(5).setCellValue(totalBankCard);
-        row9.createCell(6).setCellValue(totalPoint + totalBankCard);
-        row9.createCell(7).setCellValue(totalFee);
+        row9.createCell(4).setCellFormula("E7");
+        row9.createCell(5).setCellFormula("F7");
+        row9.createCell(6).setCellFormula("E9+F9");
+        row9.createCell(7).setCellFormula("H7+H8");
 
         HSSFRow row10 = summarySheet.createRow(9);
         row10.createCell(2).setCellValue("복지포인트 지급액 (=청구액)");
-        row10.createCell(4).setCellValue(totalPoint);
+        row10.createCell(4).setCellFormula("E7");
         row10.createCell(5).setCellValue(0); // 복지포인트 지급액은 카드/무통장과 무관
-        row10.createCell(6).setCellValue(totalPoint);
-        row10.createCell(7).setCellValue(payoutAmount);
+        row10.createCell(6).setCellFormula("E10");
+        row10.createCell(7).setCellFormula("E10-H9");
+
+        for (HSSFRow r : new HSSFRow[]{row7, row8, row9, row10}) {
+            for (int col = 4; col <= 7; col++) {
+                HSSFCell c = r.getCell(col);
+                if (c != null) c.setCellStyle(summaryNumberStyle);
+            }
+        }
+        // 합계/수수료 셀이 값이 아니라 수식이라, 엑셀에서 파일을 열 때 자동으로 재계산되도록 강제
+        summarySheet.setForceFormulaRecalculation(true);
 
         // 정산 은행/계좌 - 회사 고정 계좌 (필요 시 값만 교체하면 됨)
         HSSFRow row12 = summarySheet.createRow(11);
@@ -528,6 +549,13 @@ public class OrderController {
     ) throws Exception {
         service.resendTicketSms(orderId);
         return ResponseEntity.ok(ApiResponse.success("재전송 완료",orderId.toString()));
+    }
+
+    // 금액 컬럼에 천단위 콤마(,) 표시용 셀 스타일
+    private HSSFCellStyle createNumberStyle(HSSFWorkbook workbook) {
+        HSSFCellStyle style = workbook.createCellStyle();
+        style.setDataFormat(workbook.createDataFormat().getFormat("#,##0"));
+        return style;
     }
 
     private String formatPhoneNumber(String phone) {
