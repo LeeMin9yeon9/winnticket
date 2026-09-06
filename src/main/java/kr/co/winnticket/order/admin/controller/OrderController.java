@@ -233,9 +233,10 @@ public class OrderController {
                 "주문일", "마감일자", "주문번호", "주문자 이름", "티켓종류", "결제수단",
                 "SK 결제금액\n무통장결제", "SK 결제금액\n카드결제", "SK 결제금액\n포인트결제", "SK 결제금액\n이용권결제",
                 "SK 수수료\n무통장결제", "SK 수수료\n카드결제", "SK 수수료\n포인트결제", "SK 수수료\n이용권결제",
+                "취소수수료\nSK수수료",
                 "주문상품", "수량", "카테고리",
                 "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액", "취소수수료",
-                "취소수수료\nSK수수료", "취소수단",
+                "취소수단",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
@@ -247,7 +248,7 @@ public class OrderController {
 
         // 금액 컬럼 전체에 천단위 콤마 표시
         HSSFCellStyle numberStyle = createNumberStyle(workbook);
-        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25};
 
         // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
         // 여기서 주문(orderId) 단위로 다시 묶어서 시트에는 주문당 정확히 한 행만 쓴다.
@@ -328,24 +329,23 @@ public class OrderController {
             row.createCell(11).setCellFormula("ROUND(H" + erow + "*" + SALES_FEE_RATE + ",0)");
             row.createCell(12).setCellFormula("ROUND(I" + erow + "*" + (SALES_FEE_RATE + POINT_FEE_RATE) + ",0)");
             row.createCell(13).setCellFormula("ROUND(J" + erow + "*" + SALES_FEE_RATE + ",0)");
-            row.createCell(14).setCellValue(productSb.toString());
-            row.createCell(15).setCellValue(totalQuantity);
-            row.createCell(16).setCellValue(categorySb.toString());
-            row.createCell(17).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(18).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
-            row.createCell(19).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-            row.createCell(20).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-            row.createCell(21).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
-            row.createCell(22).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
-            row.createCell(23).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
-            long cancelFee = r.getCancelFee() != null ? r.getCancelFee() : 0;
-            row.createCell(24).setCellValue(cancelFee);
-            // 취소수수료는 고객에게 환불 안 되고 우리가 갖는 매출이라, 이 금액에 대해서도
-            // 베네피아/SK 수수료를 정산해줘야 함 - 위에서 정한 cancelFeeSkRate(무통장/카드 3.3%,
+            // 취소수수료의 SK수수료 - 다른 SK수수료 컬럼들 바로 옆에 두어 한눈에 비교되게 함.
+            // 취소수수료 자체(원금)는 뒤쪽 Z열에 있음 - 위에서 정한 cancelFeeSkRate(무통장/카드 3.3%,
             // 베네피아 포인트 5.5%) 적용. (취소가 아니면 cancelFee가 0이라 자연히 0으로 계산됨)
-            // 취소수수료 컬럼(Y)을 참조하는 수식으로 넣어서 관리자가 취소수수료를 수정하면
-            // 이 값도 자동으로 재계산되게 함.
-            row.createCell(25).setCellFormula("ROUND(Y" + erow + "*" + cancelFeeSkRate + ",0)");
+            // 관리자가 취소수수료를 수정하면 이 값도 자동으로 재계산됨.
+            row.createCell(14).setCellFormula("ROUND(Z" + erow + "*" + cancelFeeSkRate + ",0)");
+            row.createCell(15).setCellValue(productSb.toString());
+            row.createCell(16).setCellValue(totalQuantity);
+            row.createCell(17).setCellValue(categorySb.toString());
+            row.createCell(18).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(19).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
+            row.createCell(20).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
+            row.createCell(21).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
+            row.createCell(22).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
+            row.createCell(23).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+            row.createCell(24).setCellValue(r.getCancelAmount() != null ? r.getCancelAmount() : 0);
+            long cancelFee = r.getCancelFee() != null ? r.getCancelFee() : 0;
+            row.createCell(25).setCellValue(cancelFee);
             row.createCell(26).setCellValue(cancelMethodDisplay);
             row.createCell(27).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
             row.createCell(28).setCellValue(r.getCancelRequestedAt() != null ? r.getCancelRequestedAt() : "");
@@ -380,11 +380,11 @@ public class OrderController {
         String pointRange = "order!I" + orderFirstDataRow + ":I" + orderLastDataRow;
         String bankRange = "order!G" + orderFirstDataRow + ":G" + orderLastDataRow;
         String cardRange = "order!H" + orderFirstDataRow + ":H" + orderLastDataRow;
-        // 취소수수료(Y열)도 무통장/카드분인지 베네피아 포인트분인지에 따라 수수료율이 다르므로,
+        // 취소수수료(Z열)도 무통장/카드분인지 베네피아 포인트분인지에 따라 수수료율이 다르므로,
         // 결제수단(F열) 기준으로 나눠서 합산 - order 시트의 결제수단 표시값과 동일한 문자열 사용
         String pointLabel = PaymentMethod.POINT.getDisplayName();
         String methodRange = "order!F" + orderFirstDataRow + ":F" + orderLastDataRow;
-        String cancelFeeCol = "order!Y" + orderFirstDataRow + ":Y" + orderLastDataRow;
+        String cancelFeeCol = "order!Z" + orderFirstDataRow + ":Z" + orderLastDataRow;
         String cancelFeeNonPoint = "SUMIF(" + methodRange + ",\"<>" + pointLabel + "\"," + cancelFeeCol + ")";
         String cancelFeePoint = "SUMIF(" + methodRange + ",\"" + pointLabel + "\"," + cancelFeeCol + ")";
 
