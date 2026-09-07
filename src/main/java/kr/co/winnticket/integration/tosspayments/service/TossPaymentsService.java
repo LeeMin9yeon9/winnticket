@@ -204,12 +204,18 @@ public class TossPaymentsService {
 
         String orderNumber = (String) orderInfo.get("order_number");
 
-        // 취소 가능 금액 계산
+        // 취소 가능 금액 계산 - 토스가 실제 받은 금액(카드/간편결제 분담금) 기준이어야 함.
+        // 포인트로 낸 부분은 토스가 아니라 KCP로 별도 환불되는 돈이라 여기서 빼야 함
+        // (cancelFullRefund()와 동일한 기준). 안 빼면 카드+포인트 혼합결제 주문 취소 시
+        // 토스에 실제 결제액보다 큰 금액을 취소 요청하게 되어 "NOT_CANCELABLE_AMOUNT"로 실패함.
         int finalPrice = ((Number) orderInfo.get("final_price")).intValue();
+        int pointAmount = orderInfo.get("point_amount") != null
+                ? ((Number) orderInfo.get("point_amount")).intValue()
+                : 0;
         int alreadyCanceled = orderInfo.get("cancel_amount") != null
                 ? ((Number) orderInfo.get("cancel_amount")).intValue()
                 : 0;
-        int remainAmount = finalPrice - alreadyCanceled;
+        int remainAmount = (finalPrice - pointAmount) - alreadyCanceled;
 
         if (remainAmount <= 0) {
             throw new IllegalStateException("이미 전액 취소된 주문 orderId=" + orderId);
