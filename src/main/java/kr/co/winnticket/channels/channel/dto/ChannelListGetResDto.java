@@ -51,4 +51,7 @@ public class ChannelListGetResDto {
     @Schema(description = "이용권 취소 가능 기한(절대 날짜). 이 날짜까지 미사용 이용권 취소 가능. null이면 취소 불가")
     private java.time.LocalDate voucherCancelDeadline;
 
+    @Schema(description = "표시 순서 - 채널 관리 목록 및 채널 전환 드롭다운에 이 순서로 노출됨")
+    private Integer displayOrder;
+
 }

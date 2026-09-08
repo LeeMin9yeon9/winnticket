@@ -43,6 +43,10 @@ public interface ChannelMapper {
     void visibleChannel(@Param("id") UUID id,
                         @Param("visible")Boolean visible);
 
+    // 채널 표시 순서 변경
+    void updateChannelOrder(@Param("id") UUID id,
+                            @Param("displayOrder") Integer displayOrder);
+
     // 채널코드로 id 찾기
     UUID selectChannelIdByCode(String channelCode);
 

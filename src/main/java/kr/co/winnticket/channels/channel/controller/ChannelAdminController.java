@@ -100,6 +100,17 @@ public class ChannelAdminController {
         return ResponseEntity.ok(ApiResponse.success("채널 활성/비활성되었습니다.", null));
     }
 
+    @PatchMapping("/{id}/order")
+    @Operation(summary = "채널 표시 순서 변경", description = "채널 목록/채널 전환 드롭다운에 노출되는 순서를 변경합니다.")
+    public ResponseEntity<ApiResponse<Void>> updateChannelOrder(
+            @Parameter(description = "채널_ID")
+            @PathVariable UUID id,
+            @RequestBody java.util.Map<String, Integer> body
+    ) {
+        Integer displayOrder = body.get("displayOrder");
+        service.updateChannelOrder(id, displayOrder);
+        return ResponseEntity.ok(ApiResponse.success("채널 순서가 변경되었습니다.", null));
+    }
 
 }
 

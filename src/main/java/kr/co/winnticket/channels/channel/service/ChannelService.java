@@ -63,6 +63,15 @@ public class ChannelService {
         mapper.visibleChannel(id,visible);
     }
 
+    // 채널 표시 순서 변경 - 프론트에서 위/아래 버튼으로 인접한 두 채널의 순서값을 서로
+    // 바꿔서 두 번 호출하는 방식(관리자메뉴 순서변경과 동일한 패턴)
+    public void updateChannelOrder(UUID id, Integer displayOrder){
+        if(displayOrder == null || displayOrder < 1){
+            throw new IllegalArgumentException("표시 순서 값이 올바르지 않습니다.");
+        }
+        mapper.updateChannelOrder(id, displayOrder);
+    }
+
     // 채널코드로 아이디찾기
     public UUID selectChannelIdByCode(String channelCode) {
         if(channelCode != null && !channelCode.isBlank()){

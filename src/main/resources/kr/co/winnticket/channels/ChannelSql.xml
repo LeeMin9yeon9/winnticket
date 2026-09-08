@@ -18,7 +18,8 @@
         COALESCE(c.use_point, false) AS usePoint,
         COALESCE(c.use_point_change, false) AS usePointChange,
         COALESCE(c.use_order_lookup, true) AS useOrderLookup,
-        c.voucher_cancel_deadline AS voucherCancelDeadline
+        c.voucher_cancel_deadline AS voucherCancelDeadline,
+        c.display_order AS displayOrder
 
         FROM channels c
 
@@ -32,10 +33,10 @@
             )
         </if>
 
-        ORDER BY c.created_at DESC
+        ORDER BY c.display_order ASC NULLS LAST, c.created_at DESC
     </select>
 
-    <!--채널 생성-->
+    <!--채널 생성 - 표시 순서는 맨 뒤(기존 최대값+1)로 배정-->
     <insert id="createChannel" parameterType="kr.co.winnticket.channels.channel.dto.ChannelCreateReqDto">
         INSERT INTO channels(
             id,
@@ -52,6 +53,7 @@
             use_card,
             use_point,
             visible,
+            display_order,
             created_at,
             updated_at
         )
@@ -70,6 +72,7 @@
             COALESCE(#{useCard}, FALSE),
             COALESCE(#{usePoint}, FALSE),
             COALESCE(#{visible},TRUE),
+            (SELECT COALESCE(MAX(display_order), 0) + 1 FROM channels),
             NOW(),
             NOW()
                )
@@ -165,6 +168,14 @@
         SET visible = #{visible},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}::uuid;
+    </update>
+
+    <!-- 표시 순서 변경 -->
+    <update id="updateChannelOrder">
+        UPDATE channels
+        SET display_order = #{displayOrder},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
     </update>
 
     <!-- 채널코드로 아이디찾기 -->
