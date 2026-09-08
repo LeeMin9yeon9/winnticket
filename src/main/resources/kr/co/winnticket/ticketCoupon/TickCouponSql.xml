@@ -309,6 +309,27 @@
         WHERE group_id = #{groupId}
     </update>
 
+    <!--쿠폰 유효기간 변경 시, 이미 발급된 티켓(order_tickets)의 유효기간도 동기화
+        (ticket_number = coupon_number로 매칭 - 별도 FK 없이 문자열로 연결됨) -->
+    <update id="syncOrderTicketValidityByCouponId">
+        UPDATE order_tickets t
+        SET valid_from = c.valid_from,
+            valid_to = c.valid_until
+        FROM ticket_coupons c
+        WHERE t.ticket_number = c.coupon_number
+          AND c.id = #{couponId}
+    </update>
+
+    <!--그룹 단위 유효기간 일괄변경 시, 그룹에 속한 쿠폰 중 이미 발급된 티켓도 전부 동기화-->
+    <update id="syncOrderTicketValidityByGroupId">
+        UPDATE order_tickets t
+        SET valid_from = c.valid_from,
+            valid_to = c.valid_until
+        FROM ticket_coupons c
+        WHERE t.ticket_number = c.coupon_number
+          AND c.group_id = #{groupId}
+    </update>
+
     <!--유효기간 다르면 다른 그룹으로 생성 -->
     <select id="findGroupByOptionValueAndDate" resultType="java.util.UUID">
         SELECT id

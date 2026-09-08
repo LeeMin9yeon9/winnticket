@@ -102,6 +102,14 @@ public interface TicketCouponMapper {
                                     @Param("validFrom") LocalDate validFrom,
                                     @Param("validUntil") LocalDate validUntil);
 
+    // 쿠폰 하나가 이미 주문에 발급된 상태(order_tickets)라면, 그 발급본의 유효기간도
+    // 방금 바뀐 쿠폰 유효기간으로 같이 동기화 - 안 해주면 관리자취소 가능여부 판단이
+    // 여전히 옛날 유효기간을 봐서 취소 버튼이 계속 비활성화됨
+    void syncOrderTicketValidityByCouponId(@Param("couponId") UUID couponId);
+
+    // 그룹 전체 날짜 변경 시, 그 그룹에 속한 쿠폰들 중 이미 발급된 것도 전부 동기화
+    void syncOrderTicketValidityByGroupId(@Param("groupId") UUID groupId);
+
     // 유효기간 다르면 다른 그룹 생성
     UUID findGroupByOptionValueAndDate(
             @Param("productOptionValueId") UUID productOptionValueId,

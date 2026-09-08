@@ -204,6 +204,12 @@ public class TicketCouponService {
                 dto.getValidFrom(),
                 dto.getValidUntil()
         );
+
+        // 이 쿠폰이 이미 주문에 발급된 상태(order_tickets)라면 그 발급본의 유효기간도 같이
+        // 동기화 - 안 해주면 관리자취소 가능여부 판단이 옛날 유효기간을 봐서 취소가 계속 막힘
+        if (dto.getValidFrom() != null || dto.getValidUntil() != null) {
+            mapper.syncOrderTicketValidityByCouponId(couponId);
+        }
     }
 
 
@@ -404,6 +410,8 @@ public class TicketCouponService {
         validateDates(validFrom, validUntil);
         mapper.updateGroupDate(groupId, validFrom, validUntil);
         mapper.updateCouponsDateByGroupId(groupId, validFrom, validUntil);
+        // 그룹에 속한 쿠폰 중 이미 주문에 발급된 것도 유효기간을 같이 동기화 (updateCoupon과 동일한 이유)
+        mapper.syncOrderTicketValidityByGroupId(groupId);
     }
 
     // [이슈6] 공통 날짜 검증
