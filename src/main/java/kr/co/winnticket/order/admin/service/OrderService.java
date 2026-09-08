@@ -714,7 +714,12 @@ public class OrderService {
                     // 환불액이 아니라 잔액(=수수료)을 보내야 KCP가 (원금-잔액) = 환불액만큼 차감
                     dto.setModMny(finalPrice - refundAmount);
                     dto.setModOrdrIdxx(order.getOrderNumber());
-                    dto.setModOrdrGoods("수수료 제외 포인트 취소");
+                    // KCP는 STRA를 내부적으로 "전액취소 + 잔액 재승인"으로 처리해서, 이 잔액
+                    // 재승인 건이 KCP 거래내역에는 "일반" 승인건처럼 찍히고 이 값이 상품명 자리에
+                    // 그대로 노출됨 - 상품명처럼 보이게 "[상품명] 취소 수수료" 형태로 남김
+                    String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
+                    if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
+                    dto.setModOrdrGoods("[" + productSummary + "] 취소 수수료");
                 } else {
                     dto.setModType("STSC");
                 }
