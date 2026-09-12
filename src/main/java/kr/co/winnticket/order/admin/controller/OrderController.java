@@ -316,18 +316,14 @@ public class OrderController {
                 else if ("CARD".equals(method) || "KAKAOPAY".equals(method)) cardRefund += cancelFee;
                 else if ("POINT".equals(method)) pointRefund += cancelFee;
 
-                String statusDisplay = "";
-                if (r.getStatus() != null) {
-                    try { statusDisplay = kr.co.winnticket.common.enums.OrderStatus.valueOf(r.getStatus()).getDisplayName(); }
-                    catch (Exception e) { statusDisplay = r.getStatus(); }
-                }
-
+                // 취소행은 KCP가 실제로 처리하는 방식(전액취소 + 잔액 재승인)과 동일하게 표시 -
+                // 상품명 자리엔 "수수료"라고 남기고, 주문상태도 "재승인"으로 표시
                 writeBenepiaOrderRow(orderSheet, numberStyle, orderAmountCols, SALES_FEE_RATE, POINT_FEE_RATE,
-                        r, pmDisplay, statusDisplay,
+                        r, pmDisplay, "재승인",
                         bankRefund, cardRefund, pointRefund, voucherRefund,
                         r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
                         r.getCancelAmount() != null ? r.getCancelAmount() : 0,
-                        productSb.toString(), totalQuantity, categorySb.toString());
+                        "수수료", totalQuantity, categorySb.toString());
             }
         }
 
