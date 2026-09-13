@@ -1047,6 +1047,14 @@
         WHERE a.channel_id = #{channelId}
           AND a.status != 'PENDING_PAYMENT'
           AND a.payment_status != 'FAILED'
+          <!--
+              입금 전(READY) 상태에서 관리자가 취소한 주문은 실제 결제가 한 번도 완료된 적이
+              없는데도, 취소 처리 시 payment_status가 'FAILED'가 아니라 'CANCELED'로 찍혀서
+              (cancelPendingOrder → updateOrderCancelSuccess) 위 payment_status != 'FAILED'
+              조건을 통과해버림. 실제 매출이 전혀 없었던 주문이라 정산에 나오면 안 되므로,
+              한 번이라도 결제완료(paid_at)된 적 있는 주문만 포함시킨다.
+          -->
+          AND a.paid_at IS NOT NULL
           AND COALESCE(a.canceled_at, a.paid_at) IS NOT NULL
           <if test="begDate != null">
               <![CDATA[ AND COALESCE(a.canceled_at, a.paid_at)::date >= #{begDate} ]]>
