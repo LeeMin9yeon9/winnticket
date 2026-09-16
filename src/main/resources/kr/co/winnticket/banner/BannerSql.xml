@@ -59,7 +59,7 @@
             updated_at
         )
         VALUES (
-                   gen_random_uuid()::text,
+                   #{id},
                    #{name},
                    #{description},
                    #{type},
@@ -136,16 +136,45 @@
         WHERE id = #{id}
     </select>
 
-    <!-- SHOP: 위치별 조회 (노출 조건 포함) -->
+    <!-- SHOP: 위치별 조회 (노출 조건 포함) - 채널 연결이 하나도 없는 배너는 "전체 노출"로
+         간주해 항상 보여주고, 채널이 지정된 배너는 요청한 channelId가 그 목록에 있을 때만 -->
     <select id="selectByPosition" resultMap="bannerMap">
         SELECT *
-        FROM banners
+        FROM banners b
         WHERE position = #{position}
           AND visible = true
           AND (start_date IS NULL OR start_date <![CDATA[ <= ]]> NOW())
           AND (end_date IS NULL OR end_date <![CDATA[ >= ]]> NOW())
+          AND (
+              NOT EXISTS (SELECT 1 FROM banner_channels bc WHERE bc.banner_id = b.id)
+              <if test="channelId != null and channelId != ''">
+                  OR EXISTS (
+                      SELECT 1 FROM banner_channels bc
+                      WHERE bc.banner_id = b.id AND bc.channel_id = #{channelId}::uuid
+                  )
+              </if>
+          )
         ORDER BY display_order ASC, created_at DESC
     </select>
+
+    <!-- 배너에 연결된 채널 ID 목록 -->
+    <select id="selectChannelIdsByBannerId" resultType="java.lang.String">
+        SELECT channel_id::text
+        FROM banner_channels
+        WHERE banner_id = #{bannerId}
+    </select>
+
+    <delete id="deleteBannerChannels">
+        DELETE FROM banner_channels WHERE banner_id = #{bannerId}
+    </delete>
+
+    <insert id="insertBannerChannels">
+        INSERT INTO banner_channels (banner_id, channel_id)
+        VALUES
+        <foreach collection="channelIds" item="channelId" separator=",">
+            (#{bannerId}, #{channelId}::uuid)
+        </foreach>
+    </insert>
 
    <!--배너 검색 및 조회-->
     <select id="selectAdminList" resultMap="bannerMap">

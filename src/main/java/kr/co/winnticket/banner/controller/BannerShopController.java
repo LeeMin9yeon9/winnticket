@@ -23,13 +23,15 @@ public class BannerShopController {
     private final BannerService service;
 
     @GetMapping
-    @Operation(summary = "위치별 배너 조회", description = "position별로 현재 노출 가능한 배너 목록 조회")
+    @Operation(summary = "위치별 배너 조회", description = "position별로 현재 노출 가능한 배너 목록 조회. channelId를 주면 해당 채널로 제한된 배너도 함께, 없으면 채널 제한 없는(전체 노출) 배너만 조회")
     public ResponseEntity<ApiResponse<List<BannerDto>>> getBanners(
             @Parameter(description = "배너 위치", example = "MAIN_TOP")
-            @RequestParam BannerPosition position
+            @RequestParam BannerPosition position,
+            @Parameter(description = "채널 ID (선택)")
+            @RequestParam(required = false) String channelId
     ) {
         return ResponseEntity.ok(
-                ApiResponse.success("조회 성공", service.getBannersByPosition(position))
+                ApiResponse.success("조회 성공", service.getBannersByPosition(position, channelId))
         );
     }
 

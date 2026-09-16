@@ -29,13 +29,26 @@ public class BannerService {
             Integer maxOrder = bannerMapper.selectMaxDisplayOrder();
             dto.setDisplayOrder(maxOrder != null ? maxOrder + 1 : 1);
         }
+        // ID를 미리 생성해서 INSERT에 같이 넘겨야, 같은 요청 안에서 배너-채널 연결까지 저장 가능
+        dto.setId(java.util.UUID.randomUUID().toString());
         bannerMapper.insertBanner(dto);
+        saveChannelIds(dto.getId(), dto.getChannelIds());
     }
 
     @Transactional
     public void update(String id, BannerUpdateDto dto) {
         dto.setId(id);
         bannerMapper.updateBanner(dto);
+        // 채널 선택이 비어있어도(=전체 노출로 변경) 반영되도록 항상 초기화 후 재삽입
+        saveChannelIds(id, dto.getChannelIds());
+    }
+
+    // 배너-채널 연결을 통째로 다시 저장 (기존 연결 삭제 후 재삽입)
+    private void saveChannelIds(String bannerId, List<String> channelIds) {
+        bannerMapper.deleteBannerChannels(bannerId);
+        if (channelIds != null && !channelIds.isEmpty()) {
+            bannerMapper.insertBannerChannels(bannerId, channelIds);
+        }
     }
 
     @Transactional
@@ -69,8 +82,8 @@ public class BannerService {
 
     // SHOP
     @Transactional(readOnly = true)
-    public List<BannerDto> getBannersByPosition(BannerPosition position) {
-        List<BannerDto> list = bannerMapper.selectByPosition(position.name());
+    public List<BannerDto> getBannersByPosition(BannerPosition position, String channelId) {
+        List<BannerDto> list = bannerMapper.selectByPosition(position.name(), channelId);
         list.forEach(this::enrich);
         return list;
     }
@@ -88,6 +101,7 @@ public class BannerService {
     private void enrich(BannerDto b) {
         b.setStatus(calculateStatus(b));
         b.setClickCount(statsMapper.getTotalClickCount(b.getId()));
+        b.setChannelIds(bannerMapper.selectChannelIdsByBannerId(b.getId()));
     }
 
     private BannerStatus calculateStatus(BannerDto b) {

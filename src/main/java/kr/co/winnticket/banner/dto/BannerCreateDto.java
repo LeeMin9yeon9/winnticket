@@ -18,6 +18,11 @@ import java.util.List;
 @Schema(title = "[ADMIN > 배너 생성 DTO] BannerCreateDto")
 public class BannerCreateDto {
 
+    // 서비스단에서 채워 넣는 생성될 배너 ID - INSERT 시 DB에서 생성하는 대신 미리 만들어서
+    // 넘겨야, 같은 요청 안에서 배너-채널 연결(banner_channels)까지 바로 저장할 수 있음
+    @Schema(hidden = true)
+    private String id;
+
     @NotBlank
     @Schema(description = "배너명")
     private String name;
