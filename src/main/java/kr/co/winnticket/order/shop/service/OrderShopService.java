@@ -140,6 +140,18 @@ public class OrderShopService {
         log.info("[고객 취소요청] orderId={}, requiresRefundAccount={}", orderId, requiresRefundAccount);
     }
 
+    // 베네피아 SSO 세션에서 소속사코드(sitecode)를 꺼내옴 - KCP 포인트 결제 요청 시
+    // pt_memcorp_cd로 반드시 같이 보내야 하는 값 (안 보내면 다른 회사 계정으로 결제 시도 시
+    // KCP가 구분을 못 해 타인 계정 도용으로 이어질 수 있음 - 베네피아 측 지적사항)
+    private String resolveSessionMemcorpCd(HttpSession session) {
+        return Optional.ofNullable(
+                        (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
+                )
+                .map(BenepiaDecryptedParamDto::getSitecode)
+                .filter(StringUtils::hasText)
+                .orElse(null);
+    }
+
     // 주문생성
     @Transactional
     public OrderCreateResDto createOrder(OrderCreateReqDto reqDto, HttpSession session) {
@@ -355,12 +367,7 @@ public class OrderShopService {
         if (voucherAmount > 0) {
             memcorpCd = pointVoucherService.lookupMemcorpCd(voucherNumber);
         } else {
-            memcorpCd = Optional.ofNullable(
-                            (BenepiaDecryptedParamDto) session.getAttribute("BENEP_DECRYPTED")
-                    )
-                    .map(BenepiaDecryptedParamDto::getSitecode)
-                    .filter(StringUtils::hasText)
-                    .orElse(null);
+            memcorpCd = resolveSessionMemcorpCd(session);
         }
         mapper.updateOrderPrice(orderId, finalPrice, pointAmount, bankAmount, cardAmount, voucherNumber, voucherAmount, memcorpCd);
 
@@ -403,6 +410,13 @@ public class OrderShopService {
                 dto.setBuyerPhone(reqDto.getCustomerPhone());
                 dto.setBenepiaId(benepiaId);
                 dto.setBenepiaPwd(benepiaPwd);
+                // 베네피아 요청사항(2026-09-17): 포인트 결제 시 site code(pt_memcorp_cd) 미전달 시
+                // 타인 계정 도용 위험 - 세션의 소속사코드가 없으면 결제 자체를 막음
+                String vaMemcorpCd = resolveSessionMemcorpCd(session);
+                if (vaMemcorpCd == null) {
+                    throw new IllegalArgumentException("베네피아 로그인 후 이용해주세요. (소속사코드 확인 불가)");
+                }
+                dto.setMemcorpCd(vaMemcorpCd);
 
                 try {
                     kcpService.pointPayAndUpdate(dto);
@@ -510,6 +524,13 @@ public class OrderShopService {
 
             dto.setBenepiaId(benepiaId);
             dto.setBenepiaPwd(benepiaPwd);
+            // 베네피아 요청사항(2026-09-17): 포인트 결제 시 site code(pt_memcorp_cd) 미전달 시
+            // 타인 계정 도용 위험 - 세션의 소속사코드가 없으면 결제 자체를 막음
+            String pointMemcorpCd = resolveSessionMemcorpCd(session);
+            if (pointMemcorpCd == null) {
+                throw new IllegalArgumentException("베네피아 로그인 후 이용해주세요. (소속사코드 확인 불가)");
+            }
+            dto.setMemcorpCd(pointMemcorpCd);
 
             // KCP 포인트 차감 - tno는 DB 조회 없이 응답값 직접 사용
             // (completePayment 실패 시 트랜잭션이 rollback-only가 되어 DB 조회 불가)
