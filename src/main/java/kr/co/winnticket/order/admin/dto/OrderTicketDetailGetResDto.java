@@ -23,11 +23,20 @@ public class OrderTicketDetailGetResDto {
     @Schema(description = "상품명")
     private String productName;
 
+    @Schema(description = "옵션명")
+    private String optionName;
+
     @Schema(description = "사용여부")
     private boolean ticketUsed;
 
     @Schema(description = "사용일시")
     private LocalDateTime ticketUsedDate;
+
+    @Schema(description = "취소일시")
+    private LocalDateTime canceledAt;
+
+    @Schema(description = "처리일시")
+    private LocalDateTime processedAt;
 
     @Schema(description = "쿠폰상태")
     private String status;

@@ -22,11 +22,17 @@ public class FieldOrderListGetResDto {
     @Schema(description = "상품명")
     private String productName;
 
+    @Schema(description = "옵션명")
+    private String optionName;
+
     @Schema(description = "예약일자")
     private LocalDateTime orderedAt;
 
     @Schema(description = "공급가")
     private Integer supplyPrice;
+
+    @Schema(description = "판매가")
+    private Integer salePrice;
 
     @Schema(description = "쿠폰번호")
     private String couponNumber;

@@ -520,10 +520,26 @@
         SELECT
             t.id                AS ticketId,
             oi.product_name     AS productName,
+            COALESCE(
+                (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)
+                 FROM order_item_options opt WHERE opt.order_item_id = oi.id), ''
+            )                   AS optionName,
             -- 수정: partner_order_code가 있으면 우선 출력, 없으면 ticket_number 출력
             COALESCE(NULLIF(t.partner_order_code, ''), t.ticket_number) AS ticketNumber,
             t.ticket_used       AS ticketUsed,
             t.ticket_used_date  AS ticketUsedDate,
+            CASE
+                WHEN o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED'
+                THEN o.canceled_at
+                ELSE NULL
+                END AS canceledAt,
+            CASE
+                WHEN o.status IN ('CANCELED', 'REFUNDED') OR t.status = 'CANCELLED'
+                THEN o.canceled_at
+                WHEN t.ticket_used = true
+                THEN t.ticket_used_date
+                ELSE NULL
+                END AS processedAt,
             CASE
                 WHEN o.status IN ('CANCELED', 'REFUNDED') THEN 'CANCELLED'
                 ELSE t.status
