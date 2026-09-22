@@ -37,7 +37,6 @@
 
                  JOIN products p
                       ON p.id = po.product_id
-                          AND p.visible = true
 
                  LEFT JOIN menu_categories mc
                            ON mc.id = p.category_id
