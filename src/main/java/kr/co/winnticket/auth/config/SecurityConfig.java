@@ -169,6 +169,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/admin/order/tickets/**")
                         .hasAnyAuthority("ROLE001", "ROLE002")
 
+                        /* ---------- 가이드/코치마크 (ROLE001 + ROLE002 가능) - 현장관리자 화면도 자체 투어를 사용함 ---------- */
+                        .requestMatchers(HttpMethod.GET, "/api/admin/guide/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/guide/**")
+                        .hasAnyAuthority("ROLE001", "ROLE002")
+
 
                         /* ---------- 관리자 API (ROLE001만 허용) ---------- */
                         .requestMatchers(HttpMethod.GET, "/api/admin/**")
