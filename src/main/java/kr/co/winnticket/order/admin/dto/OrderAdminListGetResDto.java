@@ -49,6 +49,9 @@ public class OrderAdminListGetResDto {
     @Schema(description = "상품명")
     private String productName;
 
+    @Schema(description = "옵션명 (동일 옵션은 하나로, 서로 다른 옵션은 콤마로 구분)")
+    private String optionName;
+
     @Schema(description = "상품수")
     private int productCnt;
 
