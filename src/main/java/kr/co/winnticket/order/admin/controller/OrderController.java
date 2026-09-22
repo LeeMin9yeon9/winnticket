@@ -260,6 +260,12 @@ public class OrderController {
             byOrder.computeIfAbsent(r.getOrderId(), k -> new java.util.ArrayList<>()).add(r);
         }
 
+        // 판매행/취소행/재승인행을 바로 시트에 쓰지 않고 일단 모아뒀다가, 마지막에 각 행의
+        // "주문일"(재승인행은 취소완료시각) 기준으로 전체를 시간순 정렬해서 출력한다.
+        // 재승인행은 원래 주문일보다 훨씬 뒤(취소된 시점)일 수 있어서, 주문 단위로 묶어
+        // 그대로 순서대로 쓰면 다른 주문들 사이에서 시간순서가 뒤섞여버리기 때문.
+        java.util.List<BenepiaRowData> rowDataList = new java.util.ArrayList<>();
+
         for (java.util.List<OrderBenepiaSettlementResDto> items : byOrder.values()) {
             OrderBenepiaSettlementResDto r = items.get(0); // 주문 단위 필드(금액/상태 등)는 모든 아이템 행에 동일하게 내려옴
 
@@ -295,36 +301,54 @@ public class OrderController {
             boolean canceled = "CANCELED".equals(r.getStatus());
 
             // 판매행 - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
-            writeBenepiaOrderRow(orderSheet, numberStyle, orderAmountCols, SALES_FEE_RATE, POINT_FEE_RATE,
+            rowDataList.add(new BenepiaRowData(
                     r, pmDisplay, "결제완료",
                     bankAmount, cardAmount, pointAmount, voucherAmount,
                     r.getPaidAt(), "", null, null, 0,
-                    productSb.toString(), totalQuantity, categorySb.toString());
+                    productSb.toString(), totalQuantity, categorySb.toString(),
+                    r.getOrderedAt()));
 
             if (canceled) {
-                // 취소행 - 실제로 환불된 금액만(-표시). 취소수수료는 실제로 뗀 결제수단 컬럼에서만
-                // 수수료만큼 덜 빼고(=그만큼 우리가 챙김), 나머지 결제수단은 전액 환불이므로 그대로
-                // 마이너스 - OrderService.cancelOrder()의 결제수단별 취소수수료 산정 기준과 동일:
-                // VIRTUAL_ACCOUNT는 계좌이체분에서, CARD/KAKAOPAY는 카드분에서, PaymentMethod.POINT는
-                // 포인트분에서 뗌 (GIFT는 취소수수료가 항상 0이라 조정 불필요)
-                long bankRefund = -bankAmount;
-                long cardRefund = -cardAmount;
-                long pointRefund = -pointAmount;
-                long voucherRefund = -voucherAmount;
-                String method = r.getPaymentMethod();
-                if ("VIRTUAL_ACCOUNT".equals(method)) bankRefund += cancelFee;
-                else if ("CARD".equals(method) || "KAKAOPAY".equals(method)) cardRefund += cancelFee;
-                else if ("POINT".equals(method)) pointRefund += cancelFee;
-
-                // 취소행은 KCP가 실제로 처리하는 방식(전액취소 + 잔액 재승인)과 동일하게 표시 -
-                // 상품명 자리엔 "수수료"라고 남기고, 주문상태도 "재승인"으로 표시
-                writeBenepiaOrderRow(orderSheet, numberStyle, orderAmountCols, SALES_FEE_RATE, POINT_FEE_RATE,
-                        r, pmDisplay, "재승인",
-                        bankRefund, cardRefund, pointRefund, voucherRefund,
+                // 취소행 - 수수료 차감 없이 원금 전체를 그대로 마이너스로 표시. 주문상태는 취소완료 유지.
+                rowDataList.add(new BenepiaRowData(
+                        r, pmDisplay, "취소완료",
+                        -bankAmount, -cardAmount, -pointAmount, -voucherAmount,
                         r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
                         r.getCancelAmount() != null ? r.getCancelAmount() : 0,
-                        "수수료", totalQuantity, categorySb.toString());
+                        productSb.toString(), totalQuantity, categorySb.toString(),
+                        r.getOrderedAt()));
+
+                // 재승인행 - KCP가 실제로 처리하는 방식(전액취소 + 잔액 재승인)과 동일하게, 취소수수료만큼만
+                // 별도 행으로 추가. 주문일/마감일자는 취소완료일자로, 주문번호/상품명은 원래 주문과 동일하게 유지.
+                // 수수료는 원래 결제에 쓰인 결제수단 컬럼에 그대로 표시(OrderService.cancelOrder()의
+                // 결제수단별 취소수수료 산정 기준과 동일: VIRTUAL_ACCOUNT/CARD·KAKAOPAY/POINT).
+                if (cancelFee != 0) {
+                    String method = r.getPaymentMethod();
+                    long feeBank = "VIRTUAL_ACCOUNT".equals(method) ? cancelFee : 0;
+                    long feeCard = ("CARD".equals(method) || "KAKAOPAY".equals(method)) ? cancelFee : 0;
+                    long feePoint = "POINT".equals(method) ? cancelFee : 0;
+
+                    rowDataList.add(new BenepiaRowData(
+                            r, pmDisplay, "재승인",
+                            feeBank, feeCard, feePoint, 0,
+                            r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
+                            (int) cancelFee,
+                            productSb.toString(), totalQuantity, categorySb.toString(),
+                            r.getCanceledAt()));
+                }
             }
+        }
+
+        // 주문일(재승인행은 취소완료시각) 기준 시간순 정렬 - 날짜 포맷이 'YYYY-MM-DD HH24:MI'라
+        // 문자열 그대로 비교해도 시간순과 일치함
+        rowDataList.sort(java.util.Comparator.comparing(d -> d.orderDate() != null ? d.orderDate() : ""));
+
+        for (BenepiaRowData d : rowDataList) {
+            writeBenepiaOrderRow(orderSheet, numberStyle, orderAmountCols, SALES_FEE_RATE, POINT_FEE_RATE,
+                    d.r(), d.pmDisplay(), d.statusDisplay(),
+                    d.bankAmt(), d.cardAmt(), d.pointAmt(), d.voucherAmt(),
+                    d.closingDate(), d.cancelMethodDisplay(), d.cancelRequestedAt(), d.canceledAt(), d.cancelAmountForRow(),
+                    d.productDisplay(), d.quantity(), d.categoryDisplay(), d.orderDate());
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -456,6 +480,17 @@ public class OrderController {
                 .body(baos.toByteArray());
     }
 
+    // 베네피아 정산 엑셀 "order" 시트 한 행의 데이터를 시트에 쓰기 전에 임시로 들고 있기 위한 홀더
+    // (전체 행을 주문일 기준으로 정렬한 뒤에 실제로 시트에 써야 하므로)
+    private record BenepiaRowData(
+            OrderBenepiaSettlementResDto r, String pmDisplay, String statusDisplay,
+            long bankAmt, long cardAmt, long pointAmt, long voucherAmt,
+            String closingDate, String cancelMethodDisplay,
+            String cancelRequestedAt, String canceledAt, int cancelAmountForRow,
+            String productDisplay, long quantity, String categoryDisplay,
+            String orderDate
+    ) {}
+
     // 베네피아 정산 엑셀 "order" 시트의 한 행(판매행 또는 취소행)을 씀
     private void writeBenepiaOrderRow(
             HSSFSheet sheet, HSSFCellStyle numberStyle, int[] amountCols,
@@ -464,11 +499,12 @@ public class OrderController {
             long bankAmt, long cardAmt, long pointAmt, long voucherAmt,
             String closingDate, String cancelMethodDisplay,
             String cancelRequestedAt, String canceledAt, int cancelAmountForRow,
-            String productDisplay, long quantity, String categoryDisplay
+            String productDisplay, long quantity, String categoryDisplay,
+            String orderDate
     ) {
         HSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
         int erow = row.getRowNum() + 1; // 엑셀 1-base 행 번호 (수식에서 자기 행 참조용)
-        row.createCell(0).setCellValue(r.getOrderedAt() != null ? r.getOrderedAt() : "");
+        row.createCell(0).setCellValue(orderDate != null ? orderDate : "");
         row.createCell(1).setCellValue(closingDate != null ? closingDate : "");
         row.createCell(2).setCellValue(r.getOrderNumber() != null ? r.getOrderNumber() : "");
         row.createCell(3).setCellValue(r.getCustomerName() != null ? r.getCustomerName() : "");
