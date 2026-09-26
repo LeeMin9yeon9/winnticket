@@ -52,6 +52,12 @@ public class FieldOrderListGetResDto {
     @Schema(description = "휴대폰번호")
     private String customerPhone;
 
+    @Schema(description = "수령자명")
+    private String recipientName;
+
+    @Schema(description = "수령자 연락처")
+    private String recipientPhone;
+
     @Schema(description = "발송일시")
     private LocalDateTime ticketSentDate;
 

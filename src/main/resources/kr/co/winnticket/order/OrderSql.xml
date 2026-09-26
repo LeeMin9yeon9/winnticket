@@ -515,7 +515,9 @@
             o.id              AS orderId,
             o.order_number    AS orderNumber,
             o.customer_name   AS customerName,
-            o.customer_phone  AS customerPhone
+            o.customer_phone  AS customerPhone,
+            o.recipient_name  AS recipientName,
+            o.recipient_phone AS recipientPhone
         FROM orders o
         WHERE o.id = #{id}
     </select>

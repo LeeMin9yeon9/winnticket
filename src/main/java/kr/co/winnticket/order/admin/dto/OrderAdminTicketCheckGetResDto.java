@@ -24,6 +24,12 @@ public class OrderAdminTicketCheckGetResDto {
     @Schema(description = "주문자 연락처")
     private String customerPhone;
 
+    @Schema(description = "수령자명")
+    private String recipientName;
+
+    @Schema(description = "수령자 연락처")
+    private String recipientPhone;
+
     @Schema(description = "전체 티켓 수")
     private int totalTicketCnt;
 

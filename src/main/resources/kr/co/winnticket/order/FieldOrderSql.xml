@@ -40,6 +40,8 @@
         p.name                  AS partnerName,
         o.customer_name         AS customerName,
         o.customer_phone        AS customerPhone,
+        o.recipient_name        AS recipientName,
+        o.recipient_phone       AS recipientPhone,
         o.paid_at               AS ticketSentDate,
         t.ticket_used_date      AS ticketUsedDate,
         o.canceled_at           AS canceledAt,
