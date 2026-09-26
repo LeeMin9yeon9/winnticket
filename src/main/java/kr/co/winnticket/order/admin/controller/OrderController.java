@@ -297,19 +297,11 @@ public class OrderController {
             long cardAmount = r.getCardAmount() != null ? r.getCardAmount() : 0;
             long pointAmount = r.getPointAmount() != null ? r.getPointAmount() : 0;
             long voucherAmount = r.getVoucherAmount() != null ? r.getVoucherAmount() : 0;
-            long cancelFee = r.getCancelFee() != null ? r.getCancelFee() : 0;
             boolean canceled = "CANCELED".equals(r.getStatus());
 
-            // 판매행 - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
-            rowDataList.add(new BenepiaRowData(
-                    r, pmDisplay, "결제완료",
-                    bankAmount, cardAmount, pointAmount, voucherAmount,
-                    r.getPaidAt(), "", null, null, 0,
-                    productSb.toString(), totalQuantity, categorySb.toString(),
-                    r.getOrderedAt()));
-
             if (canceled) {
-                // 취소행 - 수수료 차감 없이 원금 전체를 그대로 마이너스로 표시. 주문상태는 취소완료 유지.
+                // 취소건은 한 줄로만 표시 - 수수료 차감 없이 원금 전체를 그대로 마이너스로,
+                // 주문상태/취소접수/취소완료 컬럼에 취소 관련 일시를 함께 표시.
                 rowDataList.add(new BenepiaRowData(
                         r, pmDisplay, "취소완료",
                         -bankAmount, -cardAmount, -pointAmount, -voucherAmount,
@@ -317,31 +309,16 @@ public class OrderController {
                         r.getCancelAmount() != null ? r.getCancelAmount() : 0,
                         productSb.toString(), totalQuantity, categorySb.toString(),
                         r.getOrderedAt()));
-
-                // 재승인행 - KCP가 실제로 처리하는 방식(전액취소 + 잔액 재승인)과 동일하게, 취소수수료만큼만
-                // 별도 행으로 추가. 주문일/마감일자는 취소완료일자로, 주문번호/상품명은 원래 주문과 동일하게 유지.
-                // 수수료는 원래 결제에 쓰인 결제수단 컬럼에 그대로 표시(OrderService.cancelOrder()의
-                // 결제수단별 취소수수료 산정 기준과 동일: VIRTUAL_ACCOUNT/CARD·KAKAOPAY/POINT).
-                if (cancelFee != 0) {
-                    String method = r.getPaymentMethod();
-                    long feeBank = "VIRTUAL_ACCOUNT".equals(method) ? cancelFee : 0;
-                    long feeCard = ("CARD".equals(method) || "KAKAOPAY".equals(method)) ? cancelFee : 0;
-                    long feePoint = "POINT".equals(method) ? cancelFee : 0;
-
-                    rowDataList.add(new BenepiaRowData(
-                            r, pmDisplay, "재승인",
-                            feeBank, feeCard, feePoint, 0,
-                            r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
-                            (int) cancelFee,
-                            productSb.toString(), totalQuantity, categorySb.toString(),
-                            r.getCanceledAt()));
-                }
+            } else {
+                // 정상건 - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
+                rowDataList.add(new BenepiaRowData(
+                        r, pmDisplay, "결제완료",
+                        bankAmount, cardAmount, pointAmount, voucherAmount,
+                        r.getPaidAt(), "", null, null, 0,
+                        productSb.toString(), totalQuantity, categorySb.toString(),
+                        r.getOrderedAt()));
             }
         }
-
-        // 주문일(재승인행은 취소완료시각) 기준 시간순 정렬 - 날짜 포맷이 'YYYY-MM-DD HH24:MI'라
-        // 문자열 그대로 비교해도 시간순과 일치함
-        rowDataList.sort(java.util.Comparator.comparing(d -> d.orderDate() != null ? d.orderDate() : ""));
 
         for (BenepiaRowData d : rowDataList) {
             writeBenepiaOrderRow(orderSheet, numberStyle, orderAmountCols, SALES_FEE_RATE, POINT_FEE_RATE,
