@@ -735,12 +735,14 @@
     </insert>
 
     <select id="selectOrderFeeRefunds" resultType="map">
+        <!-- 큰따옴표로 감싸야 PostgreSQL이 별칭을 소문자로 접지 않고 그대로 보존함
+             (resultType=map은 DTO 자동매핑과 달리 컬럼명을 대소문자 구분해서 그대로 키로 씀) -->
         SELECT
             id,
-            refund_amount AS refundAmount,
+            refund_amount AS "refundAmount",
             reason,
-            kcp_tno       AS kcpTno,
-            created_at    AS createdAt
+            kcp_tno       AS "kcpTno",
+            created_at    AS "createdAt"
         FROM order_fee_refunds
         WHERE order_id = #{orderId}::uuid
         ORDER BY created_at DESC
