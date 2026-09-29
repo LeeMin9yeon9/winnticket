@@ -1,5 +1,6 @@
 package kr.co.winnticket.product.admin.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.co.winnticket.common.enums.ProductType;
@@ -77,6 +78,7 @@ public class ProductDetailGetResDto {
     @Schema(description = "상품이미지")
     private List<String> imageUrl;
 
+    @JsonProperty("isReservation")
     @Schema(description = "예약상품여부")
     private boolean isReservation;
 
