@@ -239,10 +239,14 @@ public class TossPaymentsService {
             LocalDateTime orderedAt = ts.toLocalDateTime();
             long days = ChronoUnit.DAYS.between(orderedAt.toLocalDate(), LocalDate.now());
 
-            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(remainAmount * 0.1);
+            // 수수료율(10%)은 카드 분담금(remainAmount)이 아니라 전체 결제금액 기준으로 계산해야 함
+            // (카드+포인트 혼합결제라도 취소수수료는 주문 전체 금액의 10%여야 함).
+            // 실제 카드로 환불 가능한 금액은 remainAmount를 못 넘으므로 cancelAmount는 그대로 0 이상으로 clamp.
+            int feeBase = finalPrice - alreadyCanceled;
+            cancelFee = (days <= 7) ? 1000 : (int) Math.floor(feeBase * 0.1);
             cancelAmount = Math.max(remainAmount - cancelFee, 0);
 
-            log.info("[일반상품] orderId={}, days={}, fee={}, refund={}", orderId, days, cancelFee, cancelAmount);
+            log.info("[일반상품] orderId={}, days={}, feeBase={}, fee={}, refund={}", orderId, days, feeBase, cancelFee, cancelAmount);
         }
 
         // Toss API 취소 호출

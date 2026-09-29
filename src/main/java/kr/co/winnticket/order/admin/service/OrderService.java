@@ -497,6 +497,11 @@ public class OrderService {
         // 상품 조회
         List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
 
+        // 예약 상품 여부 - 예약 상품은 결제수단과 무관하게 취소수수료 없이 전액 환불
+        // (TossPaymentsService.cancel()의 예약상품 처리 기준과 동일)
+        boolean isReservation = items.stream()
+                .anyMatch(item -> Boolean.TRUE.equals(item.getIsReservation()));
+
         PartnerSplitResult split = orderPostPaymentService.splitByPartner(items);
 
         /*
@@ -630,15 +635,23 @@ public class OrderService {
             int vaPointPortion = order.getPointAmount() != null ? order.getPointAmount() : 0;
             int vaBankPortion = order.getFinalPrice() - vaPointPortion;
 
-            long vaDays = java.time.temporal.ChronoUnit.DAYS.between(
-                    order.getOrderedAt().toLocalDate(),
-                    LocalDate.now()
-            );
-            cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(vaBankPortion * 0.1);
-            cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
+            if (isReservation) {
+                // 예약 상품: 수수료 없이 전액 환불
+                cancelFee = 0;
+                cancelAmount = vaBankPortion;
+                log.info("[예약상품][무통장 취소] 전액환불 orderId={}, amount={}", orderId, cancelAmount);
+            } else {
+                long vaDays = java.time.temporal.ChronoUnit.DAYS.between(
+                        order.getOrderedAt().toLocalDate(),
+                        LocalDate.now()
+                );
+                // 수수료율(10%)은 계좌이체 분담금(vaBankPortion)이 아니라 전체 결제금액 기준
+                cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(order.getFinalPrice() * 0.1);
+                cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
 
-            log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
-                    order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
+                log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
+                        order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
+            }
 
             // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
             if (vaPointPortion > 0) {
@@ -675,14 +688,13 @@ public class OrderService {
             int finalPrice = order.getFinalPrice();
             int refundAmount;
 
-            // ===== testtravel 테스트 계정은 수수료 없이 전액 환불 =====
-            if (isTestTravel) {
+            // ===== testtravel 테스트 계정, 예약 상품은 수수료 없이 전액 환불 =====
+            if (isTestTravel || isReservation) {
 
                 cancelFee = 0;
                 refundAmount = finalPrice;
 
-                log.info("[TESTTRAVEL POINT CANCEL] full refund orderId={}", orderId);
-                log.info("[TESTTRAVEL POINT CANCEL] skip cancel fee. benepiaId={}", order.getBenepiaId());
+                log.info("[TESTTRAVEL/예약상품 POINT CANCEL] full refund orderId={}, isReservation={}", orderId, isReservation);
 
             } else {
 
