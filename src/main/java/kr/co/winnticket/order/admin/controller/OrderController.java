@@ -301,20 +301,23 @@ public class OrderController {
 
             if (canceled) {
                 // 취소건은 한 줄로만 표시 - 수수료 차감 없이 원금 전체를 그대로 마이너스로,
+                // 취소금액도 수수료 빼기 전 원금 전체를 마이너스로 표시(순액 아님).
                 // 주문상태/취소접수/취소완료 컬럼에 취소 관련 일시를 함께 표시.
+                long fullAmountNegative = -(bankAmount + cardAmount + pointAmount + voucherAmount);
                 rowDataList.add(new BenepiaRowData(
                         r, pmDisplay, "취소완료",
                         -bankAmount, -cardAmount, -pointAmount, -voucherAmount,
                         r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
-                        r.getCancelAmount() != null ? r.getCancelAmount() : 0,
+                        (int) fullAmountNegative,
                         productSb.toString(), totalQuantity, categorySb.toString(),
                         r.getOrderedAt()));
             } else {
                 // 정상건 - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
+                // 마감일자는 결제일시(paidAt, 시간 포함)가 아니라 날짜만 있는 closingDate를 써야 함
                 rowDataList.add(new BenepiaRowData(
                         r, pmDisplay, "결제완료",
                         bankAmount, cardAmount, pointAmount, voucherAmount,
-                        r.getPaidAt(), "", null, null, 0,
+                        r.getClosingDate(), "", null, null, 0,
                         productSb.toString(), totalQuantity, categorySb.toString(),
                         r.getOrderedAt()));
             }
@@ -500,12 +503,15 @@ public class OrderController {
         row.createCell(14).setCellValue(productDisplay);
         row.createCell(15).setCellValue(quantity);
         row.createCell(16).setCellValue(categoryDisplay);
-        row.createCell(17).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+        // 총 결제금액/결제금액은 취소행이면 같은 행의 SK 결제금액(무통장+카드+포인트+이용권)
+        // 합계와 부호를 맞춰서 음수로 표시 - 취소된 주문인데 여기만 양수로 남아있으면 혼란스러움
+        long signedTotal = bankAmt + cardAmt + pointAmt + voucherAmt;
+        row.createCell(17).setCellValue(signedTotal);
         row.createCell(18).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
         row.createCell(19).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
         row.createCell(20).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
         row.createCell(21).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
-        row.createCell(22).setCellValue(r.getFinalPrice() != null ? r.getFinalPrice() : 0);
+        row.createCell(22).setCellValue(signedTotal);
         row.createCell(23).setCellValue(cancelAmountForRow);
         row.createCell(24).setCellValue(cancelMethodDisplay);
         row.createCell(25).setCellValue(r.getPaidAt() != null ? r.getPaidAt() : "");
