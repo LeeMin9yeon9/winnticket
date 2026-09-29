@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "주문", description = "주문 관리")
@@ -593,6 +594,24 @@ public class OrderController {
     ) throws Exception {
         service.withdrawCancelRequest(orderId);
         return ResponseEntity.ok(ApiResponse.success("취소신청이 철회되었습니다.", orderId.toString()));
+    }
+
+    @PostMapping("{id}/cancel-fee/refund")
+    @Operation(summary = "취소수수료 환불(관리자)", description = "취소완료된 포인트 결제 주문에서 잘못 부과된 취소수수료를 KCP로 추가 환불합니다.")
+    public ResponseEntity<ApiResponse<String>> refundCancelFee(
+            @Parameter(description = "주문ID") @PathVariable("id") UUID orderId,
+            @Parameter(description = "환불 사유") @RequestParam(required = false) String reason
+    ) throws Exception {
+        service.refundCancelFee(orderId, reason);
+        return ResponseEntity.ok(ApiResponse.success("취소수수료가 환불되었습니다.", orderId.toString()));
+    }
+
+    @GetMapping("{id}/cancel-fee/refund")
+    @Operation(summary = "취소수수료 환불 이력 조회(관리자)", description = "해당 주문의 취소수수료 환불 이력을 조회합니다.")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getCancelFeeRefunds(
+            @Parameter(description = "주문ID") @PathVariable("id") UUID orderId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success("조회 성공", service.selectOrderFeeRefunds(orderId)));
     }
 
     @PostMapping("{id}/sms/resend-ticket")

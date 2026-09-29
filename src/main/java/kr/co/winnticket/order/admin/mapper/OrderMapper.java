@@ -112,6 +112,20 @@ public interface OrderMapper {
             @Param("payloadJson") String payloadJson
     );
 
+    // 이미 취소된 주문에서 나중에 취소수수료만 추가 환불 처리 - 보유했던 수수료를 환불액에 더하고 0으로 초기화
+    int releaseCancelFee(@Param("orderId") UUID orderId, @Param("feeAmount") int feeAmount);
+
+    // 취소수수료 환불 이력 기록
+    void insertOrderFeeRefund(
+            @Param("orderId") UUID orderId,
+            @Param("refundAmount") int refundAmount,
+            @Param("reason") String reason,
+            @Param("kcpTno") String kcpTno
+    );
+
+    // 취소수수료 환불 이력 조회
+    List<Map<String, Object>> selectOrderFeeRefunds(@Param("orderId") UUID orderId);
+
     // 취소신청 철회 - 주문상태를 주문처리완료로 되돌리고 취소요청 관련 정보 초기화
     int withdrawCancelRequest(@Param("orderId") UUID orderId);
 

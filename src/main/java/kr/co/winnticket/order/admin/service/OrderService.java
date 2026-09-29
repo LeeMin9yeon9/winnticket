@@ -878,6 +878,55 @@ public class OrderService {
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
     }
 
+    // 취소수수료 환불 - 이미 취소완료된 주문인데 보류(예약상품 예외 처리 누락 등)로 취소수수료가
+    // 잘못 부과된 경우, 관리자가 그 수수료만큼 추가로 돌려주기 위한 기능. 포인트 결제 건만 지원
+    // (포인트는 KCP tno로 잔여 승인분을 추가 취소하면 되지만, 카드/무통장은 별도 처리 방식이 필요해서
+    // 우선 실제로 필요했던 포인트 케이스만 지원).
+    @Transactional
+    public void refundCancelFee(UUID orderId, String reason) throws Exception {
+        OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
+        if (order == null) {
+            throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
+        }
+        if (order.getStatus() != OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소완료된 주문만 수수료를 환불할 수 있습니다.");
+        }
+        if (order.getCancelFee() <= 0) {
+            throw new IllegalStateException("환불할 취소수수료가 없습니다.");
+        }
+        if (order.getPaymentMethod() != PaymentMethod.POINT) {
+            throw new IllegalStateException("현재는 포인트 결제 건만 수수료 환불을 지원합니다.");
+        }
+
+        String tno = mapper.selectPointTno(order.getOrderNumber());
+        if (tno == null || tno.isBlank()) {
+            throw new IllegalStateException("KCP 거래번호(tno)를 찾을 수 없습니다.");
+        }
+
+        int feeAmount = order.getCancelFee();
+
+        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+        dto.setTno(tno);
+        dto.setModType("STSC");
+        dto.setCancelReason(reason != null && !reason.isBlank() ? reason : "관리자 - 취소수수료 환불");
+
+        kcpService.cancelPoint(dto);
+
+        int updated = mapper.releaseCancelFee(orderId, feeAmount);
+        if (updated != 1) {
+            throw new IllegalStateException("취소수수료 환불 상태 반영 실패");
+        }
+
+        mapper.insertOrderFeeRefund(orderId, feeAmount, dto.getCancelReason(), tno);
+
+        log.info("[CANCEL_FEE_REFUND] orderId={}, feeAmount={}, tno={}", orderId, feeAmount, tno);
+    }
+
+    // 취소수수료 환불 이력 조회
+    public List<Map<String, Object>> selectOrderFeeRefunds(UUID orderId) {
+        return mapper.selectOrderFeeRefunds(orderId);
+    }
+
     // 취소신청 철회 - 고객이 요청한 취소를 관리자가 반려하고 주문을 주문처리완료(COMPLETED) 상태로 되돌림.
     // 결제/티켓 등은 건드리지 않고 상태와 취소요청 관련 정보(요청시각, 환불계좌)만 초기화한다.
     @Transactional

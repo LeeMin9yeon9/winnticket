@@ -719,6 +719,33 @@
         WHERE id = #{orderId}::uuid
     </update>
 
+    <!-- 이미 취소된 주문에서 나중에 취소수수료만 추가 환불 - 보유했던 수수료를 환불액에 더하고 0으로 초기화 -->
+    <update id="releaseCancelFee">
+        UPDATE orders
+        SET
+            cancel_amount = cancel_amount + #{feeAmount},
+            cancel_fee = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{orderId}::uuid
+    </update>
+
+    <insert id="insertOrderFeeRefund">
+        INSERT INTO order_fee_refunds (order_id, refund_amount, reason, kcp_tno)
+        VALUES (#{orderId}::uuid, #{refundAmount}, #{reason}, #{kcpTno})
+    </insert>
+
+    <select id="selectOrderFeeRefunds" resultType="map">
+        SELECT
+            id,
+            refund_amount AS refundAmount,
+            reason,
+            kcp_tno       AS kcpTno,
+            created_at    AS createdAt
+        FROM order_fee_refunds
+        WHERE order_id = #{orderId}::uuid
+        ORDER BY created_at DESC
+    </select>
+
     <!-- 취소신청 철회 - 주문처리완료로 복귀, 취소요청 시각/환불계좌 정보 초기화 -->
     <update id="withdrawCancelRequest">
         UPDATE orders
