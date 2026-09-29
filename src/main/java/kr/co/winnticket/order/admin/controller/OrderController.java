@@ -241,7 +241,8 @@ public class OrderController {
                 "주문상품", "수량", "카테고리",
                 "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액",
                 "취소수단",
-                "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드"
+                "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드",
+                "취소수수료 부과액", "취소수수료 환불액"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -252,7 +253,7 @@ public class OrderController {
 
         // 금액 컬럼 전체에 천단위 콤마 표시
         HSSFCellStyle numberStyle = createNumberStyle(workbook);
-        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23};
+        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 30, 31};
 
         // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
         // 여기서 주문(orderId) 단위로 다시 묶는다.
@@ -520,6 +521,8 @@ public class OrderController {
         row.createCell(27).setCellValue(canceledAt != null ? canceledAt : "");
         row.createCell(28).setCellValue(statusDisplay);
         row.createCell(29).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
+        row.createCell(30).setCellValue(r.getFeeCharged() != null ? r.getFeeCharged() : 0);
+        row.createCell(31).setCellValue(r.getFeeRefunded() != null ? r.getFeeRefunded() : 0);
 
         for (int col : amountCols) {
             row.getCell(col).setCellStyle(numberStyle);

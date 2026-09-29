@@ -55,6 +55,12 @@ public class OrderBenepiaSettlementResDto {
     @Schema(description = "취소 수수료 - 취소된 주문이면 음수, 아니면 0")
     private Integer cancelFee;
 
+    @Schema(description = "취소수수료 부과액(원래 부과됐던 금액, 환불 여부와 무관)")
+    private Integer feeCharged;
+
+    @Schema(description = "취소수수료 환불액(관리자가 나중에 돌려준 금액 합계)")
+    private Integer feeRefunded;
+
     @Schema(description = "소속사코드")
     private String siteCode;
 

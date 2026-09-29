@@ -1076,6 +1076,14 @@
             -->
             CASE WHEN a.status = 'CANCELED' THEN -(a.final_price - COALESCE(a.cancel_fee, 0)) ELSE 0 END AS cancelAmount,
             COALESCE(a.cancel_fee, 0)                                                                  AS cancelFee,
+            <!-- 수수료 부과액/환불액 - 환불하면 orders.cancel_fee는 0으로 초기화되므로, 원래 부과됐던
+                 금액은 (현재 cancel_fee + 지금까지 환불된 합계)로 역산해야 함 -->
+            (COALESCE(a.cancel_fee, 0) + COALESCE(
+                (SELECT SUM(fr.refund_amount) FROM order_fee_refunds fr WHERE fr.order_id = a.id), 0
+            ))                                                                                          AS feeCharged,
+            COALESCE(
+                (SELECT SUM(fr.refund_amount) FROM order_fee_refunds fr WHERE fr.order_id = a.id), 0
+            )                                                                                          AS feeRefunded,
             COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             b.product_name || ' / ' || COALESCE(
                 (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)
