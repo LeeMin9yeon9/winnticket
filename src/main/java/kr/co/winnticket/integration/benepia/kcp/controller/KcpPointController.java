@@ -73,19 +73,8 @@ public class KcpPointController {
         return ResponseEntity.ok(ApiResponse.success("포인트 결제 요청 성공", res));
     }
 
-    @PostMapping("/cancel")
-    @Operation(summary = "베네피아 KCP 포인트 취소", description = "베네피아 포인트 결제를 취소합니다.")
-    public ResponseEntity<ApiResponse<KcpModResDto>> cancel(
-            @Valid @RequestBody KcpPointCancelReqDto dto
-    ) {
-
-        log.info("[KCP][CANCEL][REQ] orderNo={}, tno={}", dto.getOrderNo(), dto.getTno());
-
-        KcpModResDto res = service.cancelPoint(dto);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("포인트 취소 성공", res)
-        );
-    }
+    // 포인트 취소(cancel)는 세션/본인 주문 검증 없이 tno만으로 취소가 가능해서
+    // /api/benepia/** 전체가 인증 없이 열려있는 이 컨트롤러에 두면 안 됨(관리자 전용으로
+    // AdminKcpController로 이동, ROLE001 보호).
 
 }
