@@ -74,9 +74,8 @@
                 orders a
             JOIN order_items b
                 ON b.order_id = a.id
-            JOIN products c
+            LEFT JOIN products c
                 ON c.id = b.product_id
-                AND (CAST(#{partnerId} AS uuid) IS NULL OR c.partner_id = CAST(#{partnerId} AS uuid))
             LEFT JOIN partners d
                 ON d.id = c.partner_id
             LEFT JOIN channels e
@@ -138,6 +137,16 @@
 
         <if test="channelId != null">
             AND a.channel_id = #{channelId}
+        </if>
+
+        <if test="partnerId != null">
+            AND EXISTS (
+                SELECT 1
+                FROM order_items oi2
+                JOIN products p2 ON p2.id = oi2.product_id
+                WHERE oi2.order_id = a.id
+                AND p2.partner_id = #{partnerId}
+            )
         </if>
 
         Order By
@@ -242,7 +251,7 @@
         ) AS ticketUsed
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
-        JOIN products c ON c.id = b.product_id
+        LEFT JOIN products c ON c.id = b.product_id
         LEFT JOIN partners d ON d.id = c.partner_id
         LEFT JOIN channels e ON e.id = a.channel_id
         -- 이용권 결제는 베네피아 ID/PW 없이 진행되어 orders.benepia_id가 비어있으므로,
@@ -445,7 +454,7 @@
             order_items a
         JOIN orders b
         ON b.id = a.order_id
-        JOIN products c
+        LEFT JOIN products c
         ON c.id = a.product_id
         LEFT JOIN partners d
         ON d.id = c.partner_id
