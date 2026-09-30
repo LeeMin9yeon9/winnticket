@@ -24,9 +24,14 @@ public class PlaystoryScheduler {
     @Scheduled(fixedDelay = 3600000)
     public void playstoryCheckScheduler() {
 
-        log.info("[Playstory Scheduler Start]");
-
         List<UUID> orderIds = mapper.selectPlaystoryCheckOrders();
+
+        // 대상이 없으면 로그조차 남기지 않음(매시간 빈 실행까지 남길 필요 없음)
+        if (orderIds.isEmpty()) {
+            return;
+        }
+
+        int totalUpdated = 0;
 
         for (UUID orderId : orderIds) {
 
@@ -38,8 +43,6 @@ public class PlaystoryScheduler {
                     continue;
                 }
 
-                int updated = 0;
-
                 for (PlaystoryCheckResponse.OptChkResult opt : response.getOptList()) {
                     try {
                         String code = opt.getResultCode();
@@ -50,7 +53,7 @@ public class PlaystoryScheduler {
                         int result = mapper.updatePlaystoryTicketUsed(cpnNo, now);
 
                         if (result > 0) {
-                            updated++;
+                            totalUpdated++;
                             log.info("ticket used update success cpnNo={}", cpnNo);
                         }
                     }
@@ -60,7 +63,6 @@ public class PlaystoryScheduler {
                                 opt.getCpnNo(), e);
                     }
                 }
-                log.info("[Playstory] used sync finished updated={}",updated);
             } catch (Exception e) {
 
                 log.error("Playstory check fail orderId={}", orderId, e);
@@ -68,5 +70,8 @@ public class PlaystoryScheduler {
             }
 
         }
+
+        // 주문 건별 로그 대신, 전체 실행 결과만 한 줄로 요약해서 로그 스팸 방지
+        log.info("[Playstory Scheduler] checked={}, updated={}", orderIds.size(), totalUpdated);
     }
 }
