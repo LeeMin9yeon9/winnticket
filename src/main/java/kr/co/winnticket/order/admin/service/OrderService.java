@@ -6,6 +6,7 @@ import kr.co.winnticket.common.enums.PaymentMethod;
 import kr.co.winnticket.common.enums.PaymentStatus;
 import kr.co.winnticket.common.enums.ProductType;
 import kr.co.winnticket.integration.aquaplanet.service.AquaPlanetService;
+import kr.co.winnticket.integration.benepia.kcp.dto.KcpModResDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointCancelReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayReqDto;
 import kr.co.winnticket.integration.benepia.kcp.dto.KcpPointPayResDto;
@@ -737,7 +738,18 @@ public class OrderService {
                 }
 
                 try {
-                    kcpService.cancelPoint(dto);
+                    KcpModResDto cancelRes = kcpService.cancelPoint(dto);
+
+                    // STRA는 KCP 내부적으로 "전액취소 + 잔액 재승인"이라 원래 tno는 이미
+                    // 소멸되고 새 tno로 잔액(수수료)이 재승인됨. 이 새 tno를 저장해두지 않으면
+                    // 나중에 취소수수료 환불 시 이미 죽은 원래 tno를 취소하게 되어 KCP에는
+                    // 아무 변화도 생기지 않는다(내부 DB만 환불 처리된 것처럼 보이는 문제).
+                    if (cancelFee > 0 && cancelRes != null && cancelRes.getTno() != null
+                            && !cancelRes.getTno().equals(tno)) {
+                        mapper.updatePointActiveTno(order.getOrderNumber(), cancelRes.getTno());
+                        log.info("[POINT CANCEL] STRA 재승인 tno 갱신 orderId={}, oldTno={}, newTno={}",
+                                orderId, tno, cancelRes.getTno());
+                    }
                 } catch (Exception e) {
                     log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
                 }

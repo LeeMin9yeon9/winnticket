@@ -173,8 +173,11 @@ public interface OrderMapper {
     // 파트너 티켓코드타입 조회
     String selectTicketCodeType(UUID partnerId);
 
-    // 포인트 취소시 tno(주문번호) 조회
+    // 포인트 취소시 tno 조회 (STRA 재승인이 있었으면 그 tno, 없으면 원래 결제 tno)
     String selectPointTno(@Param("orderNumber") String orderNumber);
+
+    // KCP STRA 부분취소로 발급된 잔액 재승인 tno 기록 (원래 결제 tno인 point_tid는 그대로 보존)
+    int updatePointActiveTno(@Param("orderNumber") String orderNumber, @Param("tno") String tno);
 
     // 이용권 환불(복원)을 위한 이용권번호/사용금액 조회
     Map<String, Object> selectOrderVoucherInfo(@Param("orderNumber") String orderNumber);

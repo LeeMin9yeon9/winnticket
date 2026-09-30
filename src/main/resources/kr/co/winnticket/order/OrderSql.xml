@@ -926,12 +926,20 @@
         WHERE id = #{partnerId}
     </select>
 
-    <!--포인트 취소 시 주문번호 조회-->
+    <!-- 포인트 취소 시 tno 조회: STRA 재승인 tno(point_active_tno)가 있으면 그걸 우선 사용,
+         없으면(재승인이 없었으면) 원래 결제 tno(point_tid) 사용 -->
     <select id="selectPointTno" resultType="string">
-        SELECT point_tid
+        SELECT COALESCE(point_active_tno, point_tid)
         FROM orders
         WHERE order_number = #{orderNumber}
     </select>
+
+    <!-- KCP STRA 부분취소 후 발급되는 잔액 재승인 tno 기록 (point_tid는 원래 결제 tno로 그대로 둠) -->
+    <update id="updatePointActiveTno">
+        UPDATE orders
+        SET point_active_tno = #{tno}, updated_at = NOW()
+        WHERE order_number = #{orderNumber}
+    </update>
 
     <!-- 이용권 환불(복원)을 위한 이용권번호/사용금액 조회 -->
     <select id="selectOrderVoucherInfo" resultType="map">
