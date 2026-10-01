@@ -36,9 +36,17 @@ public class BenepiaController {
         log.info("BENEPIA RETURNURL={}", returnurl);
 
         // encParam 있으면 베네피아 유저 처리
+        // 베네피아 쪽에서 encParam이 깨진 채로(길이 손실 등) 넘어오는 경우가 있는데,
+        // 여기서 예외가 그대로 터지면 고객이 에러 응답을 그대로 보게 됨 - returnurl처럼
+        // 안전하게 홈으로 fallback 시키고, 복호화된 회원 정보 없이 채널만 표시한다.
         if (encParam != null && !encParam.isBlank()) {
-            entryService.handle(encParam, session);
-            channel = "BENE";
+            try {
+                entryService.handle(encParam, session);
+                channel = "BENE";
+            } catch (Exception e) {
+                log.error("[BENEPIA] encParam 복호화 실패 - 홈으로 fallback", e);
+                channel = "BENE";
+            }
         } else {
             channel = "DEFAULT";
         }

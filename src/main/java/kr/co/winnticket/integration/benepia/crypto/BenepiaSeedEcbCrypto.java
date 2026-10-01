@@ -34,10 +34,21 @@ public class BenepiaSeedEcbCrypto {
 
             // Base64 디코딩
             byte[] cipher = Base64.getDecoder().decode(value);
+            log.info("[BENEPIA] cipher byte length={}, %16={}, seedKey byte length={}",
+                    cipher.length, cipher.length % 16, seedKey == null ? -1 : seedKey.getBytes(StandardCharsets.ISO_8859_1).length);
 
             // SEED ECB 복호화
             byte[] key = seedKey.getBytes(StandardCharsets.ISO_8859_1);
             byte[] plain = KISA_SEED_ECB.SEED_ECB_Decrypt(key,cipher,0,cipher.length);
+
+            // 암호문 길이가 16바이트(SEED 블록 크기)의 배수가 아니면 SEED_ECB_Decrypt가
+            // 조용히 null을 반환한다(예외 아님) - 원인을 바로 알 수 있도록 명시적으로 처리.
+            if (plain == null) {
+                throw new IllegalStateException(
+                        "SEED 복호화 실패 - 암호문 길이가 16의 배수가 아님 (cipher.length=" + cipher.length
+                                + ", %16=" + (cipher.length % 16) + ")"
+                );
+            }
 
             log.info("[BENEPIA][DECRYPT SUCCESS ]");
             String result = new String(plain, StandardCharsets.UTF_8);
