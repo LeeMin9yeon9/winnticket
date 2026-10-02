@@ -29,8 +29,11 @@
             -- 리다이렉트시키는 구조라 상대경로여야 함(규격서 샘플도 전부 '/'로 시작하는 상대경로).
             CONCAT('/product/', p.code, '?channel=BENE') AS "prdDtlUrl",
             'N' AS "prdMobDtlUrlTyp",
-            -- MOBILE: 규격서상 새창으로 직접 여는 방식이라 http(s) 포함 절대 URL이어야 함.
-            CONCAT('https://www.winnticket.co.kr/product/', p.code, '?channel=BENE') AS "prdMobDtlUrl",
+            -- MOBILE: 규격서상으로는 새창 직접오픈(절대URL)이라고 되어있지만, 실제 운영 로그로
+            -- 확인해보니 모바일도 PC와 동일하게 베네피아 연동URL?returnUrl= 로 감싸서 리다이렉트함.
+            -- 절대 URL을 주면 SSO 진입점의 "상대경로만 허용" 체크에 걸려 홈으로 빠지므로 PC와
+            -- 동일하게 상대경로로 제공.
+            CONCAT('/product/', p.code, '?channel=BENE') AS "prdMobDtlUrl",
             '10' AS "prdType",        -- 여행상품
             COALESCE(p.detail_content, p.description, '') AS "prdDesc",
             to_char(p.created_at, 'YYYYMMDDHH24MISS') AS "regDate",
