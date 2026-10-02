@@ -509,10 +509,10 @@ public class OrderController {
         // 합계와 부호를 맞춰서 음수로 표시 - 취소된 주문인데 여기만 양수로 남아있으면 혼란스러움
         long signedTotal = bankAmt + cardAmt + pointAmt + voucherAmt;
         row.createCell(17).setCellValue(signedTotal);
-        row.createCell(18).setCellValue(r.getBankAmount() != null ? r.getBankAmount() : 0);
-        row.createCell(19).setCellValue(r.getCardAmount() != null ? r.getCardAmount() : 0);
-        row.createCell(20).setCellValue(r.getPointAmount() != null ? r.getPointAmount() : 0);
-        row.createCell(21).setCellValue(r.getVoucherAmount() != null ? r.getVoucherAmount() : 0);
+        row.createCell(18).setCellValue(bankAmt);
+        row.createCell(19).setCellValue(cardAmt);
+        row.createCell(20).setCellValue(pointAmt);
+        row.createCell(21).setCellValue(voucherAmt);
         row.createCell(22).setCellValue(signedTotal);
         row.createCell(23).setCellValue(cancelAmountForRow);
         row.createCell(24).setCellValue(cancelMethodDisplay);
