@@ -608,24 +608,10 @@ public class OrderService {
 
             log.info("[TOSS CANCEL RESULT] cancelAmount={}, cancelFee={}", cancelAmount, cancelFee);
 
-            // 혼합결제(토스+포인트)인 경우 포인트도 반환
+            // 혼합결제(토스+포인트)인 경우 포인트도 반환 - 카드 분담금은 전액 환불했으니
+            // 수수료는 포인트 쪽에서 뗀다(카드가 전액환불된 예약상품/카드단독 결제는 cancelFee=0이라 전액반환됨)
             if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-                String tno = mapper.selectPointTno(order.getOrderNumber());
-                if (tno != null) {
-                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                    dto.setTno(tno);
-                    dto.setCancelReason("혼합결제 취소(포인트 전액반환)");
-                    dto.setModType("STSC");
-
-                    try {
-                        kcpService.cancelPoint(dto);
-                        log.info("[POINT RETURN] 혼합결제 포인트 반환 완료 orderId={}", orderId);
-                    } catch (Exception e) {
-                        log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
-                    }
-                } else {
-                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
-                }
+                refundMixedPointPortion(orderId, order, cancelFee, items, "혼합결제 취소");
             }
 
         } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
@@ -648,30 +634,22 @@ public class OrderService {
                 );
                 // 수수료율(10%)은 계좌이체 분담금(vaBankPortion)이 아니라 전체 결제금액 기준
                 cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(order.getFinalPrice() * 0.1);
-                cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
+
+                if (vaPointPortion > 0) {
+                    // 포인트 혼합결제: 계좌이체 분담금은 전액 환불하고, 수수료는 포인트 쪽에서 뗀다
+                    cancelAmount = vaBankPortion;
+                } else {
+                    cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
+                }
 
                 log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
                         order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
             }
 
-            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환
+            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환 - 계좌이체 분담금은
+            // 전액 환불했으니 수수료는 포인트 쪽에서 뗀다
             if (vaPointPortion > 0) {
-                String tno = mapper.selectPointTno(order.getOrderNumber());
-                if (tno != null) {
-                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                    dto.setTno(tno);
-                    dto.setModType("STSC");
-                    dto.setCancelReason("무통장 취소");
-
-                    try {
-                        kcpService.cancelPoint(dto);
-                        log.info("[POINT RETURN] 무통장 포인트 반환 완료 orderId={}", orderId);
-                    } catch (Exception e) {
-                        log.error("[POINT RETURN FAIL - VA] orderId={}", orderId, e);
-                    }
-                } else {
-                    log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
-                }
+                refundMixedPointPortion(orderId, order, cancelFee, items, "무통장 취소");
             }
 
         } else if (method == PaymentMethod.POINT) {
@@ -888,6 +866,48 @@ public class OrderService {
         });
 
         log.info("[ORDER_CANCEL] 관리자 취소 완료 orderId={}, paymentMethod={}", orderId, method);
+    }
+
+    // 혼합결제(포인트+카드/무통장) 취소 시 포인트 쪽 반환 처리 - 카드/계좌이체 분담금은 전액
+    // 환불하고, 취소수수료는 이 포인트 반환에서 뗀다(순수 포인트결제 취소와 동일한 STRA 방식).
+    private void refundMixedPointPortion(UUID orderId, OrderAdminDetailGetResDto order, int cancelFee,
+                                          List<OrderProductListGetResDto> items, String reasonPrefix) {
+        String tno = mapper.selectPointTno(order.getOrderNumber());
+        if (tno == null) {
+            log.warn("[POINT SKIP] tno 없음 orderId={}", orderId);
+            return;
+        }
+
+        KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+        dto.setTno(tno);
+
+        if (cancelFee > 0) {
+            dto.setModType("STRA");
+            // KCP STRA 부분취소: mod_mny = 취소 후 남는 금액(잔액) = 수수료
+            dto.setModMny(cancelFee);
+            dto.setModOrdrIdxx(order.getOrderNumber());
+            String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
+            if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
+            dto.setModOrdrGoods("[" + productSummary + "] 취소 수수료");
+            dto.setCancelReason(reasonPrefix + "(포인트, 수수료 제외 환불)");
+        } else {
+            dto.setModType("STSC");
+            dto.setCancelReason(reasonPrefix + "(포인트 전액반환)");
+        }
+
+        try {
+            KcpModResDto res = kcpService.cancelPoint(dto);
+
+            // STRA는 KCP 내부적으로 "전액취소 + 잔액 재승인"이라 새 tno가 발급됨 - 저장해두지
+            // 않으면 나중에 이 수수료를 추가로 환불할 때 이미 죽은 tno를 취소하게 됨.
+            if (cancelFee > 0 && res != null && res.getTno() != null && !res.getTno().equals(tno)) {
+                mapper.updatePointActiveTno(order.getOrderNumber(), res.getTno());
+                log.info("[POINT RETURN] STRA 재승인 tno 갱신 orderId={}, oldTno={}, newTno={}", orderId, tno, res.getTno());
+            }
+            log.info("[POINT RETURN] {} 완료 orderId={}, fee={}", reasonPrefix, orderId, cancelFee);
+        } catch (Exception e) {
+            log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
+        }
     }
 
     // 취소수수료 환불 - 이미 취소완료된 주문인데 보류(예약상품 예외 처리 누락 등)로 취소수수료가
