@@ -1009,8 +1009,9 @@ public class OrderService {
             }
         }
 
-        // 주문 상태 CANCELED 변경
-        int updated = mapper.updateOrderCancelSuccess(orderId, 0, 0, null);
+        // 주문 상태 CANCELED 변경 - 결제가 한 번도 된 적 없는 주문이라 payment_status는
+        // CANCELED가 아니라 FAILED로 남겨야 "결제완료 후 취소"와 구분됨
+        int updated = mapper.updateOrderCancelAsPaymentFailed(orderId);
 
         if (updated != 1) {
             throw new IllegalStateException("주문 취소 상태 변경 실패");

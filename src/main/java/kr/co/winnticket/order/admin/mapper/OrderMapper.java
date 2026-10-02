@@ -112,6 +112,10 @@ public interface OrderMapper {
             @Param("payloadJson") String payloadJson
     );
 
+    // 입금 전(결제 자체가 한 번도 된 적 없는) 주문 취소 - payment_status를 CANCELED가 아닌
+    // FAILED로 남겨서 "결제완료 후 취소"와 구분되게 함
+    int updateOrderCancelAsPaymentFailed(@Param("orderId") UUID orderId);
+
     // 이미 취소된 주문에서 나중에 취소수수료만 추가 환불 처리 - 보유했던 수수료를 환불액에 더하고 0으로 초기화
     int releaseCancelFee(@Param("orderId") UUID orderId, @Param("feeAmount") int feeAmount);
 
