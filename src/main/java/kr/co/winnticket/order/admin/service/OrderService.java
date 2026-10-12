@@ -636,8 +636,10 @@ public class OrderService {
                 cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(order.getFinalPrice() * 0.1);
 
                 if (vaPointPortion > 0) {
-                    // 포인트 혼합결제: 계좌이체 분담금은 전액 환불하고, 수수료는 포인트 쪽에서 뗀다
-                    cancelAmount = vaBankPortion;
+                    // 포인트 혼합결제: 수수료는 포인트 쪽에서 떼고, 포인트 금액보다 수수료가 크면
+                    // 포인트로 못 뗀 나머지만 계좌이체 환불액에서 차감한다
+                    int feeFromPoint = Math.min(cancelFee, vaPointPortion);
+                    cancelAmount = Math.max(vaBankPortion - (cancelFee - feeFromPoint), 0);
                 } else {
                     cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
                 }
@@ -878,13 +880,23 @@ public class OrderService {
             return;
         }
 
+        // 수수료는 포인트 금액을 넘길 수 없음(넘는 부분은 카드/무통장 환불액에서 이미 차감됨)
+        int pointAmount = order.getPointAmount() != null ? order.getPointAmount() : 0;
+        int pointFee = Math.min(cancelFee, pointAmount);
+
+        if (pointFee > 0 && pointFee >= pointAmount) {
+            // 포인트 전액이 수수료로 잡히는 경우 돌려줄 포인트가 없어 KCP 취소를 하지 않음
+            log.info("[POINT RETURN] 포인트 전액이 수수료 - KCP 취소 생략 orderId={}, pointFee={}", orderId, pointFee);
+            return;
+        }
+
         KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
         dto.setTno(tno);
 
-        if (cancelFee > 0) {
+        if (pointFee > 0) {
             dto.setModType("STRA");
-            // KCP STRA 부분취소: mod_mny = 취소 후 남는 금액(잔액) = 수수료
-            dto.setModMny(cancelFee);
+            // KCP STRA 부분취소: mod_mny = 취소 후 남는 금액(잔액) = 포인트에서 뗄 수수료
+            dto.setModMny(pointFee);
             dto.setModOrdrIdxx(order.getOrderNumber());
             String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
             if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
@@ -900,11 +912,11 @@ public class OrderService {
 
             // STRA는 KCP 내부적으로 "전액취소 + 잔액 재승인"이라 새 tno가 발급됨 - 저장해두지
             // 않으면 나중에 이 수수료를 추가로 환불할 때 이미 죽은 tno를 취소하게 됨.
-            if (cancelFee > 0 && res != null && res.getTno() != null && !res.getTno().equals(tno)) {
+            if (pointFee > 0 && res != null && res.getTno() != null && !res.getTno().equals(tno)) {
                 mapper.updatePointActiveTno(order.getOrderNumber(), res.getTno());
                 log.info("[POINT RETURN] STRA 재승인 tno 갱신 orderId={}, oldTno={}, newTno={}", orderId, tno, res.getTno());
             }
-            log.info("[POINT RETURN] {} 완료 orderId={}, fee={}", reasonPrefix, orderId, cancelFee);
+            log.info("[POINT RETURN] {} 완료 orderId={}, pointFee={}", reasonPrefix, orderId, pointFee);
         } catch (Exception e) {
             log.error("[POINT RETURN FAIL] orderId={} → 보정 필요", orderId, e);
         }

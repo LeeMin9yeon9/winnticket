@@ -247,9 +247,11 @@ public class TossPaymentsService {
             cancelFee = (days <= 7) ? 1000 : (int) Math.floor(feeBase * 0.1);
 
             if (pointAmount > 0) {
-                // 포인트 혼합결제: 카드/무통장 분담금은 전액 환불하고, 수수료는 포인트 쪽에서
-                // 뗀다(OrderService에서 포인트 환불 시 STRA로 cancelFee만큼 잔여 처리).
-                cancelAmount = remainAmount;
+                // 포인트 혼합결제: 수수료는 포인트 쪽에서 뗀다(OrderService에서 포인트 환불 시
+                // STRA로 잔여 처리). 단 수수료가 포인트 금액보다 크면 포인트로 못 뗀 나머지만
+                // 카드 환불액에서 차감한다.
+                int feeFromPoint = Math.min(cancelFee, pointAmount);
+                cancelAmount = Math.max(remainAmount - (cancelFee - feeFromPoint), 0);
             } else {
                 // 실제 카드로 환불 가능한 금액은 remainAmount를 못 넘으므로 cancelAmount는 그대로 0 이상으로 clamp.
                 cancelAmount = Math.max(remainAmount - cancelFee, 0);
