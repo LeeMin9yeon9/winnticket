@@ -206,7 +206,7 @@ public class OrderController {
 
     // 베네피아 정산용 Excel 내보내기
     @GetMapping("/export/benepia-settlement")
-    @Operation(summary = "베네피아 정산용 Excel 내보내기", description = "선택한 채널의 마감일자(결제완료일, 취소된 주문이면 취소일) 기준 기간에 대한 베네피아 정산 내역서를 Excel로 다운로드합니다.")
+    @Operation(summary = "베네피아 정산용 Excel 내보내기", description = "선택한 채널의 마감일자 기준 기간에 대한 베네피아 정산 내역서를 Excel로 다운로드합니다. 판매행은 결제완료일, 취소행은 취소일이 마감일자입니다.")
     public ResponseEntity<byte[]> exportBenepiaSettlementExcel(
             @Parameter(description = "채널 ID") @RequestParam("channelId") UUID channelId,
             @Parameter(description = "채널명 (파일명/시트 제목 표시용)") @RequestParam(value = "channelName", required = false) String channelName,
@@ -229,10 +229,9 @@ public class OrderController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         // ===== "order" 상세 시트 - 주문 단위. 옵션/상품이 여러 개여도 한 줄로 합쳐서 표시.
-        // 취소된 주문은 "판매행"(원래 결제금액 그대로 +) + "취소행"(실제 환불된 금액만 -),
-        // 이렇게 두 줄로 나와서 두 줄을 합치면 우리가 실제로 챙긴 취소수수료만큼이 자연스럽게
-        // 남는다. 그래서 요약시트에서 SK결제금액 컬럼을 그냥 통째로 SUM해도 취소수수료가
-        // 알아서 포함되고, 별도의 "취소수수료"/"취소수수료 SK수수료" 컬럼이 필요 없어짐 =====
+        // 취소된 주문은 "판매행"(결제일 마감, 원래 결제금액 그대로 +) + "취소행"(취소일 마감, 원금 전체 -)
+        // 두 줄로 나온다. 결제 다음날 취소해도 결제일 정산에서 원래 주문이 사라지지 않고,
+        // 취소는 취소한 날 정산에 잡힌다 =====
         HSSFSheet orderSheet = workbook.createSheet("order");
         String[] orderHeaders = {
                 "주문일", "마감일자", "주문번호", "주문자 이름", "티켓종류", "결제수단",
@@ -256,10 +255,11 @@ public class OrderController {
         int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 30, 31};
 
         // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
-        // 여기서 주문(orderId) 단위로 다시 묶는다.
-        java.util.Map<UUID, java.util.List<OrderBenepiaSettlementResDto>> byOrder = new java.util.LinkedHashMap<>();
+        // 여기서 주문 + 행구분(SALE/CANCEL) 단위로 다시 묶는다. 취소된 주문은 결제일 기준 판매행과
+        // 취소일 기준 취소행이 각각 따로 내려오고, 조회 기간에 해당하는 행만 포함된다.
+        java.util.Map<String, java.util.List<OrderBenepiaSettlementResDto>> byOrder = new java.util.LinkedHashMap<>();
         for (OrderBenepiaSettlementResDto r : rows) {
-            byOrder.computeIfAbsent(r.getOrderId(), k -> new java.util.ArrayList<>()).add(r);
+            byOrder.computeIfAbsent(r.getOrderId() + "|" + r.getRowType(), k -> new java.util.ArrayList<>()).add(r);
         }
 
         // 판매행/취소행/재승인행을 바로 시트에 쓰지 않고 일단 모아뒀다가, 마지막에 각 행의
@@ -299,10 +299,12 @@ public class OrderController {
             long cardAmount = r.getCardAmount() != null ? r.getCardAmount() : 0;
             long pointAmount = r.getPointAmount() != null ? r.getPointAmount() : 0;
             long voucherAmount = r.getVoucherAmount() != null ? r.getVoucherAmount() : 0;
-            boolean canceled = "CANCELED".equals(r.getStatus());
+            // 주문이 취소됐더라도 판매행(SALE)은 결제일 마감에 원래 금액(+)으로 그대로 남아야 하므로
+            // 주문 상태가 아니라 행 구분으로 판단한다.
+            boolean canceled = "CANCEL".equals(r.getRowType());
 
             if (canceled) {
-                // 취소건은 한 줄로만 표시 - 수수료 차감 없이 원금 전체를 그대로 마이너스로,
+                // 취소행 - 마감일자는 취소일. 수수료 차감 없이 원금 전체를 그대로 마이너스로,
                 // 취소금액도 수수료 빼기 전 원금 전체를 마이너스로 표시(순액 아님).
                 // 주문상태/취소접수/취소완료 컬럼에 취소 관련 일시를 함께 표시.
                 long fullAmountNegative = -(bankAmount + cardAmount + pointAmount + voucherAmount);
@@ -314,7 +316,7 @@ public class OrderController {
                         productSb.toString(), totalQuantity, categorySb.toString(),
                         r.getOrderedAt()));
             } else {
-                // 정상건 - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
+                // 판매행(취소된 주문 포함) - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
                 // 마감일자는 결제일시(paidAt, 시간 포함)가 아니라 날짜만 있는 closingDate를 써야 함
                 rowDataList.add(new BenepiaRowData(
                         r, pmDisplay, "결제완료",

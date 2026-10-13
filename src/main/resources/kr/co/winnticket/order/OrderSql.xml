@@ -1080,14 +1080,18 @@
 
     <!--
         베네피아 정산용 엑셀 내보내기 - 주문상품(아이템) 단위 상세 목록.
-        마감일자(결제완료일, 취소된 주문이면 취소일) 기준으로 기간을 필터링한다.
+        마감일자 기준으로 기간을 필터링한다. 취소된 주문은 두 줄로 나온다:
+        - 판매행(SALE): 마감일자 = 결제완료일, 원래 결제금액 그대로(+)
+        - 취소행(CANCEL): 마감일자 = 취소일, 금액은 -
+        결제 다음날 취소해도 결제일 마감에는 원래 판매행이 그대로 남고, 취소는 취소일 마감에 잡힌다.
         일반 주문목록 내보내기(selectOrderExportList)는 주문일(ordered_at) 기준이라 이 용도로는 안 맞음.
     -->
     <select id="selectBenepiaSettlementList" resultType="kr.co.winnticket.order.admin.dto.OrderBenepiaSettlementResDto">
         SELECT
             a.id                                                                                        AS orderId,
             TO_CHAR(a.ordered_at, 'YYYY-MM-DD HH24:MI')                                                AS orderedAt,
-            TO_CHAR(COALESCE(a.canceled_at, a.paid_at), 'YYYY-MM-DD')                                  AS closingDate,
+            ev.kind                                                                                     AS rowType,
+            TO_CHAR(CASE WHEN ev.kind = 'CANCEL' THEN a.canceled_at ELSE a.paid_at END, 'YYYY-MM-DD')  AS closingDate,
             a.order_number                                                                              AS orderNumber,
             a.customer_name                                                                            AS customerName,
             a.payment_method                                                                            AS paymentMethod,
@@ -1104,16 +1108,16 @@
                 서로 안 맞는 값으로 나가게 된다. final_price/cancel_fee는 항상 채워지므로 이걸로 계산해야
                 두 금액이 항상 일치한다.
             -->
-            CASE WHEN a.status = 'CANCELED' THEN -(a.final_price - COALESCE(a.cancel_fee, 0)) ELSE 0 END AS cancelAmount,
-            COALESCE(a.cancel_fee, 0)                                                                  AS cancelFee,
+            CASE WHEN ev.kind = 'CANCEL' THEN -(a.final_price - COALESCE(a.cancel_fee, 0)) ELSE 0 END AS cancelAmount,
+            CASE WHEN ev.kind = 'CANCEL' THEN COALESCE(a.cancel_fee, 0) ELSE 0 END                     AS cancelFee,
             <!-- 수수료 부과액/환불액 - 환불하면 orders.cancel_fee는 0으로 초기화되므로, 원래 부과됐던
                  금액은 (현재 cancel_fee + 지금까지 환불된 합계)로 역산해야 함 -->
-            (COALESCE(a.cancel_fee, 0) + COALESCE(
+            CASE WHEN ev.kind = 'CANCEL' THEN (COALESCE(a.cancel_fee, 0) + COALESCE(
                 (SELECT SUM(fr.refund_amount) FROM order_fee_refunds fr WHERE fr.order_id = a.id), 0
-            ))                                                                                          AS feeCharged,
-            COALESCE(
+            )) ELSE 0 END                                                                               AS feeCharged,
+            CASE WHEN ev.kind = 'CANCEL' THEN COALESCE(
                 (SELECT SUM(fr.refund_amount) FROM order_fee_refunds fr WHERE fr.order_id = a.id), 0
-            )                                                                                          AS feeRefunded,
+            ) ELSE 0 END                                                                               AS feeRefunded,
             COALESCE(NULLIF(a.memcorp_cd, ''), pv.memcorp_cd, '')                                      AS siteCode,
             b.product_name || ' / ' || COALESCE(
                 (SELECT STRING_AGG(opt.option_value, ' ' ORDER BY opt.id)
@@ -1125,12 +1129,14 @@
                 WHERE y.id = b.product_id
             )                                                                                          AS categoryName,
             b.unit_price                                                                               AS unitPrice,
-            CASE WHEN a.status = 'CANCELED' THEN -b.quantity ELSE b.quantity END                        AS quantity,
+            CASE WHEN ev.kind = 'CANCEL' THEN -b.quantity ELSE b.quantity END                           AS quantity,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             TO_CHAR(a.cancel_requested_at, 'YYYY-MM-DD HH24:MI')                                       AS cancelRequestedAt,
             TO_CHAR(a.canceled_at, 'YYYY-MM-DD HH24:MI')                                              AS canceledAt
         FROM orders a
         JOIN order_items b ON b.order_id = a.id
+        -- 모든 주문은 판매행(SALE)을 갖고, 취소된 주문은 취소행(CANCEL)이 하나 더 생김
+        CROSS JOIN (VALUES ('SALE'), ('CANCEL')) AS ev(kind)
         -- 이용권 결제는 베네피아 ID/PW 없이 진행되어 orders.memcorp_cd가 비어있을 수 있으므로,
         -- 사용된 이용권의 발급 계정(point_voucher.memcorp_cd)을 대신 보여주기 위해 조인
         LEFT JOIN point_voucher pv ON pv.voucher_number = a.voucher_number
@@ -1145,13 +1151,14 @@
               한 번이라도 결제완료(paid_at)된 적 있는 주문만 포함시킨다.
           -->
           AND a.paid_at IS NOT NULL
-          AND COALESCE(a.canceled_at, a.paid_at) IS NOT NULL
+          AND (ev.kind = 'SALE' OR (a.status = 'CANCELED' AND a.canceled_at IS NOT NULL))
           <if test="begDate != null">
-              <![CDATA[ AND COALESCE(a.canceled_at, a.paid_at)::date >= #{begDate} ]]>
+              <![CDATA[ AND (CASE WHEN ev.kind = 'CANCEL' THEN a.canceled_at ELSE a.paid_at END)::date >= #{begDate} ]]>
           </if>
           <if test="endDate != null">
-              <![CDATA[ AND COALESCE(a.canceled_at, a.paid_at)::date <= #{endDate} ]]>
+              <![CDATA[ AND (CASE WHEN ev.kind = 'CANCEL' THEN a.canceled_at ELSE a.paid_at END)::date <= #{endDate} ]]>
           </if>
-        ORDER BY a.ordered_at, a.order_number, b.id
+        ORDER BY (CASE WHEN ev.kind = 'CANCEL' THEN a.canceled_at ELSE a.paid_at END)::date,
+                 a.ordered_at, a.order_number, CASE WHEN ev.kind = 'SALE' THEN 0 ELSE 1 END, b.id
     </select>
 </mapper>

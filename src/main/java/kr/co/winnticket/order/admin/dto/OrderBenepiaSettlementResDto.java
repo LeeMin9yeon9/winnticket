@@ -19,7 +19,10 @@ public class OrderBenepiaSettlementResDto {
     @Schema(description = "주문일시")
     private String orderedAt;
 
-    @Schema(description = "마감일자 - 결제완료일, 취소된 주문이면 취소일")
+    @Schema(description = "행 구분 - SALE(결제완료 기준 판매행), CANCEL(취소일 기준 취소행)")
+    private String rowType;
+
+    @Schema(description = "마감일자 - 판매행은 결제완료일, 취소행은 취소일")
     private String closingDate;
 
     @Schema(description = "주문번호")
