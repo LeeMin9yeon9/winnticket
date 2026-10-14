@@ -922,12 +922,13 @@ public class OrderService {
         }
     }
 
-    // 취소수수료 환불 - 이미 취소완료된 주문인데 보류(예약상품 예외 처리 누락 등)로 취소수수료가
-    // 잘못 부과된 경우, 관리자가 그 수수료만큼 추가로 돌려주기 위한 기능. 포인트 결제 건만 지원
-    // (포인트는 KCP tno로 잔여 승인분을 추가 취소하면 되지만, 카드/무통장은 별도 처리 방식이 필요해서
-    // 우선 실제로 필요했던 포인트 케이스만 지원).
+    // 취소수수료 환불 - 취소완료된 주문에서 포인트 쪽에 남아있는 취소수수료를 관리자가 추가로 돌려주는 기능.
+    // 포인트 단독결제뿐 아니라 포인트 혼합결제(카드/무통장+포인트)도 지원한다. 수수료는 포인트에서 차감되는
+    // 것이 기본이라(수수료가 포인트보다 크면 넘는 만큼만 카드/무통장 환불액에서 차감) KCP에 재승인으로 남아있는
+    // 잔액을 취소하면 된다. amount를 지정하면 일부만 환불하고(남는 잔액은 STRA로 다시 재승인), 생략하면 전액 환불.
+    // 카드/무통장 쪽에서 차감된 수수료는 이 기능으로 환불할 수 없다(토스/계좌이체 별도 처리 필요).
     @Transactional
-    public void refundCancelFee(UUID orderId, String reason) throws Exception {
+    public void refundCancelFee(UUID orderId, Integer amount, String reason) throws Exception {
         OrderAdminDetailGetResDto order = mapper.selectOrderAdminDetail(orderId);
         if (order == null) {
             throw new IllegalArgumentException("주문 정보가 존재하지 않습니다.");
@@ -938,8 +939,37 @@ public class OrderService {
         if (order.getCancelFee() <= 0) {
             throw new IllegalStateException("환불할 취소수수료가 없습니다.");
         }
-        if (order.getPaymentMethod() != PaymentMethod.POINT) {
-            throw new IllegalStateException("현재는 포인트 결제 건만 수수료 환불을 지원합니다.");
+        if (order.getPointAmount() == null || order.getPointAmount() <= 0) {
+            throw new IllegalStateException("포인트 결제가 포함된 주문만 수수료를 환불할 수 있습니다.");
+        }
+
+        // 지금까지 환불된 수수료 합계 - cancel_amount/cancel_fee에는 이미 반영돼 있어서 원래 값을 역산할 때 필요
+        int alreadyRefunded = 0;
+        for (Map<String, Object> r : mapper.selectOrderFeeRefunds(orderId)) {
+            Object v = r.get("refundAmount");
+            if (v instanceof Number) alreadyRefunded += ((Number) v).intValue();
+        }
+
+        // 포인트 쪽에서 환불 가능한 수수료 = 현재 남은 수수료 - 카드/무통장 환불액에서 차감된 수수료
+        int pgPortion = (order.getBankAmount() != null ? order.getBankAmount() : 0)
+                + (order.getCardAmount() != null ? order.getCardAmount() : 0);
+        int originalFee = order.getCancelFee() + alreadyRefunded;
+        int feeFromPg = 0;
+        if (pgPortion > 0) {
+            int pgRefundBase = order.getCancelAmount() - alreadyRefunded;
+            feeFromPg = Math.min(Math.max(pgPortion - pgRefundBase, 0), originalFee);
+        }
+        int refundable = order.getCancelFee() - feeFromPg;
+        if (refundable <= 0) {
+            throw new IllegalStateException("포인트로 환불할 수 있는 취소수수료가 없습니다. (카드/무통장에서 차감된 수수료는 이 기능으로 환불할 수 없습니다.)");
+        }
+
+        int feeAmount = (amount != null) ? amount : refundable;
+        if (feeAmount <= 0) {
+            throw new IllegalArgumentException("환불 금액은 1원 이상이어야 합니다.");
+        }
+        if (feeAmount > refundable) {
+            throw new IllegalArgumentException("환불 가능한 수수료(" + refundable + "원)를 초과했습니다.");
         }
 
         String tno = mapper.selectPointTno(order.getOrderNumber());
@@ -947,14 +977,30 @@ public class OrderService {
             throw new IllegalStateException("KCP 거래번호(tno)를 찾을 수 없습니다.");
         }
 
-        int feeAmount = order.getCancelFee();
-
         KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
         dto.setTno(tno);
-        dto.setModType("STSC");
         dto.setCancelReason(reason != null && !reason.isBlank() ? reason : "관리자 - 취소수수료 환불");
 
-        kcpService.cancelPoint(dto);
+        int remaining = refundable - feeAmount;
+        if (remaining > 0) {
+            // 일부만 환불 - KCP STRA로 남길 잔액(=아직 환불 안 한 수수료)을 지정해 재승인
+            List<OrderProductListGetResDto> items = mapper.selectOrderProductList(orderId);
+            dto.setModType("STRA");
+            dto.setModMny(remaining);
+            dto.setModOrdrIdxx(order.getOrderNumber());
+            String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
+            if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
+            dto.setModOrdrGoods("[" + productSummary + "] 취소 수수료");
+        } else {
+            dto.setModType("STSC");
+        }
+
+        KcpModResDto res = kcpService.cancelPoint(dto);
+
+        // STRA는 새 tno로 잔액이 재승인되므로, 이후 남은 수수료를 또 환불할 때 쓸 수 있게 저장
+        if (remaining > 0 && res != null && res.getTno() != null && !res.getTno().equals(tno)) {
+            mapper.updatePointActiveTno(order.getOrderNumber(), res.getTno());
+        }
 
         int updated = mapper.releaseCancelFee(orderId, feeAmount);
         if (updated != 1) {
@@ -963,7 +1009,7 @@ public class OrderService {
 
         mapper.insertOrderFeeRefund(orderId, feeAmount, dto.getCancelReason(), tno);
 
-        log.info("[CANCEL_FEE_REFUND] orderId={}, feeAmount={}, tno={}", orderId, feeAmount, tno);
+        log.info("[CANCEL_FEE_REFUND] orderId={}, feeAmount={}, remaining={}, tno={}", orderId, feeAmount, remaining, tno);
     }
 
     // 취소수수료 환불 이력 조회

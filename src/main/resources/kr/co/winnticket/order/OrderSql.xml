@@ -739,14 +739,15 @@
         WHERE id = #{orderId}::uuid
     </update>
 
-    <!-- 이미 취소된 주문에서 나중에 취소수수료만 추가 환불 - 보유했던 수수료를 환불액에 더하고 0으로 초기화 -->
+    <!-- 이미 취소된 주문에서 나중에 취소수수료만 추가 환불 - 환불한 만큼을 환불액에 더하고 남은 수수료에서 뺌(전액 환불이면 0) -->
     <update id="releaseCancelFee">
         UPDATE orders
         SET
             cancel_amount = cancel_amount + #{feeAmount},
-            cancel_fee = 0,
+            cancel_fee = cancel_fee - #{feeAmount},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{orderId}::uuid
+          AND cancel_fee >= #{feeAmount}
     </update>
 
     <insert id="insertOrderFeeRefund">

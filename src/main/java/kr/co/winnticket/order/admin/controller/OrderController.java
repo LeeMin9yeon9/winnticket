@@ -602,12 +602,13 @@ public class OrderController {
     }
 
     @PostMapping("{id}/cancel-fee/refund")
-    @Operation(summary = "취소수수료 환불(관리자)", description = "취소완료된 포인트 결제 주문에서 잘못 부과된 취소수수료를 KCP로 추가 환불합니다.")
+    @Operation(summary = "취소수수료 환불(관리자)", description = "취소완료된 포인트(혼합 포함) 결제 주문에서 포인트 쪽에 남아있는 취소수수료를 KCP로 추가 환불합니다. amount를 생략하면 환불 가능한 전액을 환불합니다.")
     public ResponseEntity<ApiResponse<String>> refundCancelFee(
             @Parameter(description = "주문ID") @PathVariable("id") UUID orderId,
-            @Parameter(description = "환불 사유") @RequestParam(required = false) String reason
+            @Parameter(description = "환불 사유") @RequestParam(required = false) String reason,
+            @Parameter(description = "환불 금액(생략 시 환불 가능 전액)") @RequestParam(required = false) Integer amount
     ) throws Exception {
-        service.refundCancelFee(orderId, reason);
+        service.refundCancelFee(orderId, amount, reason);
         return ResponseEntity.ok(ApiResponse.success("취소수수료가 환불되었습니다.", orderId.toString()));
     }
 
