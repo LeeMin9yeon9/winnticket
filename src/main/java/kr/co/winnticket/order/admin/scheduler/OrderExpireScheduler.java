@@ -118,9 +118,10 @@ public class OrderExpireScheduler {
                     ticketCouponService.restoreReservedCoupons(orderId);
                     log.info("쿠폰 복구 완료 order={}", orderNumber);
 
-                // KCP 주문 실패 처리
-                mapper.updatePaymentFailed(orderNumber);
-                //  최종 상태 (결제 + 주문 상태 둘 다 변경)
+                // 최종 상태 (결제상태 FAILED + 주문상태 CANCELED + 취소일시). updateExpireCompleted는
+                // payment_status가 CANCELING인 주문만 바꾸므로, 그 전에 updatePaymentFailed를 먼저
+                // 호출하면(FAILED로 바뀌어서) 이 갱신이 0건이 되어 주문이 입금전 상태로 남고 취소일시도
+                // 기록되지 않는다.
                 mapper.updateExpireCompleted(orderNumber);
 
                 log.info("자동취소 완료 order={}", orderNumber);
