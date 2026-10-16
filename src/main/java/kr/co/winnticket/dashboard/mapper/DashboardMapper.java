@@ -1,6 +1,8 @@
 package kr.co.winnticket.dashboard.mapper;
 
 import kr.co.winnticket.dashboard.dto.DashboardCategoryDto;
+import kr.co.winnticket.dashboard.dto.DashboardCouponExpiringDto;
+import kr.co.winnticket.dashboard.dto.DashboardCouponLowStockDto;
 import kr.co.winnticket.dashboard.dto.DashboardDailySalesDto;
 import kr.co.winnticket.dashboard.dto.DashboardPartnerSalesDto;
 import kr.co.winnticket.dashboard.dto.DashboardTopProductDto;
@@ -58,5 +60,10 @@ public interface DashboardMapper {
     // 일별 판매 추이
     List<DashboardDailySalesDto> selectDailySales(@Param("period") String period);
 
-}
 
+    // 유효기간이 days일 이내로 임박했고 미판매 재고가 남아있는 티켓 쿠폰 그룹
+    List<DashboardCouponExpiringDto> selectExpiringCoupons(@Param("days") int days);
+
+    // 판매 가능한 티켓 재고가 threshold장 미만인 상품 옵션
+    List<DashboardCouponLowStockDto> selectLowStockCoupons(@Param("threshold") int threshold);
+}

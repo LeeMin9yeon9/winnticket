@@ -64,4 +64,10 @@ public class DashboardResDto {
 
     @Schema(description = "일별 판매 추이")
     private List<DashboardDailySalesDto> dailySales;
+
+    @Schema(description = "유효기간이 7일 이내로 임박한 티켓(미판매 재고가 남은 쿠폰 그룹)")
+    private List<DashboardCouponExpiringDto> expiringCoupons;
+
+    @Schema(description = "티켓 재고가 기준(20장) 미만인 상품 옵션")
+    private List<DashboardCouponLowStockDto> lowStockCoupons;
 }

@@ -255,4 +255,56 @@
     </select>
 
 
+
+    <!-- 유효기간 임박 티켓 - 판매중인 상품의 쿠폰 그룹 중 유효종료일이 오늘~days일 이내이고
+         아직 팔리지 않은(ACTIVE) 쿠폰이 남아있는 것 -->
+    <select id="selectExpiringCoupons"
+            resultType="kr.co.winnticket.dashboard.dto.DashboardCouponExpiringDto">
+        SELECT
+            CAST(p.id AS VARCHAR) AS productId,
+            p.name AS productName,
+            v.value AS optionName,
+            CAST(g.id AS VARCHAR) AS groupId,
+            g.valid_until AS validUntil,
+            (g.valid_until - CURRENT_DATE) AS daysLeft,
+            COUNT(c.id) FILTER (WHERE c.status = 'ACTIVE') AS activeCount
+        FROM ticket_coupon_groups g
+                 JOIN products p ON p.id = g.product_id
+                 LEFT JOIN product_option_values v ON v.id = g.product_option_value_id
+                 LEFT JOIN ticket_coupons c ON c.group_id = g.id
+        WHERE p.visible = true
+          AND p.sales_status = 'ON_SALE'
+          AND g.valid_until BETWEEN CURRENT_DATE AND (CURRENT_DATE + #{days})
+        GROUP BY p.id, p.name, v.value, g.id, g.valid_until
+        HAVING COUNT(c.id) FILTER (WHERE c.status = 'ACTIVE') > 0
+        ORDER BY g.valid_until, p.name
+    </select>
+
+    <!-- 티켓 재고 부족 - 판매중인 상품의 옵션별로, 지금 판매 가능한(ACTIVE이고 유효기간 안) 쿠폰이
+         threshold장 미만인 것 (쿠폰 그룹이 하나라도 등록된 옵션만 대상) -->
+    <select id="selectLowStockCoupons"
+            resultType="kr.co.winnticket.dashboard.dto.DashboardCouponLowStockDto">
+        SELECT
+            CAST(p.id AS VARCHAR) AS productId,
+            p.name AS productName,
+            v.value AS optionName,
+            COUNT(c.id) FILTER (
+                WHERE c.status = 'ACTIVE'
+                  AND c.valid_from &lt;= CURRENT_DATE
+                  AND c.valid_until &gt;= CURRENT_DATE
+            ) AS activeCount
+        FROM ticket_coupon_groups g
+                 JOIN products p ON p.id = g.product_id
+                 LEFT JOIN product_option_values v ON v.id = g.product_option_value_id
+                 LEFT JOIN ticket_coupons c ON c.group_id = g.id
+        WHERE p.visible = true
+          AND p.sales_status = 'ON_SALE'
+        GROUP BY p.id, p.name, g.product_option_value_id, v.value
+        HAVING COUNT(c.id) FILTER (
+                   WHERE c.status = 'ACTIVE'
+                     AND c.valid_from &lt;= CURRENT_DATE
+                     AND c.valid_until &gt;= CURRENT_DATE
+               ) &lt; #{threshold}
+        ORDER BY activeCount, p.name
+    </select>
 </mapper>

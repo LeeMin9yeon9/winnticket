@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DashboardService {
 
+    private static final int EXPIRING_DAYS = 7;
+    private static final int LOW_STOCK_THRESHOLD = 20;
+
     private final DashboardMapper mapper;
 
     /**
@@ -65,6 +68,10 @@ public class DashboardService {
 
         // 일별 판매 추이
         res.setDailySales(mapper.selectDailySales(period));
+
+        // 티켓 경고 - 유효기간 7일 이내 임박 / 재고 20장 미만
+        res.setExpiringCoupons(mapper.selectExpiringCoupons(EXPIRING_DAYS));
+        res.setLowStockCoupons(mapper.selectLowStockCoupons(LOW_STOCK_THRESHOLD));
 
         return res;
     }
