@@ -83,7 +83,7 @@ public class TicketCouponController {
         return ResponseEntity.ok(ApiResponse.success("수정 성공", null));
     }
 
-    @Operation(summary = "쿠폰그룹 수정", description = "그룹명/유효기간 수정")
+    @Operation(summary = "쿠폰그룹 수정", description = "그룹 유효기간 수정 - 미판매 쿠폰만 같이 변경, 판매/사용된 쿠폰은 유지")
     @PatchMapping("/groups/{groupId}")
     public ResponseEntity<ApiResponse<Void>> updateGroup(
             @Parameter(description = "그룹ID") @PathVariable UUID groupId,
@@ -137,7 +137,7 @@ public class TicketCouponController {
     }
 
     @PutMapping("/group/date")
-    @Operation(summary = "쿠폰 그룹 날짜 변경", description = "해당 그룹 전체 쿠폰 날짜 일괄 변경")
+    @Operation(summary = "쿠폰 그룹 날짜 변경", description = "해당 그룹의 미판매 쿠폰 날짜 일괄 변경 (판매/사용된 쿠폰은 변경 안 됨)")
 
     public ResponseEntity<ApiResponse<Void>> updateGroupDate(
             @Parameter(description="그룹ID") @RequestParam UUID groupId,

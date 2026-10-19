@@ -107,8 +107,6 @@ public interface TicketCouponMapper {
     // 여전히 옛날 유효기간을 봐서 취소 버튼이 계속 비활성화됨
     void syncOrderTicketValidityByCouponId(@Param("couponId") UUID couponId);
 
-    // 그룹 전체 날짜 변경 시, 그 그룹에 속한 쿠폰들 중 이미 발급된 것도 전부 동기화
-    void syncOrderTicketValidityByGroupId(@Param("groupId") UUID groupId);
 
     // 유효기간 다르면 다른 그룹 생성
     UUID findGroupByOptionValueAndDate(

@@ -299,7 +299,9 @@
 
     </update>
 
-    <!--해당그룹에 속한 개별 쿠폰 날짜 일괄변경-->
+    <!--해당그룹에 속한 개별 쿠폰 날짜 일괄변경 - 이미 판매된(SOLD) / 사용된(USED) 쿠폰은 고객이 가진
+        티켓이라 유효기간을 바꾸면 안 되므로 제외하고, 아직 안 팔린 쿠폰(ACTIVE)과 주문 진행 중
+        예약 쿠폰(PENDING)만 변경한다-->
     <update id="updateCouponsDateByGroupId">
         UPDATE ticket_coupons
         SET
@@ -307,6 +309,7 @@
             valid_until = #{validUntil},
             updated_at = now()
         WHERE group_id = #{groupId}
+          AND status IN ('ACTIVE', 'PENDING')
     </update>
 
     <!--쿠폰 유효기간 변경 시, 이미 발급된 티켓(order_tickets)의 유효기간도 동기화
@@ -318,16 +321,6 @@
         FROM ticket_coupons c
         WHERE t.ticket_number = c.coupon_number
           AND c.id = #{couponId}
-    </update>
-
-    <!--그룹 단위 유효기간 일괄변경 시, 그룹에 속한 쿠폰 중 이미 발급된 티켓도 전부 동기화-->
-    <update id="syncOrderTicketValidityByGroupId">
-        UPDATE order_tickets t
-        SET valid_from = c.valid_from,
-            valid_to = c.valid_until
-        FROM ticket_coupons c
-        WHERE t.ticket_number = c.coupon_number
-          AND c.group_id = #{groupId}
     </update>
 
     <!--유효기간 다르면 다른 그룹으로 생성 -->

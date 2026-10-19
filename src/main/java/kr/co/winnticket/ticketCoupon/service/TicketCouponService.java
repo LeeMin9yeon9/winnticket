@@ -226,6 +226,11 @@ public class TicketCouponService {
             validateDates(validFrom, validUntil);
         }
         mapper.updateGroup(groupId, validFrom, validUntil);
+        // 그룹 날짜를 바꾸면 아직 안 팔린 쿠폰도 같이 바뀌어야 판매 가능 여부가 맞음.
+        // 판매/사용된 쿠폰은 쿠폰 쿼리에서 제외돼서 유효기간이 그대로 유지된다.
+        if (validFrom != null && validUntil != null) {
+            mapper.updateCouponsDateByGroupId(groupId, validFrom, validUntil);
+        }
     }
 
     // [이슈3] 그룹 삭제 - 하위 쿠폰 먼저 삭제
@@ -409,9 +414,8 @@ public class TicketCouponService {
     public void updateGroupDate(UUID groupId, LocalDate validFrom, LocalDate validUntil) {
         validateDates(validFrom, validUntil);
         mapper.updateGroupDate(groupId, validFrom, validUntil);
+        // 판매/사용된 쿠폰과 그 쿠폰으로 발급된 티켓(order_tickets)의 유효기간은 바꾸지 않는다.
         mapper.updateCouponsDateByGroupId(groupId, validFrom, validUntil);
-        // 그룹에 속한 쿠폰 중 이미 주문에 발급된 것도 유효기간을 같이 동기화 (updateCoupon과 동일한 이유)
-        mapper.syncOrderTicketValidityByGroupId(groupId);
     }
 
     // [이슈6] 공통 날짜 검증
