@@ -4,6 +4,10 @@
 
 <mapper namespace="kr.co.winnticket.dashboard.mapper.DashboardMapper">
 
+    <!-- 기간(period) 기준: week = 오늘 포함 최근 7일(6일 전 00:00부터), month = 이번 달 1일부터,
+         year = 올해 1월 1일부터. week를 "지금 시각 - 7일"로 잡으면 첫날이 반나절만 포함돼서
+         일별 추이 첫 점이 실제보다 낮게 나오고 8일치가 표시됐음 -->
+
 
     <!-- 전체 상품 -->
     <select id="selectProductCount" resultType="int">
@@ -59,7 +63,7 @@
         WHERE 1=1
         <choose>
             <when test="period == 'week'">
-                AND created_at >= NOW() - INTERVAL '7 days'
+                AND created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND created_at >= DATE_TRUNC('month', NOW())
@@ -79,7 +83,7 @@
           AND payment_status = 'PAID'
         <choose>
             <when test="period == 'week'">
-                AND created_at >= NOW() - INTERVAL '7 days'
+                AND created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND created_at >= DATE_TRUNC('month', NOW())
@@ -91,14 +95,17 @@
     </select>
 
 
-    <!-- 주문 취소 (기간 필터) -->
+    <!-- 주문 취소 (기간 필터) - 결제가 완료된 뒤 취소된 주문만 센다. 입금기한 초과 등으로 결제가
+         안 된 채 취소/실패한 주문(결제실패, 입금 전 취소)은 실제 취소가 아니라서 제외 -->
     <select id="selectCancelOrderCount" resultType="int">
         SELECT COUNT(*)
         FROM orders
-        WHERE (status = 'CANCELED' OR payment_status = 'CANCELED')
+        WHERE status = 'CANCELED'
+          AND payment_status != 'FAILED'
+          AND paid_at IS NOT NULL
         <choose>
             <when test="period == 'week'">
-                AND created_at >= NOW() - INTERVAL '7 days'
+                AND created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND created_at >= DATE_TRUNC('month', NOW())
@@ -139,7 +146,7 @@
 
         <choose>
             <when test="period == 'week'">
-                AND o.created_at >= NOW() - INTERVAL '7 days'
+                AND o.created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND o.created_at >= DATE_TRUNC('month', NOW())
@@ -198,7 +205,7 @@
         WHERE 1=1
         <choose>
             <when test="period == 'week'">
-                AND o.created_at >= NOW() - INTERVAL '7 days'
+                AND o.created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND o.created_at >= DATE_TRUNC('month', NOW())
@@ -239,7 +246,7 @@
 
         <choose>
             <when test="period == 'week'">
-                AND o.created_at >= NOW() - INTERVAL '7 days'
+                AND o.created_at >= DATE_TRUNC('day', NOW()) - INTERVAL '6 days'
             </when>
             <when test="period == 'month'">
                 AND o.created_at >= DATE_TRUNC('month', NOW())
