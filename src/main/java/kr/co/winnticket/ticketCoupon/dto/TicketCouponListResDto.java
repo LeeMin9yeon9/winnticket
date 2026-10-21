@@ -43,11 +43,11 @@ public class TicketCouponListResDto {
     @Schema(description = "구매자 주문번호")
     private String orderNumber;
 
-    @Schema(description = "주문자 이름")
-    private String customerName;
+    @Schema(description = "수령자 이름 (수령자를 입력하지 않았으면 주문자 이름)")
+    private String recipientName;
 
-    @Schema(description = "주문자 휴대폰번호")
-    private String customerPhone;
+    @Schema(description = "수령자 휴대폰번호 (수령자를 입력하지 않았으면 주문자 휴대폰번호)")
+    private String recipientPhone;
 
     @Schema(description = "주문일시")
     private LocalDateTime orderedAt;

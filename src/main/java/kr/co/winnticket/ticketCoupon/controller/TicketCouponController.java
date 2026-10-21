@@ -175,7 +175,7 @@ public class TicketCouponController {
         String[] headers = {
                 "쿠폰번호",
                 "주문번호",
-                "주문자명",
+                "수령자명",
                 "상태",
                 "유효시작일",
                 "유효종료일",
@@ -203,7 +203,7 @@ public class TicketCouponController {
             );
 
             row.createCell(2).setCellValue(
-                    r.getCustomerName() != null ? r.getCustomerName() : ""
+                    r.getRecipientName() != null ? r.getRecipientName() : ""
             );
 
             row.createCell(3).setCellValue(
