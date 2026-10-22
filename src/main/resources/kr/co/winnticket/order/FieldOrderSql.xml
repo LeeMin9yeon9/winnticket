@@ -79,6 +79,18 @@
             AND (
             o.order_number ILIKE '%' || #{srchWord} || '%'
             OR o.customer_name ILIKE '%' || #{srchWord} || '%'
+            OR o.recipient_name ILIKE '%' || #{srchWord} || '%'
+            -- 휴대폰번호 검색: 숫자/하이픈/공백만 입력한 경우에만, 저장된 번호의 하이픈 등을 뗀 숫자끼리 비교
+            -- (010-1234-5678, 01012345678, 뒷자리 일부 모두 검색됨)
+            OR (
+                CAST(#{srchWord} AS text) ~ '^[0-9 -]+$'
+                AND (
+                    regexp_replace(COALESCE(o.recipient_phone, ''), '[^0-9]', '', 'g')
+                        LIKE '%' || regexp_replace(CAST(#{srchWord} AS text), '[^0-9]', '', 'g') || '%'
+                    OR regexp_replace(COALESCE(o.customer_phone, ''), '[^0-9]', '', 'g')
+                        LIKE '%' || regexp_replace(CAST(#{srchWord} AS text), '[^0-9]', '', 'g') || '%'
+                )
+            )
             OR oi.product_name ILIKE '%' || #{srchWord} || '%'
             OR t.ticket_number ILIKE '%' || #{srchWord} || '%'
             -- 추가: 파트너사 코드(핀번호)로도 검색 가능하도록
