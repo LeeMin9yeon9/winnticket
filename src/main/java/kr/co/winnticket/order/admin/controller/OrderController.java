@@ -90,7 +90,7 @@ public class OrderController {
                 "주문자 이름", "주문자 전화번호", "주문자 이메일",
                 "수령자 이름", "수령자 전화번호",
                 "상품번호", "주문상품", "티켓종류",
-                "수량", "단가", "공급가", "총 주문금액",
+                "수량", "단가", "공급가", "순이익", "총 주문금액",
                 "결제금액", "결제수단",
                 "무통장 결제금액", "신용카드 결제금액", "이용권", "베네피아 포인트 결제금액", "베네피아 아이디",
                 "결제상태","결제일시","취소일시", "취소금액", "취소수수료", "환불수단", "티켓번호", "티켓사용여부", "소속사코드"
@@ -103,9 +103,9 @@ public class OrderController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 금액 컬럼(단가/공급가/총 주문금액/결제금액/무통장/카드/포인트/취소금액/취소수수료)에 천단위 콤마 표시
+        // 금액 컬럼(단가/공급가/순이익/총 주문금액/결제금액/무통장/카드/포인트/취소금액/취소수수료)에 천단위 콤마 표시
         HSSFCellStyle numberStyle = createNumberStyle(workbook);
-        int[] amountCols = {15, 16, 17, 18, 20, 21, 23, 28, 29};
+        int[] amountCols = {15, 16, 17, 18, 19, 21, 22, 24, 29, 30};
 
         // 같은 주문번호끼리 그룹핑하여 한 줄로 합침 (상품명은 / 로 연결)
         java.util.LinkedHashMap<String, java.util.List<OrderExportResDto>> grouped = new java.util.LinkedHashMap<>();
@@ -125,6 +125,12 @@ public class OrderController {
                     .map(i -> i.getProductCode() != null ? i.getProductCode() : "")
                     .collect(java.util.stream.Collectors.joining("/"));
             int totalQty = items.stream().mapToInt(i -> i.getQuantity() != null ? i.getQuantity() : 0).sum();
+            // 순이익 = Σ (단가 - 공급가) x 수량 - 여러 상품/수량이면 합계
+            long totalProfit = items.stream()
+                    .mapToLong(i -> ((long) (i.getUnitPrice() != null ? i.getUnitPrice() : 0)
+                            - (i.getSupplyPrice() != null ? i.getSupplyPrice() : 0))
+                            * (i.getQuantity() != null ? i.getQuantity() : 0))
+                    .sum();
             String ticketNumbers = items.stream()
                     .map(i -> i.getTicketNumber() != null ? i.getTicketNumber() : "")
                     .filter(s -> !s.isEmpty())
@@ -151,35 +157,36 @@ public class OrderController {
             row.createCell(14).setCellValue(totalQty);
             row.createCell(15).setCellValue(first.getUnitPrice() != null ? first.getUnitPrice() : 0);
             row.createCell(16).setCellValue(first.getSupplyPrice() != null ? first.getSupplyPrice() : 0);
-            row.createCell(17).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
-            row.createCell(18).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
+            row.createCell(17).setCellValue(totalProfit);
+            row.createCell(18).setCellValue(first.getTotalOrderAmount() != null ? first.getTotalOrderAmount() : 0);
+            row.createCell(19).setCellValue(first.getFinalPrice() != null ? first.getFinalPrice() : 0);
             String pmDisplay = "";
             if (first.getPaymentMethod() != null) {
                 try { pmDisplay = PaymentMethod.valueOf(first.getPaymentMethod()).getDisplayName(); }
                 catch (Exception e) { pmDisplay = first.getPaymentMethod(); }
             }
-            row.createCell(19).setCellValue(pmDisplay);
-            row.createCell(20).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
-            row.createCell(21).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
-            row.createCell(22).setCellValue(first.getVoucherInfo() != null ? first.getVoucherInfo() : "");
-            row.createCell(23).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
-            row.createCell(24).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
+            row.createCell(20).setCellValue(pmDisplay);
+            row.createCell(21).setCellValue(first.getBankTransferAmount() != null ? first.getBankTransferAmount() : 0);
+            row.createCell(22).setCellValue(first.getCardAmount() != null ? first.getCardAmount() : 0);
+            row.createCell(23).setCellValue(first.getVoucherInfo() != null ? first.getVoucherInfo() : "");
+            row.createCell(24).setCellValue(first.getPointAmount() != null ? first.getPointAmount() : 0);
+            row.createCell(25).setCellValue(first.getBenepiaId() != null ? first.getBenepiaId() : "");
             String psDisplay = "";
             if (first.getPaymentStatus() != null) {
                 try { psDisplay = PaymentStatus.valueOf(first.getPaymentStatus()).getDisplayName(); }
                 catch (Exception e) { psDisplay = first.getPaymentStatus(); }
             }
-            row.createCell(25).setCellValue(psDisplay);  // 결제 상태
-            row.createCell(26).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
-            row.createCell(27).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
-            row.createCell(28).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액 (마이너스)
-            row.createCell(29).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (항상 양수)
+            row.createCell(26).setCellValue(psDisplay);  // 결제 상태
+            row.createCell(27).setCellValue(first.getPaidAt() != null ? first.getPaidAt() : ""); // 결제 일시
+            row.createCell(28).setCellValue(first.getCanceledAt() != null ? first.getCanceledAt() : ""); // 결제취소일시
+            row.createCell(29).setCellValue(first.getCancelAmount() != null ? first.getCancelAmount() : 0); // 취소금액 (마이너스)
+            row.createCell(30).setCellValue(first.getCancelFee() != null ? first.getCancelFee() : 0); // 취소수수료 (항상 양수)
             // 환불수단 - 실제로 취소된 주문(취소일시가 있는 경우)만 결제수단과 동일하게 표시 (무통장/카드/포인트/이용권)
             boolean isCanceled = first.getCanceledAt() != null && !first.getCanceledAt().isEmpty();
-            row.createCell(30).setCellValue(isCanceled ? pmDisplay : "");
-            row.createCell(31).setCellValue(ticketNumbers);
-            row.createCell(32).setCellValue(ticketUsedList);
-            row.createCell(33).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
+            row.createCell(31).setCellValue(isCanceled ? pmDisplay : "");
+            row.createCell(32).setCellValue(ticketNumbers);
+            row.createCell(33).setCellValue(ticketUsedList);
+            row.createCell(34).setCellValue(first.getSiteCode() != null ? first.getSiteCode() : "");
 
             for (int col : amountCols) {
                 row.getCell(col).setCellStyle(numberStyle);
@@ -241,7 +248,8 @@ public class OrderController {
                 "총 결제금액", "무통장", "카드", "포인트", "이용권", "결제금액", "취소금액",
                 "취소수단",
                 "결제일시", "취소접수", "취소완료", "주문상태", "소속사코드",
-                "취소수수료 부과액", "취소수수료 환불액"
+                "취소수수료 부과액", "취소수수료 환불액",
+                "공급가", "단가", "순이익"
         };
         HSSFRow orderHeaderRow = orderSheet.createRow(2);
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -252,7 +260,7 @@ public class OrderController {
 
         // 금액 컬럼 전체에 천단위 콤마 표시
         HSSFCellStyle numberStyle = createNumberStyle(workbook);
-        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 30, 31};
+        int[] orderAmountCols = {6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 30, 31, 32, 33, 34};
 
         // 한 주문에 옵션/상품이 여러 개면 order_item JOIN으로 rows에 여러 줄이 내려오므로,
         // 여기서 주문 + 행구분(SALE/CANCEL) 단위로 다시 묶는다. 취소된 주문은 결제일 기준 판매행과
@@ -276,9 +284,14 @@ public class OrderController {
             StringBuilder categorySb = new StringBuilder();
             java.util.Set<String> seenCategories = new java.util.LinkedHashSet<>();
             long totalQuantity = 0;
+            // 공급가/단가는 여러 장이면 수량을 곱해 합산(취소행은 수량이 음수라 자동으로 음수)
+            long supplySum = 0;
+            long unitSum = 0;
             for (OrderBenepiaSettlementResDto item : items) {
                 int qty = item.getQuantity() != null ? item.getQuantity() : 0;
                 totalQuantity += qty;
+                supplySum += (long) (item.getSupplyPrice() != null ? item.getSupplyPrice() : 0) * qty;
+                unitSum += (long) (item.getUnitPrice() != null ? item.getUnitPrice() : 0) * qty;
                 if (productSb.length() > 0) productSb.append(", ");
                 productSb.append(item.getProductDisplayName() != null ? item.getProductDisplayName() : "")
                         .append(" x").append(Math.abs(qty));
@@ -314,7 +327,7 @@ public class OrderController {
                         r.getClosingDate(), pmDisplay, r.getCancelRequestedAt(), r.getCanceledAt(),
                         (int) fullAmountNegative,
                         productSb.toString(), totalQuantity, categorySb.toString(),
-                        r.getOrderedAt()));
+                        r.getOrderedAt(), supplySum, unitSum));
             } else {
                 // 판매행(취소된 주문 포함) - 결제수단과 무관하게 항상 원래 결제된 금액 그대로(+표시), 취소 관련 컬럼은 비움
                 // 마감일자는 결제일시(paidAt, 시간 포함)가 아니라 날짜만 있는 closingDate를 써야 함
@@ -323,7 +336,7 @@ public class OrderController {
                         bankAmount, cardAmount, pointAmount, voucherAmount,
                         r.getClosingDate(), "", null, null, 0,
                         productSb.toString(), totalQuantity, categorySb.toString(),
-                        r.getOrderedAt()));
+                        r.getOrderedAt(), supplySum, unitSum));
             }
         }
 
@@ -332,7 +345,8 @@ public class OrderController {
                     d.r(), d.pmDisplay(), d.statusDisplay(),
                     d.bankAmt(), d.cardAmt(), d.pointAmt(), d.voucherAmt(),
                     d.closingDate(), d.cancelMethodDisplay(), d.cancelRequestedAt(), d.canceledAt(), d.cancelAmountForRow(),
-                    d.productDisplay(), d.quantity(), d.categoryDisplay(), d.orderDate());
+                    d.productDisplay(), d.quantity(), d.categoryDisplay(), d.orderDate(),
+                    d.supplySum(), d.unitSum());
         }
 
         for (int i = 0; i < orderHeaders.length; i++) {
@@ -472,7 +486,7 @@ public class OrderController {
             String closingDate, String cancelMethodDisplay,
             String cancelRequestedAt, String canceledAt, int cancelAmountForRow,
             String productDisplay, long quantity, String categoryDisplay,
-            String orderDate
+            String orderDate, long supplySum, long unitSum
     ) {}
 
     // 베네피아 정산 엑셀 "order" 시트의 한 행(판매행 또는 취소행)을 씀
@@ -484,7 +498,7 @@ public class OrderController {
             String closingDate, String cancelMethodDisplay,
             String cancelRequestedAt, String canceledAt, int cancelAmountForRow,
             String productDisplay, long quantity, String categoryDisplay,
-            String orderDate
+            String orderDate, long supplySum, long unitSum
     ) {
         HSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
         int erow = row.getRowNum() + 1; // 엑셀 1-base 행 번호 (수식에서 자기 행 참조용)
@@ -525,6 +539,10 @@ public class OrderController {
         row.createCell(29).setCellValue(r.getSiteCode() != null ? r.getSiteCode() : "");
         row.createCell(30).setCellValue(r.getFeeCharged() != null ? r.getFeeCharged() : 0);
         row.createCell(31).setCellValue(r.getFeeRefunded() != null ? r.getFeeRefunded() : 0);
+        row.createCell(32).setCellValue(supplySum);
+        row.createCell(33).setCellValue(unitSum);
+        // 순이익 = 단가 합 - 공급가 합 (같은 행 셀을 참조하는 수식이라 금액을 고치면 자동 재계산)
+        row.createCell(34).setCellFormula("AH" + erow + "-AG" + erow);
 
         for (int col : amountCols) {
             row.getCell(col).setCellStyle(numberStyle);

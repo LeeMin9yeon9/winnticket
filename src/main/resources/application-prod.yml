@@ -101,7 +101,7 @@ plusn:
 
 # 파트너 연동 (코어웍스 운영)
 coreworks:
-  base-url: https://api.core-works.co.kr/channel/general/v11/order
+  base-url: https://api.core-works.co.kr
   auth-token: ${COREWORKS_AUTH_TOKEN}
   channel-cd: HYUNDAINTOUR
 

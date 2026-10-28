@@ -76,6 +76,9 @@ public class OrderBenepiaSettlementResDto {
     @Schema(description = "단가")
     private Integer unitPrice;
 
+    @Schema(description = "공급가(상품옵션 기준 원가)")
+    private Integer supplyPrice;
+
     @Schema(description = "수량 - 취소된 주문이면 음수")
     private Integer quantity;
 

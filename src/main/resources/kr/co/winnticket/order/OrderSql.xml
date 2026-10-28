@@ -1130,6 +1130,16 @@
                 WHERE y.id = b.product_id
             )                                                                                          AS categoryName,
             b.unit_price                                                                               AS unitPrice,
+            COALESCE(
+                (
+                    SELECT pov.base_price
+                    FROM order_item_options oio
+                    JOIN product_option_values pov ON pov.id = oio.option_value_id
+                    WHERE oio.order_item_id = b.id
+                    LIMIT 1
+                ),
+                0
+            )                                                                                          AS supplyPrice,
             CASE WHEN ev.kind = 'CANCEL' THEN -b.quantity ELSE b.quantity END                           AS quantity,
             TO_CHAR(a.paid_at, 'YYYY-MM-DD HH24:MI')                                                  AS paidAt,
             TO_CHAR(a.cancel_requested_at, 'YYYY-MM-DD HH24:MI')                                       AS cancelRequestedAt,
