@@ -182,15 +182,18 @@
             ''                                                                                         AS productCategory,
             '모바일자동'                                                                                 AS ticketType,
             b.quantity                                                                                 AS quantity,
-            b.unit_price                                                                               AS unitPrice,
+            <!-- 단가(1장 기준): 옵션 1개면 실제 판매가(채널가 반영된 unit_price), 옵션이 여러 개면
+                 주문 당시 옵션별 가격(order_item_options.additional_price)의 합 -->
+            CASE WHEN (SELECT COUNT(*) FROM order_item_options x WHERE x.order_item_id = b.id) &gt; 1
+                 THEN (SELECT COALESCE(SUM(x.additional_price), 0) FROM order_item_options x WHERE x.order_item_id = b.id)
+                 ELSE b.unit_price
+            END                                                                                        AS unitPrice,
             COALESCE(
                 (
-                    SELECT pov.base_price
+                    SELECT SUM(pov.base_price)
                     FROM order_item_options oio
-                    JOIN product_option_values pov
-                    ON pov.id = oio.option_value_id
+                    JOIN product_option_values pov ON pov.id = oio.option_value_id
                     WHERE oio.order_item_id = b.id
-                    LIMIT 1
                 ),
                 0
             )                                                                                          AS supplyPrice,
@@ -1129,14 +1132,18 @@
                 JOIN products y ON x.id = y.category_id
                 WHERE y.id = b.product_id
             )                                                                                          AS categoryName,
-            b.unit_price                                                                               AS unitPrice,
+            <!-- 단가(1장 기준): 옵션 1개면 실제 판매가(채널가 반영된 unit_price), 옵션이 여러 개면
+                 주문 당시 옵션별 가격(order_item_options.additional_price)의 합 -->
+            CASE WHEN (SELECT COUNT(*) FROM order_item_options x WHERE x.order_item_id = b.id) &gt; 1
+                 THEN (SELECT COALESCE(SUM(x.additional_price), 0) FROM order_item_options x WHERE x.order_item_id = b.id)
+                 ELSE b.unit_price
+            END                                                                                        AS unitPrice,
             COALESCE(
                 (
-                    SELECT pov.base_price
+                    SELECT SUM(pov.base_price)
                     FROM order_item_options oio
                     JOIN product_option_values pov ON pov.id = oio.option_value_id
                     WHERE oio.order_item_id = b.id
-                    LIMIT 1
                 ),
                 0
             )                                                                                          AS supplyPrice,
