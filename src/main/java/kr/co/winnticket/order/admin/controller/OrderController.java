@@ -125,10 +125,10 @@ public class OrderController {
                     .map(i -> i.getProductCode() != null ? i.getProductCode() : "")
                     .collect(java.util.stream.Collectors.joining("/"));
             int totalQty = items.stream().mapToInt(i -> i.getQuantity() != null ? i.getQuantity() : 0).sum();
-            // 순이익 = Σ (단가 - 공급가) x 수량 - 여러 상품/수량이면 합계
+            // 순이익 = Σ (공급가 - 단가) x 수량 - 여러 상품/수량이면 합계
             long totalProfit = items.stream()
-                    .mapToLong(i -> ((long) (i.getUnitPrice() != null ? i.getUnitPrice() : 0)
-                            - (i.getSupplyPrice() != null ? i.getSupplyPrice() : 0))
+                    .mapToLong(i -> ((long) (i.getSupplyPrice() != null ? i.getSupplyPrice() : 0)
+                            - (i.getUnitPrice() != null ? i.getUnitPrice() : 0))
                             * (i.getQuantity() != null ? i.getQuantity() : 0))
                     .sum();
             String ticketNumbers = items.stream()
@@ -541,8 +541,8 @@ public class OrderController {
         row.createCell(31).setCellValue(r.getFeeRefunded() != null ? r.getFeeRefunded() : 0);
         row.createCell(32).setCellValue(supplySum);
         row.createCell(33).setCellValue(unitSum);
-        // 순이익 = 단가 합 - 공급가 합 (같은 행 셀을 참조하는 수식이라 금액을 고치면 자동 재계산)
-        row.createCell(34).setCellFormula("AH" + erow + "-AG" + erow);
+        // 순이익 = 공급가 합 - 단가 합 (같은 행 셀을 참조하는 수식이라 금액을 고치면 자동 재계산)
+        row.createCell(34).setCellFormula("AG" + erow + "-AH" + erow);
 
         for (int col : amountCols) {
             row.getCell(col).setCellStyle(numberStyle);
