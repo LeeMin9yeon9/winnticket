@@ -182,12 +182,12 @@
             ''                                                                                         AS productCategory,
             '모바일자동'                                                                                 AS ticketType,
             b.quantity                                                                                 AS quantity,
-            <!-- 단가(1장 기준): 옵션 1개면 실제 판매가(채널가 반영된 unit_price), 옵션이 여러 개면
-                 주문 당시 옵션별 가격(order_item_options.additional_price)의 합 -->
-            CASE WHEN (SELECT COUNT(*) FROM order_item_options x WHERE x.order_item_id = b.id) &gt; 1
-                 THEN (SELECT COALESCE(SUM(x.additional_price), 0) FROM order_item_options x WHERE x.order_item_id = b.id)
-                 ELSE b.unit_price
-            END                                                                                        AS unitPrice,
+            <!-- 단가(1장 기준): 주문 당시 옵션별 가격(order_item_options.additional_price)의 합.
+                 옵션 정보가 없는 주문만 unit_price로 대체 -->
+            COALESCE(
+                (SELECT SUM(x.additional_price) FROM order_item_options x WHERE x.order_item_id = b.id),
+                b.unit_price
+            )                                                                                          AS unitPrice,
             COALESCE(
                 (
                     SELECT SUM(pov.base_price)
@@ -1132,12 +1132,12 @@
                 JOIN products y ON x.id = y.category_id
                 WHERE y.id = b.product_id
             )                                                                                          AS categoryName,
-            <!-- 단가(1장 기준): 옵션 1개면 실제 판매가(채널가 반영된 unit_price), 옵션이 여러 개면
-                 주문 당시 옵션별 가격(order_item_options.additional_price)의 합 -->
-            CASE WHEN (SELECT COUNT(*) FROM order_item_options x WHERE x.order_item_id = b.id) &gt; 1
-                 THEN (SELECT COALESCE(SUM(x.additional_price), 0) FROM order_item_options x WHERE x.order_item_id = b.id)
-                 ELSE b.unit_price
-            END                                                                                        AS unitPrice,
+            <!-- 단가(1장 기준): 주문 당시 옵션별 가격(order_item_options.additional_price)의 합.
+                 옵션 정보가 없는 주문만 unit_price로 대체 -->
+            COALESCE(
+                (SELECT SUM(x.additional_price) FROM order_item_options x WHERE x.order_item_id = b.id),
+                b.unit_price
+            )                                                                                          AS unitPrice,
             COALESCE(
                 (
                     SELECT SUM(pov.base_price)
