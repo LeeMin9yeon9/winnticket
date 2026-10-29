@@ -226,32 +226,42 @@ public class LsCompanyService {
                 throw new RuntimeException("취소 가능한 티켓 없음");
             }
 
-            //  상태 전체 조회
-            List<LsStatusResDto> statusList = inquiryTicket(orderId);
+            // 사전 검증 - 티켓별로 상태 조회 후, 하나라도 취소 불가 상태면 아무것도 취소하지 않고 중단
+            // (E009: LS에 발권내역이 없는 티켓 → LS 쪽에는 취소할 대상이 없으므로 건너뛰고 나머지만 취소)
+            List<String> cancelTargets = new ArrayList<>();
 
-            // 사전 검증
-            for (LsStatusResDto statusRes : statusList) {
+            for (String ticketNumber : ticketNumbers) {
+
+                LsStatusResDto statusRes = client.inquiryTicket(ticketNumber);
+
+                if (statusRes == null) {
+                    throw new RuntimeException("상태조회 응답 없음 ticket=" + ticketNumber + " → 취소 불가");
+                }
 
                 String status = statusRes.getResultCode();
 
-                if (!"T000".equals(status)) {
-                    switch (status) {
-                        case "T001":
-                            throw new RuntimeException("이미 사용된 티켓 포함 → 취소 불가");
-                        case "T002":
-                            throw new RuntimeException("취소 진행중 티켓 포함 → 취소 불가");
-                        case "T003":
-                            throw new RuntimeException("이미 취소된 티켓 포함 → 취소 불가");
-                        default:
-                            throw new RuntimeException("알 수 없는 상태 → 취소 불가");
-                    }
+                switch (status == null ? "" : status) {
+                    case "T000":
+                        cancelTargets.add(ticketNumber);
+                        break;
+                    case "E009":
+                        log.warn("LS 발권내역 없음 → LS 취소 생략 ticket={}", ticketNumber);
+                        break;
+                    case "T001":
+                        throw new RuntimeException("이미 사용된 티켓 포함 → 취소 불가 ticket=" + ticketNumber);
+                    case "T002":
+                        throw new RuntimeException("취소 진행중 티켓 포함 → 취소 불가 ticket=" + ticketNumber);
+                    case "T003":
+                        throw new RuntimeException("이미 취소된 티켓 포함 → 취소 불가 ticket=" + ticketNumber);
+                    default:
+                        throw new RuntimeException("알 수 없는 상태(" + status + ") → 취소 불가 ticket=" + ticketNumber);
                 }
             }
 
-            // 전체 취소
+            // 취소 가능한 티켓 취소
             List<LsCancelResDto> results = new ArrayList<>();
 
-            for (String ticketNumber : ticketNumbers) {
+            for (String ticketNumber : cancelTargets) {
 
                 LsCancelResDto res = client.cancelTicket(ticketNumber);
 

@@ -95,6 +95,8 @@
         FROM order_tickets ot
                  JOIN order_items oi ON oi.id = ot.order_item_id
         WHERE oi.order_id = #{orderId}
+          <!-- LS컴퍼니 상품만 - 다른 공급사(엠에어 등) 티켓이 섞인 주문에서 LS에 없는 티켓을 조회/취소하면 안 됨 -->
+          AND oi.partner_id = 'b49be80d-4150-408b-80e6-e11c6f13db9d'
         ORDER BY ot.created_at
     </select>
 
