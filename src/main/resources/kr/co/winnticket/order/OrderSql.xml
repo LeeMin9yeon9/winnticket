@@ -1033,7 +1033,7 @@
     </insert>
 
     <select id="selectOrderCancelFailures" resultType="kr.co.winnticket.order.admin.dto.OrderCancelFailureDto">
-        SELECT stage, reason, created_at
+        SELECT stage, reason, created_at AT TIME ZONE 'Asia/Seoul' AS created_at -- timestamptz → KST LocalDateTime
         FROM order_cancel_failures
         WHERE order_id = #{orderId}::uuid
         ORDER BY created_at
