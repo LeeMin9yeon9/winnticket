@@ -514,7 +514,12 @@ public class OrderService {
         if (split.isHasPlusN()) {
             try {
                 log.info("[플러스앤 orderCancel start]");
-                plusNService.cancel(orderId);
+                // 플러스앤은 실패를 예외가 아니라 success=false 응답으로 돌려주므로 직접 확인해서 중단해야 함
+                // (안 그러면 취소 실패했는데도 뒤 파트너 취소/PG 환불이 계속 진행됨)
+                var plusNRes = plusNService.cancel(orderId);
+                if (!plusNRes.isSuccess()) {
+                    throw new IllegalStateException(plusNRes.getMessage());
+                }
             } catch (Exception e) {
                 throw new IllegalStateException("플러스앤 주문 취소 실패", e);
             }
@@ -523,7 +528,16 @@ public class OrderService {
         if (split.isHasSmartInfini()) {
             try {
                 log.info("[스마트인피니 orderCancel start]");
-                smartInfiniService.cancelMulti(orderId);
+                // 스마트인피니도 티켓별 결과코드(return_div)를 응답에 담아 주므로 하나라도 실패면 중단
+                var siRes = smartInfiniService.cancelMulti(orderId);
+                if (siRes.getCancelList() == null || siRes.getCancelList().isEmpty()) {
+                    throw new IllegalStateException("취소 결과 응답 없음");
+                }
+                for (var r : siRes.getCancelList()) {
+                    if (!"0000".equals(r.getReturnDiv())) {
+                        throw new IllegalStateException("order_sales=" + r.getOrderSales() + " " + r.getReturnMsg());
+                    }
+                }
             } catch (Exception e) {
                 throw new IllegalStateException("스마트인피니 주문 취소 실패", e);
             }
@@ -550,7 +564,11 @@ public class OrderService {
         if (split.isHasWoongin()) {
             try {
                 log.info("[웅진 취소 시작]");
-                woongjinService.cancel(orderId);
+                // 웅진도 실패를 success=false 응답으로 돌려줌
+                var wjRes = woongjinService.cancel(orderId);
+                if (!wjRes.isSuccess()) {
+                    throw new IllegalStateException(wjRes.getMessage());
+                }
             } catch (Exception e) {
                 throw new IllegalStateException("웅진 주문 취소 실패", e);
             }
