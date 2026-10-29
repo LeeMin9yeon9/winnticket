@@ -776,7 +776,10 @@ public class OrderService {
                                     orderId, tno, cancelRes.getTno());
                         }
                     } catch (Exception e) {
+                        // KCP 환불이 실패했는데도 주문을 취소 처리하면 고객 포인트가 돌아가지 않으므로
+                        // 삼키지 않고 실패로 올린다(바깥 PG 단계 catch에서 이력 기록 후 주문은 취소되지 않음)
                         log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                        throw new IllegalStateException("KCP 포인트 환불 실패: " + e.getMessage(), e);
                     }
                 } else {
                     log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
