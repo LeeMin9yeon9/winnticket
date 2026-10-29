@@ -23,13 +23,24 @@ public class OrderCancelProgressRecorder {
 
     private final OrderMapper mapper;
 
+    /**
+     * @param canceledPartnerIds 이번 시도에서 취소에 성공한 파트너 (티켓을 CANCELLED로 기록)
+     * @param failedPartnerId    취소에 실패한 파트너 (티켓에 실패 사유 기록). PG 단계 실패면 null
+     * @param stage              PARTNER(파트너 취소 실패) / PG(결제·환불 실패)
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void record(UUID orderId, List<String> canceledPartnerIds, String failedPartnerId, String reason) {
+    public void record(UUID orderId, List<String> canceledPartnerIds, String failedPartnerId,
+                       String stage, String reason) {
+        String trimmed = reason == null ? "취소 실패"
+                : (reason.length() > 500 ? reason.substring(0, 500) : reason);
+
         for (String partnerId : canceledPartnerIds) {
             mapper.updateTicketsCancelledByPartner(orderId, partnerId);
         }
-        String trimmed = reason == null ? "취소 실패"
-                : (reason.length() > 500 ? reason.substring(0, 500) : reason);
-        mapper.updateTicketsCancelFailed(orderId, failedPartnerId, trimmed);
+        if (failedPartnerId != null) {
+            mapper.updateTicketsCancelFailed(orderId, failedPartnerId, trimmed);
+        }
+        // 주문 타임라인 표시용 이력 (orders는 UPDATE하지 않음 - 교착 방지)
+        mapper.insertOrderCancelFailure(orderId, stage, trimmed);
     }
 }

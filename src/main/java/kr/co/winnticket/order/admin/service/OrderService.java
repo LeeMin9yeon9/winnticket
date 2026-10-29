@@ -95,6 +95,7 @@ public class OrderService {
         OrderAdminDetailGetResDto model = mapper.selectOrderAdminDetail(auId);
         model.setProducts(mapper.selectOrderProductList(auId));
         model.setTickets(mapper.selectOrderTicketList(auId));
+        model.setCancelFailures(mapper.selectOrderCancelFailures(auId));
 
         // 관리자 취소(직접취소/취소신청 승인 공통) 가능 여부: 결제완료 + 아직 취소 확정 안됨 + 사용했거나 기한 지난 티켓 없음
         // (실제 cancelOrder()의 취소 가능 조건과 동일한 기준 - 버튼을 미리 비활성화해서 클릭 후 에러로 알리지 않도록 함.
@@ -597,7 +598,7 @@ public class OrderService {
                 String reason = step.name() + " 취소 실패: " + e.getMessage();
                 log.error("[{}] 파트너 취소 실패 orderId={}", step.name(), orderId, e);
                 try {
-                    cancelProgressRecorder.record(orderId, canceledPartnerIds, step.partnerId(), reason);
+                    cancelProgressRecorder.record(orderId, canceledPartnerIds, step.partnerId(), "PARTNER", reason);
                 } catch (Exception recordEx) {
                     // 기록 실패(예: 컬럼 미생성)가 원래 취소 실패 원인을 가리지 않도록 로그만 남김
                     log.error("파트너 취소 진행상태 기록 실패 orderId={}", orderId, recordEx);
@@ -639,157 +640,169 @@ public class OrderService {
         int cancelAmount = 0;
         int cancelFee = 0;
 
-        // PG사가 TOSSPAYMENTS면 payment_method와 관계없이 토스 취소 API 호출
-        // (토스 위젯에서 카드/가상계좌/간편결제 등 어떤 방식으로 결제했든 토스 API로 취소)
-        if ("TOSSPAYMENTS".equalsIgnoreCase(pgProvider)) {
+        // PG 환불 단계가 실패해도 위에서 이미 취소된 파트너 티켓은 되돌릴 수 없으므로 "취소됨"으로 기록하고,
+        // 실패 사유를 주문 타임라인에 남긴다(재시도 시 이미 취소된 파트너를 다시 요청하지 않도록).
+        try {
+            // PG사가 TOSSPAYMENTS면 payment_method와 관계없이 토스 취소 API 호출
+            // (토스 위젯에서 카드/가상계좌/간편결제 등 어떤 방식으로 결제했든 토스 API로 취소)
+            if ("TOSSPAYMENTS".equalsIgnoreCase(pgProvider)) {
 
-            tossCancelResult = tossPaymentsService.cancel(orderId);
-            cancelAmount = tossCancelResult.getCancelAmount();
-            cancelFee = tossCancelResult.getCancelFee();
+                tossCancelResult = tossPaymentsService.cancel(orderId);
+                cancelAmount = tossCancelResult.getCancelAmount();
+                cancelFee = tossCancelResult.getCancelFee();
 
-            log.info("[TOSS CANCEL RESULT] cancelAmount={}, cancelFee={}", cancelAmount, cancelFee);
+                log.info("[TOSS CANCEL RESULT] cancelAmount={}, cancelFee={}", cancelAmount, cancelFee);
 
-            // 혼합결제(토스+포인트)인 경우 포인트도 반환 - 카드 분담금은 전액 환불했으니
-            // 수수료는 포인트 쪽에서 뗀다(카드가 전액환불된 예약상품/카드단독 결제는 cancelFee=0이라 전액반환됨)
-            if (order.getPointAmount() != null && order.getPointAmount() > 0) {
-                refundMixedPointPortion(orderId, order, cancelFee, items, "혼합결제 취소");
-            }
-
-        } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
-            // 무통장은 PG 자동취소가 없어 관리자가 계좌로 수기 환불하지만, 취소금액/수수료 자체는
-            // 기록으로 남겨야 하므로 포인트 결제와 동일한 취소수수료 정책(7일 이내 1000원, 이후 10%)을
-            // 적용해 계산한다. 포인트가 섞인 경우 포인트 부분은 제외한 계좌이체 부분 기준으로 계산
-            // (카드/토스 취소의 cancelAmount가 포인트 제외 금액인 것과 동일한 기준).
-            int vaPointPortion = order.getPointAmount() != null ? order.getPointAmount() : 0;
-            int vaBankPortion = order.getFinalPrice() - vaPointPortion;
-
-            if (isReservation) {
-                // 예약 상품: 수수료 없이 전액 환불
-                cancelFee = 0;
-                cancelAmount = vaBankPortion;
-                log.info("[예약상품][무통장 취소] 전액환불 orderId={}, amount={}", orderId, cancelAmount);
-            } else {
-                long vaDays = java.time.temporal.ChronoUnit.DAYS.between(
-                        order.getOrderedAt().toLocalDate(),
-                        LocalDate.now()
-                );
-                // 수수료율(10%)은 계좌이체 분담금(vaBankPortion)이 아니라 전체 결제금액 기준
-                cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(order.getFinalPrice() * 0.1);
-
-                if (vaPointPortion > 0) {
-                    // 포인트 혼합결제: 수수료는 포인트 쪽에서 떼고, 포인트 금액보다 수수료가 크면
-                    // 포인트로 못 뗀 나머지만 계좌이체 환불액에서 차감한다
-                    int feeFromPoint = Math.min(cancelFee, vaPointPortion);
-                    cancelAmount = Math.max(vaBankPortion - (cancelFee - feeFromPoint), 0);
-                } else {
-                    cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
+                // 혼합결제(토스+포인트)인 경우 포인트도 반환 - 카드 분담금은 전액 환불했으니
+                // 수수료는 포인트 쪽에서 뗀다(카드가 전액환불된 예약상품/카드단독 결제는 cancelFee=0이라 전액반환됨)
+                if (order.getPointAmount() != null && order.getPointAmount() > 0) {
+                    refundMixedPointPortion(orderId, order, cancelFee, items, "혼합결제 취소");
                 }
 
-                log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
-                        order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
-            }
+            } else if (method == PaymentMethod.VIRTUAL_ACCOUNT) {
+                // 무통장은 PG 자동취소가 없어 관리자가 계좌로 수기 환불하지만, 취소금액/수수료 자체는
+                // 기록으로 남겨야 하므로 포인트 결제와 동일한 취소수수료 정책(7일 이내 1000원, 이후 10%)을
+                // 적용해 계산한다. 포인트가 섞인 경우 포인트 부분은 제외한 계좌이체 부분 기준으로 계산
+                // (카드/토스 취소의 cancelAmount가 포인트 제외 금액인 것과 동일한 기준).
+                int vaPointPortion = order.getPointAmount() != null ? order.getPointAmount() : 0;
+                int vaBankPortion = order.getFinalPrice() - vaPointPortion;
 
-            // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환 - 계좌이체 분담금은
-            // 전액 환불했으니 수수료는 포인트 쪽에서 뗀다
-            if (vaPointPortion > 0) {
-                refundMixedPointPortion(orderId, order, cancelFee, items, "무통장 취소");
-            }
-
-        } else if (method == PaymentMethod.POINT) {
-
-            log.info(
-                    "[TEST CHECK] benepiaId='{}', isTestTravel={}",
-                    order.getBenepiaId(),
-                    "testtravel".equals(order.getBenepiaId())
-            );
-
-            boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
-
-            String tno = mapper.selectPointTno(order.getOrderNumber());
-
-            int finalPrice = order.getFinalPrice();
-            int refundAmount;
-
-            // ===== testtravel 테스트 계정, 예약 상품은 수수료 없이 전액 환불 =====
-            if (isTestTravel || isReservation) {
-
-                cancelFee = 0;
-                refundAmount = finalPrice;
-
-                log.info("[TESTTRAVEL/예약상품 POINT CANCEL] full refund orderId={}, isReservation={}", orderId, isReservation);
-
-            } else {
-
-                // ===== 수수료 계산 =====
-                LocalDateTime orderedAt = order.getOrderedAt();
-
-                long days = java.time.temporal.ChronoUnit.DAYS.between(
-                        orderedAt.toLocalDate(),
-                        LocalDate.now()
-                );
-
-                cancelFee = (days <= 7)
-                        ? 1000
-                        : (int) Math.floor(finalPrice * 0.1);
-
-                refundAmount = Math.max(finalPrice - cancelFee, 0);
-
-                log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
-            }
-
-            if (tno != null) {
-                KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
-                dto.setTno(tno);
-                dto.setCancelReason("고객요청 관리자 취소");
-
-                if (cancelFee > 0) {
-                    dto.setModType("STRA");
-                    // KCP STRA 부분취소: mod_mny = "취소 후 남는 금액(잔액)"
-                    // 환불액이 아니라 잔액(=수수료)을 보내야 KCP가 (원금-잔액) = 환불액만큼 차감
-                    dto.setModMny(finalPrice - refundAmount);
-                    dto.setModOrdrIdxx(order.getOrderNumber());
-                    // KCP는 STRA를 내부적으로 "전액취소 + 잔액 재승인"으로 처리해서, 이 잔액
-                    // 재승인 건이 KCP 거래내역에는 "일반" 승인건처럼 찍히고 이 값이 상품명 자리에
-                    // 그대로 노출됨 - 상품명처럼 보이게 "[상품명] 취소 수수료" 형태로 남김
-                    String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
-                    if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
-                    dto.setModOrdrGoods("[" + productSummary + "] 취소 수수료");
+                if (isReservation) {
+                    // 예약 상품: 수수료 없이 전액 환불
+                    cancelFee = 0;
+                    cancelAmount = vaBankPortion;
+                    log.info("[예약상품][무통장 취소] 전액환불 orderId={}, amount={}", orderId, cancelAmount);
                 } else {
-                    dto.setModType("STSC");
-                }
+                    long vaDays = java.time.temporal.ChronoUnit.DAYS.between(
+                            order.getOrderedAt().toLocalDate(),
+                            LocalDate.now()
+                    );
+                    // 수수료율(10%)은 계좌이체 분담금(vaBankPortion)이 아니라 전체 결제금액 기준
+                    cancelFee = (vaDays <= 7) ? 1000 : (int) Math.floor(order.getFinalPrice() * 0.1);
 
-                try {
-                    KcpModResDto cancelRes = kcpService.cancelPoint(dto);
-
-                    // STRA는 KCP 내부적으로 "전액취소 + 잔액 재승인"이라 원래 tno는 이미
-                    // 소멸되고 새 tno로 잔액(수수료)이 재승인됨. 이 새 tno를 저장해두지 않으면
-                    // 나중에 취소수수료 환불 시 이미 죽은 원래 tno를 취소하게 되어 KCP에는
-                    // 아무 변화도 생기지 않는다(내부 DB만 환불 처리된 것처럼 보이는 문제).
-                    if (cancelFee > 0 && cancelRes != null && cancelRes.getTno() != null
-                            && !cancelRes.getTno().equals(tno)) {
-                        mapper.updatePointActiveTno(order.getOrderNumber(), cancelRes.getTno());
-                        log.info("[POINT CANCEL] STRA 재승인 tno 갱신 orderId={}, oldTno={}, newTno={}",
-                                orderId, tno, cancelRes.getTno());
+                    if (vaPointPortion > 0) {
+                        // 포인트 혼합결제: 수수료는 포인트 쪽에서 떼고, 포인트 금액보다 수수료가 크면
+                        // 포인트로 못 뗀 나머지만 계좌이체 환불액에서 차감한다
+                        int feeFromPoint = Math.min(cancelFee, vaPointPortion);
+                        cancelAmount = Math.max(vaBankPortion - (cancelFee - feeFromPoint), 0);
+                    } else {
+                        cancelAmount = Math.max(vaBankPortion - cancelFee, 0);
                     }
-                } catch (Exception e) {
-                    log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+
+                    log.info("[무통장 취소] total={}, pointPortion={}, bankPortion={}, fee={}, refund={}",
+                            order.getFinalPrice(), vaPointPortion, vaBankPortion, cancelFee, cancelAmount);
                 }
+
+                // 자체 무통장입금 (토스 아닌 경우) + 포인트 혼합 시 포인트 반환 - 계좌이체 분담금은
+                // 전액 환불했으니 수수료는 포인트 쪽에서 뗀다
+                if (vaPointPortion > 0) {
+                    refundMixedPointPortion(orderId, order, cancelFee, items, "무통장 취소");
+                }
+
+            } else if (method == PaymentMethod.POINT) {
+
+                log.info(
+                        "[TEST CHECK] benepiaId='{}', isTestTravel={}",
+                        order.getBenepiaId(),
+                        "testtravel".equals(order.getBenepiaId())
+                );
+
+                boolean isTestTravel = "testtravel".equals(order.getBenepiaId());
+
+                String tno = mapper.selectPointTno(order.getOrderNumber());
+
+                int finalPrice = order.getFinalPrice();
+                int refundAmount;
+
+                // ===== testtravel 테스트 계정, 예약 상품은 수수료 없이 전액 환불 =====
+                if (isTestTravel || isReservation) {
+
+                    cancelFee = 0;
+                    refundAmount = finalPrice;
+
+                    log.info("[TESTTRAVEL/예약상품 POINT CANCEL] full refund orderId={}, isReservation={}", orderId, isReservation);
+
+                } else {
+
+                    // ===== 수수료 계산 =====
+                    LocalDateTime orderedAt = order.getOrderedAt();
+
+                    long days = java.time.temporal.ChronoUnit.DAYS.between(
+                            orderedAt.toLocalDate(),
+                            LocalDate.now()
+                    );
+
+                    cancelFee = (days <= 7)
+                            ? 1000
+                            : (int) Math.floor(finalPrice * 0.1);
+
+                    refundAmount = Math.max(finalPrice - cancelFee, 0);
+
+                    log.info("[POINT CANCEL] total={}, fee={}, refund={}", finalPrice, cancelFee, refundAmount);
+                }
+
+                if (tno != null) {
+                    KcpPointCancelReqDto dto = new KcpPointCancelReqDto();
+                    dto.setTno(tno);
+                    dto.setCancelReason("고객요청 관리자 취소");
+
+                    if (cancelFee > 0) {
+                        dto.setModType("STRA");
+                        // KCP STRA 부분취소: mod_mny = "취소 후 남는 금액(잔액)"
+                        // 환불액이 아니라 잔액(=수수료)을 보내야 KCP가 (원금-잔액) = 환불액만큼 차감
+                        dto.setModMny(finalPrice - refundAmount);
+                        dto.setModOrdrIdxx(order.getOrderNumber());
+                        // KCP는 STRA를 내부적으로 "전액취소 + 잔액 재승인"으로 처리해서, 이 잔액
+                        // 재승인 건이 KCP 거래내역에는 "일반" 승인건처럼 찍히고 이 값이 상품명 자리에
+                        // 그대로 노출됨 - 상품명처럼 보이게 "[상품명] 취소 수수료" 형태로 남김
+                        String productSummary = items.isEmpty() ? "" : items.get(0).getProductName();
+                        if (items.size() > 1) productSummary += " 외 " + (items.size() - 1) + "건";
+                        dto.setModOrdrGoods("[" + productSummary + "] 취소 수수료");
+                    } else {
+                        dto.setModType("STSC");
+                    }
+
+                    try {
+                        KcpModResDto cancelRes = kcpService.cancelPoint(dto);
+
+                        // STRA는 KCP 내부적으로 "전액취소 + 잔액 재승인"이라 원래 tno는 이미
+                        // 소멸되고 새 tno로 잔액(수수료)이 재승인됨. 이 새 tno를 저장해두지 않으면
+                        // 나중에 취소수수료 환불 시 이미 죽은 원래 tno를 취소하게 되어 KCP에는
+                        // 아무 변화도 생기지 않는다(내부 DB만 환불 처리된 것처럼 보이는 문제).
+                        if (cancelFee > 0 && cancelRes != null && cancelRes.getTno() != null
+                                && !cancelRes.getTno().equals(tno)) {
+                            mapper.updatePointActiveTno(order.getOrderNumber(), cancelRes.getTno());
+                            log.info("[POINT CANCEL] STRA 재승인 tno 갱신 orderId={}, oldTno={}, newTno={}",
+                                    orderId, tno, cancelRes.getTno());
+                        }
+                    } catch (Exception e) {
+                        log.error("[POINT CANCEL FAIL] orderId={}", orderId, e);
+                    }
+                } else {
+                    log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
+                }
+
+                cancelAmount = refundAmount;
+                cancelFee = cancelFee;
+
+            } else if (method == PaymentMethod.GIFT) {
+                // 이용권(GIFT) 단독결제 - PG/포인트 취소 API 호출 없이, 실제 사용된 이용권 금액만큼
+                // 전액 환불(수수료 없음). 이용권 잔액 복원 자체는 바로 아래 "2.5 이용권 환불" 단계에서
+                // order.getVoucherAmount() 기준으로 처리됨.
+                cancelAmount = order.getFinalPrice();
+                cancelFee = 0;
+
             } else {
-                log.warn("[POINT CANCEL] tno 없음 - KCP 환불 스킵, 관리자 확인 필요 orderId={}", orderId);
+                throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
             }
-
-            cancelAmount = refundAmount;
-            cancelFee = cancelFee;
-
-        } else if (method == PaymentMethod.GIFT) {
-            // 이용권(GIFT) 단독결제 - PG/포인트 취소 API 호출 없이, 실제 사용된 이용권 금액만큼
-            // 전액 환불(수수료 없음). 이용권 잔액 복원 자체는 바로 아래 "2.5 이용권 환불" 단계에서
-            // order.getVoucherAmount() 기준으로 처리됨.
-            cancelAmount = order.getFinalPrice();
-            cancelFee = 0;
-
-        } else {
-            throw new IllegalArgumentException("지원하지 않는 결제수단입니다. method=" + method);
+        } catch (Exception e) {
+            log.error("[PG 환불 실패] orderId={}", orderId, e);
+            try {
+                cancelProgressRecorder.record(orderId, canceledPartnerIds, null, "PG", "PG 환불 실패: " + e.getMessage());
+            } catch (Exception recordEx) {
+                log.error("PG 환불 실패 기록 실패 orderId={}", orderId, recordEx);
+            }
+            throw e;
         }
 
         /*

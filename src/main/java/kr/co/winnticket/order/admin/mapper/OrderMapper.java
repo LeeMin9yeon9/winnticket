@@ -216,6 +216,10 @@ public interface OrderMapper {
     int updateTicketsCancelledByPartner(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId);
     int updateTicketsCancelFailed(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId, @Param("reason") String reason);
 
+    // 주문 취소 실패 이력 (파트너 취소/PG 환불 실패)
+    int insertOrderCancelFailure(@Param("orderId") UUID orderId, @Param("stage") String stage, @Param("reason") String reason);
+    List<OrderCancelFailureDto> selectOrderCancelFailures(@Param("orderId") UUID orderId);
+
     // 주문 취소 시 티켓 찾기
     UUID findCancelledTicket(@Param("ticketNumber") String ticketNumber);
 

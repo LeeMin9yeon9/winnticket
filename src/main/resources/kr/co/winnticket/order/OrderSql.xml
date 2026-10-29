@@ -1023,6 +1023,22 @@
           AND oi.order_id = #{orderId}
     </update>
 
+    <!--
+        주문 취소 실패 이력. orders를 UPDATE하지 않고 새 행만 INSERT한다 - 취소 도중(예: 토스 취소 직후)에는
+        바깥 트랜잭션이 orders 행을 이미 잠그고 있어서, 별도 트랜잭션에서 같은 행을 UPDATE하면 교착됨.
+    -->
+    <insert id="insertOrderCancelFailure">
+        INSERT INTO order_cancel_failures (order_id, stage, reason)
+        VALUES (#{orderId}::uuid, #{stage}, #{reason})
+    </insert>
+
+    <select id="selectOrderCancelFailures" resultType="kr.co.winnticket.order.admin.dto.OrderCancelFailureDto">
+        SELECT stage, reason, created_at
+        FROM order_cancel_failures
+        WHERE order_id = #{orderId}::uuid
+        ORDER BY created_at
+    </select>
+
     <!-- 파트너별 주문 티켓 수 (partnerId 기준) -->
     <select id="countPartnerTickets" resultType="int">
         SELECT COUNT(*)

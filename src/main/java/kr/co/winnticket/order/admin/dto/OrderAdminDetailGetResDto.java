@@ -73,6 +73,9 @@ public class OrderAdminDetailGetResDto {
     @Schema(description = "취소요청일시 (고객이 취소요청을 접수한 시각)")
     private LocalDateTime cancelRequestedAt;
 
+    @Schema(description = "취소 실패 이력 (파트너 취소/PG 환불 실패 - 주문 타임라인 표시용)")
+    private java.util.List<OrderCancelFailureDto> cancelFailures;
+
     @Schema(description = "환불(취소) 금액 - 포인트로 결제된 부분은 제외")
     private int cancelAmount;
 
