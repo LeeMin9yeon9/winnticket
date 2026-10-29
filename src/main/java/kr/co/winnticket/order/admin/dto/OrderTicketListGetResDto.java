@@ -32,6 +32,12 @@ public class OrderTicketListGetResDto {
     @Schema(description = "사용일시")
     private LocalDateTime ticketUsedDate;
 
+    @Schema(description = "티켓상태(ISSUED/USED/CANCELLED)")
+    private String status;
+
+    @Schema(description = "파트너 취소 실패 사유 - 값이 있으면 사용취소 안됨")
+    private String cancelFailedReason;
+
     @Hidden
     @Schema(description = "주문상품_id")
     private UUID orderItemId;

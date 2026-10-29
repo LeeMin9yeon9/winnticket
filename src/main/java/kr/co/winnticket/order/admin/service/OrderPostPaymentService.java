@@ -63,15 +63,15 @@ public class OrderPostPaymentService {
 
     private static final String QR_URL = "https://www.winnticket.co.kr/qr?orderNumber=";
     private static final String BARCODE_URL = "https://www.winnticket.co.kr/barcode?orderNumber=";
-    private static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
-    private static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
-    private static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
-    private static final String COREWORKS = "1d5228eb-6d03-4e12-b370-b2ceb19a77cc";
-    private static final String PLUSN = "85f50a52-7096-470e-95f5-a8e9c1cd6589";
-    private static final String SMARTINFINI = "eec583a7-ce38-4cd0-927e-c35b5391a66d";
-    private static final String SPAVIS = "0f46cad1-6fb4-4514-938f-d309850f0668";
-    private static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
-    private static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
+    public static final String WOOGJIN = "bd0e1a6e-b871-44a0-827c-f44c0d82f3f4";
+    public static final String PLAYSTORY = "e8e6f928-ebe2-44f9-930c-4a3f9a061b3c";
+    public static final String MAIR = "15f283a9-fd6c-47ba-862d-0af9697a3e1b";
+    public static final String COREWORKS = "1d5228eb-6d03-4e12-b370-b2ceb19a77cc";
+    public static final String PLUSN = "85f50a52-7096-470e-95f5-a8e9c1cd6589";
+    public static final String SMARTINFINI = "eec583a7-ce38-4cd0-927e-c35b5391a66d";
+    public static final String SPAVIS = "0f46cad1-6fb4-4514-938f-d309850f0668";
+    public static final String AQUAPLANET = "d16d7f6f-e432-40ee-9f57-e4aaa2c65751";
+    public static final String LSCOMPANY = "b49be80d-4150-408b-80e6-e11c6f13db9d";
 
     // ─────────────────────────────────────────────
     // 티켓 발급 유틸

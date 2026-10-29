@@ -240,6 +240,8 @@
         (
         SELECT STRING_AGG(
         CASE
+        WHEN t.cancel_failed_reason IS NOT NULL
+        THEN '사용취소 안됨'
         WHEN t.ticket_used = true
         THEN '사용완료'
         ELSE '미사용'
@@ -493,7 +495,8 @@
             e.name partner_name,  -- 파트너명
             a.ticket_used,  -- 사용여부
             a.ticket_used_date, -- 사용일시
-            a.status
+            a.status,
+            a.cancel_failed_reason -- 파트너 취소 실패 사유 (값이 있으면 "사용취소 안됨")
         FROM order_tickets a
                  JOIN order_items b
                       ON b.id = a.order_item_id
@@ -514,7 +517,8 @@
             e.name,
             a.ticket_used,
             a.ticket_used_date,
-            a.status
+            a.status,
+            a.cancel_failed_reason
         ORDER BY
             ticket_number;
     </select>
@@ -1012,10 +1016,52 @@
     <!--주문취소 후 상태변경-->
     <update id="cancelTicketsByOrderId">
         UPDATE order_tickets t
-        SET status = 'CANCELLED'
+        SET status = 'CANCELLED',
+            cancel_failed_reason = NULL
             FROM order_items oi
         WHERE t.order_item_id = oi.id
           AND oi.order_id = #{orderId}
+    </update>
+
+    <!-- 파트너별 주문 티켓 수 (partnerId 기준) -->
+    <select id="countPartnerTickets" resultType="int">
+        SELECT COUNT(*)
+        FROM order_tickets t
+                 JOIN order_items oi ON oi.id = t.order_item_id
+        WHERE oi.order_id = #{orderId}
+          AND oi.partner_id = #{partnerId}::uuid
+    </select>
+
+    <!-- 파트너별 아직 취소되지 않은 티켓 수 - 0이면 이미 그 파트너 취소가 끝난 것이라 재시도 시 건너뜀 -->
+    <select id="countPartnerActiveTickets" resultType="int">
+        SELECT COUNT(*)
+        FROM order_tickets t
+                 JOIN order_items oi ON oi.id = t.order_item_id
+        WHERE oi.order_id = #{orderId}
+          AND oi.partner_id = #{partnerId}::uuid
+          AND t.status != 'CANCELLED'
+    </select>
+
+    <!-- 파트너 취소는 성공했지만 주문 취소는 끝나지 않은 경우 - 그 파트너 티켓을 취소됨으로 기록 -->
+    <update id="updateTicketsCancelledByPartner">
+        UPDATE order_tickets t
+        SET status = 'CANCELLED',
+            cancel_failed_reason = NULL
+            FROM order_items oi
+        WHERE t.order_item_id = oi.id
+          AND oi.order_id = #{orderId}
+          AND oi.partner_id = #{partnerId}::uuid
+    </update>
+
+    <!-- 파트너 취소 실패 - 그 파트너 티켓에 실패 사유 기록 (관리자 화면에 "사용취소 안됨"으로 표시) -->
+    <update id="updateTicketsCancelFailed">
+        UPDATE order_tickets t
+        SET cancel_failed_reason = #{reason}
+            FROM order_items oi
+        WHERE t.order_item_id = oi.id
+          AND oi.order_id = #{orderId}
+          AND oi.partner_id = #{partnerId}::uuid
+          AND t.status != 'CANCELLED'
     </update>
 
     <!--티켓 유효기간 조회-->

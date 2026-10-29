@@ -210,6 +210,12 @@ public interface OrderMapper {
     // 선사입 쿠폰 주문 취소 티켓 조ㅓ회
     int cancelTicketsByOrderId(@Param("orderId") UUID orderId);
 
+    // 파트너별 주문 취소 진행상태 기록/조회 (일부 파트너만 취소된 경우 재시도·표시용)
+    int countPartnerTickets(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId);
+    int countPartnerActiveTickets(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId);
+    int updateTicketsCancelledByPartner(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId);
+    int updateTicketsCancelFailed(@Param("orderId") UUID orderId, @Param("partnerId") String partnerId, @Param("reason") String reason);
+
     // 주문 취소 시 티켓 찾기
     UUID findCancelledTicket(@Param("ticketNumber") String ticketNumber);
 

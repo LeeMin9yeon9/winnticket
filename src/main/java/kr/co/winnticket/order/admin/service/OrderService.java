@@ -53,6 +53,7 @@ public class OrderService {
     private final TicketCouponMapper ticketCouponMapper;
     private final TicketCouponService ticketCouponService;
     private final OrderCleanupService orderCleanupService;
+    private final OrderCancelProgressRecorder cancelProgressRecorder;
 
     // 파트너 연동 (취소에서 사용)
     private final WoongjinService woongjinService;
@@ -461,6 +462,10 @@ public class OrderService {
         }
     }
 
+    // 파트너 취소 한 단계 (파트너명, 파트너ID, 취소 호출)
+    private interface CancelAction { void run() throws Exception; }
+    private record PartnerCancelStep(String name, String partnerId, CancelAction action) {}
+
     // 주문 취소
     @Transactional
     public void cancelOrder(UUID orderId) throws Exception {
@@ -511,8 +516,13 @@ public class OrderService {
          * =========================
          */
 
+        // 파트너 취소를 순서대로 실행한다. 하나라도 실패하면 뒤 파트너 취소/PG 환불은 하지 않고 중단하며,
+        // 이미 취소된 앞 파트너 티켓은 "취소됨"으로, 실패한 파트너 티켓은 실패 사유와 함께 기록한다
+        // (관리자 화면에서 "사용취소 안됨"으로 보임). 주문 자체는 취소되지 않고 그대로 남는다.
+        List<PartnerCancelStep> cancelSteps = new ArrayList<>();
+
         if (split.isHasPlusN()) {
-            try {
+            cancelSteps.add(new PartnerCancelStep("플러스앤", OrderPostPaymentService.PLUSN, () -> {
                 log.info("[플러스앤 orderCancel start]");
                 // 플러스앤은 실패를 예외가 아니라 success=false 응답으로 돌려주므로 직접 확인해서 중단해야 함
                 // (안 그러면 취소 실패했는데도 뒤 파트너 취소/PG 환불이 계속 진행됨)
@@ -520,13 +530,11 @@ public class OrderService {
                 if (!plusNRes.isSuccess()) {
                     throw new IllegalStateException(plusNRes.getMessage());
                 }
-            } catch (Exception e) {
-                throw new IllegalStateException("플러스앤 주문 취소 실패", e);
-            }
+            }));
         }
 
         if (split.isHasSmartInfini()) {
-            try {
+            cancelSteps.add(new PartnerCancelStep("스마트인피니", OrderPostPaymentService.SMARTINFINI, () -> {
                 log.info("[스마트인피니 orderCancel start]");
                 // 스마트인피니도 티켓별 결과코드(return_div)를 응답에 담아 주므로 하나라도 실패면 중단
                 var siRes = smartInfiniService.cancelMulti(orderId);
@@ -538,48 +546,63 @@ public class OrderService {
                         throw new IllegalStateException("order_sales=" + r.getOrderSales() + " " + r.getReturnMsg());
                     }
                 }
-            } catch (Exception e) {
-                throw new IllegalStateException("스마트인피니 주문 취소 실패", e);
-            }
+            }));
         }
 
-        if (split.isHasLsCompany()){
-            try {
+        if (split.isHasLsCompany()) {
+            cancelSteps.add(new PartnerCancelStep("LS컴퍼니", OrderPostPaymentService.LSCOMPANY, () -> {
                 log.info("[LS컴퍼니 orderCancel start]");
                 lsCompanyService.cancelTicket(orderId);
-            } catch (Exception e) {
-                throw new IllegalStateException("LS컴퍼니 주문 취소 실패", e);
-            }
+            }));
         }
 
         if (split.isHasAquaplanet()) {
-            try {
+            cancelSteps.add(new PartnerCancelStep("아쿠아플라넷", OrderPostPaymentService.AQUAPLANET, () -> {
                 log.info("[아쿠아플라넷 orderCancel start]");
                 aquaplanetService.cancelOrder(orderId);
-            } catch (Exception e) {
-                throw new IllegalStateException("아쿠아플라넷 주문 취소 실패", e);
-            }
+            }));
         }
 
         if (split.isHasWoongin()) {
-            try {
+            cancelSteps.add(new PartnerCancelStep("웅진", OrderPostPaymentService.WOOGJIN, () -> {
                 log.info("[웅진 취소 시작]");
                 // 웅진도 실패를 success=false 응답으로 돌려줌
                 var wjRes = woongjinService.cancel(orderId);
                 if (!wjRes.isSuccess()) {
                     throw new IllegalStateException(wjRes.getMessage());
                 }
-            } catch (Exception e) {
-                throw new IllegalStateException("웅진 주문 취소 실패", e);
-            }
+            }));
         }
 
         if (split.isHasPlaystory()) {
-            try {
+            cancelSteps.add(new PartnerCancelStep("플레이스토리", OrderPostPaymentService.PLAYSTORY, () -> {
                 log.info("[플레이스토리 취소 시작]");
                 playstoryService.cancel(orderId);
+            }));
+        }
+
+        List<String> canceledPartnerIds = new ArrayList<>();
+        for (PartnerCancelStep step : cancelSteps) {
+            // 이전 시도에서 이 파트너 취소가 이미 끝났다면(티켓이 전부 CANCELLED) 다시 요청하지 않는다
+            // - 다시 요청하면 파트너사에서 "이미 취소됨"으로 거절해 영영 취소가 막힘
+            int total = mapper.countPartnerTickets(orderId, step.partnerId());
+            if (total > 0 && mapper.countPartnerActiveTickets(orderId, step.partnerId()) == 0) {
+                log.info("[{}] 이미 취소된 파트너라 건너뜀 orderId={}", step.name(), orderId);
+                continue;
+            }
+            try {
+                step.action().run();
+                canceledPartnerIds.add(step.partnerId());
             } catch (Exception e) {
-                throw new IllegalStateException("플레이스토리 주문 취소 실패", e);
+                String reason = step.name() + " 취소 실패: " + e.getMessage();
+                log.error("[{}] 파트너 취소 실패 orderId={}", step.name(), orderId, e);
+                try {
+                    cancelProgressRecorder.record(orderId, canceledPartnerIds, step.partnerId(), reason);
+                } catch (Exception recordEx) {
+                    // 기록 실패(예: 컬럼 미생성)가 원래 취소 실패 원인을 가리지 않도록 로그만 남김
+                    log.error("파트너 취소 진행상태 기록 실패 orderId={}", orderId, recordEx);
+                }
+                throw new IllegalStateException(step.name() + " 주문 취소 실패", e);
             }
         }
 
